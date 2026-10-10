@@ -220,6 +220,13 @@
       },
       "x-semio-state": "artifact"
     },
+    "space_conditions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SpaceConditions"
+      },
+      "x-semio-state": "artifact"
+    },
     "views": {
       "type": "object",
       "additionalProperties": {
@@ -304,6 +311,55 @@
       },
       "x-semio-state": "artifact"
     },
+    "components": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Component"
+      },
+      "x-semio-state": "artifact"
+    },
+    "component_overrides": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ComponentOverride"
+      },
+      "x-semio-state": "artifact"
+    },
+    "mep_elements": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/MepElement"
+      },
+      "x-semio-state": "artifact"
+    },
+    "clash_sets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ClashSet"
+      },
+      "x-semio-state": "artifact"
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Rule"
+      },
+      "x-semio-state": "artifact"
+    },
+    "issues": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Issue"
+      },
+      "x-semio-state": "artifact"
+    },
+    "issue_comments": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/IssueComment"
+      },
+      "x-semio-state": "artifact"
+    },
     "wall_sweeps": {
       "type": "object",
       "additionalProperties": {
@@ -345,6 +401,304 @@
         "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ClassificationSet"
       },
       "x-semio-state": "artifact"
+    },
+    "option_groups": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/OptionGroup"
+      },
+      "x-semio-state": "artifact"
+    },
+    "design_options": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/DesignOption"
+      },
+      "x-semio-state": "artifact"
+    },
+    "worksets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Workset"
+      },
+      "x-semio-state": "artifact"
+    },
+    "element_options": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ElementMembership"
+      },
+      "x-semio-state": "artifact"
+    },
+    "element_worksets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ElementMembership"
+      },
+      "x-semio-state": "artifact"
+    },
+    "supports": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralSupport"
+      },
+      "x-semio-state": "artifact"
+    },
+    "load_cases": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/LoadCase"
+      },
+      "x-semio-state": "artifact"
+    },
+    "loads": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralLoad"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "OptionGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "DesignOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "name",
+        "primary"
+      ],
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "primary": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Workset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "default_visible"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "default_visible": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ElementMembership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "properties": {
+        "target": {
+          "type": "string"
+        }
+      }
+    },
+    "Restraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "rx",
+        "ry",
+        "rz"
+      ],
+      "properties": {
+        "x": {
+          "type": "boolean"
+        },
+        "y": {
+          "type": "boolean"
+        },
+        "z": {
+          "type": "boolean"
+        },
+        "rx": {
+          "type": "boolean"
+        },
+        "ry": {
+          "type": "boolean"
+        },
+        "rz": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StructuralSupport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "member",
+        "location",
+        "offset",
+        "restraints"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "member": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralLocation"
+        },
+        "offset": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+        },
+        "restraints": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Restraints"
+        }
+      }
+    },
+    "LoadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "category",
+        "factor"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "factor": {
+          "type": "number"
+        }
+      }
+    },
+    "StructuralLoad": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "load_case",
+        "member",
+        "location",
+        "force",
+        "moment"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "load_case": {
+          "type": "string"
+        },
+        "member": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralLocation"
+        },
+        "force": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+        },
+        "moment": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+        }
+      }
+    },
+    "StructuralLocation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Point"
+          ],
+          "properties": {
+            "Point": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/PointLocation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Line"
+          ],
+          "properties": {
+            "Line": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/LineLocation"
+            }
+          }
+        },
+        {
+          "const": "Area"
+        }
+      ]
+    },
+    "PointLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "station"
+      ],
+      "properties": {
+        "station": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "LineLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "end": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
     }
   }
 }

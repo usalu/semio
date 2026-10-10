@@ -1,10 +1,10 @@
 {
   "property_templates": {
     "pt-door": {
-      "entry": "Patched",
       "applies_to": [
         "Door"
-      ]
+      ],
+      "entry": "Patched"
     }
   }
 }

@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.semio.tech/draw/owned-export",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "viewBox",
+    "expected",
+    "formats",
+    "workGrants",
+    "cancelTurns",
+    "deniedBirth",
+    "deniedHandoff",
+    "fault"
+  ],
+  "properties": {
+    "source": {
+      "const": "rectangle"
+    },
+    "viewBox": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "expected": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "png",
+          "svg",
+          "pdf"
+        ]
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "workGrants": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "cancelTurns": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "deniedBirth": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "capacity",
+          "depth"
+        ]
+      }
+    },
+    "deniedHandoff": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "depth"
+        ]
+      }
+    },
+    "fault": {
+      "properties": {
+        "format": {
+          "const": "png"
+        },
+        "reason": {
+          "const": "pixel-limit"
+        },
+        "height": {
+          "const": 16384
+        },
+        "width": {
+          "const": 16384
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "format",
+        "width",
+        "height",
+        "reason"
+      ]
+    }
+  }
+}

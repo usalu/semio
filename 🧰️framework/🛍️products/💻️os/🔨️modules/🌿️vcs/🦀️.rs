@@ -1356,7 +1356,7 @@ impl<T> ArtifactHistoryLedger<T> {
 
 impl<T> Drop for ArtifactHistoryLedger<T> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "artifact history ledger reached Drop before every exact entry owner was retired");
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "artifact history ledger reached Drop before every exact entry owner was retired");
         unsafe { std::mem::ManuallyDrop::drop(&mut self.pages) };
     }
 }

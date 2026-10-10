@@ -2,6 +2,7 @@
 //! in both languages, every window and panel has an accessible name, and the gesture in progress shows in the 3D window too.
 
 use super::*;
+use semio_framework_plugin::PluginApp as _;
 use crate::editor::bim::entities::kind_of;
 use crate::editor::bim::unit_tests::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
@@ -169,6 +170,37 @@ async fn the_classification_is_no_field_row_any_more_it_has_its_commands_and_its
     let snapshot = demo();
     assert_eq!(code(set(&snapshot, &["w-south"], "classification", "Uniclass Ss_25")), Some("bim.set.field-unknown".to_string()), "a classification is one code per system: the setClassification and removeClassification commands write it");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn the_wall_sweep_the_attach_and_the_reveal_are_reachable_from_the_ui_through_set_field_and_the_commands() {
+    let snapshot = with(with(furnished(), "wall-sweep", "sw-1", "w-south"), "opening", "op-1", "w-south");
+    assert_eq!(snapshot.wall_sweeps["sw-1"].host, "w-south", "createEntity names the wall as the container of a sweep");
+    for (field, value) in [("side", "Right"), ("profile", "circle 0.04"), ("height", "0.2"), ("inset", "0.005"), ("name", "Skirting"), ("host", "w-east"), ("material", "m-wool")] {
+        let emit = set(&snapshot, &["sw-1"], field, value).unwrap_or_else(|fault| panic!("{field}: {}", fault.message));
+        assert!(matches!(emit.artifact_mutations.as_slice(), [ModelMutation::SetWallSweep(_) | ModelMutation::RenameElement(_)]), "{field}");
+        applied(&snapshot, &emit);
+    }
+    assert_eq!(code(set(&snapshot, &["sw-1"], "side", "Up")), Some("bim.set.value-invalid".to_string()));
+    let attached = applied(&snapshot, &set(&snapshot, &["w-south"], "top_attach", "roof-1").expect("attaches the top"));
+    assert!(matches!(attached.walls["w-south"].top, crate::TopConstraint::Roof { .. }));
+    let based = applied(&attached, &set(&attached, &["w-south"], "base_slab", "slab-1").expect("follows the slab"));
+    assert_eq!(based.walls["w-south"].base_slab.as_deref(), Some("slab-1"));
+    let freed = applied(&based, &set(&based, &["w-south"], "top_attach", "").expect("frees the top"));
+    assert!(matches!(freed.walls["w-south"].top, crate::TopConstraint::StoreyTop { .. }));
+    let revealed = applied(&snapshot, &set(&snapshot, &["op-1"], "reveal_depth", "0.1").expect("sets the reveal"));
+    assert_eq!(revealed.openings["op-1"].reveal_depth, Some(0.1));
+    let json = serde_json::to_string(&create_bim_app()).expect("app definition json");
+    let picks: [fn(&BimLabels) -> LabelText; 4] = [|labels| labels.utility_sweep, |labels| labels.cmd_arm_sweep, |labels| labels.cmd_attach_walls, |labels| labels.cmd_attach_walls_describe];
+    for pick in picks {
+        for labels in [&BimLabels::NATIVE_EN, &BimLabels::NATIVE_DE] {
+            assert!(json.contains(pick(labels).as_str()), "the manifest lacks '{}'", pick(labels).as_str());
+        }
+    }
+    let notices: Vec<&str> = bim_fault_notices().iter().map(|(code, _)| *code).collect();
+    for code in ["bim.attach.wall-missing", "bim.attach.target-missing", "bim.create.wall-missing", "bim.create.material-missing"] {
+        assert!(notices.contains(&code), "no notice for {code}");
+    }
+}
 //#endregion 🔖️Fields
 
 //#region 🔖️Panel
@@ -223,8 +255,8 @@ async fn with_nothing_selected_the_panel_edits_the_project() {
 async fn accessible(app: &mut BimApp, body: &str, view: &ViewModel) -> (Option<String>, Option<String>) {
     use semio_framework_plugin::PluginApp;
     let tree = app.render(body, None, view).await.expect("render");
-    let name = tree.root.accessibility.label.as_ref().map(|label| label.as_str().to_string());
-    let description = tree.root.accessibility.description.as_ref().map(|label| label.as_str().to_string());
+    let name = tree.root.accessibility.label.as_ref().map(|label| label.0.as_str().to_string());
+    let description = tree.root.accessibility.description.as_ref().map(|label| label.0.as_str().to_string());
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire");
     (name, description)
 }

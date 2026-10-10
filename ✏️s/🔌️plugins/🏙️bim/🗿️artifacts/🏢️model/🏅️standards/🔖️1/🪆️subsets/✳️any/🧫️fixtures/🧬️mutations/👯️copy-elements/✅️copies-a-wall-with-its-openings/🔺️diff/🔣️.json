@@ -1,1 +1,86 @@
-{}
+{
+  "classifications": {
+    "cp-1-0": {
+      "cs-uniclass": "EF_25_10",
+      "entry": "Created"
+    }
+  },
+  "openings": {
+    "cp-1-1": {
+      "entry": "Created",
+      "flip_facing": false,
+      "flip_hand": false,
+      "host": "cp-1-0",
+      "kind": {
+        "Door": {
+          "door_type": "dt-1"
+        }
+      },
+      "name": "Door",
+      "offset": 1.5
+    },
+    "cp-1-2": {
+      "entry": "Created",
+      "flip_facing": false,
+      "flip_hand": false,
+      "host": "cp-1-0",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "name": "Window",
+      "offset": 5.5
+    }
+  },
+  "properties": {
+    "cp-1-0": {
+      "Pset_WallCommon": {
+        "FireRating": {
+          "Text": {
+            "value": "F90"
+          }
+        }
+      },
+      "entry": "Created"
+    },
+    "cp-1-2": {
+      "Pset_WindowCommon": {
+        "ThermalTransmittance": {
+          "Real": {
+            "value": 1.1
+          }
+        }
+      },
+      "entry": "Created"
+    }
+  },
+  "walls": {
+    "cp-1-0": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": -4.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": -4.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

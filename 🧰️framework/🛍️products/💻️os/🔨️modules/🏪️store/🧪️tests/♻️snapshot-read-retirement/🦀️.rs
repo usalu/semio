@@ -2,6 +2,12 @@
 use super::*;
 use super::tests::physical_test_close_grant;
 
+/// 🪙️ One funded admission of the next returned root, handed back whole as the retirement pump would receive it.
+fn take_one_returned(registry: &crate::os_store::SnapshotReadRegistryHandle) -> Option<Arc<u64>> {
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() };
+    registry.try_admit_one_returned::<u64, Arc<u64>>(grant, |root, _| Ok((root, Default::default()))).unwrap().0
+}
+
 #[test]
 fn snapshot_read_retirement_skips_empty_slots_and_wraps_without_starvation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️snapshot-read-retirement/🔣️.json")).unwrap();

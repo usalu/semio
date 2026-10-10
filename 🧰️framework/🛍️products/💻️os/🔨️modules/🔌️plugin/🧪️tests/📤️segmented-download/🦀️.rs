@@ -66,7 +66,7 @@ fn segmented_download_slot_table_retires_every_chunk_as_it_is_taken() {
 
 #[test]
 fn segmented_output_original_full_grant_physical_retirement() {
-    use semio_framework_value::{RetainedCloneGrant, RetainedCloneStep};
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement};
     let contract = contract();
     let chunk_bytes = contract["chunkBytes"].as_u64().unwrap() as usize;

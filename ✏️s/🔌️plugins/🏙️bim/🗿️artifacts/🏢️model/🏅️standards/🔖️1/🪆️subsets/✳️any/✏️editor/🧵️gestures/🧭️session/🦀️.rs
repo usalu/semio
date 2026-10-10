@@ -65,6 +65,23 @@ pub enum ToolEvent {
     Escape,
     Lost,
 }
+
+/// 🔑️ The metres a raise or a lower key moves the elevation of a component or MEP route tool.
+pub const ELEVATION_STEP: f64 = 0.1;
+
+/// 🔑️ A key of the gesture in progress that is no pointer event: a turn of the ghost in radians, a mirror, the next or previous choice (family, section kind), a higher or lower elevation, the next system and the back
+/// key that takes the last point back.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum GestureKey {
+    Turn(f64),
+    Mirror,
+    Next,
+    Previous,
+    Raise,
+    Lower,
+    System,
+    Back,
+}
 //#endregion 🔖️Events
 
 //#region 🔖️Context
@@ -86,7 +103,7 @@ pub struct ToolContext<'a> {
     pub library: &'a [String],
     pub labels: Option<&'static BimLabels>,
     pub mint: IdMint,
-    pub instance: Option<u32>,
+    pub instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Instance<'a>,
 }
 
 impl<'a> ToolContext<'a> {
@@ -192,7 +209,7 @@ impl Step {
 
 //#region 🔖️Preview
 /// 🖌️ How a mark is drawn.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub enum Style {
     Ghost,
     Guide,
@@ -203,7 +220,7 @@ pub enum Style {
 }
 
 /// 🔷️ What a mark is.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub enum Shape {
     Path,
     Dot,
@@ -212,7 +229,7 @@ pub enum Shape {
 }
 
 /// 🫧️ One mark over a window: a path (flat `x, y` pairs), a dot, a text label at the first point or a snap marker named by its kind in `text`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Mark {
     pub shape: Shape,
@@ -245,7 +262,7 @@ impl Mark {
 }
 
 /// 🫧️ The marks a tool shows over its window.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Preview {
     pub marks: Vec<Mark>,
@@ -289,6 +306,16 @@ pub trait Tool: Send {
 
     /// ⚓️ The point the gesture in progress hangs on (the last corner of a chain, the pivot of a turn): what a typed offset, polar offset or length is measured from.
     fn anchor(&self) -> Option<P> {
+        None
+    }
+
+    /// 🔑️ A key of the gesture; `None` when the tool has no use for it, so the key keeps its other meaning.
+    fn key(&mut self, _ctx: &mut ToolContext<'_>, _key: GestureKey) -> Option<Step> {
+        None
+    }
+
+    /// ⌨️ A typed option line (an elevation, a section, a system); `None` when the line is no option of the tool, so it is read as a point.
+    fn line(&mut self, _ctx: &mut ToolContext<'_>, _line: &str) -> Option<Step> {
         None
     }
 }

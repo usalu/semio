@@ -23,14 +23,6 @@ pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::Native
 
 fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio object row identity or columns"))}else{Ok(())}}
 fn project_child<S>(child:&store::ArtifactChild<S>,table:&str,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{let target=&child.target;let reference=p.insert("semio_object_reference",&[Cell::Text(&target.artifact_id),Cell::Text(&target.dialect.artifact_kind),Cell::Text(&target.dialect.standard),Cell::Text(&target.dialect.subset)])?;p.insert(table,&[Cell::Integer(1),Cell::Text(&child.child_id),Cell::Integer(reference)])?;Ok(())}
-fn child<S:Send+'static>(database:&SqliteDatabase,table:&str,subset:&str,references:&mut semio_framework_os_kernel::sqlite_snapshot::artifact::RowIndex<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<Option<store::ArtifactChild<S>>,ValueError>{
- use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
- let rows=database.table(table)?;if rows.rows.is_empty(){return Ok(None)}let row=SqliteRow::new(rows.single_row()?,float_columns(table))?;identity(row,4)?;if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio object child owner"))}
- let reference=references.take(row.integer(3)?,control)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"dangling or multiply owned Semio object reference"))?;
- let mut child=Owned::new(store::ArtifactChild::<S>::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}));
- child.get_mut().target.artifact_id=reconstruct_text(control,reference.text(1)?)?;child.get_mut().target.dialect.artifact_kind=reconstruct_text(control,reference.text(2)?)?;child.get_mut().target.dialect.standard=reconstruct_text(control,reference.text(3)?)?;child.get_mut().target.dialect.subset=reconstruct_text(control,reference.text(4)?)?;child.get_mut().child_id=reconstruct_text(control,row.text(2)?)?;
- let view=child.get_mut();validate_semio_child_identity(&view.child_id,&view.target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;Ok(Some(child.take()))
-}
 impl ArtifactSqliteSnapshot for SemioObjectSnapshot{
 fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_encoding::encode(self,encoding,control,native_owner)}
@@ -52,25 +44,11 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 impl SemioObjectSnapshot {
     /// 🧩️ Projects owned semantic fields with typed relational refusals.
     pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()
+semantic::layout(control.limits())?;crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
 }
 
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
-    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{
- use semio_framework_os_kernel::sqlite_snapshot::artifact::RowIndex;
- use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
- control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
- let document=single_float_row(database,"semio_object_document")?;identity(document,12)?;if document.rowid!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio object document identifier"))}
- let mut references=RowIndex::new(database,"semio_object_reference",5,float_columns("semio_object_reference"),control,"duplicate Semio object reference identity")?;
- for(count,&index)in references.indices().iter().enumerate(){let row=references.row(index)?;for column in 1..5{row.text(column)?;}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count+1,references.len())?;}
- let transform=SemioTransform{translation:SemioPoint3{x:document.real(2)?,y:document.real(3)?,z:document.real(4)?},rotation:SemioQuaternion{x:document.real(5)?,y:document.real(6)?,z:document.real(7)?,w:document.real(8)?},scale:SemioPoint3{x:document.real(9)?,y:document.real(10)?,z:document.real(11)?}};
- let mut snapshot=Owned::new(Self{schema:String::new(),transform,brep:None,mesh:None,properties:None});
- snapshot.get_mut().brep=child::<SemioBrepSnapshot>(database,"semio_object_brep_child","brep",&mut references,control)?;
- snapshot.get_mut().mesh=child::<SemioMeshSnapshot>(database,"semio_object_mesh_child","mesh",&mut references,control)?;
- snapshot.get_mut().properties=child::<SemioValueSnapshot>(database,"semio_object_value_child","value",&mut references,control)?;
- if references.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unowned Semio object reference"))}
- snapshot.get_mut().schema=reconstruct_text(control,document.text(1)?)?;snapshot.get_mut().validate().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;Ok(snapshot.take())
-}
+    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 
 fn float_columns(table:&str)->&'static [FloatColumn]{match table{"semio_object_document"=>&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11)],_=>&[]}}
@@ -97,3 +75,5 @@ pub(crate) mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
 pub(crate) mod native_decoding;
+
+#[path="💰️reconstruction/🦀️.rs"]pub(crate) mod reconstruction;

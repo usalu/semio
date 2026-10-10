@@ -184,7 +184,7 @@ struct RetainedClonePreparation<P: RetainedClone, M: RetireOwned + Sync, E: Reta
     pending_mutation_authority: Option<SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>>,
     mutation_owner: Option<Arc<M>>,
     edit: Option<Arc<E>>,
-    source: Option<RetainedCloneSource<P>>,
+    source: Option<RetainedCloneSource<P,SnapshotRead<P>>>,
     clone_cursor: Option<P::Cursor>,
     clone_handoff: Option<RetainedCloneCursorHandoff<P>>,
     copied: Option<P>,
@@ -338,8 +338,9 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         let clone_grant = RetainedCloneGrant { maximum_items: 1, ..grant.retained_grant() };
         match self.phase {
             RetainedClonePreparationPhase::Source => {
-                let bytes=RetainedCloneSource::<P>::constructor_capacity_bytes::<SnapshotRead<P>>();
+                let bytes=RetainedCloneSource::<P>::borrowed_constructor_capacity_bytes::<SnapshotRead<P>>();
                 if (RetainedCloneBirthDemand{capacity_bytes:bytes,depth:1}).admit(clone_grant).is_err(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                if clone_grant.maximum_copy_bytes<RetainedCloneSource::<P>::borrowed_constructor_copy_bytes::<SnapshotRead<P>>(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let base=self.pending_base.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its original captured base").with_retained_progress(self.ownership))?;
                 match base.admit_retained_clone_source(clone_grant){
                     Ok((source,progress))=>{self.source=Some(source);self.record_progress(progress)?;self.phase=RetainedClonePreparationPhase::MutationSource;},
@@ -350,6 +351,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             RetainedClonePreparationPhase::MutationSource => {
                 let demand=RetainedCloneSource::<M>::owned_constructor_demand::<SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>>();
                 if demand.admit(clone_grant).is_err(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                if clone_grant.maximum_copy_bytes<RetainedCloneSource::<M>::constructor_copy_bytes(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let mutation=self.pending_mutation.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its original owned mutation").with_retained_progress(self.ownership))?;
                 let authority=self.pending_mutation_authority.take().unwrap_or_else(||SharedControlledRetirement::lease(Arc::clone(self.authority.as_ref().expect("retained original mutation publication authority"))));
                 match RetainedCloneSource::admit_owned(mutation,authority,clone_grant){

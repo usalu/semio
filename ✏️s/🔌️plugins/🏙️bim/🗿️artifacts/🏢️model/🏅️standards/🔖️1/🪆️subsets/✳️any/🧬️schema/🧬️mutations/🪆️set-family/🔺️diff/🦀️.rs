@@ -23,5 +23,10 @@ pub fn diff(payload: &SetFamily, base: &ModelSnapshot) -> MutationOutcome<ModelD
             return MutationOutcome::refuse(OutcomeCode::TargetReferenced, format!("Family \"{}\" is still the profile of {noun} and must stay a profile.", payload.id), [payload.id.clone()]);
         }
     }
+    if record.category != FamilyCategory::Profile && next.category == FamilyCategory::Profile {
+        if let Some(noun) = family_rules::component_user(base, &payload.id) {
+            return MutationOutcome::refuse(OutcomeCode::TargetReferenced, format!("Family \"{}\" is still placed by {noun} and cannot become a profile.", payload.id), [payload.id.clone()]);
+        }
+    }
     MutationOutcome::new(ModelDiff::families(payload.id.clone(), Entry::Patched(change)))
 }

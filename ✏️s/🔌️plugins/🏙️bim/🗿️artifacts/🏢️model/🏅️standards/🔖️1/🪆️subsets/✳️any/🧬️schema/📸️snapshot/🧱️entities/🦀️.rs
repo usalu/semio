@@ -3,7 +3,7 @@
 use super::values::*;
 
 /// 🏷️ A property set template: the property set `name` that elements (and types) of the listed kinds are expected to carry, with the definition of each of its properties. Library data: it owns no entries and no element is changed by it; the effective properties of an element are inferred.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct PropertyTemplate {
     /// The name of the property set the template defines; unique among the templates.
     pub name: String,
@@ -14,7 +14,7 @@ pub struct PropertyTemplate {
 }
 
 /// 🗂️ A classification system of the project library (for example Uniclass 2015, DIN 276 or OmniClass): its name and edition and the authored table of its entries. Library data: it owns no entries of elements.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ClassificationSystem {
     /// The name of the system.
     pub name: String,
@@ -26,8 +26,29 @@ pub struct ClassificationSystem {
     #[dsl(table)] #[value(default)] pub entries: Vec<ClassificationItem>,
 }
 
+/// 🌡️ The thermal conditions of one space, keyed by the id of the space: occupancy type and density, heating and cooling set points, outdoor air flow, lighting and equipment power density and the reference of the schedule profile that drives them. Every field is optional; the envelope, the areas and the U-values are inferred.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct SpaceConditions {
+    /// The occupancy type of the space (for example Office, Residential or Classroom); absent leaves it unstated.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub occupancy: Option<String>,
+    /// Persons per square metre of floor area; absent takes the occupancy density of the zone of the space.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub occupancy_density: Option<f64>,
+    /// Heating set point in degrees Celsius; absent means the space is not heated (an unheated neighbour of a heated space is a thermal boundary).
+    #[value(default, skip_serializing_if = "Option::is_none")] pub heating_setpoint: Option<f64>,
+    /// Cooling set point in degrees Celsius; absent means the space is not cooled.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub cooling_setpoint: Option<f64>,
+    /// Outdoor air flow in litres per second per square metre of floor area.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub ventilation_rate: Option<f64>,
+    /// Installed lighting power in watts per square metre of floor area.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub lighting_power_density: Option<f64>,
+    /// Installed equipment (plug load) power in watts per square metre of floor area.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub equipment_power_density: Option<f64>,
+    /// The name of the schedule profile that drives occupancy, lighting and equipment (for example Office 08-18); the energy model resolves it.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub schedule: Option<String>,
+}
+
 /// 📏️ A dimension: the distances between consecutive anchors measured along `angle`, drawn `offset` metres beside the first anchor. Its values and text are inferred from the current geometry of the anchors, never stored; an optional lock names the value it must keep.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Dimension {
     /// The storey plan the dimension is drawn on.
     pub storey: String,
@@ -44,7 +65,7 @@ pub struct Dimension {
 }
 
 /// 🏷️ A tag: text read from an element of the model, placed `offset` metres from the reference point of the element so it follows the element.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Tag {
     pub storey: String,
     pub element: String,
@@ -55,7 +76,7 @@ pub struct Tag {
 }
 
 /// 🗒️ A free text on a storey plan.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct TextNote {
     pub storey: String,
     #[dsl(block)] pub position: Point2,
@@ -66,7 +87,7 @@ pub struct TextNote {
 }
 
 /// ↗️ A leader: a text joined by a line to an anchor; the text sits `offset` metres from the anchor point so it follows the anchored element.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Leader {
     pub storey: String,
     #[dsl(statements, block)] pub anchor: AnnotationAnchor,
@@ -77,7 +98,7 @@ pub struct Leader {
 }
 
 /// 🎨️ A style shared by dimensions, tags, notes and leaders: text height, line end mark, printed unit and precision.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct AnnotationStyle {
     pub name: String,
     /// Height of the text in metres of model space.
@@ -95,14 +116,14 @@ pub struct AnnotationStyle {
 }
 
 /// 🧩 A parametric family: a named, categorised set of parameters and solids. Its parameter values, solids and profile outline are inferred, never stored.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Family {
     pub name: String,
     pub category: FamilyCategory,
 }
 
 /// 🔢 One parameter of a family: its kind and the formula (canonical text of the expression language) that gives its value. Keyed by `family.name`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct FamilyParameter {
     /// The family the parameter belongs to.
     pub family: String,
@@ -114,7 +135,7 @@ pub struct FamilyParameter {
 }
 
 /// 🧊 One solid of a family: its shape, the material and the visibility as formulas, and an offset of the solid in the family frame.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct FamilySolid {
     pub family: String,
     pub name: String,
@@ -127,8 +148,124 @@ pub struct FamilySolid {
     #[dsl(block)] pub offset: ExprPoint3,
 }
 
+/// 🪑️ A placed instance of a family: furniture, equipment, casework, a fixture or a terminal. Its solids are the evaluated solids of the family under the per-instance overrides; they are inferred, never stored.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Component {
+    /// The storey the component stands on; its elevation is measured from the elevation of this storey.
+    pub storey: String,
+    /// The family the component is an instance of; its category must not be a profile.
+    pub family: String,
+    /// Plan position of the family origin in metres. With a host wall the component clings to the face of the wall on the side of this point, at the projection of this point onto the wall.
+    #[dsl(block)] pub position: Point2,
+    /// Height in metres of the family origin above the elevation of the storey (negative below).
+    pub elevation: f64,
+    /// Counter-clockwise turn in radians about the vertical axis through the origin, added to the orientation the host wall gives.
+    pub rotation: f64,
+    /// Whether the family is mirrored left to right (the local x axis is flipped) before it is turned.
+    pub mirrored: bool,
+    /// The wall the component is mounted on (a basin, a socket, a wall light); absent for a free-standing instance.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub host: Option<String>,
+    /// The service the connector of the family carries: set for a terminal (a diffuser, a tap, a luminaire), absent otherwise.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub system: Option<MepSystem>,
+    pub name: String,
+}
+
+/// 🎚️ One per-instance override of a family parameter: the formula (canonical text of the expression language) that replaces the formula of the parameter `name` for the component. Keyed by `component.name`.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct ComponentOverride {
+    /// The component the override belongs to.
+    pub component: String,
+    /// The name of the family parameter whose formula the override replaces.
+    pub name: String,
+    /// The replacing formula, in the canonical text of the expression language; it may use every parameter of the family.
+    pub value: String,
+}
+
+/// 🌀️ A routed MEP element: a duct, pipe or cable tray of a system along a polyline in space, its section given by the shape. Its solid, plan symbol, length and clashes are inferred.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct MepElement {
+    pub storey: String,
+    /// The service the element carries; it decides the colour in the plan and in 3D and the group in the quantities.
+    pub system: MepSystem,
+    /// Cross-section across the centre line in metres: duct width and height, pipe diameter, tray width and height.
+    #[dsl(statements, block)] pub shape: MepShape,
+    /// Centre line of the element from its start to its end: vertices in metres, the height above the elevation of the storey in z.
+    #[dsl(table)] #[value(default)] pub path: Vec<Point3>,
+    pub name: String,
+}
+
+/// 💥️ A clash set: the elements of side A are tested against the elements of side B. Two elements clash hard when their solids interpenetrate by more than the tolerance and softly when they stay closer than the clearance; touching or sharing a face is no clash. The clashes are inferred, grouped and never stored.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct ClashSet {
+    /// The name of the clash set as listed in the clash panel.
+    pub name: String,
+    /// Side A: the elements tested against side B.
+    #[dsl(block)] pub a: ElementSelector,
+    /// Side B: the elements side A is tested against. When both sides select the same element it is not tested against itself and a pair is reported once.
+    #[dsl(block)] pub b: ElementSelector,
+    /// Penetration in metres below which an overlap is not reported as a hard clash (zero reports every interpenetration).
+    pub tolerance: f64,
+    /// Distance in metres below which two elements that do not touch are reported as a soft clash (zero reports hard clashes only).
+    pub clearance: f64,
+}
+
+/// ⚖️ A rule: one numeric code check with a limit, a severity and a scope. Its findings (the elements that break the limit, with the measured value) are inferred and never stored.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Rule {
+    /// The name of the rule as listed in the rules panel.
+    pub name: String,
+    /// Which measure the rule checks and in which direction (minimum or maximum).
+    pub kind: RuleKind,
+    /// The limit: metres for heights, depths and widths, a ratio of rise to run for the ramp slope, square metres for the compartment area.
+    pub limit: f64,
+    /// How serious a violation is.
+    pub severity: RuleSeverity,
+    /// Where the rule applies.
+    #[dsl(block)] pub scope: RuleScope,
+}
+
+/// 🚩️ An issue (a BCF topic): what is wrong, who raised it and who has to fix it, the elements it concerns, the clash it was raised from and the viewpoint that shows it. Comments are records of their own.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Issue {
+    /// The headline of the issue.
+    pub title: String,
+    /// What is wrong, in full.
+    pub description: String,
+    /// Where the issue stands.
+    pub status: IssueStatus,
+    /// How urgent the issue is.
+    pub priority: IssuePriority,
+    /// Who has to fix the issue; empty is unassigned.
+    pub assignee: String,
+    /// Who raised the issue.
+    pub author: String,
+    /// When the issue was raised, as year-month-day or year-month-dayThour:minute:second with an optional Z or offset.
+    pub created: String,
+    /// Free labels of the issue (for example Clash or MEP).
+    #[value(default)] pub labels: Vec<String>,
+    /// Ids of the elements the issue concerns. An element that is deleted later stays named here as history.
+    #[value(default)] pub elements: Vec<String>,
+    /// Optional: the clash the issue was raised from.
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub clash: Option<ClashRef>,
+    /// Optional: the viewpoint that shows the issue.
+    #[dsl(block)] #[value(default, skip_serializing_if = "Option::is_none")] pub viewpoint: Option<IssueViewpoint>,
+}
+
+/// 💬️ One comment of an issue: who wrote it, when and what.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct IssueComment {
+    /// The issue the comment belongs to.
+    pub issue: String,
+    /// Who wrote the comment.
+    pub author: String,
+    /// When the comment was written, as year-month-day or year-month-dayThour:minute:second with an optional Z or offset.
+    pub date: String,
+    /// The comment.
+    pub text: String,
+}
+
 /// 📄️ A sheet of the drawing set: number, name, paper and the authored fields of its title block. Its frame, title block and revision table are inferred, and so are the drawings its viewports show.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Sheet {
     /// The sheet number as printed on the drawing, unique within the project (for example A-101).
     pub number: String,
@@ -138,7 +275,7 @@ pub struct Sheet {
     #[dsl(statements, block)] pub paper: Paper,
     /// Landscape puts the long side of the paper along the width, portrait along the height.
     pub orientation: Orientation,
-    /// The project line of the title block; empty prints the name of the project.
+    /// The project line of the title block; empty prints none.
     pub project: String,
     /// Who drew the sheet, as printed in the title block.
     pub drawn_by: String,
@@ -148,12 +285,12 @@ pub struct Sheet {
     pub date: String,
     /// The current revision mark, as printed in the title block; empty prints the mark of the last row of the revision table.
     pub revision: String,
-    /// The scale line of the title block (for example 1:100 or As indicated); empty prints the common scale of the viewports, or As indicated when they differ.
+    /// The scale line of the title block (for example 1:100 or As indicated); empty prints the distinct scales of the viewports, comma-joined.
     pub scale_label: String,
 }
 
 /// 🖼️ A viewport: one authored view placed on one sheet at a drawing scale. The drawing is the inferred linework of the view, scaled to the viewport and clipped to its window.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Viewport {
     /// The sheet the viewport stands on.
     pub sheet: String,
@@ -170,7 +307,7 @@ pub struct Viewport {
 }
 
 /// 🧾️ One row of the revision table of a sheet: the revision mark, its date, what changed and who changed it.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct SheetRevision {
     /// The sheet whose revision table holds the row.
     pub sheet: String,
@@ -185,7 +322,7 @@ pub struct SheetRevision {
 }
 
 /// 🧷️ A wall sweep: a profile run along one face of a wall (a baseboard, a cornice, a drip rail). It follows its host by inference: along the join-trimmed face, interrupted by the openings that reach its height, and clipped where the top of the wall is attached. Its solid, length and areas are inferred, never stored.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WallSweep {
     /// The wall the sweep runs along.
     pub host: String,
@@ -203,7 +340,7 @@ pub struct WallSweep {
 }
 
 /// 🧱️ A material of the project library.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Material {
     pub name: String,
     pub category: MaterialCategory,
@@ -214,35 +351,35 @@ pub struct Material {
 }
 
 /// 🧱️ Layered wall build-up.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WallType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
 
 /// 🧱️ Layered slab build-up.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct SlabType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
 
 /// 🧱️ Layered ceiling build-up: the first layer is topmost, the last one is the visible underside.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CeilingType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
 
 /// 🧱️ Layered roof build-up.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct RoofType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
 
 /// 🏛️ Column profile and material.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ColumnType {
     pub name: String,
     #[dsl(statements, block)] pub profile: Profile,
@@ -250,7 +387,7 @@ pub struct ColumnType {
 }
 
 /// 🏛️ Beam profile and material.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct BeamType {
     pub name: String,
     #[dsl(statements, block)] pub profile: Profile,
@@ -258,7 +395,7 @@ pub struct BeamType {
 }
 
 /// 🪟️ Window family parameters.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WindowType {
     pub name: String,
     pub width: f64,
@@ -268,10 +405,16 @@ pub struct WindowType {
     pub frame_depth: f64,
     pub panes: u32,
     pub material: String,
+    /// Thermal transmittance of the whole window (glazing and frame) in watts per square metre and kelvin; absent means the window has no thermal data.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub u_value: Option<f64>,
+    /// Total solar energy transmittance of the glazing, from 0 to 1; absent means the window has no solar data.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub g_value: Option<f64>,
+    /// Share of the window opening covered by the frame, from 0 to 1; the glazed share is one minus it; absent counts the whole opening as glazing.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub frame_fraction: Option<f64>,
 }
 
 /// 🚪️ Door family parameters.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct DoorType {
     pub name: String,
     pub width: f64,
@@ -281,10 +424,12 @@ pub struct DoorType {
     pub leaves: DoorLeaves,
     pub swing: Swing,
     pub material: String,
+    /// Thermal transmittance of the door leaf in watts per square metre and kelvin; absent means the door has no thermal data.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub u_value: Option<f64>,
 }
 
 /// 🌍️ A site: geographic anchor and boundary.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Site {
     pub name: String,
     pub latitude: f64,
@@ -295,7 +440,7 @@ pub struct Site {
 }
 
 /// 🏢️ A building on a site.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Building {
     pub site: String,
     pub name: String,
@@ -305,7 +450,7 @@ pub struct Building {
 }
 
 /// 🪜️ A storey: authored level index, height and optional plan cut height; its elevation is inferred.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Storey {
     pub building: String,
     pub name: String,
@@ -316,7 +461,7 @@ pub struct Storey {
 }
 
 /// 📏️ A labelled grid line of a building.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct GridLine {
     pub building: String,
     pub label: String,
@@ -325,7 +470,7 @@ pub struct GridLine {
 }
 
 /// 🧱️ A wall: axis, type, location line and base/top constraints; never its height.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Wall {
     pub storey: String,
     pub wall_type: String,
@@ -344,7 +489,7 @@ pub struct Wall {
 }
 
 /// 🏬️ A curtain wall type: the grid rules of both directions, the mullion sections of the interior grid lines and of the border, the default panel of every cell, the glass material and the mullion material.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CurtainWallType {
     pub name: String,
     /// Grid rule along the wall: equal cells of about the spacing, or explicit lines in metres from the start of the axis.
@@ -361,10 +506,16 @@ pub struct CurtainWallType {
     pub panel_material: String,
     /// Material of every mullion.
     pub mullion_material: String,
+    /// Thermal transmittance of the whole curtain wall (glass panels and mullions) in watts per square metre and kelvin; absent means the curtain wall has no thermal data.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub u_value: Option<f64>,
+    /// Total solar energy transmittance of the glass panels, from 0 to 1; absent means the curtain wall has no solar data.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub g_value: Option<f64>,
+    /// Share of the curtain wall area covered by the mullions, from 0 to 1; the glazed share is one minus it; absent counts the whole area as glazing.
+    #[value(default, skip_serializing_if = "Option::is_none")] pub frame_fraction: Option<f64>,
 }
 
 /// 🎯️ The panel of one cell of a curtain wall that differs from the default panel of its type; the cell is named by its indices along the wall and up it, at most one override per cell.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CurtainPanelOverride {
     /// The curtain wall whose cell is overridden.
     pub curtain: String,
@@ -377,7 +528,7 @@ pub struct CurtainPanelOverride {
 }
 
 /// 🪟️ A curtain wall: axis, base and top constraints, the type that carries its grid rules, mullions and panels, and optional grid rules of its own.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CurtainWall {
     pub storey: String,
     /// The curtain wall type that carries the grid rules, mullion sections, default panel and materials.
@@ -394,7 +545,7 @@ pub struct CurtainWall {
 }
 
 /// 🏛️ A column placed on a storey, plumb or leaning.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Column {
     pub storey: String,
     pub column_type: String,
@@ -409,7 +560,7 @@ pub struct Column {
 }
 
 /// ➖️ A beam along a line or an arc, level or inclined: its top lies `top_offset` metres above (positive) or below (negative) the storey top at the start and `end_top_offset` at the end; zero is flush with the storey top.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Beam {
     pub storey: String,
     pub beam_type: String,
@@ -424,7 +575,7 @@ pub struct Beam {
 }
 
 /// ⬜️ A slab: boundary loop, holes, offset and optional slope.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Slab {
     pub storey: String,
     pub slab_type: String,
@@ -437,7 +588,7 @@ pub struct Slab {
 }
 
 /// 🔲️ A ceiling: boundary loop, holes, drop below the storey top and optional slope; the layers of its type hang downward.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Ceiling {
     pub storey: String,
     pub ceiling_type: String,
@@ -451,7 +602,7 @@ pub struct Ceiling {
 }
 
 /// 🏠️ A roof: footprint loop and shape.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Roof {
     pub storey: String,
     pub roof_type: String,
@@ -464,7 +615,7 @@ pub struct Roof {
 }
 
 /// 🪟️ A window, door or void hosted by a wall or curtain wall; `sill_override` replaces the sill of its type (zero for doors and voids).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Opening {
     pub host: String,
     #[dsl(statements, block)] pub kind: OpeningKind,
@@ -483,7 +634,7 @@ pub struct Opening {
 }
 
 /// 🪜️ A stair run: placement, flight, limits and construction (stringer, nosing, tread thickness, risers, landing depth).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Stair {
     pub storey: String,
     #[dsl(block)] pub start: Point2,
@@ -508,7 +659,7 @@ pub struct Stair {
 }
 
 /// 🛤️ A railing along a path: heights, rail and post sections, optional balusters and an infill.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Railing {
     pub storey: String,
     #[dsl(table)] #[value(default)] pub path: Vec<Point2>,
@@ -531,7 +682,7 @@ pub struct Railing {
 }
 
 /// 🛝️ A ramp: a sloped slab of constant thickness and width along a centre-line path whose rise is resolved by its top constraint; the slope, the landings and the compliance are inferred.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Ramp {
     pub storey: String,
     /// Centre line of the ramp from its foot to its head: vertices with the bulge of the segment to the next one; the ramp climbs along it.
@@ -561,7 +712,7 @@ pub struct Ramp {
 }
 
 /// 🏠️ A room: its zone and the materials that finish its floor, walls and ceiling are authored references.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Space {
     pub storey: String,
     pub number: String,
@@ -580,7 +731,7 @@ pub struct Space {
 }
 
 /// 🏘️ A zone: a named group of spaces of any storey that share a purpose and an occupancy density.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Zone {
     pub name: String,
     /// What the zone groups the spaces for (for example a fire compartment, a ventilation or a tenant zone).
@@ -590,7 +741,7 @@ pub struct Zone {
 }
 
 /// 🗃️ An area scheme (gross, net or rentable area): the authored rule that decides which spaces it adds up, by usage and by zone.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct AreaScheme {
     pub name: String,
     pub measure: AreaMeasure,
@@ -601,7 +752,7 @@ pub struct AreaScheme {
 }
 
 /// 🖼️ An authored view of a building: a plan of a storey, a section or elevation through a vertical plane, or a camera; with its cut height, view depth, crop, hidden categories, phase filter, scale and detail level. The linework it draws is inferred.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct View {
     /// The building the view belongs to; a plan view's storey is one of its storeys.
     pub building: String,
@@ -629,7 +780,7 @@ pub struct View {
 }
 
 /// 📋️ A user-defined schedule: the authored definition (category, columns, sort, filter, grouping, scope) of a table whose rows and totals are inferred from the quantity take-off and the authored fields; no row is stored.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Schedule {
     pub name: String,
     pub category: ScheduleCategory,
@@ -647,5 +798,33 @@ pub struct Schedule {
     #[value(default)] pub storeys: Vec<String>,
     /// Phases the schedule covers; empty covers every phase. An element that carries no phase of its own counts as new, an opening takes the phase of its host.
     #[value(default)] pub phases: Vec<Phase>,
+}
+
+
+/// 🧭️ Authored OptionGroup record.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct OptionGroup {
+    pub name: String,
+}
+
+/// 🧭️ Authored DesignOption record.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct DesignOption {
+    pub group: String,
+    pub name: String,
+    pub primary: bool,
+}
+
+/// 🧭️ Authored Workset record.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct Workset {
+    pub name: String,
+    pub default_visible: bool,
+}
+
+/// 🧭️ Authored ElementMembership record.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct ElementMembership {
+    pub target: String,
 }
 

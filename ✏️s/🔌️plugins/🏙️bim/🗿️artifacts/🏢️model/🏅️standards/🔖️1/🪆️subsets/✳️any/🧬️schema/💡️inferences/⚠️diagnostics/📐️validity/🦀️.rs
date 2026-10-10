@@ -3,7 +3,7 @@
 
 use super::{Diagnostic, DiagnosticCode, Inputs};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::MAX_TILT;
+use crate::standards::v1::subsets::any::schema::authored::plan::MAX_TILT;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, extents_of, seg};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;

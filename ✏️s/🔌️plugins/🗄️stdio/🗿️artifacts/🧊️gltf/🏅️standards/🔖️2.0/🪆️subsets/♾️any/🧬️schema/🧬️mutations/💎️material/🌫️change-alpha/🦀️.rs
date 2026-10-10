@@ -12,7 +12,7 @@ pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/alphaMode"];
 pub fn touched_paths(payload: &GltfChangeMaterialAlphaModePayload) -> Vec<String> {
     vec![format!("document/materials/{}/alphaMode", payload.material)]
 }
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialAlphaModeRejection {
     pub code: String,
@@ -23,7 +23,7 @@ pub struct GltfChangeMaterialAlphaModeRejection {
 fn failure(value: GltfMaterialAnimationFailure) -> GltfChangeMaterialAlphaModeRejection {
     GltfChangeMaterialAlphaModeRejection { code: value.code.into(), path: value.path, detail: value.detail.into() }
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialAlphaModePayload {
     pub material: usize,
@@ -57,7 +57,7 @@ pub fn inverse(p: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> V
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeMaterialAlphaModeMutation {

@@ -8,7 +8,7 @@ pub mod document;
 pub use document::*;
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.svg")]
 pub struct SvgSnapshot {
@@ -67,7 +67,7 @@ impl SvgSnapshot {
 
 //#region 🔖️Geometry
 /// 📐️ Parsed `viewBox="min-x min-y width height"`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ViewBox {
     pub min_x: f64,
@@ -89,7 +89,7 @@ pub struct ViewBox {
 
 //#region 🔖️Transform
 /// ✖️ 2D affine matrix `[a c e; b d f; 0 0 1]`, matching SVG's `matrix(a,b,c,d,e,f)` layout.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Matrix2D {
     pub a: f64,
@@ -123,7 +123,7 @@ impl Matrix2D {
 /// 📜 One entry of a `transform="..."` list. Kept as a typed op list (rather than collapsed
 /// eagerly into a single matrix) so the original function-call structure round-trips; compose via
 /// `transform_ops_to_matrix` whenever a single resolved affine matrix is needed.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "op", rename_all = "camelCase")]
 pub enum TransformOp {
     Matrix {
@@ -199,7 +199,7 @@ pub fn transform_ops_to_matrix(ops: &[TransformOp]) -> Matrix2D {
 /// (relative-to-current-point) form from the upper-case (absolute) form -- both are kept typed
 /// rather than pre-resolved to absolute coordinates, since resolving requires walking the whole
 /// path with a running current-point/start-point state that belongs to a renderer, not the parser.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "cmd", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PathCommand {
     MoveTo { x: f64, y: f64, relative: bool },
@@ -226,7 +226,7 @@ pub enum PathCommand {
 /// CSS cascade precedence over presentation attributes). `extra_style` losslessly retains any
 /// `style=""` declaration this artifact doesn't specifically model, so a `style` attribute never
 /// silently loses content it didn't recognize.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PresentationAttrs {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -264,7 +264,7 @@ pub struct PresentationAttrs {
 /// presentation-attribute subset, and an `extra_attrs` escape hatch for anything else on the
 /// element this artifact doesn't specifically model (namespaced attrs, `xmlns`, custom `data-*`,
 /// unrecognized presentation properties, ...) -- kept verbatim so nothing is ever silently dropped.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CommonAttrs {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -347,7 +347,7 @@ impl CommonAttrs {
 /// 🌳 Typed SVG 1.1 element tree. Elements outside this typed set (and any element this session
 /// chose not to model in depth) fall into `Unknown` -- name/attrs/children kept byte-for-byte, so
 /// parsing never drops or corrupts content outside the typed surface.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SvgElement {
     Svg {

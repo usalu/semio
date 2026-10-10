@@ -1,0 +1,8 @@
+# Value Path Codec Verification
+
+The original Draw export native build exposed ten missing enc_semio_path_bin/dec_semio_path_bin callers. Shared protocol, exact binary frames, malformed child fixtures, and Rust/TypeScript tests were authored before implementation.
+
+The first canonical semio-source value-path source owner exited 1 before assertions: frozen Bun dependency synchronization refused duplicate @semio-tech/flow-core workspace manifests. The actual Flow ownership fixture lists the old generated package-root bindings manifest as a predecessor. The frozen lock and canonical publisher own the core-level bindings package. The obsolete manifest was untracked and carried no current exports; only that duplicate manifest was removed after validating both package identities. No generated bindings or current package source was deleted, and no dependency install bypass was used.
+
+The source test needs the already declared protobufjs/minimal independent varint/UTF-8 oracle. The codec implementation and current native acceptance remain pending.
+The canonical lock-only owner exited 0 and saved the current 1841-package lock. The following frozen dependency sync completed and exposed the expected missing-production-module red (0 pass, 1 failure). After implementation the same canonical source owner exited 0: one test, 20 exact assertions, plus strict TypeScript verification. Exact native/TypeScript bytes for all four shared cases match the independent protobuf writer; eight malformed child frames are refused. The native codec is mounted in the original Semio mutation module, with shared Rust unit coverage authored but not yet executed. Its API remains an embedded frame codec, not a claim of controlled whole-decoder ownership.

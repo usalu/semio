@@ -26,6 +26,10 @@ path = "../../🧪️tests/📐️first-party-geometry/🦀️.rs"
 name = "aec_geometry_oracles"
 path = "../../🧪️tests/🏙️aec-oracles/🦀️.rs"
 
+[[test]]
+name = "collision_oracles"
+path = "../../🧪️tests/💥️collision-oracles/🦀️.rs"
+
 [dependencies]
 
 [dev-dependencies]

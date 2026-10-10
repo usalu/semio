@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "r-1": {
+      "entry": "Created",
+      "kind": "MaxRiser",
+      "limit": 0.19,
+      "name": "Maximum riser",
+      "scope": {
+        "filter": "",
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "severity": "Error"
+    }
+  }
+}

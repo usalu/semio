@@ -36,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: crate::editor::bim::utilities::initial(),
         id: WINDOW_KIND_ID.into(),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.window_plan.as_str(), BimLabels::NATIVE_DE.window_plan.as_str()),
+        label: BimLabels::localized(|labels| labels.window_plan),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "layout-panel-top".into(),
@@ -134,7 +134,15 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &Bim
 #[allow(clippy::too_many_arguments)]
 pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimPlanWindowConfig, selection: &[String], hover: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let view = active_view(snapshot, config);
-    let plan = view.as_ref().and_then(|view| inference.view_linework.get(view)).map(|drawing| &drawing.lines);
+    let filtered = view.as_ref().and_then(|view| inference.view_linework.get(view)).map(|drawing| {
+        let mut lines = drawing.lines.clone();
+        let visible = |id: &String| inference.option_scope.includes(id, &config.selected_options, &config.workset_visibility);
+        lines.regions.retain(|region| visible(&region.element));
+        lines.polylines.retain(|line| visible(&line.element));
+        lines.texts.retain(|text| visible(&text.element));
+        lines
+    });
+    let plan = filtered.as_ref();
     let mut records = plan.map_or_else(|| vec![meta_record(utility)], |plan| records(plan, selection, hover, utility));
     if view.is_none() {
         records.push(text_record("empty", (0.0, 0.0), labels.empty_plan.as_str(), crate::render::plan::TEXT_SIZE * 2.0, [0.22, 0.24, 0.28, 1.0]));

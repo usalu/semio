@@ -422,6 +422,15 @@ impl<T, const N: usize> PagedList<T, N> {
         Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list page authority is missing" })
     }
 
+    /// 🎟️ Reserves one original metadata or payload page only with independent structural funding.
+    pub fn reserve_one_funded(&mut self, grant:crate::retained_clone::RetainedCloneGrant) -> Result<crate::retained_clone::RetainedCloneProgress,PagedListAllocationError> {
+        if self.has_reserved_slot() { return Ok(Default::default()); }
+        let copy=self.next_reserve_copy_byte_demand().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
+        let capacity=self.next_allocation_bytes().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
+        if grant.maximum_items==0||grant.maximum_depth==0||copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes { return Ok(Default::default()); }
+        let progress=self.reserve_one(grant.maximum_capacity_bytes)?;
+        Ok(crate::retained_clone::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
+    }
     /// 📏️ Admits the actual remaining final payload extent without reserving a full unused page.
     pub fn next_exact_capacity_allocation_bytes(&self, limit: usize) -> Result<Option<usize>, PagedListError> {
         if limit > N || limit < self.length {

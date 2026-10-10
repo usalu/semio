@@ -1,1 +1,19 @@
-{}
+{
+  "views": {
+    "v-orbit": {
+      "camera": {
+        "value": {
+          "azimuth": 1.2,
+          "distance": 25.0,
+          "pitch": 0.5,
+          "target": {
+            "x": 4.0,
+            "y": 3.0
+          },
+          "target_height": 1.5
+        }
+      },
+      "entry": "Patched"
+    }
+  }
+}

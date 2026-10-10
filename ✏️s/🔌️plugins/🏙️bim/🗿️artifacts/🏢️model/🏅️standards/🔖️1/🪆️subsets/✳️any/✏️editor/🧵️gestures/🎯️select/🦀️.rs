@@ -39,6 +39,7 @@ enum Mode {
     Marquee { start: P, current: P, merge: &'static str },
     Handle { wall: String, kind: HandleKind, current: P },
     Vertex { id: String, roof: bool, index: usize, current: P },
+    Route { id: String, index: usize, current: P },
     Sliding { id: String, from: (String, f64), current: P, reach: f64 },
     Height { storey: String, value: f64 },
 }
@@ -70,11 +71,28 @@ pub fn outline_handles(snapshot: &ModelSnapshot, selected: &[String]) -> Option<
     snapshot.slabs.get(only).map(|slab| (only.clone(), false, corners(&slab.boundary))).or_else(|| snapshot.roofs.get(only).map(|roof| (only.clone(), true, corners(&roof.footprint))))
 }
 
-/// 🔧️ The marks of the live handles in a plan: a handle dot on both ends and on the midpoint of the one selected wall, and on every corner of the one selected slab or roof.
+/// 🔧️ The plan points of the vertices of the one selected MEP element: the handles the author drags to reroute it (the elevation of a vertex stays).
+pub fn route_handles(snapshot: &ModelSnapshot, selected: &[String]) -> Option<(String, Vec<P>)> {
+    let [only] = selected else { return None };
+    snapshot.mep_elements.get(only).map(|element| (only.clone(), element.path.iter().map(|vertex| [vertex.x, vertex.y]).collect()))
+}
+
+/// 🔷️ The mutation that moves vertex `index` of the MEP element `id` to the plan point `to` at its own elevation; none when the vertex does not exist, does not move or would leave two neighbours on one point.
+fn dragged_route(snapshot: &ModelSnapshot, id: &str, index: usize, to: P) -> Option<ModelMutation> {
+    let element = snapshot.mep_elements.get(id)?;
+    let vertex = element.path.get(index)?;
+    let mut path = element.path.clone();
+    path[index] = crate::Point3 { x: to[0], y: to[1], z: vertex.z };
+    let apart = |a: &crate::Point3, b: &crate::Point3| (b.x - a.x).hypot(b.y - a.y).hypot(b.z - a.z) > 1e-6;
+    (path != element.path && path.windows(2).all(|pair| apart(&pair[0], &pair[1]))).then(|| ModelMutation::SetMepElement(crate::mutations::set_mep_element::SetMepElement { id: id.into(), storey: None, system: None, shape: None, path: Some(path), name: None }))
+}
+
+/// 🔧️ The marks of the live handles in a plan: a handle dot on both ends and on the midpoint of the one selected wall, on every corner of the one selected slab or roof and on every vertex of the one selected MEP element.
 pub fn plan_marks(snapshot: &ModelSnapshot, selected: &[String]) -> Vec<Mark> {
     let wall = wall_handles(snapshot, selected).map(|(_, handles)| handles.to_vec()).unwrap_or_default();
     let outline = outline_handles(snapshot, selected).map(|(_, _, corners)| corners).unwrap_or_default();
-    wall.into_iter().chain(outline).map(|at| Mark::dot(at, Style::Handle)).collect()
+    let route = route_handles(snapshot, selected).map(|(_, vertices)| vertices).unwrap_or_default();
+    wall.into_iter().chain(outline).chain(route).map(|at| Mark::dot(at, Style::Handle)).collect()
 }
 
 /// 🔧️ The marks of the storey top handles in a section: a guide along the top of every storey with a handle dot at its left end.
@@ -185,6 +203,12 @@ impl Select {
                 return Step::default();
             }
         }
+        if let Some((id, vertices)) = route_handles(ctx.snapshot, ctx.selected) {
+            if let Some(index) = corner_at(&vertices, pointer.at, reach * 1.5) {
+                self.mode = Mode::Route { id, index, current: vertices[index] };
+                return Step::default();
+            }
+        }
         let hit = linework(ctx).and_then(|linework| plan::pick(linework, (pointer.at[0], pointer.at[1]), reach));
         let merge = pointer.modifiers.merge();
         match hit.and_then(|id| target_of(ctx, &id)) {
@@ -235,6 +259,10 @@ impl Select {
                 let to = ctx.snapped(pointer, None, std::slice::from_ref(&id), &[]).point;
                 dragged_outline(ctx.snapshot, &id, roof, index, to).map_or_else(Step::default, |mutation| Step::write(ctx, mutation))
             }
+            Mode::Route { id, index, .. } => {
+                let to = ctx.snapped(pointer, None, &[], &[]).point;
+                dragged_route(ctx.snapshot, &id, index, to).map_or_else(Step::default, |mutation| Step::write(ctx, mutation))
+            }
             Mode::Sliding { id, from, .. } => match self.slide(ctx, &id, &from, pointer.at, reach) {
                 Some((_, _, mutation, true)) => Step::write(ctx, mutation),
                 Some((_, _, _, false)) | None => Step::default(),
@@ -266,6 +294,7 @@ impl Tool for Select {
                         *current = if *kind == HandleKind::Curve { pointer.at } else { ctx.snapped(pointer, anchor, std::slice::from_ref(wall), &[]).point };
                     }
                     Mode::Vertex { id, current, .. } => *current = ctx.snapped(pointer, None, std::slice::from_ref(id), &[]).point,
+                    Mode::Route { current, .. } => *current = ctx.snapped(pointer, None, &[], &[]).point,
                     Mode::Height { value, .. } => *value = pointer.at[1],
                     Mode::Idle => {}
                 }
@@ -301,6 +330,13 @@ impl Tool for Select {
                     let mut ring = corners;
                     ring[*index] = *current;
                     marks.push(Mark::path(&ring, true, Style::Ghost));
+                    marks.push(Mark::dot(*current, Style::Handle));
+                }
+            }
+            Mode::Route { id, index, current } => {
+                if let Some((_, mut vertices)) = route_handles(ctx.snapshot, std::slice::from_ref(id)).filter(|(_, vertices)| *index < vertices.len()) {
+                    vertices[*index] = *current;
+                    marks.push(Mark::path(&vertices, false, Style::Ghost));
                     marks.push(Mark::dot(*current, Style::Handle));
                 }
             }

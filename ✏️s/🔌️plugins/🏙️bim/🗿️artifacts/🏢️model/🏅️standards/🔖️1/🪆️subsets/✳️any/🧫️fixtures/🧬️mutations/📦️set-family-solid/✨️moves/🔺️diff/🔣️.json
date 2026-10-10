@@ -1,1 +1,12 @@
-{}
+{
+  "family_solids": {
+    "s-top": {
+      "entry": "Patched",
+      "offset": {
+        "x": "0.1 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    }
+  }
+}

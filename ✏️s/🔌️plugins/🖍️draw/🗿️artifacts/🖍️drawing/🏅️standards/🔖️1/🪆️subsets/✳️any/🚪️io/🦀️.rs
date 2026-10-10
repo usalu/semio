@@ -201,3 +201,6 @@ pub mod image;
 
 #[path="🧵️write/🦀️.rs"]
 pub mod byte_writer;
+
+#[path="📤️export/📦️owned/🦀️.rs"]
+pub mod owned_export;

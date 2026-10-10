@@ -1,0 +1,6 @@
+{
+  "mutation": "setRule",
+  "id": "r-1",
+  "kind": "MaxRiser",
+  "severity": "Error"
+}

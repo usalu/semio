@@ -1,9 +1,11 @@
 //! 🏗️ Slabs, columns, beams, spaces and grids of an IFC file: the swept `Body` gives the outline or profile and the extent, the placement the position, rotation and level.
 
 use super::reader::{opt_text, text, Doc, Loop, Section};
-use super::spatial::phase_of;
+use super::data::label;
+use super::spatial::{authoring_of, phase_of};
+use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use super::Import;
-use crate::{Beam, BeamType, Column, ColumnType, GridLine, Layer, LayerFunction, Point2, Profile, Slab, SlabType, Space, SpaceBoundary, TopConstraint, Vertex};
+use crate::{Axis, Beam, BeamType, Column, ColumnType, GridLine, Layer, LayerFunction, Point2, Profile, Slab, SlabType, Space, SpaceBoundary, TopConstraint, Vertex};
 use semio_s_artifact_stdio_ifc::part21::Part21Value;
 
 fn vertices(ring: &Loop, to_building: &impl Fn([f64; 2]) -> Point2) -> Vec<Vertex> {
@@ -46,6 +48,13 @@ fn slab(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
         return;
     }
     let label_text = text(args, 2);
+    let recorded = label(&authoring_of(&i.doc, ifc), "Slab").and_then(|record| from_json_str::<Slab>(&record, JsonMemberPolicy::Reject).ok());
+    if let (Some(slab), Some(storey)) = (recorded, i.storey_of(ifc)) {
+        let id = Doc::identity(args, "IFCSLAB").unwrap_or_else(|| format!("sl-{ifc}"));
+        i.model.slabs.insert(id.clone(), Slab { storey, ..slab });
+        i.ids.insert(ifc, id);
+        return;
+    }
     let (Some(storey), Some(body)) = (i.storey_of(ifc), i.doc.body(args)) else {
         i.skip("IFCSLAB", &label_text, "it is not in a storey or has no swept body");
         return;
@@ -74,6 +83,13 @@ fn slab(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
 
 fn column(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let label_text = text(args, 2);
+    let recorded = label(&authoring_of(&i.doc, ifc), "Column").and_then(|record| from_json_str::<Column>(&record, JsonMemberPolicy::Reject).ok());
+    if let (Some(column), Some(storey)) = (recorded, i.storey_of(ifc)) {
+        let id = Doc::identity(args, "IFCCOLUMN").unwrap_or_else(|| format!("c-{ifc}"));
+        i.model.columns.insert(id.clone(), Column { storey, ..column });
+        i.ids.insert(ifc, id);
+        return;
+    }
     let (Some(storey), Some(body)) = (i.storey_of(ifc), i.doc.body(args)) else {
         i.skip("IFCCOLUMN", &label_text, "it is not in a storey or has no swept body");
         return;
@@ -102,12 +118,19 @@ fn column(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     };
     let base_z = to_building.point(body.position.origin)[2];
     let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
-    i.model.columns.insert(id.clone(), Column { storey, column_type, position: Point2 { x: to_building.origin[0], y: to_building.origin[1] }, rotation: to_building.heading(), base_offset: base_z - elevation, top: TopConstraint::Unconnected { height: body.depth * body.direction[2].abs() }, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
+    i.model.columns.insert(id.clone(), Column { storey, column_type, position: Point2 { x: to_building.origin[0], y: to_building.origin[1] }, rotation: to_building.heading(), tilt: None, base_offset: base_z - elevation, top: TopConstraint::Unconnected { height: body.depth * body.direction[2].abs() }, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
     i.ids.insert(ifc, id);
 }
 
 fn beam(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let label_text = text(args, 2);
+    let recorded = label(&authoring_of(&i.doc, ifc), "Beam").and_then(|record| from_json_str::<Beam>(&record, JsonMemberPolicy::Reject).ok());
+    if let (Some(beam), Some(storey)) = (recorded, i.storey_of(ifc)) {
+        let id = Doc::identity(args, "IFCBEAM").unwrap_or_else(|| format!("b-{ifc}"));
+        i.model.beams.insert(id.clone(), Beam { storey, ..beam });
+        i.ids.insert(ifc, id);
+        return;
+    }
     let (Some(storey), Some(body)) = (i.storey_of(ifc), i.doc.body(args)) else {
         i.skip("IFCBEAM", &label_text, "it is not in a storey or has no swept body");
         return;
@@ -139,7 +162,7 @@ fn beam(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let end = Point2 { x: start.x + direction[0] * body.depth, y: start.y + direction[1] * body.depth };
     let top = to_building.point(body.position.origin)[2] + profile_top(&body.section);
     let storey_top = i.levels.get(&storey).map_or(0.0, |level| level.top_elevation);
-    i.model.beams.insert(id.clone(), Beam { storey, beam_type, start, end, top_offset: top - storey_top, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
+    i.model.beams.insert(id.clone(), Beam { storey, beam_type, axis: Axis::Line { start, end }, top_offset: top - storey_top, end_top_offset: None, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
     i.ids.insert(ifc, id);
 }
 
@@ -149,21 +172,28 @@ fn space(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
         i.skip("IFCSPACE", &label_text, "it is not aggregated under a storey");
         return;
     };
-    let Some(body) = i.doc.body(args) else {
-        i.skip("IFCSPACE", &label_text, "it has no swept body, so its outline is unknown");
-        return;
-    };
-    let Section::Outline { outer, .. } = &body.section else {
-        i.skip("IFCSPACE", &label_text, "its profile is not an outline");
-        return;
-    };
     let id = Doc::identity(args, "IFCSPACE").unwrap_or_else(|| format!("sp-{ifc}"));
-    let to_building = i.in_building(&args[5], &storey);
-    let map = |point: [f64; 2]| {
-        let world = to_building.point(body.position.point([point[0], point[1], 0.0]));
-        Point2 { x: world[0], y: world[1] }
+    let recorded = label(&authoring_of(&i.doc, ifc), "Boundary").and_then(|record| from_json_str::<SpaceBoundary>(&record, JsonMemberPolicy::Reject).ok());
+    let boundary = match recorded {
+        Some(boundary) => boundary,
+        None => {
+            let Some(body) = i.doc.body(args) else {
+                i.skip("IFCSPACE", &label_text, "it has no swept body, so its outline is unknown");
+                return;
+            };
+            let Section::Outline { outer, .. } = &body.section else {
+                i.skip("IFCSPACE", &label_text, "its profile is not an outline");
+                return;
+            };
+            let to_building = i.in_building(&args[5], &storey);
+            let map = |point: [f64; 2]| {
+                let world = to_building.point(body.position.point([point[0], point[1], 0.0]));
+                Point2 { x: world[0], y: world[1] }
+            };
+            SpaceBoundary::Explicit { outline: vertices(outer, &map) }
+        }
     };
-    i.model.spaces.insert(id.clone(), Space { storey, number: text(args, 2), name: label_text, boundary: SpaceBoundary::Explicit { outline: vertices(outer, &map) }, usage: text(args, 3), phase: phase_of(&i.doc, ifc), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
+    i.model.spaces.insert(id.clone(), Space { storey, number: text(args, 2), name: label_text, boundary, usage: text(args, 3), phase: phase_of(&i.doc, ifc), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
     i.ids.insert(ifc, id);
 }
 
@@ -183,7 +213,7 @@ fn grid(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
         }
     }
     let ids = opt_text(args, 4).map(|list| list.split(',').map(str::to_string).collect::<Vec<_>>()).unwrap_or_default();
-    for (index, axis) in axes.into_iter().enumerate() {
+    for (index, axis) in axes.into_iter().enumerate().filter(|(index, _)| ids.is_empty() || *index < ids.len()) {
         let Some(row) = i.doc.args(axis, "IFCGRIDAXIS") else { continue };
         let Some(edge) = i.doc.edge(&row[1]) else { continue };
         let map = |point: [f64; 2]| {

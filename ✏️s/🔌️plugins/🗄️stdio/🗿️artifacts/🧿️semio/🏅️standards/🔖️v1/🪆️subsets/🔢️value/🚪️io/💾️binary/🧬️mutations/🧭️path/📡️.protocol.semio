@@ -1,0 +1,13 @@
+dialect protocol
+protocol semio.value.path
+version 1
+schema stdio.semio.value.path
+start body
+framing record
+
+field count varint
+record key tag=0
+field length varint
+field utf8 bytes
+record index tag=1
+field index varint

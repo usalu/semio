@@ -3,7 +3,11 @@
  * 🥒️ Writes the language-agnostic mutation case `🧪️tests/🏙️mutate-model-1-any/{🥒️.feature,🦀️.rs}` from the leaf specs: one `mutate` and one
  * `inverse` scenario row per leaf, named after the first applied case of the leaf. Reads the leaf directories and their committed fixtures, so Wave M re-runs it after adding leaves.
  */
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync as writeRaw } from "node:fs";
+const writeFileSync = (path: string, data: string) => {
+  rmSync(path, { force: true });
+  writeRaw(path, data);
+};
 import { join } from "node:path";
 import { em, fixtures as fixturesRoot, JSONF, mutations, RS, subset } from "./r3-f1-paths.ts";
 

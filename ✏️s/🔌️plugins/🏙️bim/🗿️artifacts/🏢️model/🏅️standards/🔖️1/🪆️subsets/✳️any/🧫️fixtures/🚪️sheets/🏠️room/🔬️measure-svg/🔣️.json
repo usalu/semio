@@ -1,0 +1,160 @@
+{
+  "sh-plans": {
+    "paper": "A3",
+    "size": [
+      420.0,
+      297.0
+    ],
+    "viewports": {
+      "vp-detail": {
+        "scale": 25,
+        "window": [
+          240.0,
+          30.0,
+          160.0,
+          120.0
+        ]
+      },
+      "vp-plan": {
+        "scale": 100,
+        "window": [
+          30.0,
+          30.0,
+          80.0,
+          60.0
+        ]
+      },
+      "vp-south": {
+        "scale": 50,
+        "window": [
+          30.0,
+          110.0,
+          200.0,
+          60.0
+        ]
+      }
+    },
+    "title_texts": [
+      "1:25, 1:50, 1:100",
+      "2026-10-09",
+      "A-101",
+      "AB",
+      "B",
+      "Checked by",
+      "Date",
+      "Drawn by",
+      "Plan and elevation",
+      "Project",
+      "Revision",
+      "Room",
+      "Scale",
+      "Sheet no.",
+      "Title",
+      "UG"
+    ],
+    "revision_texts": [
+      "2026-10-01",
+      "2026-10-05",
+      "A",
+      "AB",
+      "B",
+      "By",
+      "Date",
+      "Description",
+      "Issued for permit",
+      "Mark",
+      "Section added",
+      "UG"
+    ]
+  },
+  "sh-notes": {
+    "paper": "A4",
+    "size": [
+      210.0,
+      297.0
+    ],
+    "viewports": {
+      "vp-camera": {
+        "scale": 100,
+        "window": [
+          30.0,
+          30.0,
+          10.0,
+          10.0
+        ]
+      },
+      "vp-outside": {
+        "scale": 50,
+        "window": [
+          150.0,
+          200.0,
+          160.0,
+          120.0
+        ]
+      }
+    },
+    "title_texts": [
+      "2026-10-09",
+      "A-901",
+      "AB",
+      "As indicated",
+      "Checked by",
+      "Date",
+      "Drawn by",
+      "Notes",
+      "Project",
+      "Revision",
+      "Room",
+      "Scale",
+      "Sheet no.",
+      "Title",
+      "UG"
+    ],
+    "revision_texts": []
+  },
+  "sh-custom": {
+    "paper": "500 × 350",
+    "size": [
+      500.0,
+      350.0
+    ],
+    "viewports": {
+      "vp-custom": {
+        "scale": 100,
+        "window": [
+          30.0,
+          30.0,
+          100.0,
+          30.0
+        ]
+      },
+      "vp-custom-b": {
+        "scale": 100,
+        "window": [
+          100.0,
+          40.0,
+          20.0,
+          20.0
+        ]
+      }
+    },
+    "title_texts": [
+      "1:100",
+      "2026-10-09",
+      "A-902",
+      "AB",
+      "Checked by",
+      "Custom",
+      "Date",
+      "Drawn by",
+      "Project",
+      "Revision",
+      "Room",
+      "Scale",
+      "Sheet no.",
+      "Title",
+      "UG"
+    ],
+    "revision_texts": []
+  }
+}

@@ -11,6 +11,12 @@ use std::sync::Arc;
 pub fn apply(inference: &mut ModelInference, value: ModelValue) {
     let ModelValue { node, data } = value;
     match (node, data) {
+        (ModelNode::OptionScope, Data::OptionScope(scope)) => inference.option_scope = Arc::unwrap_or_clone(scope),
+        (ModelNode::StructuralAnalysis, Data::Structure(value)) => {
+            let analysis = Arc::unwrap_or_clone(value);
+            inference.analytical_members = analysis.members.clone();
+            inference.structural_analysis = analysis;
+        }
         (ModelNode::Storey(id), Data::Level(level)) => {
             inference.storey_levels.insert(id, level);
         }
@@ -18,7 +24,7 @@ pub fn apply(inference: &mut ModelInference, value: ModelValue) {
             inference.wall_layout.insert(id, Arc::unwrap_or_clone(layout));
         }
         (ModelNode::CurtainLayout(id), Data::Curtain(layout)) => {
-            inference.curtain_layout.insert(id, layout);
+            inference.curtain_layout.insert(id, Arc::unwrap_or_clone(layout));
         }
         (ModelNode::OpeningFrame(id), Data::Frame(frame)) => {
             inference.opening_frames.insert(id, Arc::unwrap_or_clone(frame));
@@ -67,11 +73,29 @@ pub fn apply(inference: &mut ModelInference, value: ModelValue) {
         (ModelNode::Zone(id), Data::Zone(totals)) => {
             inference.zone_totals.insert(id, Arc::unwrap_or_clone(totals));
         }
+        (ModelNode::Envelope(id), Data::Envelope(envelope)) => {
+            inference.energy_envelopes.insert(id, Arc::unwrap_or_clone(envelope));
+        }
+        (ModelNode::EnergyTotals(scope), Data::EnergyTotals(totals)) => {
+            inference.energy_totals.insert(scope.key(), Arc::unwrap_or_clone(totals));
+        }
         (ModelNode::Scheme(id), Data::Scheme(totals)) => {
             inference.scheme_totals.insert(id, Arc::unwrap_or_clone(totals));
         }
+        (ModelNode::ClashSet(id), Data::Clashes(found)) => {
+            inference.clash_sets.insert(id, Arc::unwrap_or_clone(found));
+        }
+        (ModelNode::Rule(id), Data::Rule(found)) => {
+            inference.rule_results.insert(id, Arc::unwrap_or_clone(found));
+        }
         (ModelNode::Family(id), Data::Family(family)) => {
             inference.families.insert(id, Arc::unwrap_or_clone(family));
+        }
+        (ModelNode::Component(id), Data::Component(entry)) => {
+            inference.components.insert(id, Arc::unwrap_or_clone(entry).value);
+        }
+        (ModelNode::Mep(id), Data::Mep(value)) => {
+            inference.mep.insert(id, Arc::unwrap_or_clone(value));
         }
         (ModelNode::PhaseVisibility(storey), Data::Phases(visibility)) => {
             inference.phase_visibility.insert(storey, Arc::unwrap_or_clone(visibility));
@@ -104,6 +128,7 @@ pub fn apply(inference: &mut ModelInference, value: ModelValue) {
 /// 🪞️ Removes the entry of a node that left the graph (or whose value is about to be replaced by a different set of entries).
 pub fn retract(inference: &mut ModelInference, value: &ModelValue) {
     match (&value.node, &value.data) {
+        (ModelNode::StructuralAnalysis, _) => { inference.analytical_members.clear(); inference.structural_analysis = Default::default(); }
         (ModelNode::Storey(id), _) => {
             inference.storey_levels.remove(id);
         }
@@ -152,11 +177,29 @@ pub fn retract(inference: &mut ModelInference, value: &ModelValue) {
         (ModelNode::Zone(id), _) => {
             inference.zone_totals.remove(id);
         }
+        (ModelNode::Envelope(id), _) => {
+            inference.energy_envelopes.remove(id);
+        }
+        (ModelNode::EnergyTotals(scope), _) => {
+            inference.energy_totals.remove(&scope.key());
+        }
         (ModelNode::Scheme(id), _) => {
             inference.scheme_totals.remove(id);
         }
+        (ModelNode::ClashSet(id), _) => {
+            inference.clash_sets.remove(id);
+        }
+        (ModelNode::Rule(id), _) => {
+            inference.rule_results.remove(id);
+        }
         (ModelNode::Family(id), _) => {
             inference.families.remove(id);
+        }
+        (ModelNode::Component(id), _) => {
+            inference.components.remove(id);
+        }
+        (ModelNode::Mep(id), _) => {
+            inference.mep.remove(id);
         }
         (ModelNode::PhaseVisibility(storey), _) => {
             inference.phase_visibility.remove(storey);

@@ -16,6 +16,13 @@ use semio_framework_dsl_record::{FieldSpec,FieldValue,RecordLayout,RecordSpec,Re
 use crate::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackLimits};
 use std::collections::{HashMap, HashSet};
 
+#[path = "🎟️storage/🦀️.rs"]
+mod original_storage;
+
+#[cfg(test)]
+#[path = "🎟️storage/🧪️tests/🦀️.rs"]
+mod original_storage_tests;
+
 #[path = "🛫️encode/🦀️.rs"]
 mod controlled_encoding;
 pub use controlled_encoding::{ProjectedSymbolScratch,SourceTextLocator,SourceTextKind};

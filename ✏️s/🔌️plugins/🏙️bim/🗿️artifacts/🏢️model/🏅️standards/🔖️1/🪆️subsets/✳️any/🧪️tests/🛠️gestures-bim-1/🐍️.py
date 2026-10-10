@@ -128,9 +128,48 @@ def cursor_point(start, steps):
     return [float(round(value, 9)) + 0.0 for value in point]
 
 
+def component_fit(axis, thickness, point):
+    """🪑️ Where a component mounted on the wall `axis` of `thickness` stands for the plan point `point`: GEOS projects the point onto the axis, numpy puts the origin on the face of the side the point lies on
+    (the left face for a point on the axis) and gives the unit vector of the local depth axis, which points away from the wall along the outward normal."""
+    line = LineString([axis["start"], axis["end"]])
+    spot = Point(point)
+    foot = numpy.array(line.interpolate(line.project(spot)).coords[0])
+    tangent = numpy.array(axis["end"], dtype=float) - numpy.array(axis["start"], dtype=float)
+    tangent = tangent / numpy.linalg.norm(tangent)
+    left = numpy.array([-tangent[1], tangent[0]])
+    offset = numpy.array(point, dtype=float) - foot
+    side = float(numpy.sign(tangent[0] * offset[1] - tangent[1] * offset[0])) or 1.0
+    depth = left * side
+    origin = foot + depth * thickness / 2
+    return [float(round(value, 9)) + 0.0 for value in origin], [float(round(value, 9)) + 0.0 for value in depth]
+
+
+def component_frame(origin, yaw_degrees, mirrored, local):
+    """🧭️ The plan points of family-frame points: numpy mirrors local x, turns by the yaw with a rotation matrix and adds the origin."""
+    radians = numpy.radians(yaw_degrees)
+    rotation_matrix = numpy.array([[numpy.cos(radians), -numpy.sin(radians)], [numpy.sin(radians), numpy.cos(radians)]])
+    mirror = numpy.diag([-1.0 if mirrored else 1.0, 1.0])
+    return [[float(round(value, 9)) + 0.0 for value in rotation_matrix @ mirror @ numpy.array(p, dtype=float) + numpy.array(origin, dtype=float)] for p in local]
+
+
+def route_length(points):
+    """🌀️ The length of a polyline in space: numpy sums the norms of its segments."""
+    array = numpy.array(points, dtype=float)
+    return float(round(numpy.linalg.norm(numpy.diff(array, axis=0), axis=1).sum(), 9))
+
+
+def turned(steps):
+    """🔄️ The rotation in degrees in [0, 360) after a run of turn keys (degrees counter-clockwise, negative clockwise)."""
+    return float(round(numpy.mod(numpy.sum(numpy.array(steps, dtype=float)), 360.0), 9)) + 0.0
+
+
 def expectations(cases):
     """🧮️ The committed cases with every expectation recomputed."""
     out = dict(cases)
+    out["component_fits"] = [{**c, **dict(zip(("origin", "depth"), component_fit(c["axis"], c["thickness"], c["point"])))} for c in cases["component_fits"]]
+    out["component_frames"] = [{**c, "world": component_frame(c["origin"], c["yaw"], c["mirrored"], c["local"])} for c in cases["component_frames"]]
+    out["routes"] = [{**c, "length": route_length(c["points"])} for c in cases["routes"]]
+    out["turns"] = [{**c, "degrees": turned(c["steps"])} for c in cases["turns"]]
     out["arcs"] = [{**c, "bulge": bulge_through(c["start"], c["through"], c["end"])} for c in cases["arcs"]]
     out["projections"] = [
         {**c, **dict(zip(("offset", "distance", "side"), projection(c["axis"], c["point"])))} for c in cases["projections"]

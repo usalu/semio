@@ -5,6 +5,9 @@ import "../🛰️.proto";
 // 🧬️ BIM model snapshot schema — authored parameters only.
 
 message ModelSnapshot {
+  map<string,artifact.StructuralSupport> supports = 25000;
+  map<string,artifact.LoadCase> load_cases = 25001;
+  map<string,artifact.StructuralLoad> loads = 25002;
   string schema = 1;
   Project project = 2;
   map<string, artifact.Material> materials = 3;
@@ -36,23 +39,31 @@ message ModelSnapshot {
   map<string, artifact.Ceiling> ceilings = 29;
   map<string, artifact.Zone> zones = 30;
   map<string, artifact.AreaScheme> area_schemes = 31;
-  map<string, artifact.View> views = 32;
-  map<string, artifact.Sheet> sheets = 33;
-  map<string, artifact.Viewport> viewports = 34;
-  map<string, artifact.SheetRevision> sheet_revisions = 35;
-  map<string, artifact.Dimension> dimensions = 36;
-  map<string, artifact.Tag> tags = 37;
-  map<string, artifact.TextNote> text_notes = 38;
-  map<string, artifact.Leader> leaders = 39;
-  map<string, artifact.AnnotationStyle> annotation_styles = 40;
-  map<string, artifact.Family> families = 41;
-  map<string, artifact.FamilyParameter> family_parameters = 42;
-  map<string, artifact.FamilySolid> family_solids = 43;
-  map<string, artifact.WallSweep> wall_sweeps = 44;
-  map<string, artifact.Schedule> schedules = 45;
-  map<string, artifact.PropertyTemplate> property_templates = 46;
-  map<string, artifact.ClassificationSystem> classification_systems = 47;
-  map<string, artifact.PropertySetRows> properties = 48;
-  map<string, artifact.ClassificationSetRows> classifications = 49;
+  map<string, artifact.SpaceConditions> space_conditions = 32;
+  map<string, artifact.View> views = 33;
+  map<string, artifact.Sheet> sheets = 34;
+  map<string, artifact.Viewport> viewports = 35;
+  map<string, artifact.SheetRevision> sheet_revisions = 36;
+  map<string, artifact.Dimension> dimensions = 37;
+  map<string, artifact.Tag> tags = 38;
+  map<string, artifact.TextNote> text_notes = 39;
+  map<string, artifact.Leader> leaders = 40;
+  map<string, artifact.AnnotationStyle> annotation_styles = 41;
+  map<string, artifact.Family> families = 42;
+  map<string, artifact.FamilyParameter> family_parameters = 43;
+  map<string, artifact.FamilySolid> family_solids = 44;
+  map<string, artifact.Component> components = 45;
+  map<string, artifact.ComponentOverride> component_overrides = 46;
+  map<string, artifact.MepElement> mep_elements = 47;
+  map<string, artifact.ClashSet> clash_sets = 48;
+  map<string, artifact.Rule> rules = 49;
+  map<string, artifact.Issue> issues = 50;
+  map<string, artifact.IssueComment> issue_comments = 51;
+  map<string, artifact.WallSweep> wall_sweeps = 52;
+  map<string, artifact.Schedule> schedules = 53;
+  map<string, artifact.PropertyTemplate> property_templates = 54;
+  map<string, artifact.ClassificationSystem> classification_systems = 55;
+  map<string, artifact.PropertySetRows> properties = 56;
+  map<string, artifact.ClassificationSetRows> classifications = 57;
 }
 

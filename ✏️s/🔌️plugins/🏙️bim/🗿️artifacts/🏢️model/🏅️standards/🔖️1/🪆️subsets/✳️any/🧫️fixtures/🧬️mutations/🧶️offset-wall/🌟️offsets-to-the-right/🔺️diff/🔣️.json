@@ -1,1 +1,30 @@
-{}
+{
+  "walls": {
+    "w-offset": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 9.5,
+            "y": 6.0
+          },
+          "start": {
+            "x": 9.5,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

@@ -1,1 +1,15 @@
-{}
+{
+  "curtain_panel_overrides": {
+    "ov-1": {
+      "curtain": "cw-1",
+      "entry": "Created",
+      "panel": {
+        "Solid": {
+          "material": "m-wood"
+        }
+      },
+      "u": 0,
+      "v": 0
+    }
+  }
+}

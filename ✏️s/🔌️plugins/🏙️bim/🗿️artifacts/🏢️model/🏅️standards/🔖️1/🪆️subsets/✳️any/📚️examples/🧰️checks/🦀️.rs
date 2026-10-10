@@ -112,7 +112,7 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
             })*
         };
     }
-    on_storey!(walls, curtain_walls, columns, beams, slabs, ceilings, roofs, stairs, ramps, railings, spaces);
+    on_storey!(walls, curtain_walls, columns, beams, slabs, ceilings, roofs, stairs, ramps, railings, spaces, components, mep_elements);
     for (id, building) in &model.buildings {
         need(format!("buildings/{id}/site"), model.sites.contains_key(&building.site));
     }
@@ -136,11 +136,32 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
     for (id, wall) in &model.walls {
         need(format!("walls/{id}/wall_type"), model.wall_types.contains_key(&wall.wall_type));
         need(format!("walls/{id}/top"), top_storey(&wall.top).is_none_or(|storey| model.storeys.contains_key(storey)));
+        for target in crate::standards::v1::subsets::any::schema::authored::references::targets_of(wall) {
+            need(format!("walls/{id}/attach/{target}"), model.roofs.contains_key(target) || model.slabs.contains_key(target) || model.ceilings.contains_key(target));
+        }
+    }
+    for (id, sweep) in &model.wall_sweeps {
+        need(format!("wall_sweeps/{id}/host"), model.walls.contains_key(&sweep.host));
+        need(format!("wall_sweeps/{id}/material"), model.materials.contains_key(&sweep.material));
     }
     for (id, curtain) in &model.curtain_walls {
         need(format!("curtain_walls/{id}/top"), top_storey(&curtain.top).is_none_or(|storey| model.storeys.contains_key(storey)));
-        need(format!("curtain_walls/{id}/panel_material"), model.materials.contains_key(&curtain.panel_material));
-        need(format!("curtain_walls/{id}/mullion_material"), model.materials.contains_key(&curtain.mullion_material));
+        need(format!("curtain_walls/{id}/curtain_wall_type"), model.curtain_wall_types.contains_key(&curtain.curtain_wall_type));
+    }
+    let panel_ok = |panel: &crate::CurtainPanel| match panel {
+        crate::CurtainPanel::Glass | crate::CurtainPanel::Empty => true,
+        crate::CurtainPanel::Solid { material } => model.materials.contains_key(material),
+        crate::CurtainPanel::Door { door_type } => model.door_types.contains_key(door_type),
+        crate::CurtainPanel::Window { window_type } => model.window_types.contains_key(window_type),
+    };
+    for (id, kind) in &model.curtain_wall_types {
+        need(format!("curtain_wall_types/{id}/panel_material"), model.materials.contains_key(&kind.panel_material));
+        need(format!("curtain_wall_types/{id}/mullion_material"), model.materials.contains_key(&kind.mullion_material));
+        need(format!("curtain_wall_types/{id}/panel"), panel_ok(&kind.panel));
+    }
+    for (id, row) in &model.curtain_panel_overrides {
+        need(format!("curtain_panel_overrides/{id}/curtain"), model.curtain_walls.contains_key(&row.curtain));
+        need(format!("curtain_panel_overrides/{id}/panel"), panel_ok(&row.panel));
     }
     for (id, column) in &model.columns {
         need(format!("columns/{id}/column_type"), model.column_types.contains_key(&column.column_type));
@@ -171,6 +192,7 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
     }
     for (id, opening) in &model.openings {
         need(format!("openings/{id}/host"), model.walls.contains_key(&opening.host) || model.curtain_walls.contains_key(&opening.host));
+        need(format!("openings/{id}/reveal_material"), opening.reveal_material.as_ref().is_none_or(|material| model.materials.contains_key(material)));
         match &opening.kind {
             OpeningKind::Window { window_type } => need(format!("openings/{id}/window_type"), model.window_types.contains_key(window_type)),
             OpeningKind::Door { door_type } => need(format!("openings/{id}/door_type"), model.door_types.contains_key(door_type)),
@@ -196,16 +218,47 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
     }
     of_material!(column_types, beam_types, window_types, door_types);
     let owned = |id: &String| {
-        model.walls.contains_key(id) || model.curtain_walls.contains_key(id) || model.columns.contains_key(id) || model.beams.contains_key(id) || model.slabs.contains_key(id) || model.ceilings.contains_key(id) || model.roofs.contains_key(id) || model.openings.contains_key(id) || model.stairs.contains_key(id) || model.ramps.contains_key(id) || model.railings.contains_key(id) || model.spaces.contains_key(id) || model.zones.contains_key(id) || model.area_schemes.contains_key(id) || model.views.contains_key(id)
+        model.walls.contains_key(id) || model.curtain_walls.contains_key(id) || model.columns.contains_key(id) || model.beams.contains_key(id) || model.slabs.contains_key(id) || model.ceilings.contains_key(id) || model.roofs.contains_key(id) || model.wall_sweeps.contains_key(id) || model.openings.contains_key(id) || model.stairs.contains_key(id) || model.ramps.contains_key(id) || model.railings.contains_key(id) || model.spaces.contains_key(id) || model.components.contains_key(id) || model.mep_elements.contains_key(id) || model.zones.contains_key(id) || model.area_schemes.contains_key(id) || model.views.contains_key(id)
     };
+    let holder = |id: &String| owned(id) || model.wall_types.contains_key(id) || model.slab_types.contains_key(id) || model.ceiling_types.contains_key(id) || model.roof_types.contains_key(id) || model.column_types.contains_key(id) || model.beam_types.contains_key(id) || model.curtain_wall_types.contains_key(id) || model.window_types.contains_key(id) || model.door_types.contains_key(id);
     for id in model.properties.keys() {
-        need(format!("properties/{id}"), owned(id));
+        need(format!("properties/{id}"), holder(id));
     }
-    for id in model.classifications.keys() {
-        need(format!("classifications/{id}"), owned(id));
+    for (id, classified) in &model.classifications {
+        need(format!("classifications/{id}"), holder(id));
+        for (system, code) in classified {
+            need(format!("classifications/{id}/{system}"), model.classification_systems.get(system).is_some_and(|table| table.entry(code).is_some()));
+        }
+    }
+    for (id, system) in &model.classification_systems {
+        need(format!("classification_systems/{id}/entries"), crate::entries_problem(&system.entries).is_none());
+    }
+    for (id, template) in &model.property_templates {
+        need(format!("property_templates/{id}/definition"), crate::template_problem(&template.name, &template.applies_to, &template.properties).is_none());
     }
     for (id, view) in &model.views {
         need(format!("views/{id}/definition"), crate::view_problem(model, id, view).is_none());
+    }
+    for (id, row) in &model.sheets {
+        need(format!("sheets/{id}/definition"), crate::sheet_problem(model, id, row).is_none());
+    }
+    for (id, row) in &model.viewports {
+        need(format!("viewports/{id}/definition"), crate::viewport_problem(model, id, row).is_none());
+    }
+    for (id, row) in &model.sheet_revisions {
+        need(format!("sheet_revisions/{id}/definition"), crate::revision_problem(model, id, row).is_none());
+    }
+    for (id, row) in &model.clash_sets {
+        need(format!("clash_sets/{id}/definition"), crate::clash_set_problem(model, id, row).is_none());
+    }
+    for (id, row) in &model.rules {
+        need(format!("rules/{id}/definition"), crate::rule_problem(model, id, row).is_none());
+    }
+    for (id, row) in &model.issues {
+        need(format!("issues/{id}/definition"), crate::issue_problem(model, id, row).is_none());
+    }
+    for (id, row) in &model.issue_comments {
+        need(format!("issue_comments/{id}/definition"), crate::comment_problem(model, id, row).is_none());
     }
     let present = |id: &str| owned(&id.to_string()) || model.grids.contains_key(id);
     for (id, row) in &model.dimensions {
@@ -226,6 +279,36 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
         need(format!("leaders/{id}/storey"), model.storeys.contains_key(&row.storey));
         need(format!("leaders/{id}/style"), model.annotation_styles.contains_key(&row.style));
         need(format!("leaders/{id}/anchor"), row.element().is_none_or(present));
+    }
+    for (key, row) in &model.family_parameters {
+        need(format!("family_parameters/{key}/family"), model.families.contains_key(&row.family));
+        need(format!("family_parameters/{key}/key"), key == &crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, &row.name));
+        need(format!("family_parameters/{key}/value"), crate::standards::v1::subsets::any::schema::authored::formula::references(&row.value).iter().all(|name| model.family_parameters.contains_key(&crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, name))));
+    }
+    for (id, row) in &model.family_solids {
+        need(format!("family_solids/{id}/family"), model.families.contains_key(&row.family));
+        need(format!("family_solids/{id}/formulas"), crate::standards::v1::subsets::any::schema::authored::formula::solid_slots(row).iter().all(|(_, text)| crate::standards::v1::subsets::any::schema::authored::formula::references(text).iter().all(|name| model.family_parameters.contains_key(&crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, name)))));
+    }
+    for (id, row) in &model.components {
+        need(format!("components/{id}/family"), model.families.get(&row.family).is_some_and(|family| family.category != crate::FamilyCategory::Profile));
+        need(format!("components/{id}/host"), row.host.as_ref().is_none_or(|wall| model.walls.get(wall).is_some_and(|host| host.storey == row.storey)));
+    }
+    for (key, row) in &model.component_overrides {
+        let family = model.components.get(&row.component).map(|component| component.family.as_str());
+        need(format!("component_overrides/{key}/component"), family.is_some());
+        need(format!("component_overrides/{key}/key"), key == &crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.component, &row.name));
+        need(format!("component_overrides/{key}/parameter"), family.is_some_and(|family| model.family_parameters.contains_key(&crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(family, &row.name))));
+        need(format!("component_overrides/{key}/value"), crate::standards::v1::subsets::any::schema::authored::formula::is_canonical(&row.value));
+    }
+    for (id, row) in &model.mep_elements {
+        need(format!("mep_elements/{id}/path"), row.path.len() >= 2 && row.path.windows(2).all(|pair| (pair[0].x - pair[1].x).hypot(pair[0].y - pair[1].y).hypot(pair[0].z - pair[1].z) > 1e-9));
+    }
+    let profile_ok = |profile: &crate::Profile| crate::standards::v1::subsets::any::schema::inferences::families::family_of_profile(profile).is_none_or(|family| model.families.get(family).is_some_and(|row| row.category == crate::FamilyCategory::Profile));
+    for (id, kind) in &model.column_types {
+        need(format!("column_types/{id}/profile"), profile_ok(&kind.profile));
+    }
+    for (id, kind) in &model.beam_types {
+        need(format!("beam_types/{id}/profile"), profile_ok(&kind.profile));
     }
     for (id, schedule) in &model.schedules {
         for storey in &schedule.storeys {
@@ -255,6 +338,14 @@ pub fn infer(model: &ModelSnapshot) -> ModelInference {
     assert_eq!(inferred.opening_frames.len(), model.openings.len());
     assert_eq!(inferred.stair_runs.len(), model.stairs.len());
     assert_eq!(inferred.ramp_runs.len(), model.ramps.len());
+    assert_eq!(inferred.components.len(), model.components.len());
+    assert_eq!(inferred.mep.len(), model.mep_elements.len());
+    for (id, value) in &inferred.components {
+        assert!(value.solid() && value.issues.is_empty(), "component {id} has a body and no issue: {:?}", value.issues);
+    }
+    for (id, value) in &inferred.mep {
+        assert!(value.buildable() && value.issues.is_empty(), "MEP element {id} has a solid and no issue: {:?}", value.issues);
+    }
     for (id, layout) in &inferred.wall_layout {
         assert!(layout.height > 0.0 && layout.thickness > 0.0 && layout.length > 0.0, "wall {id} resolves to a solid extent");
     }
@@ -330,14 +421,17 @@ families!(
     ("create-building", "createBuilding", "building", buildings),
     ("create-storey", "createStorey", "storey", storeys),
     ("create-grid-line", "createGridLine", "grid_line", grids),
-    ("create-wall", "createWall", "wall", walls),
+    ("create-curtain-wall-type", "createCurtainWallType", "curtain_wall_type", curtain_wall_types),
     ("create-curtain-wall", "createCurtainWall", "curtain_wall", curtain_walls),
+    ("create-curtain-panel-override", "createCurtainPanelOverride", "curtain_panel_override", curtain_panel_overrides),
     ("create-column", "createColumn", "column", columns),
     ("create-beam", "createBeam", "beam", beams),
     ("create-slab", "createSlab", "slab", slabs),
     ("create-ceiling", "createCeiling", "ceiling", ceilings),
     ("create-roof", "createRoof", "roof", roofs),
+    ("create-wall", "createWall", "wall", walls),
     ("create-opening", "createOpening", "opening", openings),
+    ("create-wall-sweep", "createWallSweep", "wall_sweep", wall_sweeps),
     ("create-stair", "createStair", "stair", stairs),
     ("create-ramp", "createRamp", "ramp", ramps),
     ("create-railing", "createRailing", "railing", railings),
@@ -345,12 +439,25 @@ families!(
     ("create-area-scheme", "createAreaScheme", "area_scheme", area_schemes),
     ("create-space", "createSpace", "space", spaces),
     ("create-view", "createView", "view", views),
+    ("create-sheet", "createSheet", "sheet", sheets),
+    ("create-viewport", "createViewport", "viewport", viewports),
+    ("create-sheet-revision", "createSheetRevision", "sheet_revision", sheet_revisions),
+    ("create-clash-set", "createClashSet", "clash_set", clash_sets),
+    ("create-rule", "createRule", "rule", rules),
+    ("create-issue", "createIssue", "issue", issues),
+    ("create-issue-comment", "createIssueComment", "issue_comment", issue_comments),
     ("create-schedule", "createSchedule", "schedule", schedules),
+    ("create-property-template", "createPropertyTemplate", "template", property_templates),
+    ("create-classification-system", "createClassificationSystem", "system", classification_systems),
     ("create-annotation-style", "createAnnotationStyle", "annotation_style", annotation_styles),
     ("create-dimension", "createDimension", "dimension", dimensions),
     ("create-tag", "createTag", "tag", tags),
     ("create-text-note", "createTextNote", "text_note", text_notes),
     ("create-leader", "createLeader", "leader", leaders),
+    ("create-family", "createFamily", "family", families),
+    ("create-family-solid", "createFamilySolid", "solid", family_solids),
+    ("create-component", "createComponent", "component", components),
+    ("create-mep-element", "createMepElement", "mep", mep_elements),
 );
 
 fn apply_json(state: &ModelSnapshot, json: &str) -> ModelSnapshot {
@@ -388,6 +495,11 @@ pub fn replay_derived(model: &ModelSnapshot, derivations: &str) -> Replay {
             seeded.push(*kind);
         }
     }
+    let set_override = KINDS.contains(&"set-component-override");
+    if !set_override {
+        state.component_overrides = model.component_overrides.clone();
+        seeded.push("set-component-override");
+    }
     let (set_property, set_classification) = (KINDS.contains(&"set-element-property"), KINDS.contains(&"set-element-classification"));
     if !set_property {
         state.properties = model.properties.clone();
@@ -417,6 +529,22 @@ pub fn replay_derived(model: &ModelSnapshot, derivations: &str) -> Replay {
             state = apply_json(&state, &format!("{{\"mutation\":\"{variant}\",\"id\":{id},\"{field}\":{record}}}"));
             applied += 1;
         }
+        if kind == "create-family" && KINDS.contains(&"set-family-parameter") {
+            for family in model.families.keys() {
+                for row in crate::mutations::family_rules::parameters_in_order(model, family) {
+                    let quoted = |text: &String| semio_framework_pack_json::to_json_string(text);
+                    state = apply_json(&state, &format!("{{\"mutation\":\"setFamilyParameter\",\"family\":{},\"name\":{},\"kind\":{},\"value\":{}}}", quoted(&row.family), quoted(&row.name), semio_framework_pack_json::to_json_string(&row.kind), quoted(&row.value)));
+                    applied += 1;
+                }
+            }
+        }
+    }
+    if set_override {
+        for row in model.component_overrides.values() {
+            let quoted = |text: &String| semio_framework_pack_json::to_json_string(text);
+            state = apply_json(&state, &format!("{{\"mutation\":\"setComponentOverride\",\"component\":{},\"name\":{},\"value\":{}}}", quoted(&row.component), quoted(&row.name), quoted(&row.value)));
+            applied += 1;
+        }
     }
     for (element, _, to) in &moved {
         state = apply_json(&state, &format!("{{\"mutation\":\"setElementStorey\",\"id\":\"{element}\",\"storey\":\"{to}\"}}"));
@@ -438,9 +566,11 @@ pub fn replay_derived(model: &ModelSnapshot, derivations: &str) -> Replay {
         }
     }
     if set_classification {
-        for (id, classification) in &model.classifications {
-            state = apply_json(&state, &format!("{{\"mutation\":\"setElementClassification\",\"id\":{},\"classification\":{}}}", quoted(id), semio_framework_pack_json::to_json_string(classification)));
-            applied += 1;
+        for (id, classified) in &model.classifications {
+            for (system, code) in classified {
+                state = apply_json(&state, &format!("{{\"mutation\":\"setElementClassification\",\"id\":{},\"system\":{},\"code\":{}}}", quoted(id), quoted(system), quoted(code)));
+                applied += 1;
+            }
         }
     }
     Replay { applied, seeded, result: state }

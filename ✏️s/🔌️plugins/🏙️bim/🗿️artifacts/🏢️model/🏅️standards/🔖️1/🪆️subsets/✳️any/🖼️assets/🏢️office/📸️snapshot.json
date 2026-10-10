@@ -303,6 +303,15 @@
         }
       },
       "material": "m-concrete"
+    },
+    "bt-hea-300": {
+      "name": "HEA 300 (profile family)",
+      "profile": {
+        "Family": {
+          "family": "fam-hea-300"
+        }
+      },
+      "material": "m-steel"
     }
   },
   "window_types": {
@@ -314,7 +323,10 @@
       "frame_width": 0.07,
       "frame_depth": 0.08,
       "panes": 3,
-      "material": "m-steel"
+      "material": "m-steel",
+      "u_value": 1.3,
+      "g_value": 0.45,
+      "frame_fraction": 0.2
     }
   },
   "door_types": {
@@ -326,7 +338,8 @@
       "frame_depth": 0.08,
       "leaves": "Double",
       "swing": "Left",
-      "material": "m-steel"
+      "material": "m-steel",
+      "u_value": 1.4
     },
     "dr-core": {
       "name": "Fire Door",
@@ -336,7 +349,8 @@
       "frame_depth": 0.08,
       "leaves": "Single",
       "swing": "Left",
-      "material": "m-steel"
+      "material": "m-steel",
+      "u_value": 1.8
     }
   },
   "sites": {
@@ -2037,6 +2051,7 @@
   "curtain_walls": {
     "cu-0-south": {
       "storey": "st-0",
+      "curtain_wall_type": "cwt-facade",
       "axis": {
         "Line": {
           "start": {
@@ -2055,20 +2070,19 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.3,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
+      "name": "South Curtain Wall 0",
+      "v_grid": {
+        "Lines": {
+          "positions": [
+            2.4
+          ]
         }
       },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
-      "name": "South Curtain Wall 0"
+      "phase": "New"
     },
     "cu-0-north": {
       "storey": "st-0",
+      "curtain_wall_type": "cwt-facade",
       "axis": {
         "Line": {
           "start": {
@@ -2087,21 +2101,12 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.3,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
       "name": "North Curtain Wall 0",
       "phase": "Demolished"
     },
     "cu-1-south": {
       "storey": "st-1",
+      "curtain_wall_type": "cwt-facade",
       "axis": {
         "Line": {
           "start": {
@@ -2120,20 +2125,12 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.3,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
-      "name": "South Curtain Wall 1"
+      "name": "South Curtain Wall 1",
+      "phase": "New"
     },
     "cu-1-north": {
       "storey": "st-1",
+      "curtain_wall_type": "cwt-facade",
       "axis": {
         "Line": {
           "start": {
@@ -2152,20 +2149,12 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.3,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
-      "name": "North Curtain Wall 1"
+      "name": "North Curtain Wall 1",
+      "phase": "New"
     },
     "cu-2-south": {
       "storey": "st-2",
+      "curtain_wall_type": "cwt-facade",
       "axis": {
         "Line": {
           "start": {
@@ -2184,20 +2173,12 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.3,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
-      "name": "South Curtain Wall 2"
+      "name": "South Curtain Wall 2",
+      "phase": "New"
     },
     "cu-2-north": {
       "storey": "st-2",
+      "curtain_wall_type": "cwt-facade",
       "axis": {
         "Line": {
           "start": {
@@ -2216,20 +2197,23 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.3,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
+      "name": "North Curtain Wall 2",
+      "u_grid": {
+        "Lines": {
+          "positions": [
+            5,
+            10,
+            15,
+            20,
+            25
+          ]
         }
       },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
-      "name": "North Curtain Wall 2"
+      "phase": "New"
     },
     "cu-3-south": {
       "storey": "st-3",
+      "curtain_wall_type": "cwt-facade",
       "axis": {
         "Line": {
           "start": {
@@ -2248,20 +2232,12 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.3,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
-      "name": "South Curtain Wall 3"
+      "name": "South Curtain Wall 3",
+      "phase": "New"
     },
     "cu-3-north": {
       "storey": "st-3",
+      "curtain_wall_type": "cwt-facade",
       "axis": {
         "Line": {
           "start": {
@@ -2280,17 +2256,8 @@
           "offset": 0
         }
       },
-      "u_spacing": 1.5,
-      "v_spacing": 1.3,
-      "mullion": {
-        "Rectangle": {
-          "width": 0.05,
-          "depth": 0.15
-        }
-      },
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel",
-      "name": "North Curtain Wall 3"
+      "name": "North Curtain Wall 3",
+      "phase": "New"
     }
   },
   "columns": {
@@ -2716,7 +2683,8 @@
           "offset": 0
         }
       },
-      "name": "Column A1"
+      "name": "Column A1",
+      "phase": "New"
     },
     "c-1-B1": {
       "storey": "st-1",
@@ -2732,7 +2700,8 @@
           "offset": 0
         }
       },
-      "name": "Column B1"
+      "name": "Column B1",
+      "phase": "New"
     },
     "c-1-C1": {
       "storey": "st-1",
@@ -2748,7 +2717,8 @@
           "offset": 0
         }
       },
-      "name": "Column C1"
+      "name": "Column C1",
+      "phase": "New"
     },
     "c-1-D1": {
       "storey": "st-1",
@@ -2764,7 +2734,8 @@
           "offset": 0
         }
       },
-      "name": "Column D1"
+      "name": "Column D1",
+      "phase": "New"
     },
     "c-1-E1": {
       "storey": "st-1",
@@ -2780,7 +2751,8 @@
           "offset": 0
         }
       },
-      "name": "Column E1"
+      "name": "Column E1",
+      "phase": "New"
     },
     "c-1-F1": {
       "storey": "st-1",
@@ -2796,7 +2768,8 @@
           "offset": 0
         }
       },
-      "name": "Column F1"
+      "name": "Column F1",
+      "phase": "New"
     },
     "c-1-A2": {
       "storey": "st-1",
@@ -2812,7 +2785,8 @@
           "offset": 0
         }
       },
-      "name": "Column A2"
+      "name": "Column A2",
+      "phase": "New"
     },
     "c-1-B2": {
       "storey": "st-1",
@@ -2828,7 +2802,8 @@
           "offset": 0
         }
       },
-      "name": "Column B2"
+      "name": "Column B2",
+      "phase": "New"
     },
     "c-1-C2": {
       "storey": "st-1",
@@ -2844,7 +2819,8 @@
           "offset": 0
         }
       },
-      "name": "Column C2"
+      "name": "Column C2",
+      "phase": "New"
     },
     "c-1-D2": {
       "storey": "st-1",
@@ -2860,7 +2836,8 @@
           "offset": 0
         }
       },
-      "name": "Column D2"
+      "name": "Column D2",
+      "phase": "New"
     },
     "c-1-E2": {
       "storey": "st-1",
@@ -2876,7 +2853,8 @@
           "offset": 0
         }
       },
-      "name": "Column E2"
+      "name": "Column E2",
+      "phase": "New"
     },
     "c-1-F2": {
       "storey": "st-1",
@@ -2892,7 +2870,8 @@
           "offset": 0
         }
       },
-      "name": "Column F2"
+      "name": "Column F2",
+      "phase": "New"
     },
     "c-1-A3": {
       "storey": "st-1",
@@ -2908,7 +2887,8 @@
           "offset": 0
         }
       },
-      "name": "Column A3"
+      "name": "Column A3",
+      "phase": "New"
     },
     "c-1-B3": {
       "storey": "st-1",
@@ -2924,7 +2904,8 @@
           "offset": 0
         }
       },
-      "name": "Column B3"
+      "name": "Column B3",
+      "phase": "New"
     },
     "c-1-C3": {
       "storey": "st-1",
@@ -2940,7 +2921,8 @@
           "offset": 0
         }
       },
-      "name": "Column C3"
+      "name": "Column C3",
+      "phase": "New"
     },
     "c-1-D3": {
       "storey": "st-1",
@@ -2956,7 +2938,8 @@
           "offset": 0
         }
       },
-      "name": "Column D3"
+      "name": "Column D3",
+      "phase": "New"
     },
     "c-1-E3": {
       "storey": "st-1",
@@ -2972,7 +2955,8 @@
           "offset": 0
         }
       },
-      "name": "Column E3"
+      "name": "Column E3",
+      "phase": "New"
     },
     "c-1-F3": {
       "storey": "st-1",
@@ -2988,7 +2972,8 @@
           "offset": 0
         }
       },
-      "name": "Column F3"
+      "name": "Column F3",
+      "phase": "New"
     },
     "c-1-A4": {
       "storey": "st-1",
@@ -3004,7 +2989,8 @@
           "offset": 0
         }
       },
-      "name": "Column A4"
+      "name": "Column A4",
+      "phase": "New"
     },
     "c-1-B4": {
       "storey": "st-1",
@@ -3020,7 +3006,8 @@
           "offset": 0
         }
       },
-      "name": "Column B4"
+      "name": "Column B4",
+      "phase": "New"
     },
     "c-1-C4": {
       "storey": "st-1",
@@ -3036,7 +3023,8 @@
           "offset": 0
         }
       },
-      "name": "Column C4"
+      "name": "Column C4",
+      "phase": "New"
     },
     "c-1-D4": {
       "storey": "st-1",
@@ -3052,7 +3040,8 @@
           "offset": 0
         }
       },
-      "name": "Column D4"
+      "name": "Column D4",
+      "phase": "New"
     },
     "c-1-E4": {
       "storey": "st-1",
@@ -3068,7 +3057,8 @@
           "offset": 0
         }
       },
-      "name": "Column E4"
+      "name": "Column E4",
+      "phase": "New"
     },
     "c-1-F4": {
       "storey": "st-1",
@@ -3084,7 +3074,8 @@
           "offset": 0
         }
       },
-      "name": "Column F4"
+      "name": "Column F4",
+      "phase": "New"
     },
     "c-2-A1": {
       "storey": "st-2",
@@ -3100,7 +3091,8 @@
           "offset": 0
         }
       },
-      "name": "Column A1"
+      "name": "Column A1",
+      "phase": "New"
     },
     "c-2-B1": {
       "storey": "st-2",
@@ -3116,7 +3108,8 @@
           "offset": 0
         }
       },
-      "name": "Column B1"
+      "name": "Column B1",
+      "phase": "New"
     },
     "c-2-C1": {
       "storey": "st-2",
@@ -3132,7 +3125,8 @@
           "offset": 0
         }
       },
-      "name": "Column C1"
+      "name": "Column C1",
+      "phase": "New"
     },
     "c-2-D1": {
       "storey": "st-2",
@@ -3148,7 +3142,8 @@
           "offset": 0
         }
       },
-      "name": "Column D1"
+      "name": "Column D1",
+      "phase": "New"
     },
     "c-2-E1": {
       "storey": "st-2",
@@ -3164,7 +3159,8 @@
           "offset": 0
         }
       },
-      "name": "Column E1"
+      "name": "Column E1",
+      "phase": "New"
     },
     "c-2-F1": {
       "storey": "st-2",
@@ -3180,7 +3176,8 @@
           "offset": 0
         }
       },
-      "name": "Column F1"
+      "name": "Column F1",
+      "phase": "New"
     },
     "c-2-A2": {
       "storey": "st-2",
@@ -3196,7 +3193,8 @@
           "offset": 0
         }
       },
-      "name": "Column A2"
+      "name": "Column A2",
+      "phase": "New"
     },
     "c-2-B2": {
       "storey": "st-2",
@@ -3212,7 +3210,8 @@
           "offset": 0
         }
       },
-      "name": "Column B2"
+      "name": "Column B2",
+      "phase": "New"
     },
     "c-2-C2": {
       "storey": "st-2",
@@ -3228,7 +3227,8 @@
           "offset": 0
         }
       },
-      "name": "Column C2"
+      "name": "Column C2",
+      "phase": "New"
     },
     "c-2-D2": {
       "storey": "st-2",
@@ -3244,7 +3244,8 @@
           "offset": 0
         }
       },
-      "name": "Column D2"
+      "name": "Column D2",
+      "phase": "New"
     },
     "c-2-E2": {
       "storey": "st-2",
@@ -3260,7 +3261,8 @@
           "offset": 0
         }
       },
-      "name": "Column E2"
+      "name": "Column E2",
+      "phase": "New"
     },
     "c-2-F2": {
       "storey": "st-2",
@@ -3276,7 +3278,8 @@
           "offset": 0
         }
       },
-      "name": "Column F2"
+      "name": "Column F2",
+      "phase": "New"
     },
     "c-2-A3": {
       "storey": "st-2",
@@ -3292,7 +3295,8 @@
           "offset": 0
         }
       },
-      "name": "Column A3"
+      "name": "Column A3",
+      "phase": "New"
     },
     "c-2-B3": {
       "storey": "st-2",
@@ -3308,7 +3312,8 @@
           "offset": 0
         }
       },
-      "name": "Column B3"
+      "name": "Column B3",
+      "phase": "New"
     },
     "c-2-C3": {
       "storey": "st-2",
@@ -3324,7 +3329,8 @@
           "offset": 0
         }
       },
-      "name": "Column C3"
+      "name": "Column C3",
+      "phase": "New"
     },
     "c-2-D3": {
       "storey": "st-2",
@@ -3340,7 +3346,8 @@
           "offset": 0
         }
       },
-      "name": "Column D3"
+      "name": "Column D3",
+      "phase": "New"
     },
     "c-2-E3": {
       "storey": "st-2",
@@ -3356,7 +3363,8 @@
           "offset": 0
         }
       },
-      "name": "Column E3"
+      "name": "Column E3",
+      "phase": "New"
     },
     "c-2-F3": {
       "storey": "st-2",
@@ -3372,7 +3380,8 @@
           "offset": 0
         }
       },
-      "name": "Column F3"
+      "name": "Column F3",
+      "phase": "New"
     },
     "c-2-A4": {
       "storey": "st-2",
@@ -3388,7 +3397,8 @@
           "offset": 0
         }
       },
-      "name": "Column A4"
+      "name": "Column A4",
+      "phase": "New"
     },
     "c-2-B4": {
       "storey": "st-2",
@@ -3404,7 +3414,8 @@
           "offset": 0
         }
       },
-      "name": "Column B4"
+      "name": "Column B4",
+      "phase": "New"
     },
     "c-2-C4": {
       "storey": "st-2",
@@ -3420,7 +3431,8 @@
           "offset": 0
         }
       },
-      "name": "Column C4"
+      "name": "Column C4",
+      "phase": "New"
     },
     "c-2-D4": {
       "storey": "st-2",
@@ -3436,7 +3448,8 @@
           "offset": 0
         }
       },
-      "name": "Column D4"
+      "name": "Column D4",
+      "phase": "New"
     },
     "c-2-E4": {
       "storey": "st-2",
@@ -3452,7 +3465,8 @@
           "offset": 0
         }
       },
-      "name": "Column E4"
+      "name": "Column E4",
+      "phase": "New"
     },
     "c-2-F4": {
       "storey": "st-2",
@@ -3468,7 +3482,8 @@
           "offset": 0
         }
       },
-      "name": "Column F4"
+      "name": "Column F4",
+      "phase": "New"
     },
     "c-3-A1": {
       "storey": "st-3",
@@ -3484,7 +3499,8 @@
           "offset": 0
         }
       },
-      "name": "Column A1"
+      "name": "Column A1",
+      "phase": "New"
     },
     "c-3-B1": {
       "storey": "st-3",
@@ -3500,7 +3516,8 @@
           "offset": 0
         }
       },
-      "name": "Column B1"
+      "name": "Column B1",
+      "phase": "New"
     },
     "c-3-C1": {
       "storey": "st-3",
@@ -3516,7 +3533,8 @@
           "offset": 0
         }
       },
-      "name": "Column C1"
+      "name": "Column C1",
+      "phase": "New"
     },
     "c-3-D1": {
       "storey": "st-3",
@@ -3532,7 +3550,8 @@
           "offset": 0
         }
       },
-      "name": "Column D1"
+      "name": "Column D1",
+      "phase": "New"
     },
     "c-3-E1": {
       "storey": "st-3",
@@ -3548,7 +3567,8 @@
           "offset": 0
         }
       },
-      "name": "Column E1"
+      "name": "Column E1",
+      "phase": "New"
     },
     "c-3-F1": {
       "storey": "st-3",
@@ -3564,7 +3584,8 @@
           "offset": 0
         }
       },
-      "name": "Column F1"
+      "name": "Column F1",
+      "phase": "New"
     },
     "c-3-A2": {
       "storey": "st-3",
@@ -3580,7 +3601,8 @@
           "offset": 0
         }
       },
-      "name": "Column A2"
+      "name": "Column A2",
+      "phase": "New"
     },
     "c-3-B2": {
       "storey": "st-3",
@@ -3596,7 +3618,8 @@
           "offset": 0
         }
       },
-      "name": "Column B2"
+      "name": "Column B2",
+      "phase": "New"
     },
     "c-3-C2": {
       "storey": "st-3",
@@ -3612,7 +3635,8 @@
           "offset": 0
         }
       },
-      "name": "Column C2"
+      "name": "Column C2",
+      "phase": "New"
     },
     "c-3-D2": {
       "storey": "st-3",
@@ -3628,7 +3652,8 @@
           "offset": 0
         }
       },
-      "name": "Column D2"
+      "name": "Column D2",
+      "phase": "New"
     },
     "c-3-E2": {
       "storey": "st-3",
@@ -3644,7 +3669,8 @@
           "offset": 0
         }
       },
-      "name": "Column E2"
+      "name": "Column E2",
+      "phase": "New"
     },
     "c-3-F2": {
       "storey": "st-3",
@@ -3660,7 +3686,8 @@
           "offset": 0
         }
       },
-      "name": "Column F2"
+      "name": "Column F2",
+      "phase": "New"
     },
     "c-3-A3": {
       "storey": "st-3",
@@ -3676,7 +3703,8 @@
           "offset": 0
         }
       },
-      "name": "Column A3"
+      "name": "Column A3",
+      "phase": "New"
     },
     "c-3-B3": {
       "storey": "st-3",
@@ -3692,7 +3720,8 @@
           "offset": 0
         }
       },
-      "name": "Column B3"
+      "name": "Column B3",
+      "phase": "New"
     },
     "c-3-C3": {
       "storey": "st-3",
@@ -3708,7 +3737,8 @@
           "offset": 0
         }
       },
-      "name": "Column C3"
+      "name": "Column C3",
+      "phase": "New"
     },
     "c-3-D3": {
       "storey": "st-3",
@@ -3724,7 +3754,8 @@
           "offset": 0
         }
       },
-      "name": "Column D3"
+      "name": "Column D3",
+      "phase": "New"
     },
     "c-3-E3": {
       "storey": "st-3",
@@ -3740,7 +3771,8 @@
           "offset": 0
         }
       },
-      "name": "Column E3"
+      "name": "Column E3",
+      "phase": "New"
     },
     "c-3-F3": {
       "storey": "st-3",
@@ -3756,7 +3788,8 @@
           "offset": 0
         }
       },
-      "name": "Column F3"
+      "name": "Column F3",
+      "phase": "New"
     },
     "c-3-A4": {
       "storey": "st-3",
@@ -3772,7 +3805,8 @@
           "offset": 0
         }
       },
-      "name": "Column A4"
+      "name": "Column A4",
+      "phase": "New"
     },
     "c-3-B4": {
       "storey": "st-3",
@@ -3788,7 +3822,8 @@
           "offset": 0
         }
       },
-      "name": "Column B4"
+      "name": "Column B4",
+      "phase": "New"
     },
     "c-3-C4": {
       "storey": "st-3",
@@ -3804,7 +3839,8 @@
           "offset": 0
         }
       },
-      "name": "Column C4"
+      "name": "Column C4",
+      "phase": "New"
     },
     "c-3-D4": {
       "storey": "st-3",
@@ -3820,7 +3856,8 @@
           "offset": 0
         }
       },
-      "name": "Column D4"
+      "name": "Column D4",
+      "phase": "New"
     },
     "c-3-E4": {
       "storey": "st-3",
@@ -3836,7 +3873,8 @@
           "offset": 0
         }
       },
-      "name": "Column E4"
+      "name": "Column E4",
+      "phase": "New"
     },
     "c-3-F4": {
       "storey": "st-3",
@@ -3852,2137 +3890,2997 @@
           "offset": 0
         }
       },
-      "name": "Column F4"
+      "name": "Column F4",
+      "phase": "New"
+    },
+    "c-1-lean": {
+      "storey": "st-1",
+      "column_type": "ct-rc-400",
+      "position": {
+        "x": 15,
+        "y": 3
+      },
+      "rotation": 0,
+      "tilt": {
+        "direction": 0,
+        "angle": 0.1
+      },
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "name": "Leaning Column",
+      "phase": "New"
     }
   },
   "beams": {
     "bm-0-x-A1": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 6,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A1-B1"
+      "name": "Beam A1-B1",
+      "phase": "New"
     },
     "bm-0-y-A1": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 0,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 0,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A1-A2"
+      "name": "Beam A1-A2",
+      "phase": "New"
     },
     "bm-0-x-B1": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 0
-      },
-      "end": {
-        "x": 12,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 12,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B1-C1"
+      "name": "Beam B1-C1",
+      "phase": "New"
     },
     "bm-0-y-B1": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 0
-      },
-      "end": {
-        "x": 6,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B1-B2"
+      "name": "Beam B1-B2",
+      "phase": "New"
     },
     "bm-0-x-C1": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 0
-      },
-      "end": {
-        "x": 18,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 0
+          },
+          "end": {
+            "x": 18,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C1-D1"
+      "name": "Beam C1-D1",
+      "phase": "New"
     },
     "bm-0-y-C1": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 0
-      },
-      "end": {
-        "x": 12,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 0
+          },
+          "end": {
+            "x": 12,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C1-C2"
+      "name": "Beam C1-C2",
+      "phase": "New"
     },
     "bm-0-x-D1": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 0
-      },
-      "end": {
-        "x": 24,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 0
+          },
+          "end": {
+            "x": 24,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D1-E1"
+      "name": "Beam D1-E1",
+      "phase": "New"
     },
     "bm-0-y-D1": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 0
-      },
-      "end": {
-        "x": 18,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 0
+          },
+          "end": {
+            "x": 18,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D1-D2"
+      "name": "Beam D1-D2",
+      "phase": "New"
     },
     "bm-0-x-E1": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 0
-      },
-      "end": {
-        "x": 30,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E1-F1"
+      "name": "Beam E1-F1",
+      "phase": "New"
     },
     "bm-0-y-E1": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 0
-      },
-      "end": {
-        "x": 24,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 24,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E1-E2"
+      "name": "Beam E1-E2",
+      "phase": "New"
     },
     "bm-0-y-F1": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 0
-      },
-      "end": {
-        "x": 30,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F1-F2"
+      "name": "Beam F1-F2",
+      "phase": "New"
     },
     "bm-0-x-A2": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 6
-      },
-      "end": {
-        "x": 6,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 6,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A2-B2"
+      "name": "Beam A2-B2",
+      "phase": "New"
     },
     "bm-0-y-A2": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 6
-      },
-      "end": {
-        "x": 0,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A2-A3"
+      "name": "Beam A2-A3",
+      "phase": "New"
     },
     "bm-0-x-B2": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 6
-      },
-      "end": {
-        "x": 12,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 6
+          },
+          "end": {
+            "x": 12,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B2-C2"
+      "name": "Beam B2-C2",
+      "phase": "New"
     },
     "bm-0-y-B2": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 6
-      },
-      "end": {
-        "x": 6,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 6
+          },
+          "end": {
+            "x": 6,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B2-B3"
+      "name": "Beam B2-B3",
+      "phase": "New"
     },
     "bm-0-x-C2": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 6
-      },
-      "end": {
-        "x": 18,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 6
+          },
+          "end": {
+            "x": 18,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C2-D2"
+      "name": "Beam C2-D2",
+      "phase": "New"
     },
     "bm-0-y-C2": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 6
-      },
-      "end": {
-        "x": 12,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 6
+          },
+          "end": {
+            "x": 12,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C2-C3"
+      "name": "Beam C2-C3",
+      "phase": "New"
     },
     "bm-0-x-D2": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 6
-      },
-      "end": {
-        "x": 24,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 6
+          },
+          "end": {
+            "x": 24,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D2-E2"
+      "name": "Beam D2-E2",
+      "phase": "New"
     },
     "bm-0-y-D2": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 6
-      },
-      "end": {
-        "x": 18,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 6
+          },
+          "end": {
+            "x": 18,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D2-D3"
+      "name": "Beam D2-D3",
+      "phase": "New"
     },
     "bm-0-x-E2": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 6
-      },
-      "end": {
-        "x": 30,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 6
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E2-F2"
+      "name": "Beam E2-F2",
+      "phase": "New"
     },
     "bm-0-y-E2": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 6
-      },
-      "end": {
-        "x": 24,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 6
+          },
+          "end": {
+            "x": 24,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E2-E3"
+      "name": "Beam E2-E3",
+      "phase": "New"
     },
     "bm-0-y-F2": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 6
-      },
-      "end": {
-        "x": 30,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 6
+          },
+          "end": {
+            "x": 30,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F2-F3"
+      "name": "Beam F2-F3",
+      "phase": "New"
     },
     "bm-0-x-A3": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 12
-      },
-      "end": {
-        "x": 6,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 12
+          },
+          "end": {
+            "x": 6,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A3-B3"
+      "name": "Beam A3-B3",
+      "phase": "New"
     },
     "bm-0-y-A3": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 12
-      },
-      "end": {
-        "x": 0,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 12
+          },
+          "end": {
+            "x": 0,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A3-A4"
+      "name": "Beam A3-A4",
+      "phase": "New"
     },
     "bm-0-x-B3": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 12
-      },
-      "end": {
-        "x": 12,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 12
+          },
+          "end": {
+            "x": 12,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B3-C3"
+      "name": "Beam B3-C3",
+      "phase": "New"
     },
     "bm-0-y-B3": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 12
-      },
-      "end": {
-        "x": 6,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 12
+          },
+          "end": {
+            "x": 6,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B3-B4"
+      "name": "Beam B3-B4",
+      "phase": "New"
     },
     "bm-0-x-C3": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 12
-      },
-      "end": {
-        "x": 18,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 12
+          },
+          "end": {
+            "x": 18,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C3-D3"
+      "name": "Beam C3-D3",
+      "phase": "New"
     },
     "bm-0-y-C3": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 12
-      },
-      "end": {
-        "x": 12,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 12
+          },
+          "end": {
+            "x": 12,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C3-C4"
+      "name": "Beam C3-C4",
+      "phase": "New"
     },
     "bm-0-x-D3": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 12
-      },
-      "end": {
-        "x": 24,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 12
+          },
+          "end": {
+            "x": 24,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D3-E3"
+      "name": "Beam D3-E3",
+      "phase": "New"
     },
     "bm-0-y-D3": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 12
-      },
-      "end": {
-        "x": 18,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 12
+          },
+          "end": {
+            "x": 18,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D3-D4"
+      "name": "Beam D3-D4",
+      "phase": "New"
     },
     "bm-0-x-E3": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 12
-      },
-      "end": {
-        "x": 30,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E3-F3"
+      "name": "Beam E3-F3",
+      "phase": "New"
     },
     "bm-0-y-E3": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 12
-      },
-      "end": {
-        "x": 24,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 24,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E3-E4"
+      "name": "Beam E3-E4",
+      "phase": "New"
     },
     "bm-0-y-F3": {
       "storey": "st-0",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 12
-      },
-      "end": {
-        "x": 30,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F3-F4"
+      "name": "Beam F3-F4",
+      "phase": "New"
     },
     "bm-0-x-A4": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 18
-      },
-      "end": {
-        "x": 6,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 18
+          },
+          "end": {
+            "x": 6,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A4-B4"
+      "name": "Beam A4-B4",
+      "phase": "New"
     },
     "bm-0-x-B4": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 18
-      },
-      "end": {
-        "x": 12,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 18
+          },
+          "end": {
+            "x": 12,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B4-C4"
+      "name": "Beam B4-C4",
+      "phase": "New"
     },
     "bm-0-x-C4": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 18
-      },
-      "end": {
-        "x": 18,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 18
+          },
+          "end": {
+            "x": 18,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C4-D4"
+      "name": "Beam C4-D4",
+      "phase": "New"
     },
     "bm-0-x-D4": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 18
-      },
-      "end": {
-        "x": 24,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 18
+          },
+          "end": {
+            "x": 24,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D4-E4"
+      "name": "Beam D4-E4",
+      "phase": "New"
     },
     "bm-0-x-E4": {
       "storey": "st-0",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 18
-      },
-      "end": {
-        "x": 30,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 18
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E4-F4"
+      "name": "Beam E4-F4",
+      "phase": "New"
     },
     "bm-1-x-A1": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 6,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A1-B1"
+      "name": "Beam A1-B1",
+      "phase": "New"
     },
     "bm-1-y-A1": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 0,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 0,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A1-A2"
+      "name": "Beam A1-A2",
+      "phase": "New"
     },
     "bm-1-x-B1": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 0
-      },
-      "end": {
-        "x": 12,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 12,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B1-C1"
+      "name": "Beam B1-C1",
+      "phase": "New"
     },
     "bm-1-y-B1": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 0
-      },
-      "end": {
-        "x": 6,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B1-B2"
+      "name": "Beam B1-B2",
+      "phase": "New"
     },
     "bm-1-x-C1": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 0
-      },
-      "end": {
-        "x": 18,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 0
+          },
+          "end": {
+            "x": 18,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C1-D1"
+      "name": "Beam C1-D1",
+      "phase": "New"
     },
     "bm-1-y-C1": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 0
-      },
-      "end": {
-        "x": 12,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 0
+          },
+          "end": {
+            "x": 12,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C1-C2"
+      "name": "Beam C1-C2",
+      "phase": "New"
     },
     "bm-1-x-D1": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 0
-      },
-      "end": {
-        "x": 24,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 0
+          },
+          "end": {
+            "x": 24,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D1-E1"
+      "name": "Beam D1-E1",
+      "phase": "New"
     },
     "bm-1-y-D1": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 0
-      },
-      "end": {
-        "x": 18,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 0
+          },
+          "end": {
+            "x": 18,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D1-D2"
+      "name": "Beam D1-D2",
+      "phase": "New"
     },
     "bm-1-x-E1": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 0
-      },
-      "end": {
-        "x": 30,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E1-F1"
+      "name": "Beam E1-F1",
+      "phase": "New"
     },
     "bm-1-y-E1": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 0
-      },
-      "end": {
-        "x": 24,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 24,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E1-E2"
+      "name": "Beam E1-E2",
+      "phase": "New"
     },
     "bm-1-y-F1": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 0
-      },
-      "end": {
-        "x": 30,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F1-F2"
+      "name": "Beam F1-F2",
+      "phase": "New"
     },
     "bm-1-x-A2": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 6
-      },
-      "end": {
-        "x": 6,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 6,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A2-B2"
+      "name": "Beam A2-B2",
+      "phase": "New"
     },
     "bm-1-y-A2": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 6
-      },
-      "end": {
-        "x": 0,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A2-A3"
+      "name": "Beam A2-A3",
+      "phase": "New"
     },
     "bm-1-x-B2": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 6
-      },
-      "end": {
-        "x": 12,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 6
+          },
+          "end": {
+            "x": 12,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B2-C2"
+      "name": "Beam B2-C2",
+      "phase": "New"
     },
     "bm-1-y-B2": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 6
-      },
-      "end": {
-        "x": 6,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 6
+          },
+          "end": {
+            "x": 6,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B2-B3"
+      "name": "Beam B2-B3",
+      "phase": "New"
     },
     "bm-1-x-C2": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 6
-      },
-      "end": {
-        "x": 18,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 6
+          },
+          "end": {
+            "x": 18,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C2-D2"
+      "name": "Beam C2-D2",
+      "phase": "New"
     },
     "bm-1-y-C2": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 6
-      },
-      "end": {
-        "x": 12,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 6
+          },
+          "end": {
+            "x": 12,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C2-C3"
+      "name": "Beam C2-C3",
+      "phase": "New"
     },
     "bm-1-x-D2": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 6
-      },
-      "end": {
-        "x": 24,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 6
+          },
+          "end": {
+            "x": 24,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D2-E2"
+      "name": "Beam D2-E2",
+      "phase": "New"
     },
     "bm-1-y-D2": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 6
-      },
-      "end": {
-        "x": 18,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 6
+          },
+          "end": {
+            "x": 18,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D2-D3"
+      "name": "Beam D2-D3",
+      "phase": "New"
     },
     "bm-1-x-E2": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 6
-      },
-      "end": {
-        "x": 30,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 6
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E2-F2"
+      "name": "Beam E2-F2",
+      "phase": "New"
     },
     "bm-1-y-E2": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 6
-      },
-      "end": {
-        "x": 24,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 6
+          },
+          "end": {
+            "x": 24,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E2-E3"
+      "name": "Beam E2-E3",
+      "phase": "New"
     },
     "bm-1-y-F2": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 6
-      },
-      "end": {
-        "x": 30,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 6
+          },
+          "end": {
+            "x": 30,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F2-F3"
+      "name": "Beam F2-F3",
+      "phase": "New"
     },
     "bm-1-x-A3": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 12
-      },
-      "end": {
-        "x": 6,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 12
+          },
+          "end": {
+            "x": 6,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A3-B3"
+      "name": "Beam A3-B3",
+      "phase": "New"
     },
     "bm-1-y-A3": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 12
-      },
-      "end": {
-        "x": 0,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 12
+          },
+          "end": {
+            "x": 0,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A3-A4"
+      "name": "Beam A3-A4",
+      "phase": "New"
     },
     "bm-1-x-B3": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 12
-      },
-      "end": {
-        "x": 12,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 12
+          },
+          "end": {
+            "x": 12,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B3-C3"
+      "name": "Beam B3-C3",
+      "phase": "New"
     },
     "bm-1-y-B3": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 12
-      },
-      "end": {
-        "x": 6,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 12
+          },
+          "end": {
+            "x": 6,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B3-B4"
+      "name": "Beam B3-B4",
+      "phase": "New"
     },
     "bm-1-x-C3": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 12
-      },
-      "end": {
-        "x": 18,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 12
+          },
+          "end": {
+            "x": 18,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C3-D3"
+      "name": "Beam C3-D3",
+      "phase": "New"
     },
     "bm-1-y-C3": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 12
-      },
-      "end": {
-        "x": 12,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 12
+          },
+          "end": {
+            "x": 12,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C3-C4"
+      "name": "Beam C3-C4",
+      "phase": "New"
     },
     "bm-1-x-D3": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 12
-      },
-      "end": {
-        "x": 24,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 12
+          },
+          "end": {
+            "x": 24,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D3-E3"
+      "name": "Beam D3-E3",
+      "phase": "New"
     },
     "bm-1-y-D3": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 12
-      },
-      "end": {
-        "x": 18,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 12
+          },
+          "end": {
+            "x": 18,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D3-D4"
+      "name": "Beam D3-D4",
+      "phase": "New"
     },
     "bm-1-x-E3": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 12
-      },
-      "end": {
-        "x": 30,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E3-F3"
+      "name": "Beam E3-F3",
+      "phase": "New"
     },
     "bm-1-y-E3": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 12
-      },
-      "end": {
-        "x": 24,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 24,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E3-E4"
+      "name": "Beam E3-E4",
+      "phase": "New"
     },
     "bm-1-y-F3": {
       "storey": "st-1",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 12
-      },
-      "end": {
-        "x": 30,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F3-F4"
+      "name": "Beam F3-F4",
+      "phase": "New"
     },
     "bm-1-x-A4": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 18
-      },
-      "end": {
-        "x": 6,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 18
+          },
+          "end": {
+            "x": 6,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A4-B4"
+      "name": "Beam A4-B4",
+      "phase": "New"
     },
     "bm-1-x-B4": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 18
-      },
-      "end": {
-        "x": 12,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 18
+          },
+          "end": {
+            "x": 12,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B4-C4"
+      "name": "Beam B4-C4",
+      "phase": "New"
     },
     "bm-1-x-C4": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 18
-      },
-      "end": {
-        "x": 18,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 18
+          },
+          "end": {
+            "x": 18,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C4-D4"
+      "name": "Beam C4-D4",
+      "phase": "New"
     },
     "bm-1-x-D4": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 18
-      },
-      "end": {
-        "x": 24,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 18
+          },
+          "end": {
+            "x": 24,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D4-E4"
+      "name": "Beam D4-E4",
+      "phase": "New"
     },
     "bm-1-x-E4": {
       "storey": "st-1",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 18
-      },
-      "end": {
-        "x": 30,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 18
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E4-F4"
+      "name": "Beam E4-F4",
+      "phase": "New"
     },
     "bm-2-x-A1": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 6,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A1-B1"
+      "name": "Beam A1-B1",
+      "phase": "New"
     },
     "bm-2-y-A1": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 0,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 0,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A1-A2"
+      "name": "Beam A1-A2",
+      "phase": "New"
     },
     "bm-2-x-B1": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 0
-      },
-      "end": {
-        "x": 12,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 12,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B1-C1"
+      "name": "Beam B1-C1",
+      "phase": "New"
     },
     "bm-2-y-B1": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 0
-      },
-      "end": {
-        "x": 6,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B1-B2"
+      "name": "Beam B1-B2",
+      "phase": "New"
     },
     "bm-2-x-C1": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 0
-      },
-      "end": {
-        "x": 18,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 0
+          },
+          "end": {
+            "x": 18,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C1-D1"
+      "name": "Beam C1-D1",
+      "phase": "New"
     },
     "bm-2-y-C1": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 0
-      },
-      "end": {
-        "x": 12,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 0
+          },
+          "end": {
+            "x": 12,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C1-C2"
+      "name": "Beam C1-C2",
+      "phase": "New"
     },
     "bm-2-x-D1": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 0
-      },
-      "end": {
-        "x": 24,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 0
+          },
+          "end": {
+            "x": 24,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D1-E1"
+      "name": "Beam D1-E1",
+      "phase": "New"
     },
     "bm-2-y-D1": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 0
-      },
-      "end": {
-        "x": 18,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 0
+          },
+          "end": {
+            "x": 18,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D1-D2"
+      "name": "Beam D1-D2",
+      "phase": "New"
     },
     "bm-2-x-E1": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 0
-      },
-      "end": {
-        "x": 30,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E1-F1"
+      "name": "Beam E1-F1",
+      "phase": "New"
     },
     "bm-2-y-E1": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 0
-      },
-      "end": {
-        "x": 24,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 24,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E1-E2"
+      "name": "Beam E1-E2",
+      "phase": "New"
     },
     "bm-2-y-F1": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 0
-      },
-      "end": {
-        "x": 30,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F1-F2"
+      "name": "Beam F1-F2",
+      "phase": "New"
     },
     "bm-2-x-A2": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 6
-      },
-      "end": {
-        "x": 6,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 6,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A2-B2"
+      "name": "Beam A2-B2",
+      "phase": "New"
     },
     "bm-2-y-A2": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 6
-      },
-      "end": {
-        "x": 0,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A2-A3"
+      "name": "Beam A2-A3",
+      "phase": "New"
     },
     "bm-2-x-B2": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 6
-      },
-      "end": {
-        "x": 12,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 6
+          },
+          "end": {
+            "x": 12,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B2-C2"
+      "name": "Beam B2-C2",
+      "phase": "New"
     },
     "bm-2-y-B2": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 6
-      },
-      "end": {
-        "x": 6,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 6
+          },
+          "end": {
+            "x": 6,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B2-B3"
+      "name": "Beam B2-B3",
+      "phase": "New"
     },
     "bm-2-x-C2": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 6
-      },
-      "end": {
-        "x": 18,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 6
+          },
+          "end": {
+            "x": 18,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C2-D2"
+      "name": "Beam C2-D2",
+      "phase": "New"
     },
     "bm-2-y-C2": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 6
-      },
-      "end": {
-        "x": 12,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 6
+          },
+          "end": {
+            "x": 12,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C2-C3"
+      "name": "Beam C2-C3",
+      "phase": "New"
     },
     "bm-2-x-D2": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 6
-      },
-      "end": {
-        "x": 24,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 6
+          },
+          "end": {
+            "x": 24,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D2-E2"
+      "name": "Beam D2-E2",
+      "phase": "New"
     },
     "bm-2-y-D2": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 6
-      },
-      "end": {
-        "x": 18,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 6
+          },
+          "end": {
+            "x": 18,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D2-D3"
+      "name": "Beam D2-D3",
+      "phase": "New"
     },
     "bm-2-x-E2": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 6
-      },
-      "end": {
-        "x": 30,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 6
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E2-F2"
+      "name": "Beam E2-F2",
+      "phase": "New"
     },
     "bm-2-y-E2": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 6
-      },
-      "end": {
-        "x": 24,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 6
+          },
+          "end": {
+            "x": 24,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E2-E3"
+      "name": "Beam E2-E3",
+      "phase": "New"
     },
     "bm-2-y-F2": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 6
-      },
-      "end": {
-        "x": 30,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 6
+          },
+          "end": {
+            "x": 30,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F2-F3"
+      "name": "Beam F2-F3",
+      "phase": "New"
     },
     "bm-2-x-A3": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 12
-      },
-      "end": {
-        "x": 6,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 12
+          },
+          "end": {
+            "x": 6,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A3-B3"
+      "name": "Beam A3-B3",
+      "phase": "New"
     },
     "bm-2-y-A3": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 12
-      },
-      "end": {
-        "x": 0,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 12
+          },
+          "end": {
+            "x": 0,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A3-A4"
+      "name": "Beam A3-A4",
+      "phase": "New"
     },
     "bm-2-x-B3": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 12
-      },
-      "end": {
-        "x": 12,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 12
+          },
+          "end": {
+            "x": 12,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B3-C3"
+      "name": "Beam B3-C3",
+      "phase": "New"
     },
     "bm-2-y-B3": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 12
-      },
-      "end": {
-        "x": 6,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 12
+          },
+          "end": {
+            "x": 6,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B3-B4"
+      "name": "Beam B3-B4",
+      "phase": "New"
     },
     "bm-2-x-C3": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 12
-      },
-      "end": {
-        "x": 18,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 12
+          },
+          "end": {
+            "x": 18,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C3-D3"
+      "name": "Beam C3-D3",
+      "phase": "New"
     },
     "bm-2-y-C3": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 12
-      },
-      "end": {
-        "x": 12,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 12
+          },
+          "end": {
+            "x": 12,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C3-C4"
+      "name": "Beam C3-C4",
+      "phase": "New"
     },
     "bm-2-x-D3": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 12
-      },
-      "end": {
-        "x": 24,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 12
+          },
+          "end": {
+            "x": 24,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D3-E3"
+      "name": "Beam D3-E3",
+      "phase": "New"
     },
     "bm-2-y-D3": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 12
-      },
-      "end": {
-        "x": 18,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 12
+          },
+          "end": {
+            "x": 18,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D3-D4"
+      "name": "Beam D3-D4",
+      "phase": "New"
     },
     "bm-2-x-E3": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 12
-      },
-      "end": {
-        "x": 30,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E3-F3"
+      "name": "Beam E3-F3",
+      "phase": "New"
     },
     "bm-2-y-E3": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 12
-      },
-      "end": {
-        "x": 24,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 24,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E3-E4"
+      "name": "Beam E3-E4",
+      "phase": "New"
     },
     "bm-2-y-F3": {
       "storey": "st-2",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 12
-      },
-      "end": {
-        "x": 30,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F3-F4"
+      "name": "Beam F3-F4",
+      "phase": "New"
     },
     "bm-2-x-A4": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 18
-      },
-      "end": {
-        "x": 6,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 18
+          },
+          "end": {
+            "x": 6,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A4-B4"
+      "name": "Beam A4-B4",
+      "phase": "New"
     },
     "bm-2-x-B4": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 18
-      },
-      "end": {
-        "x": 12,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 18
+          },
+          "end": {
+            "x": 12,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B4-C4"
+      "name": "Beam B4-C4",
+      "phase": "New"
     },
     "bm-2-x-C4": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 18
-      },
-      "end": {
-        "x": 18,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 18
+          },
+          "end": {
+            "x": 18,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C4-D4"
+      "name": "Beam C4-D4",
+      "phase": "New"
     },
     "bm-2-x-D4": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 18
-      },
-      "end": {
-        "x": 24,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 18
+          },
+          "end": {
+            "x": 24,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D4-E4"
+      "name": "Beam D4-E4",
+      "phase": "New"
     },
     "bm-2-x-E4": {
       "storey": "st-2",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 18
-      },
-      "end": {
-        "x": 30,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 18
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E4-F4"
+      "name": "Beam E4-F4",
+      "phase": "New"
     },
     "bm-3-x-A1": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 6,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A1-B1"
+      "name": "Beam A1-B1",
+      "phase": "New"
     },
     "bm-3-y-A1": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 0
-      },
-      "end": {
-        "x": 0,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 0,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A1-A2"
+      "name": "Beam A1-A2",
+      "phase": "New"
     },
     "bm-3-x-B1": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 0
-      },
-      "end": {
-        "x": 12,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 12,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B1-C1"
+      "name": "Beam B1-C1",
+      "phase": "New"
     },
     "bm-3-y-B1": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 0
-      },
-      "end": {
-        "x": 6,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B1-B2"
+      "name": "Beam B1-B2",
+      "phase": "New"
     },
     "bm-3-x-C1": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 0
-      },
-      "end": {
-        "x": 18,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 0
+          },
+          "end": {
+            "x": 18,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C1-D1"
+      "name": "Beam C1-D1",
+      "phase": "New"
     },
     "bm-3-y-C1": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 0
-      },
-      "end": {
-        "x": 12,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 0
+          },
+          "end": {
+            "x": 12,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C1-C2"
+      "name": "Beam C1-C2",
+      "phase": "New"
     },
     "bm-3-x-D1": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 0
-      },
-      "end": {
-        "x": 24,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 0
+          },
+          "end": {
+            "x": 24,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D1-E1"
+      "name": "Beam D1-E1",
+      "phase": "New"
     },
     "bm-3-y-D1": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 0
-      },
-      "end": {
-        "x": 18,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 0
+          },
+          "end": {
+            "x": 18,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D1-D2"
+      "name": "Beam D1-D2",
+      "phase": "New"
     },
     "bm-3-x-E1": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 0
-      },
-      "end": {
-        "x": 30,
-        "y": 0
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 0
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E1-F1"
+      "name": "Beam E1-F1",
+      "phase": "New"
     },
     "bm-3-y-E1": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 0
-      },
-      "end": {
-        "x": 24,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 24,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E1-E2"
+      "name": "Beam E1-E2",
+      "phase": "New"
     },
     "bm-3-y-F1": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 0
-      },
-      "end": {
-        "x": 30,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F1-F2"
+      "name": "Beam F1-F2",
+      "phase": "New"
     },
     "bm-3-x-A2": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 6
-      },
-      "end": {
-        "x": 6,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 6,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A2-B2"
+      "name": "Beam A2-B2",
+      "phase": "New"
     },
     "bm-3-y-A2": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 6
-      },
-      "end": {
-        "x": 0,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A2-A3"
+      "name": "Beam A2-A3",
+      "phase": "New"
     },
     "bm-3-x-B2": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 6
-      },
-      "end": {
-        "x": 12,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 6
+          },
+          "end": {
+            "x": 12,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B2-C2"
+      "name": "Beam B2-C2",
+      "phase": "New"
     },
     "bm-3-y-B2": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 6
-      },
-      "end": {
-        "x": 6,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 6
+          },
+          "end": {
+            "x": 6,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B2-B3"
+      "name": "Beam B2-B3",
+      "phase": "New"
     },
     "bm-3-x-C2": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 6
-      },
-      "end": {
-        "x": 18,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 6
+          },
+          "end": {
+            "x": 18,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C2-D2"
+      "name": "Beam C2-D2",
+      "phase": "New"
     },
     "bm-3-y-C2": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 6
-      },
-      "end": {
-        "x": 12,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 6
+          },
+          "end": {
+            "x": 12,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C2-C3"
+      "name": "Beam C2-C3",
+      "phase": "New"
     },
     "bm-3-x-D2": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 6
-      },
-      "end": {
-        "x": 24,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 6
+          },
+          "end": {
+            "x": 24,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D2-E2"
+      "name": "Beam D2-E2",
+      "phase": "New"
     },
     "bm-3-y-D2": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 6
-      },
-      "end": {
-        "x": 18,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 6
+          },
+          "end": {
+            "x": 18,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D2-D3"
+      "name": "Beam D2-D3",
+      "phase": "New"
     },
     "bm-3-x-E2": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 6
-      },
-      "end": {
-        "x": 30,
-        "y": 6
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 6
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E2-F2"
+      "name": "Beam E2-F2",
+      "phase": "New"
     },
     "bm-3-y-E2": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 6
-      },
-      "end": {
-        "x": 24,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 6
+          },
+          "end": {
+            "x": 24,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E2-E3"
+      "name": "Beam E2-E3",
+      "phase": "New"
     },
     "bm-3-y-F2": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 6
-      },
-      "end": {
-        "x": 30,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 6
+          },
+          "end": {
+            "x": 30,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F2-F3"
+      "name": "Beam F2-F3",
+      "phase": "New"
     },
     "bm-3-x-A3": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 12
-      },
-      "end": {
-        "x": 6,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 12
+          },
+          "end": {
+            "x": 6,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A3-B3"
+      "name": "Beam A3-B3",
+      "phase": "New"
     },
     "bm-3-y-A3": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 0,
-        "y": 12
-      },
-      "end": {
-        "x": 0,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 12
+          },
+          "end": {
+            "x": 0,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A3-A4"
+      "name": "Beam A3-A4",
+      "phase": "New"
     },
     "bm-3-x-B3": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 12
-      },
-      "end": {
-        "x": 12,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 12
+          },
+          "end": {
+            "x": 12,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B3-C3"
+      "name": "Beam B3-C3",
+      "phase": "New"
     },
     "bm-3-y-B3": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 6,
-        "y": 12
-      },
-      "end": {
-        "x": 6,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 12
+          },
+          "end": {
+            "x": 6,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B3-B4"
+      "name": "Beam B3-B4",
+      "phase": "New"
     },
     "bm-3-x-C3": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 12
-      },
-      "end": {
-        "x": 18,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 12
+          },
+          "end": {
+            "x": 18,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C3-D3"
+      "name": "Beam C3-D3",
+      "phase": "New"
     },
     "bm-3-y-C3": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 12,
-        "y": 12
-      },
-      "end": {
-        "x": 12,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 12
+          },
+          "end": {
+            "x": 12,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C3-C4"
+      "name": "Beam C3-C4",
+      "phase": "New"
     },
     "bm-3-x-D3": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 12
-      },
-      "end": {
-        "x": 24,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 12
+          },
+          "end": {
+            "x": 24,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D3-E3"
+      "name": "Beam D3-E3",
+      "phase": "New"
     },
     "bm-3-y-D3": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 18,
-        "y": 12
-      },
-      "end": {
-        "x": 18,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 12
+          },
+          "end": {
+            "x": 18,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D3-D4"
+      "name": "Beam D3-D4",
+      "phase": "New"
     },
     "bm-3-x-E3": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 12
-      },
-      "end": {
-        "x": 30,
-        "y": 12
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 12
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E3-F3"
+      "name": "Beam E3-F3",
+      "phase": "New"
     },
     "bm-3-y-E3": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 24,
-        "y": 12
-      },
-      "end": {
-        "x": 24,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 24,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E3-E4"
+      "name": "Beam E3-E4",
+      "phase": "New"
     },
     "bm-3-y-F3": {
       "storey": "st-3",
       "beam_type": "bt-rc-secondary",
-      "start": {
-        "x": 30,
-        "y": 12
-      },
-      "end": {
-        "x": 30,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 30,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam F3-F4"
+      "name": "Beam F3-F4",
+      "phase": "New"
     },
     "bm-3-x-A4": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 0,
-        "y": 18
-      },
-      "end": {
-        "x": 6,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 18
+          },
+          "end": {
+            "x": 6,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam A4-B4"
+      "name": "Beam A4-B4",
+      "phase": "New"
     },
     "bm-3-x-B4": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 6,
-        "y": 18
-      },
-      "end": {
-        "x": 12,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 18
+          },
+          "end": {
+            "x": 12,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam B4-C4"
+      "name": "Beam B4-C4",
+      "phase": "New"
     },
     "bm-3-x-C4": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 12,
-        "y": 18
-      },
-      "end": {
-        "x": 18,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": 18
+          },
+          "end": {
+            "x": 18,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam C4-D4"
+      "name": "Beam C4-D4",
+      "phase": "New"
     },
     "bm-3-x-D4": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 18,
-        "y": 18
-      },
-      "end": {
-        "x": 24,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 18,
+            "y": 18
+          },
+          "end": {
+            "x": 24,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam D4-E4"
+      "name": "Beam D4-E4",
+      "phase": "New"
     },
     "bm-3-x-E4": {
       "storey": "st-3",
       "beam_type": "bt-rc-primary",
-      "start": {
-        "x": 24,
-        "y": 18
-      },
-      "end": {
-        "x": 30,
-        "y": 18
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 18
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
       },
       "top_offset": -0.36,
-      "name": "Beam E4-F4"
+      "name": "Beam E4-F4",
+      "phase": "New"
+    },
+    "bm-canopy-1": {
+      "storey": "st-0",
+      "beam_type": "bt-hea-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": -2.4
+          },
+          "end": {
+            "x": 18,
+            "y": -2.4
+          }
+        }
+      },
+      "top_offset": -0.36,
+      "name": "Canopy Beam 1",
+      "phase": "New"
+    },
+    "bm-canopy-2": {
+      "storey": "st-0",
+      "beam_type": "bt-hea-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 12,
+            "y": -1.2
+          },
+          "end": {
+            "x": 18,
+            "y": -1.2
+          }
+        }
+      },
+      "top_offset": -0.36,
+      "name": "Canopy Beam 2",
+      "phase": "New"
+    },
+    "bm-1-arc-E1-F2": {
+      "storey": "st-1",
+      "beam_type": "bt-rc-secondary",
+      "axis": {
+        "Arc": {
+          "start": {
+            "x": 24,
+            "y": 0
+          },
+          "end": {
+            "x": 30,
+            "y": 6
+          },
+          "bulge": -0.25
+        }
+      },
+      "top_offset": -0.36,
+      "name": "Arc Beam E1-F2",
+      "phase": "New"
+    },
+    "bm-3-incline-E3-F4": {
+      "storey": "st-3",
+      "beam_type": "bt-rc-secondary",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 24,
+            "y": 12
+          },
+          "end": {
+            "x": 30,
+            "y": 18
+          }
+        }
+      },
+      "top_offset": -0.36,
+      "end_top_offset": -1,
+      "name": "Inclined Beam E3-F4",
+      "phase": "New"
     }
   },
   "slabs": {
@@ -6120,7 +7018,8 @@
         ]
       ],
       "offset": 0,
-      "name": "Floor Slab 1"
+      "name": "Floor Slab 1",
+      "phase": "New"
     },
     "sl-2": {
       "storey": "st-2",
@@ -6218,7 +7117,8 @@
         ]
       ],
       "offset": 0,
-      "name": "Floor Slab 2"
+      "name": "Floor Slab 2",
+      "phase": "New"
     },
     "sl-3": {
       "storey": "st-3",
@@ -6316,7 +7216,8 @@
         ]
       ],
       "offset": 0,
-      "name": "Floor Slab 3"
+      "name": "Floor Slab 3",
+      "phase": "New"
     }
   },
   "roofs": {
@@ -6356,7 +7257,8 @@
       "shape": "Flat",
       "overhang": 0,
       "base_offset": 0,
-      "name": "Flat Roof"
+      "name": "Flat Roof",
+      "phase": "New"
     }
   },
   "openings": {
@@ -6879,7 +7781,8 @@
       "tread_thickness": 0.06,
       "riser": "Closed",
       "landing_depth": 1.2,
-      "name": "Escape Stair W 0"
+      "name": "Escape Stair W 0",
+      "phase": "New"
     },
     "sr-0-e": {
       "storey": "st-0",
@@ -6906,7 +7809,8 @@
       "tread_thickness": 0.06,
       "riser": "Closed",
       "landing_depth": 1.2,
-      "name": "Escape Stair E 0"
+      "name": "Escape Stair E 0",
+      "phase": "New"
     },
     "sr-1-w": {
       "storey": "st-1",
@@ -6933,7 +7837,8 @@
       "tread_thickness": 0.06,
       "riser": "Closed",
       "landing_depth": 1.2,
-      "name": "Escape Stair W 1"
+      "name": "Escape Stair W 1",
+      "phase": "New"
     },
     "sr-1-e": {
       "storey": "st-1",
@@ -6960,7 +7865,8 @@
       "tread_thickness": 0.06,
       "riser": "Closed",
       "landing_depth": 1.2,
-      "name": "Escape Stair E 1"
+      "name": "Escape Stair E 1",
+      "phase": "New"
     },
     "sr-2-w": {
       "storey": "st-2",
@@ -6987,7 +7893,8 @@
       "tread_thickness": 0.06,
       "riser": "Closed",
       "landing_depth": 1.2,
-      "name": "Escape Stair W 2"
+      "name": "Escape Stair W 2",
+      "phase": "New"
     },
     "sr-2-e": {
       "storey": "st-2",
@@ -7014,7 +7921,8 @@
       "tread_thickness": 0.06,
       "riser": "Closed",
       "landing_depth": 1.2,
-      "name": "Escape Stair E 2"
+      "name": "Escape Stair E 2",
+      "phase": "New"
     }
   },
   "railings": {},
@@ -7061,7 +7969,8 @@
       "zone": "z-office",
       "floor_finish": "m-oak",
       "wall_finish": "m-paint",
-      "ceiling_finish": "m-paint"
+      "ceiling_finish": "m-paint",
+      "phase": "New"
     },
     "sp-0-2": {
       "storey": "st-0",
@@ -7105,7 +8014,8 @@
       "zone": "z-office",
       "floor_finish": "m-oak",
       "wall_finish": "m-paint",
-      "ceiling_finish": "m-paint"
+      "ceiling_finish": "m-paint",
+      "phase": "New"
     },
     "sp-0-3": {
       "storey": "st-0",
@@ -7148,7 +8058,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-0-4": {
       "storey": "st-0",
@@ -7191,7 +8102,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-0-5": {
       "storey": "st-0",
@@ -7234,7 +8146,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-0-6": {
       "storey": "st-0",
@@ -7249,7 +8162,8 @@
         }
       },
       "usage": "Escape Stair",
-      "zone": "z-circulation"
+      "zone": "z-circulation",
+      "phase": "New"
     },
     "sp-0-7": {
       "storey": "st-0",
@@ -7264,7 +8178,8 @@
         }
       },
       "usage": "Escape Stair",
-      "zone": "z-circulation"
+      "zone": "z-circulation",
+      "phase": "New"
     },
     "sp-1-1": {
       "storey": "st-1",
@@ -7308,7 +8223,8 @@
       "zone": "z-office",
       "floor_finish": "m-oak",
       "wall_finish": "m-paint",
-      "ceiling_finish": "m-paint"
+      "ceiling_finish": "m-paint",
+      "phase": "New"
     },
     "sp-1-2": {
       "storey": "st-1",
@@ -7352,7 +8268,8 @@
       "zone": "z-office",
       "floor_finish": "m-oak",
       "wall_finish": "m-paint",
-      "ceiling_finish": "m-paint"
+      "ceiling_finish": "m-paint",
+      "phase": "New"
     },
     "sp-1-3": {
       "storey": "st-1",
@@ -7395,7 +8312,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-1-4": {
       "storey": "st-1",
@@ -7438,7 +8356,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-1-5": {
       "storey": "st-1",
@@ -7481,7 +8400,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-1-6": {
       "storey": "st-1",
@@ -7496,7 +8416,8 @@
         }
       },
       "usage": "Escape Stair",
-      "zone": "z-circulation"
+      "zone": "z-circulation",
+      "phase": "New"
     },
     "sp-1-7": {
       "storey": "st-1",
@@ -7511,7 +8432,8 @@
         }
       },
       "usage": "Escape Stair",
-      "zone": "z-circulation"
+      "zone": "z-circulation",
+      "phase": "New"
     },
     "sp-2-1": {
       "storey": "st-2",
@@ -7555,7 +8477,8 @@
       "zone": "z-office",
       "floor_finish": "m-oak",
       "wall_finish": "m-paint",
-      "ceiling_finish": "m-paint"
+      "ceiling_finish": "m-paint",
+      "phase": "New"
     },
     "sp-2-2": {
       "storey": "st-2",
@@ -7599,7 +8522,8 @@
       "zone": "z-office",
       "floor_finish": "m-oak",
       "wall_finish": "m-paint",
-      "ceiling_finish": "m-paint"
+      "ceiling_finish": "m-paint",
+      "phase": "New"
     },
     "sp-2-3": {
       "storey": "st-2",
@@ -7642,7 +8566,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-2-4": {
       "storey": "st-2",
@@ -7685,7 +8610,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-2-5": {
       "storey": "st-2",
@@ -7728,7 +8654,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-2-6": {
       "storey": "st-2",
@@ -7743,7 +8670,8 @@
         }
       },
       "usage": "Escape Stair",
-      "zone": "z-circulation"
+      "zone": "z-circulation",
+      "phase": "New"
     },
     "sp-2-7": {
       "storey": "st-2",
@@ -7758,7 +8686,8 @@
         }
       },
       "usage": "Escape Stair",
-      "zone": "z-circulation"
+      "zone": "z-circulation",
+      "phase": "New"
     },
     "sp-3-1": {
       "storey": "st-3",
@@ -7802,7 +8731,8 @@
       "zone": "z-office",
       "floor_finish": "m-oak",
       "wall_finish": "m-paint",
-      "ceiling_finish": "m-paint"
+      "ceiling_finish": "m-paint",
+      "phase": "New"
     },
     "sp-3-2": {
       "storey": "st-3",
@@ -7846,7 +8776,8 @@
       "zone": "z-office",
       "floor_finish": "m-oak",
       "wall_finish": "m-paint",
-      "ceiling_finish": "m-paint"
+      "ceiling_finish": "m-paint",
+      "phase": "New"
     },
     "sp-3-3": {
       "storey": "st-3",
@@ -7889,7 +8820,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-3-4": {
       "storey": "st-3",
@@ -7932,7 +8864,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-3-5": {
       "storey": "st-3",
@@ -7975,7 +8908,8 @@
       "usage": "Circulation",
       "zone": "z-circulation",
       "floor_finish": "m-ceramic",
-      "wall_finish": "m-paint"
+      "wall_finish": "m-paint",
+      "phase": "New"
     },
     "sp-3-6": {
       "storey": "st-3",
@@ -7990,7 +8924,8 @@
         }
       },
       "usage": "Escape Stair",
-      "zone": "z-circulation"
+      "zone": "z-circulation",
+      "phase": "New"
     },
     "sp-3-7": {
       "storey": "st-3",
@@ -8005,7 +8940,8 @@
         }
       },
       "usage": "Escape Stair",
-      "zone": "z-circulation"
+      "zone": "z-circulation",
+      "phase": "New"
     }
   },
   "properties": {
@@ -8069,6 +9005,20 @@
           }
         }
       }
+    },
+    "ct-rc-500": {
+      "Pset_ColumnCommon": {
+        "LoadBearing": {
+          "Boolean": {
+            "value": true
+          }
+        },
+        "FireRating": {
+          "Text": {
+            "value": "R 90"
+          }
+        }
+      }
     }
   },
   "classifications": {
@@ -8079,13 +9029,17 @@
       "cs-din-276": "343"
     },
     "cu-0-south": {
-      "cs-din-276": "337"
+      "cs-din-276": "337",
+      "cs-uniclass": "EF_25_10_25"
     },
     "w-0-core-w-south": {
       "cs-din-276": "341"
     },
     "rf-main": {
       "cs-din-276": "360"
+    },
+    "ct-rc-500": {
+      "cs-omniclass-23": "23-13 35 11 13"
     }
   },
   "schedules": {
@@ -9240,6 +10194,2245 @@
       "style": "as-plan"
     }
   },
+  "classification_systems": {
+    "cs-uniclass": {
+      "name": "Uniclass 2015",
+      "edition": "EF v1.16, Pr v1.34",
+      "source": "https://uniclass.thenbs.com",
+      "entries": [
+        {
+          "code": "EF_25",
+          "title": "Wall and barrier elements"
+        },
+        {
+          "code": "EF_25_10",
+          "title": "Walls",
+          "parent": "EF_25"
+        },
+        {
+          "code": "EF_25_10_25",
+          "title": "External walls",
+          "parent": "EF_25_10"
+        },
+        {
+          "code": "EF_25_10_30",
+          "title": "Free-standing walls",
+          "parent": "EF_25_10"
+        },
+        {
+          "code": "EF_25_10_40",
+          "title": "Internal walls",
+          "parent": "EF_25_10"
+        },
+        {
+          "code": "EF_25_10_60",
+          "title": "Parapet walls",
+          "parent": "EF_25_10"
+        },
+        {
+          "code": "EF_25_30",
+          "title": "Openings",
+          "parent": "EF_25"
+        },
+        {
+          "code": "Pr",
+          "title": "Products"
+        },
+        {
+          "code": "Pr_20",
+          "title": "Structure and general products",
+          "parent": "Pr"
+        },
+        {
+          "code": "Pr_20_93",
+          "title": "Unit structure and general products",
+          "parent": "Pr_20"
+        },
+        {
+          "code": "Pr_20_93_52",
+          "title": "Masonry walling units",
+          "parent": "Pr_20_93"
+        },
+        {
+          "code": "Pr_25",
+          "title": "Skin products",
+          "parent": "Pr"
+        },
+        {
+          "code": "Pr_25_71",
+          "title": "Rigid board, panel, sheet and sectional products",
+          "parent": "Pr_25"
+        },
+        {
+          "code": "Pr_25_93",
+          "title": "Unit skin products",
+          "parent": "Pr_25"
+        }
+      ]
+    },
+    "cs-din-276": {
+      "name": "DIN 276",
+      "edition": "2018-12",
+      "source": "https://www.din.de",
+      "entries": [
+        {
+          "code": "300",
+          "title": "Bauwerk - Baukonstruktionen"
+        },
+        {
+          "code": "330",
+          "title": "Außenwände/Vertikale Baukonstruktionen, außen",
+          "parent": "300"
+        },
+        {
+          "code": "331",
+          "title": "Tragende Außenwände",
+          "parent": "330"
+        },
+        {
+          "code": "332",
+          "title": "Nichttragende Außenwände",
+          "parent": "330"
+        },
+        {
+          "code": "333",
+          "title": "Außenstützen",
+          "parent": "330"
+        },
+        {
+          "code": "334",
+          "title": "Außentüren und -fenster",
+          "parent": "330"
+        },
+        {
+          "code": "337",
+          "title": "Elementierte Außenwände",
+          "parent": "330"
+        },
+        {
+          "code": "340",
+          "title": "Innenwände/Vertikale Baukonstruktionen, innen",
+          "parent": "300"
+        },
+        {
+          "code": "341",
+          "title": "Tragende Innenwände",
+          "parent": "340"
+        },
+        {
+          "code": "342",
+          "title": "Nichttragende Innenwände",
+          "parent": "340"
+        },
+        {
+          "code": "343",
+          "title": "Innenstützen",
+          "parent": "340"
+        },
+        {
+          "code": "344",
+          "title": "Innentüren und -fenster",
+          "parent": "340"
+        },
+        {
+          "code": "350",
+          "title": "Decken/Horizontale Baukonstruktionen",
+          "parent": "300"
+        },
+        {
+          "code": "351",
+          "title": "Deckenkonstruktionen",
+          "parent": "350"
+        },
+        {
+          "code": "360",
+          "title": "Dächer",
+          "parent": "300"
+        },
+        {
+          "code": "361",
+          "title": "Dachkonstruktionen",
+          "parent": "360"
+        },
+        {
+          "code": "362",
+          "title": "Dachfenster, Dachöffnungen",
+          "parent": "360"
+        },
+        {
+          "code": "363",
+          "title": "Dachbeläge",
+          "parent": "360"
+        }
+      ]
+    },
+    "cs-omniclass-23": {
+      "name": "OmniClass Table 23 Products",
+      "edition": "2012",
+      "source": "https://www.csiresources.org/standards/omniclass",
+      "entries": [
+        {
+          "code": "23-13 00 00",
+          "title": "Structural and Exterior Enclosure Products"
+        },
+        {
+          "code": "23-13 35 00",
+          "title": "Framing Products",
+          "parent": "23-13 00 00"
+        },
+        {
+          "code": "23-13 35 11",
+          "title": "Structural Frames",
+          "parent": "23-13 35 00"
+        },
+        {
+          "code": "23-13 35 11 13",
+          "title": "Column Slab Frames",
+          "parent": "23-13 35 11"
+        },
+        {
+          "code": "23-17 00 00",
+          "title": "Openings, Passages, and Protection Products"
+        },
+        {
+          "code": "23-17 23 00",
+          "title": "Circulation and Escape Products",
+          "parent": "23-17 00 00"
+        },
+        {
+          "code": "23-17 23 17",
+          "title": "Stairs",
+          "parent": "23-17 23 00"
+        }
+      ]
+    }
+  },
+  "property_templates": {
+    "pt-wall": {
+      "name": "Pset_WallCommon",
+      "applies_to": [
+        "Wall",
+        "WallType"
+      ],
+      "properties": [
+        {
+          "name": "IsExternal",
+          "kind": "Boolean",
+          "required": false,
+          "allowed": [],
+          "default_value": {
+            "Boolean": {
+              "value": false
+            }
+          }
+        },
+        {
+          "name": "LoadBearing",
+          "kind": "Boolean",
+          "required": false,
+          "allowed": [],
+          "default_value": {
+            "Boolean": {
+              "value": false
+            }
+          }
+        },
+        {
+          "name": "FireRating",
+          "kind": "Text",
+          "required": false,
+          "allowed": [
+            {
+              "Text": {
+                "value": "REI 30"
+              }
+            },
+            {
+              "Text": {
+                "value": "REI 60"
+              }
+            },
+            {
+              "Text": {
+                "value": "REI 90"
+              }
+            },
+            {
+              "Text": {
+                "value": "REI 120"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ThermalTransmittance",
+          "kind": "Real",
+          "required": false,
+          "allowed": [],
+          "unit": "W/(m2.K)",
+          "minimum": 0,
+          "maximum": 5
+        }
+      ]
+    },
+    "pt-column": {
+      "name": "Pset_ColumnCommon",
+      "applies_to": [
+        "Column",
+        "ColumnType"
+      ],
+      "properties": [
+        {
+          "name": "LoadBearing",
+          "kind": "Boolean",
+          "required": false,
+          "allowed": [],
+          "default_value": {
+            "Boolean": {
+              "value": false
+            }
+          }
+        },
+        {
+          "name": "FireRating",
+          "kind": "Text",
+          "required": false,
+          "allowed": [
+            {
+              "Text": {
+                "value": "R 30"
+              }
+            },
+            {
+              "Text": {
+                "value": "R 60"
+              }
+            },
+            {
+              "Text": {
+                "value": "R 90"
+              }
+            },
+            {
+              "Text": {
+                "value": "R 120"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "pt-curtain": {
+      "name": "Pset_CurtainWallCommon",
+      "applies_to": [
+        "CurtainWall"
+      ],
+      "properties": [
+        {
+          "name": "IsExternal",
+          "kind": "Boolean",
+          "required": false,
+          "allowed": [],
+          "default_value": {
+            "Boolean": {
+              "value": false
+            }
+          }
+        },
+        {
+          "name": "ThermalTransmittance",
+          "kind": "Real",
+          "required": false,
+          "allowed": [],
+          "unit": "W/(m2.K)",
+          "minimum": 0,
+          "maximum": 5
+        }
+      ]
+    },
+    "pt-door": {
+      "name": "Pset_DoorCommon",
+      "applies_to": [
+        "Door",
+        "DoorType"
+      ],
+      "properties": [
+        {
+          "name": "IsExternal",
+          "kind": "Boolean",
+          "required": false,
+          "allowed": [],
+          "default_value": {
+            "Boolean": {
+              "value": false
+            }
+          }
+        },
+        {
+          "name": "SecurityRating",
+          "kind": "Text",
+          "required": false,
+          "allowed": [
+            {
+              "Text": {
+                "value": "RC1"
+              }
+            },
+            {
+              "Text": {
+                "value": "RC2"
+              }
+            },
+            {
+              "Text": {
+                "value": "RC3"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "pt-window": {
+      "name": "Pset_WindowCommon",
+      "applies_to": [
+        "Window",
+        "WindowType"
+      ],
+      "properties": [
+        {
+          "name": "ThermalTransmittance",
+          "kind": "Real",
+          "required": false,
+          "allowed": [],
+          "unit": "W/(m2.K)",
+          "minimum": 0,
+          "maximum": 5
+        },
+        {
+          "name": "GlazingAreaFraction",
+          "kind": "Real",
+          "required": false,
+          "allowed": [],
+          "minimum": 0,
+          "maximum": 1
+        }
+      ]
+    },
+    "pt-roof": {
+      "name": "Pset_RoofCommon",
+      "applies_to": [
+        "Roof",
+        "RoofType"
+      ],
+      "properties": [
+        {
+          "name": "ThermalTransmittance",
+          "kind": "Real",
+          "required": false,
+          "allowed": [],
+          "unit": "W/(m2.K)",
+          "minimum": 0,
+          "maximum": 5
+        },
+        {
+          "name": "FireRating",
+          "kind": "Text",
+          "required": false,
+          "allowed": [
+            {
+              "Text": {
+                "value": "RF1"
+              }
+            },
+            {
+              "Text": {
+                "value": "RF2"
+              }
+            },
+            {
+              "Text": {
+                "value": "RF3"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "pt-space": {
+      "name": "Pset_SpaceCommon",
+      "applies_to": [
+        "Space"
+      ],
+      "properties": [
+        {
+          "name": "OccupancyType",
+          "kind": "Text",
+          "required": false,
+          "allowed": []
+        },
+        {
+          "name": "Reference",
+          "kind": "Text",
+          "required": false,
+          "allowed": []
+        }
+      ]
+    },
+    "pt-energy": {
+      "name": "Semio_Energy",
+      "applies_to": [
+        "Space"
+      ],
+      "properties": [
+        {
+          "name": "HeatedZone",
+          "kind": "Boolean",
+          "required": false,
+          "allowed": [],
+          "default_value": {
+            "Boolean": {
+              "value": false
+            }
+          }
+        },
+        {
+          "name": "TargetTemperature",
+          "kind": "Real",
+          "required": false,
+          "allowed": [],
+          "unit": "°C",
+          "minimum": 5,
+          "maximum": 30
+        }
+      ]
+    }
+  },
+  "families": {
+    "fam-hea-300": {
+      "name": "HEA 300",
+      "category": "Profile"
+    },
+    "fam-table": {
+      "name": "Table",
+      "category": "Furniture"
+    },
+    "fam-chair": {
+      "name": "Chair",
+      "category": "Furniture"
+    },
+    "fam-diffuser": {
+      "name": "Air terminal",
+      "category": "Mechanical"
+    },
+    "fam-basin": {
+      "name": "Basin",
+      "category": "Plumbing"
+    },
+    "fam-tap": {
+      "name": "Tap",
+      "category": "Plumbing"
+    },
+    "fam-lamp": {
+      "name": "Pendant lamp",
+      "category": "Lighting"
+    }
+  },
+  "family_parameters": {
+    "fam-hea-300.h": {
+      "family": "fam-hea-300",
+      "name": "h",
+      "kind": "Length",
+      "value": "290 mm"
+    },
+    "fam-hea-300.b": {
+      "family": "fam-hea-300",
+      "name": "b",
+      "kind": "Length",
+      "value": "300 mm"
+    },
+    "fam-hea-300.tw": {
+      "family": "fam-hea-300",
+      "name": "tw",
+      "kind": "Length",
+      "value": "8.5 mm"
+    },
+    "fam-hea-300.tf": {
+      "family": "fam-hea-300",
+      "name": "tf",
+      "kind": "Length",
+      "value": "14 mm"
+    },
+    "fam-table.width": {
+      "family": "fam-table",
+      "name": "width",
+      "kind": "Length",
+      "value": "1.6 m"
+    },
+    "fam-table.depth": {
+      "family": "fam-table",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.8 m"
+    },
+    "fam-table.height": {
+      "family": "fam-table",
+      "name": "height",
+      "kind": "Length",
+      "value": "0.74 m"
+    },
+    "fam-table.top_thickness": {
+      "family": "fam-table",
+      "name": "top_thickness",
+      "kind": "Length",
+      "value": "30 mm"
+    },
+    "fam-table.leg_section": {
+      "family": "fam-table",
+      "name": "leg_section",
+      "kind": "Length",
+      "value": "60 mm"
+    },
+    "fam-table.leg_inset": {
+      "family": "fam-table",
+      "name": "leg_inset",
+      "kind": "Length",
+      "value": "50 mm"
+    },
+    "fam-table.leg_height": {
+      "family": "fam-table",
+      "name": "leg_height",
+      "kind": "Length",
+      "value": "height - top_thickness"
+    },
+    "fam-table.leg_x": {
+      "family": "fam-table",
+      "name": "leg_x",
+      "kind": "Length",
+      "value": "width - leg_inset - leg_section"
+    },
+    "fam-table.leg_y": {
+      "family": "fam-table",
+      "name": "leg_y",
+      "kind": "Length",
+      "value": "depth - leg_inset - leg_section"
+    },
+    "fam-table.seats": {
+      "family": "fam-table",
+      "name": "seats",
+      "kind": "Integer",
+      "value": "if width > 1.4 m then 6 else 4"
+    },
+    "fam-chair.seat_width": {
+      "family": "fam-chair",
+      "name": "seat_width",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.seat_depth": {
+      "family": "fam-chair",
+      "name": "seat_depth",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.seat_height": {
+      "family": "fam-chair",
+      "name": "seat_height",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.back_height": {
+      "family": "fam-chair",
+      "name": "back_height",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.plank": {
+      "family": "fam-chair",
+      "name": "plank",
+      "kind": "Length",
+      "value": "40 mm"
+    },
+    "fam-chair.leg": {
+      "family": "fam-chair",
+      "name": "leg",
+      "kind": "Length",
+      "value": "40 mm"
+    },
+    "fam-chair.leg_x": {
+      "family": "fam-chair",
+      "name": "leg_x",
+      "kind": "Length",
+      "value": "seat_width - leg"
+    },
+    "fam-chair.leg_y": {
+      "family": "fam-chair",
+      "name": "leg_y",
+      "kind": "Length",
+      "value": "seat_depth - leg"
+    },
+    "fam-chair.leg_height": {
+      "family": "fam-chair",
+      "name": "leg_height",
+      "kind": "Length",
+      "value": "seat_height - plank"
+    },
+    "fam-diffuser.size": {
+      "family": "fam-diffuser",
+      "name": "size",
+      "kind": "Length",
+      "value": "0.6 m"
+    },
+    "fam-diffuser.thickness": {
+      "family": "fam-diffuser",
+      "name": "thickness",
+      "kind": "Length",
+      "value": "80 mm"
+    },
+    "fam-basin.width": {
+      "family": "fam-basin",
+      "name": "width",
+      "kind": "Length",
+      "value": "0.55 m"
+    },
+    "fam-basin.depth": {
+      "family": "fam-basin",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-basin.bowl_height": {
+      "family": "fam-basin",
+      "name": "bowl_height",
+      "kind": "Length",
+      "value": "0.18 m"
+    },
+    "fam-tap.body": {
+      "family": "fam-tap",
+      "name": "body",
+      "kind": "Length",
+      "value": "30 mm"
+    },
+    "fam-tap.reach": {
+      "family": "fam-tap",
+      "name": "reach",
+      "kind": "Length",
+      "value": "0.18 m"
+    },
+    "fam-tap.tap_height": {
+      "family": "fam-tap",
+      "name": "tap_height",
+      "kind": "Length",
+      "value": "0.12 m"
+    },
+    "fam-lamp.drop": {
+      "family": "fam-lamp",
+      "name": "drop",
+      "kind": "Length",
+      "value": "0.5 m"
+    },
+    "fam-lamp.shade": {
+      "family": "fam-lamp",
+      "name": "shade",
+      "kind": "Length",
+      "value": "0.4 m"
+    },
+    "fam-lamp.shade_height": {
+      "family": "fam-lamp",
+      "name": "shade_height",
+      "kind": "Length",
+      "value": "0.18 m"
+    },
+    "fam-lamp.cord": {
+      "family": "fam-lamp",
+      "name": "cord",
+      "kind": "Length",
+      "value": "12 mm"
+    }
+  },
+  "family_solids": {
+    "fs-hea-300-section": {
+      "family": "fam-hea-300",
+      "name": "HEA 300 section",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "IShape": {
+              "width": "b",
+              "depth": "h",
+              "web": "tw",
+              "flange": "tf"
+            }
+          },
+          "base": "0 m",
+          "height": "1 m"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-top": {
+      "family": "fam-table",
+      "name": "Top",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "leg_height",
+          "width": "width",
+          "depth": "depth",
+          "height": "top_thickness"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-leg-1": {
+      "family": "fam-table",
+      "name": "Leg 1",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_inset",
+          "y": "leg_inset",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-leg-2": {
+      "family": "fam-table",
+      "name": "Leg 2",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "leg_inset",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-leg-3": {
+      "family": "fam-table",
+      "name": "Leg 3",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-leg-4": {
+      "family": "fam-table",
+      "name": "Leg 4",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_inset",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-seat": {
+      "family": "fam-chair",
+      "name": "Seat",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "leg_height",
+          "width": "seat_width",
+          "depth": "seat_depth",
+          "height": "plank"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-back": {
+      "family": "fam-chair",
+      "name": "Back",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "seat_height",
+          "width": "seat_width",
+          "depth": "plank",
+          "height": "back_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-leg-1": {
+      "family": "fam-chair",
+      "name": "Leg 1",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "leg",
+          "depth": "leg",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-leg-2": {
+      "family": "fam-chair",
+      "name": "Leg 2",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "leg",
+          "depth": "leg",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-leg-3": {
+      "family": "fam-chair",
+      "name": "Leg 3",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg",
+          "depth": "leg",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-leg-4": {
+      "family": "fam-chair",
+      "name": "Leg 4",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg",
+          "depth": "leg",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-diffuser-plate": {
+      "family": "fam-diffuser",
+      "name": "Plate",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - size / 2",
+          "y": "0 m - size / 2",
+          "z": "0 m - thickness",
+          "width": "size",
+          "depth": "size",
+          "height": "thickness"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-basin-bowl": {
+      "family": "fam-basin",
+      "name": "Bowl",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - width / 2",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "bowl_height"
+        }
+      },
+      "material": "\"m-ceramic\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-tap-body": {
+      "family": "fam-tap",
+      "name": "Body",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - body / 2",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "body",
+          "depth": "reach",
+          "height": "tap_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-lamp-cord": {
+      "family": "fam-lamp",
+      "name": "Cord",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - cord / 2",
+          "y": "0 m - cord / 2",
+          "z": "0 m - drop",
+          "width": "cord",
+          "depth": "cord",
+          "height": "drop"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-lamp-shade": {
+      "family": "fam-lamp",
+      "name": "Shade",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - shade / 2",
+          "y": "0 m - shade / 2",
+          "z": "0 m - drop - shade_height",
+          "width": "shade",
+          "depth": "shade",
+          "height": "shade_height"
+        }
+      },
+      "material": "\"m-paint\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    }
+  },
+  "components": {
+    "cmp-desk-1": {
+      "storey": "st-1",
+      "family": "fam-table",
+      "position": {
+        "x": 2,
+        "y": 1
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Desk 1"
+    },
+    "cmp-chair-1": {
+      "storey": "st-1",
+      "family": "fam-chair",
+      "position": {
+        "x": 3.025,
+        "y": 2.15
+      },
+      "elevation": 0,
+      "rotation": 3.141592653589793,
+      "mirrored": false,
+      "name": "Office Chair 1"
+    },
+    "cmp-desk-2": {
+      "storey": "st-1",
+      "family": "fam-table",
+      "position": {
+        "x": 6.2,
+        "y": 1
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Desk 2"
+    },
+    "cmp-chair-2": {
+      "storey": "st-1",
+      "family": "fam-chair",
+      "position": {
+        "x": 7.325,
+        "y": 2.15
+      },
+      "elevation": 0,
+      "rotation": 3.141592653589793,
+      "mirrored": false,
+      "name": "Office Chair 2"
+    },
+    "cmp-desk-3": {
+      "storey": "st-1",
+      "family": "fam-table",
+      "position": {
+        "x": 10.4,
+        "y": 1
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Desk 3"
+    },
+    "cmp-chair-3": {
+      "storey": "st-1",
+      "family": "fam-chair",
+      "position": {
+        "x": 11.325,
+        "y": 2.15
+      },
+      "elevation": 0,
+      "rotation": 3.141592653589793,
+      "mirrored": false,
+      "name": "Office Chair 3"
+    },
+    "cmp-desk-4": {
+      "storey": "st-1",
+      "family": "fam-table",
+      "position": {
+        "x": 14.6,
+        "y": 1
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Desk 4"
+    },
+    "cmp-chair-4": {
+      "storey": "st-1",
+      "family": "fam-chair",
+      "position": {
+        "x": 15.725,
+        "y": 2.15
+      },
+      "elevation": 0,
+      "rotation": 3.141592653589793,
+      "mirrored": false,
+      "name": "Office Chair 4"
+    },
+    "cmp-desk-5": {
+      "storey": "st-1",
+      "family": "fam-table",
+      "position": {
+        "x": 18.8,
+        "y": 1
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Desk 5"
+    },
+    "cmp-chair-5": {
+      "storey": "st-1",
+      "family": "fam-chair",
+      "position": {
+        "x": 19.825000000000003,
+        "y": 2.15
+      },
+      "elevation": 0,
+      "rotation": 3.141592653589793,
+      "mirrored": false,
+      "name": "Office Chair 5"
+    },
+    "cmp-desk-6": {
+      "storey": "st-1",
+      "family": "fam-table",
+      "position": {
+        "x": 23,
+        "y": 1
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Desk 6"
+    },
+    "cmp-chair-6": {
+      "storey": "st-1",
+      "family": "fam-chair",
+      "position": {
+        "x": 23.925,
+        "y": 2.15
+      },
+      "elevation": 0,
+      "rotation": 3.141592653589793,
+      "mirrored": false,
+      "name": "Office Chair 6"
+    },
+    "cmp-supply-1": {
+      "storey": "st-1",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 5,
+        "y": 3
+      },
+      "elevation": 2.8,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Supply",
+      "name": "Supply Diffuser 1"
+    },
+    "cmp-supply-2": {
+      "storey": "st-1",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 12,
+        "y": 3
+      },
+      "elevation": 2.8,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Supply",
+      "name": "Supply Diffuser 2"
+    },
+    "cmp-supply-3": {
+      "storey": "st-1",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 19,
+        "y": 3
+      },
+      "elevation": 2.8,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Supply",
+      "name": "Supply Diffuser 3"
+    },
+    "cmp-supply-4": {
+      "storey": "st-1",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 26,
+        "y": 3
+      },
+      "elevation": 2.8,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Supply",
+      "name": "Supply Diffuser 4"
+    },
+    "cmp-return-1": {
+      "storey": "st-1",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 8,
+        "y": 15
+      },
+      "elevation": 2.8,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Return",
+      "name": "Return Grille 1"
+    },
+    "cmp-return-2": {
+      "storey": "st-1",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 15,
+        "y": 15
+      },
+      "elevation": 2.8,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Return",
+      "name": "Return Grille 2"
+    },
+    "cmp-return-3": {
+      "storey": "st-1",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 22,
+        "y": 15
+      },
+      "elevation": 2.8,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Return",
+      "name": "Return Grille 3"
+    },
+    "cmp-lamp-1": {
+      "storey": "st-1",
+      "family": "fam-lamp",
+      "position": {
+        "x": 3,
+        "y": 1
+      },
+      "elevation": 3.1,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Lighting",
+      "name": "Pendant Lamp 1"
+    },
+    "cmp-lamp-2": {
+      "storey": "st-1",
+      "family": "fam-lamp",
+      "position": {
+        "x": 9,
+        "y": 1
+      },
+      "elevation": 3.1,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Lighting",
+      "name": "Pendant Lamp 2"
+    },
+    "cmp-lamp-3": {
+      "storey": "st-1",
+      "family": "fam-lamp",
+      "position": {
+        "x": 15,
+        "y": 1
+      },
+      "elevation": 3.1,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Lighting",
+      "name": "Pendant Lamp 3"
+    },
+    "cmp-lamp-4": {
+      "storey": "st-1",
+      "family": "fam-lamp",
+      "position": {
+        "x": 21,
+        "y": 1
+      },
+      "elevation": 3.1,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Lighting",
+      "name": "Pendant Lamp 4"
+    },
+    "cmp-basin": {
+      "storey": "st-1",
+      "family": "fam-basin",
+      "position": {
+        "x": 6.7,
+        "y": 9
+      },
+      "elevation": 0.8,
+      "rotation": 0,
+      "mirrored": false,
+      "host": "w-1-core-w-west",
+      "system": "Waste",
+      "name": "Pantry Basin"
+    },
+    "cmp-tap": {
+      "storey": "st-1",
+      "family": "fam-tap",
+      "position": {
+        "x": 6.7,
+        "y": 9
+      },
+      "elevation": 0.95,
+      "rotation": 0,
+      "mirrored": false,
+      "host": "w-1-core-w-west",
+      "system": "DomesticWater",
+      "name": "Pantry Tap"
+    }
+  },
+  "component_overrides": {
+    "cmp-desk-1.width": {
+      "component": "cmp-desk-1",
+      "name": "width",
+      "value": "1.6 m"
+    },
+    "cmp-desk-1.depth": {
+      "component": "cmp-desk-1",
+      "name": "depth",
+      "value": "0.7 m"
+    },
+    "cmp-desk-2.width": {
+      "component": "cmp-desk-2",
+      "name": "width",
+      "value": "1.8 m"
+    },
+    "cmp-desk-2.depth": {
+      "component": "cmp-desk-2",
+      "name": "depth",
+      "value": "0.7 m"
+    },
+    "cmp-desk-2.height": {
+      "component": "cmp-desk-2",
+      "name": "height",
+      "value": "0.72 m"
+    },
+    "cmp-desk-3.width": {
+      "component": "cmp-desk-3",
+      "name": "width",
+      "value": "1.4 m"
+    },
+    "cmp-desk-3.depth": {
+      "component": "cmp-desk-3",
+      "name": "depth",
+      "value": "0.7 m"
+    },
+    "cmp-chair-3.seat_height": {
+      "component": "cmp-chair-3",
+      "name": "seat_height",
+      "value": "0.5 m"
+    },
+    "cmp-desk-4.width": {
+      "component": "cmp-desk-4",
+      "name": "width",
+      "value": "1.8 m"
+    },
+    "cmp-desk-4.depth": {
+      "component": "cmp-desk-4",
+      "name": "depth",
+      "value": "0.7 m"
+    },
+    "cmp-desk-4.height": {
+      "component": "cmp-desk-4",
+      "name": "height",
+      "value": "0.72 m"
+    },
+    "cmp-desk-5.width": {
+      "component": "cmp-desk-5",
+      "name": "width",
+      "value": "1.6 m"
+    },
+    "cmp-desk-5.depth": {
+      "component": "cmp-desk-5",
+      "name": "depth",
+      "value": "0.7 m"
+    },
+    "cmp-desk-6.width": {
+      "component": "cmp-desk-6",
+      "name": "width",
+      "value": "1.4 m"
+    },
+    "cmp-desk-6.depth": {
+      "component": "cmp-desk-6",
+      "name": "depth",
+      "value": "0.7 m"
+    },
+    "cmp-desk-6.height": {
+      "component": "cmp-desk-6",
+      "name": "height",
+      "value": "0.72 m"
+    },
+    "cmp-chair-6.seat_height": {
+      "component": "cmp-chair-6",
+      "name": "seat_height",
+      "value": "0.5 m"
+    },
+    "cmp-lamp-3.drop": {
+      "component": "cmp-lamp-3",
+      "name": "drop",
+      "value": "0.8 m"
+    },
+    "cmp-supply-4.size": {
+      "component": "cmp-supply-4",
+      "name": "size",
+      "value": "0.45 m"
+    },
+    "cmp-basin.width": {
+      "component": "cmp-basin",
+      "name": "width",
+      "value": "0.6 m"
+    }
+  },
+  "mep_elements": {
+    "mep-supply-main": {
+      "storey": "st-1",
+      "system": "Supply",
+      "shape": {
+        "Duct": {
+          "width": 0.4,
+          "height": 0.25
+        }
+      },
+      "path": [
+        {
+          "x": 1,
+          "y": 3,
+          "z": 3
+        },
+        {
+          "x": 27,
+          "y": 3,
+          "z": 3
+        }
+      ],
+      "name": "Supply Main"
+    },
+    "mep-return-main": {
+      "storey": "st-1",
+      "system": "Return",
+      "shape": {
+        "Duct": {
+          "width": 0.4,
+          "height": 0.25
+        }
+      },
+      "path": [
+        {
+          "x": 1,
+          "y": 15,
+          "z": 3
+        },
+        {
+          "x": 24,
+          "y": 15,
+          "z": 3
+        }
+      ],
+      "name": "Return Main"
+    },
+    "mep-lighting-main": {
+      "storey": "st-1",
+      "system": "Lighting",
+      "shape": {
+        "Tray": {
+          "width": 0.3,
+          "height": 0.06
+        }
+      },
+      "path": [
+        {
+          "x": 1,
+          "y": 1,
+          "z": 3.35
+        },
+        {
+          "x": 23,
+          "y": 1,
+          "z": 3.35
+        }
+      ],
+      "name": "Lighting Tray"
+    },
+    "mep-power-main": {
+      "storey": "st-1",
+      "system": "Power",
+      "shape": {
+        "Tray": {
+          "width": 0.3,
+          "height": 0.06
+        }
+      },
+      "path": [
+        {
+          "x": 1,
+          "y": 16.5,
+          "z": 3.1
+        },
+        {
+          "x": 29,
+          "y": 16.5,
+          "z": 3.1
+        }
+      ],
+      "name": "Power Tray"
+    },
+    "mep-water": {
+      "storey": "st-1",
+      "system": "DomesticWater",
+      "shape": {
+        "Pipe": {
+          "diameter": 0.02
+        }
+      },
+      "path": [
+        {
+          "x": 6.875,
+          "y": 10.5,
+          "z": 0.95
+        },
+        {
+          "x": 6.875,
+          "y": 9,
+          "z": 0.95
+        }
+      ],
+      "name": "Pantry Cold Water"
+    },
+    "mep-waste": {
+      "storey": "st-1",
+      "system": "Waste",
+      "shape": {
+        "Pipe": {
+          "diameter": 0.05
+        }
+      },
+      "path": [
+        {
+          "x": 6.875,
+          "y": 9,
+          "z": 0.8
+        },
+        {
+          "x": 6.875,
+          "y": 9,
+          "z": 0.2
+        },
+        {
+          "x": 6.875,
+          "y": 10.5,
+          "z": 0.2
+        }
+      ],
+      "name": "Pantry Waste"
+    },
+    "mep-supply-drop-1": {
+      "storey": "st-1",
+      "system": "Supply",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.3
+        }
+      },
+      "path": [
+        {
+          "x": 5,
+          "y": 3,
+          "z": 3
+        },
+        {
+          "x": 5,
+          "y": 3,
+          "z": 2.8
+        }
+      ],
+      "name": "Supply Drop 1"
+    },
+    "mep-supply-drop-2": {
+      "storey": "st-1",
+      "system": "Supply",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.3
+        }
+      },
+      "path": [
+        {
+          "x": 12,
+          "y": 3,
+          "z": 3
+        },
+        {
+          "x": 12,
+          "y": 3,
+          "z": 2.8
+        }
+      ],
+      "name": "Supply Drop 2"
+    },
+    "mep-supply-drop-3": {
+      "storey": "st-1",
+      "system": "Supply",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.3
+        }
+      },
+      "path": [
+        {
+          "x": 19,
+          "y": 3,
+          "z": 3
+        },
+        {
+          "x": 19,
+          "y": 3,
+          "z": 2.8
+        }
+      ],
+      "name": "Supply Drop 3"
+    },
+    "mep-supply-drop-4": {
+      "storey": "st-1",
+      "system": "Supply",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.3
+        }
+      },
+      "path": [
+        {
+          "x": 26,
+          "y": 3,
+          "z": 3
+        },
+        {
+          "x": 26,
+          "y": 3,
+          "z": 2.8
+        }
+      ],
+      "name": "Supply Drop 4"
+    },
+    "mep-return-drop-1": {
+      "storey": "st-1",
+      "system": "Return",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.3
+        }
+      },
+      "path": [
+        {
+          "x": 8,
+          "y": 15,
+          "z": 3
+        },
+        {
+          "x": 8,
+          "y": 15,
+          "z": 2.8
+        }
+      ],
+      "name": "Return Drop 1"
+    },
+    "mep-return-drop-2": {
+      "storey": "st-1",
+      "system": "Return",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.3
+        }
+      },
+      "path": [
+        {
+          "x": 15,
+          "y": 15,
+          "z": 3
+        },
+        {
+          "x": 15,
+          "y": 15,
+          "z": 2.8
+        }
+      ],
+      "name": "Return Drop 2"
+    },
+    "mep-return-drop-3": {
+      "storey": "st-1",
+      "system": "Return",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.3
+        }
+      },
+      "path": [
+        {
+          "x": 22,
+          "y": 15,
+          "z": 3
+        },
+        {
+          "x": 22,
+          "y": 15,
+          "z": 2.8
+        }
+      ],
+      "name": "Return Drop 3"
+    },
+    "mep-lighting-stub-1": {
+      "storey": "st-1",
+      "system": "Lighting",
+      "shape": {
+        "Tray": {
+          "width": 0.1,
+          "height": 0.05
+        }
+      },
+      "path": [
+        {
+          "x": 3,
+          "y": 1,
+          "z": 3.35
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "z": 3.1
+        }
+      ],
+      "name": "Lighting Stub 1"
+    },
+    "mep-lighting-stub-2": {
+      "storey": "st-1",
+      "system": "Lighting",
+      "shape": {
+        "Tray": {
+          "width": 0.1,
+          "height": 0.05
+        }
+      },
+      "path": [
+        {
+          "x": 9,
+          "y": 1,
+          "z": 3.35
+        },
+        {
+          "x": 9,
+          "y": 1,
+          "z": 3.1
+        }
+      ],
+      "name": "Lighting Stub 2"
+    },
+    "mep-lighting-stub-3": {
+      "storey": "st-1",
+      "system": "Lighting",
+      "shape": {
+        "Tray": {
+          "width": 0.1,
+          "height": 0.05
+        }
+      },
+      "path": [
+        {
+          "x": 15,
+          "y": 1,
+          "z": 3.35
+        },
+        {
+          "x": 15,
+          "y": 1,
+          "z": 3.1
+        }
+      ],
+      "name": "Lighting Stub 3"
+    },
+    "mep-lighting-stub-4": {
+      "storey": "st-1",
+      "system": "Lighting",
+      "shape": {
+        "Tray": {
+          "width": 0.1,
+          "height": 0.05
+        }
+      },
+      "path": [
+        {
+          "x": 21,
+          "y": 1,
+          "z": 3.35
+        },
+        {
+          "x": 21,
+          "y": 1,
+          "z": 3.1
+        }
+      ],
+      "name": "Lighting Stub 4"
+    }
+  },
+  "curtain_wall_types": {
+    "cwt-facade": {
+      "name": "Curtain wall 1.5 x 1.3",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.3
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.15
+        }
+      },
+      "border_mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.15
+        }
+      },
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "mullion_material": "m-steel"
+    }
+  },
+  "curtain_panel_overrides": {
+    "cpo-0-south-door": {
+      "curtain": "cu-0-south",
+      "u": 15,
+      "v": 0,
+      "panel": {
+        "Door": {
+          "door_type": "dr-core"
+        }
+      }
+    },
+    "cpo-0-south-vent": {
+      "curtain": "cu-0-south",
+      "u": 3,
+      "v": 1,
+      "panel": "Empty"
+    },
+    "cpo-0-south-spandrel": {
+      "curtain": "cu-0-south",
+      "u": 6,
+      "v": 1,
+      "panel": {
+        "Solid": {
+          "material": "m-concrete"
+        }
+      }
+    },
+    "cpo-1-south-window": {
+      "curtain": "cu-1-south",
+      "u": 4,
+      "v": 0,
+      "panel": {
+        "Window": {
+          "window_type": "wn-ribbon"
+        }
+      }
+    }
+  },
+  "space_conditions": {
+    "sp-0-1": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 21,
+      "cooling_setpoint": 25,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-0-2": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 21,
+      "cooling_setpoint": 25,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-0-3": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-0-4": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-0-5": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-0-6": {
+      "occupancy": "Escape stair",
+      "occupancy_density": 0.01,
+      "lighting_power_density": 2,
+      "schedule": "Office 08-18"
+    },
+    "sp-0-7": {
+      "occupancy": "Escape stair",
+      "occupancy_density": 0.01,
+      "lighting_power_density": 2,
+      "schedule": "Office 08-18"
+    },
+    "sp-1-1": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 21,
+      "cooling_setpoint": 25,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-1-2": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 21,
+      "cooling_setpoint": 25,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-1-3": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-1-4": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-1-5": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-1-6": {
+      "occupancy": "Escape stair",
+      "occupancy_density": 0.01,
+      "lighting_power_density": 2,
+      "schedule": "Office 08-18"
+    },
+    "sp-1-7": {
+      "occupancy": "Escape stair",
+      "occupancy_density": 0.01,
+      "lighting_power_density": 2,
+      "schedule": "Office 08-18"
+    },
+    "sp-2-1": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 21,
+      "cooling_setpoint": 25,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-2-2": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 21,
+      "cooling_setpoint": 25,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-2-3": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-2-4": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-2-5": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-2-6": {
+      "occupancy": "Escape stair",
+      "occupancy_density": 0.01,
+      "lighting_power_density": 2,
+      "schedule": "Office 08-18"
+    },
+    "sp-2-7": {
+      "occupancy": "Escape stair",
+      "occupancy_density": 0.01,
+      "lighting_power_density": 2,
+      "schedule": "Office 08-18"
+    },
+    "sp-3-1": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 21,
+      "cooling_setpoint": 25,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-3-2": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 21,
+      "cooling_setpoint": 25,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-3-3": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-3-4": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-3-5": {
+      "occupancy": "Circulation",
+      "occupancy_density": 0.02,
+      "heating_setpoint": 18,
+      "ventilation_rate": 0.3,
+      "lighting_power_density": 4,
+      "equipment_power_density": 1,
+      "schedule": "Office 08-18"
+    },
+    "sp-3-6": {
+      "occupancy": "Escape stair",
+      "occupancy_density": 0.01,
+      "lighting_power_density": 2,
+      "schedule": "Office 08-18"
+    },
+    "sp-3-7": {
+      "occupancy": "Escape stair",
+      "occupancy_density": 0.01,
+      "lighting_power_density": 2,
+      "schedule": "Office 08-18"
+    }
+  },
   "views": {
     "v-plan-st-0": {
       "building": "bldg-1",
@@ -9335,18 +12528,18 @@
       "building": "bldg-1",
       "name": "Section A",
       "kind": "Section",
-      "depth": 11.620000000000001,
+      "depth": 12.595,
       "hidden": [],
       "scale": 100,
       "detail": "Medium",
       "plane": {
         "start": {
           "x": -2.4699999999999998,
-          "y": 9
+          "y": 8.025
         },
         "end": {
           "x": 32.47,
-          "y": 9
+          "y": 8.025
         }
       }
     },
@@ -9361,7 +12554,7 @@
       "plane": {
         "start": {
           "x": 15.000000000000002,
-          "y": -2.62
+          "y": -4.57
         },
         "end": {
           "x": 15.000000000000002,
@@ -9373,18 +12566,18 @@
       "building": "bldg-1",
       "name": "South",
       "kind": "Elevation",
-      "depth": 22.240000000000002,
+      "depth": 24.19,
       "hidden": [],
       "scale": 100,
       "detail": "Medium",
       "plane": {
         "start": {
           "x": -2.4699999999999998,
-          "y": -2.62
+          "y": -4.57
         },
         "end": {
           "x": 32.47,
-          "y": -2.62
+          "y": -4.57
         }
       }
     },
@@ -9399,7 +12592,7 @@
       "plane": {
         "start": {
           "x": 32.47,
-          "y": -2.62
+          "y": -4.57
         },
         "end": {
           "x": 32.47,
@@ -9411,7 +12604,7 @@
       "building": "bldg-1",
       "name": "North",
       "kind": "Elevation",
-      "depth": 22.240000000000002,
+      "depth": 24.19,
       "hidden": [],
       "scale": 100,
       "detail": "Medium",
@@ -9441,7 +12634,7 @@
         },
         "end": {
           "x": -2.4699999999999998,
-          "y": -2.62
+          "y": -4.57
         }
       }
     },
@@ -9456,7 +12649,7 @@
       "camera": {
         "target": {
           "x": 15.000000000000002,
-          "y": 9
+          "y": 8.025
         },
         "target_height": 8.299999999999999,
         "azimuth": 0.7853981633974483,
@@ -9465,32 +12658,526 @@
       }
     }
   },
-  "classification_systems": {
-    "cs-din-276": {
-      "name": "DIN 276",
-      "edition": "",
-      "entries": [
-        {
-          "code": "333",
-          "title": "Außenstützen"
-        },
-        {
-          "code": "343",
-          "title": "Innenstützen"
-        },
-        {
-          "code": "337",
-          "title": "Elementierte Außenwände"
-        },
-        {
-          "code": "341",
-          "title": "Tragende Innenwände"
-        },
-        {
-          "code": "360",
-          "title": "Dächer"
+  "sheets": {
+    "sh-plans": {
+      "number": "A-101",
+      "name": "Floor plans",
+      "paper": {
+        "Iso": {
+          "size": "A0"
         }
-      ]
+      },
+      "orientation": "Landscape",
+      "project": "Office Building",
+      "drawn_by": "semio",
+      "checked_by": "",
+      "date": "2026-10-09",
+      "revision": "",
+      "scale_label": ""
+    },
+    "sh-sections": {
+      "number": "A-201",
+      "name": "Sections",
+      "paper": {
+        "Iso": {
+          "size": "A1"
+        }
+      },
+      "orientation": "Landscape",
+      "project": "Office Building",
+      "drawn_by": "semio",
+      "checked_by": "",
+      "date": "2026-10-09",
+      "revision": "",
+      "scale_label": ""
+    },
+    "sh-elevations": {
+      "number": "A-301",
+      "name": "Elevations",
+      "paper": {
+        "Iso": {
+          "size": "A1"
+        }
+      },
+      "orientation": "Landscape",
+      "project": "Office Building",
+      "drawn_by": "semio",
+      "checked_by": "",
+      "date": "2026-10-09",
+      "revision": "",
+      "scale_label": ""
+    }
+  },
+  "viewports": {
+    "vp-plans-plan-st-0": {
+      "sheet": "sh-plans",
+      "view": "v-plan-st-0",
+      "position": {
+        "x": 30,
+        "y": 20
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": -0.47,
+          "y": -2.57
+        },
+        "max": {
+          "x": 30.470000000000002,
+          "y": 18.62
+        }
+      }
+    },
+    "vp-plans-plan-st-1": {
+      "sheet": "sh-plans",
+      "view": "v-plan-st-1",
+      "position": {
+        "x": 349.4,
+        "y": 20
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": -0.47,
+          "y": -2.57
+        },
+        "max": {
+          "x": 30.470000000000002,
+          "y": 18.62
+        }
+      }
+    },
+    "vp-plans-plan-st-2": {
+      "sheet": "sh-plans",
+      "view": "v-plan-st-2",
+      "position": {
+        "x": 668.8,
+        "y": 20
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": -0.47,
+          "y": -2.57
+        },
+        "max": {
+          "x": 30.470000000000002,
+          "y": 18.62
+        }
+      }
+    },
+    "vp-plans-plan-st-3": {
+      "sheet": "sh-plans",
+      "view": "v-plan-st-3",
+      "position": {
+        "x": 30,
+        "y": 241.9
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": -0.47,
+          "y": -2.57
+        },
+        "max": {
+          "x": 30.470000000000002,
+          "y": 18.62
+        }
+      }
+    },
+    "vp-plans-plan-st-r": {
+      "sheet": "sh-plans",
+      "view": "v-plan-st-r",
+      "position": {
+        "x": 349.4,
+        "y": 241.9
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": -0.47,
+          "y": -2.57
+        },
+        "max": {
+          "x": 30.470000000000002,
+          "y": 18.62
+        }
+      }
+    },
+    "vp-sections-section-a": {
+      "sheet": "sh-sections",
+      "view": "v-section-a",
+      "position": {
+        "x": 30,
+        "y": 20
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": 0,
+          "y": -0.5
+        },
+        "max": {
+          "x": 34.94,
+          "y": 20.599999999999998
+        }
+      }
+    },
+    "vp-sections-section-b": {
+      "sheet": "sh-sections",
+      "view": "v-section-b",
+      "position": {
+        "x": 389.4,
+        "y": 20
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": 0,
+          "y": -0.5
+        },
+        "max": {
+          "x": 25.19,
+          "y": 20.599999999999998
+        }
+      }
+    },
+    "vp-elevations-elevation-south": {
+      "sheet": "sh-elevations",
+      "view": "v-elevation-south",
+      "position": {
+        "x": 30,
+        "y": 20
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": 0,
+          "y": -0.5
+        },
+        "max": {
+          "x": 34.94,
+          "y": 20.599999999999998
+        }
+      }
+    },
+    "vp-elevations-elevation-east": {
+      "sheet": "sh-elevations",
+      "view": "v-elevation-east",
+      "position": {
+        "x": 389.4,
+        "y": 20
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": 0,
+          "y": -0.5
+        },
+        "max": {
+          "x": 25.19,
+          "y": 20.599999999999998
+        }
+      }
+    },
+    "vp-elevations-elevation-north": {
+      "sheet": "sh-elevations",
+      "view": "v-elevation-north",
+      "position": {
+        "x": 30,
+        "y": 240.99999999999997
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": 0,
+          "y": -0.5
+        },
+        "max": {
+          "x": 34.94,
+          "y": 20.599999999999998
+        }
+      }
+    },
+    "vp-elevations-elevation-west": {
+      "sheet": "sh-elevations",
+      "view": "v-elevation-west",
+      "position": {
+        "x": 389.4,
+        "y": 240.99999999999997
+      },
+      "scale": 100,
+      "crop": {
+        "min": {
+          "x": 0,
+          "y": -0.5
+        },
+        "max": {
+          "x": 25.19,
+          "y": 20.599999999999998
+        }
+      }
+    }
+  },
+  "sheet_revisions": {
+    "rev-plans-a": {
+      "number": "A",
+      "date": "2026-10-01",
+      "description": "Issued for review",
+      "author": "semio",
+      "sheet": "sh-plans"
+    },
+    "rev-plans-b": {
+      "number": "B",
+      "date": "2026-10-05",
+      "description": "Sheets added",
+      "author": "semio",
+      "sheet": "sh-plans"
+    }
+  },
+  "clash_sets": {
+    "cs-structure": {
+      "name": "Structure against walls",
+      "a": {
+        "classes": [
+          "Column",
+          "Beam",
+          "Slab"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "b": {
+        "classes": [
+          "Wall"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "tolerance": 0.002,
+      "clearance": 0
+    },
+    "cs-services": {
+      "name": "Services against structure",
+      "a": {
+        "classes": [
+          "Mep"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "b": {
+        "classes": [
+          "Beam",
+          "Column",
+          "Slab",
+          "Wall"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "tolerance": 0.005,
+      "clearance": 0.05
+    },
+    "cs-frame": {
+      "name": "Beams against columns",
+      "a": {
+        "classes": [
+          "Beam"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "b": {
+        "classes": [
+          "Column"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "tolerance": 0.002,
+      "clearance": 0
+    },
+    "cs-facade": {
+      "name": "Curtain walls against structure",
+      "a": {
+        "classes": [
+          "CurtainWall"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "b": {
+        "classes": [
+          "Column",
+          "Beam",
+          "Slab"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "tolerance": 0.005,
+      "clearance": 0.01
+    }
+  },
+  "rules": {
+    "rl-riser": {
+      "name": "Riser height (DIN 18065)",
+      "kind": "MaxRiser",
+      "limit": 0.19,
+      "severity": "Error",
+      "scope": {
+        "storeys": [],
+        "phases": [],
+        "ids": [],
+        "filter": ""
+      }
+    },
+    "rl-tread": {
+      "name": "Tread depth (DIN 18065)",
+      "kind": "MinTread",
+      "limit": 0.26,
+      "severity": "Error",
+      "scope": {
+        "storeys": [],
+        "phases": [],
+        "ids": [],
+        "filter": ""
+      }
+    },
+    "rl-stair-width": {
+      "name": "Stair width (MBO 34)",
+      "kind": "MinStairWidth",
+      "limit": 1,
+      "severity": "Warning",
+      "scope": {
+        "storeys": [],
+        "phases": [],
+        "ids": [],
+        "filter": ""
+      }
+    },
+    "rl-door-width": {
+      "name": "Door clear width (DIN 18040-2)",
+      "kind": "MinDoorWidth",
+      "limit": 0.9,
+      "severity": "Warning",
+      "scope": {
+        "storeys": [],
+        "phases": [],
+        "ids": [],
+        "filter": ""
+      }
+    },
+    "rl-clear-height": {
+      "name": "Clear height of rooms (MBO)",
+      "kind": "MinClearHeight",
+      "limit": 2.4,
+      "severity": "Error",
+      "scope": {
+        "storeys": [],
+        "phases": [],
+        "ids": [],
+        "filter": ""
+      }
+    },
+    "rl-corridor": {
+      "name": "Corridor width (ASR A1.8)",
+      "kind": "MinCorridorWidth",
+      "limit": 1.2,
+      "severity": "Warning",
+      "scope": {
+        "storeys": [],
+        "phases": [],
+        "ids": [],
+        "filter": "Circulation"
+      }
+    },
+    "rl-compartment": {
+      "name": "Use unit area (MBO)",
+      "kind": "MaxCompartmentArea",
+      "limit": 400,
+      "severity": "Note",
+      "scope": {
+        "storeys": [],
+        "phases": [],
+        "ids": [],
+        "filter": ""
+      }
+    }
+  },
+  "issues": {
+    "is-1": {
+      "title": "Check the beam bearing at the south wall",
+      "description": "The beam is modelled to bear on the wall; confirm the bearing length with the structural engineer.",
+      "status": "Open",
+      "priority": "High",
+      "assignee": "structure",
+      "author": "semio",
+      "created": "2026-10-09T08:00:00Z",
+      "labels": [
+        "Coordination",
+        "Structure"
+      ],
+      "elements": [
+        "bm-0-x-A1",
+        "w-0-west-1"
+      ],
+      "clash": {
+        "set": "cs-structure",
+        "first": "bm-0-x-A1",
+        "second": "w-0-west-1"
+      },
+      "viewpoint": {
+        "camera": {
+          "target": {
+            "x": 9,
+            "y": 6
+          },
+          "target_height": 6,
+          "azimuth": 0.9,
+          "pitch": 0.5,
+          "distance": 40
+        },
+        "section": {
+          "min": {
+            "x": -1,
+            "y": -1,
+            "z": -3.5
+          },
+          "max": {
+            "x": 16,
+            "y": 13,
+            "z": 9
+          }
+        },
+        "isolate": [
+          "bm-0-x-A1",
+          "w-0-west-1"
+        ]
+      }
+    }
+  },
+  "issue_comments": {
+    "ic-1": {
+      "issue": "is-1",
+      "author": "structure",
+      "date": "2026-10-09T09:30:00Z",
+      "text": "Will check with the next design iteration."
+    },
+    "ic-2": {
+      "issue": "is-1",
+      "author": "semio",
+      "date": "2026-10-09T10:15:00Z",
+      "text": "Thanks. Section box and isolation are saved with the viewpoint."
     }
   }
 }

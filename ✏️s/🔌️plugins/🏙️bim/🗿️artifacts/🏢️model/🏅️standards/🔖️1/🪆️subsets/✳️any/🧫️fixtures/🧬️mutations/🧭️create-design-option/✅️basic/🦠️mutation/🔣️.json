@@ -1,0 +1,9 @@
+{
+  "design_option": {
+    "group": "g",
+    "name": "Timber",
+    "primary": false
+  },
+  "id": "b",
+  "mutation": "createDesignOption"
+}

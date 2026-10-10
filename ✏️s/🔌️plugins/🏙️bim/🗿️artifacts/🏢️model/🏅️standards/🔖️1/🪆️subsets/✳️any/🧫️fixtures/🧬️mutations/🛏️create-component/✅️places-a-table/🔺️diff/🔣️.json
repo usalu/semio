@@ -1,0 +1,17 @@
+{
+  "components": {
+    "cmp-new": {
+      "elevation": 0.0,
+      "entry": "Created",
+      "family": "fam-table",
+      "mirrored": false,
+      "name": "Table 2",
+      "position": {
+        "x": 5.0,
+        "y": 2.0
+      },
+      "rotation": 0.0,
+      "storey": "st-ground"
+    }
+  }
+}

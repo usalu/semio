@@ -268,7 +268,7 @@ pub(crate) mod context {
     /// window instance view state carries the armed utility does.
     pub fn dispatch_armed(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: &str, utility_id: &str) -> Result<InvocationResult, Fault> {
         let mut view = window_view(window_id, window_id);
-        view.active_utility_by_window_id.insert(window_id.to_string(), utility_id.to_string());
+        view.active_utility_by_window_id.cold_insert(window_id.to_string(), utility_id.to_string());
         let action_meta = ActionMeta { view_state: Some(view), ..meta("local") };
         let result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), Some(window_id.to_string())), &action_meta));
         settle(app, result)

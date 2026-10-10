@@ -2,8 +2,10 @@
 //! storeys and grid lines → the views and schedules scoped to them → everything on a storey → panel overrides and openings of removed curtain walls and openings of removed walls → properties and classifications
 //! of every removed element), the sparse diff that deletes it, and its inverse of one concrete create (or data setter) per record.
 
+use super::super::set_component_override::SetComponentOverride;
 use super::super::set_element_classification::SetElementClassification;
 use super::super::set_element_property::SetElementProperty;
+use super::super::set_space_conditions::SetSpaceConditions;
 use crate::{Entry, KeyedDelta, ModelDiff, ModelMutation, ModelSnapshot, Patch, TopConstraint};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeSet;
@@ -26,8 +28,12 @@ macro_rules! removal {
         #[derive(Clone, Debug, Default, PartialEq)]
         pub struct Removal {
             $( pub $field: BTreeSet<String>, )*
+            pub component_overrides: BTreeSet<String>,
             pub properties: BTreeSet<String>,
             pub classifications: BTreeSet<String>,
+            pub space_conditions: BTreeSet<String>,
+            pub element_options: BTreeSet<String>,
+            pub element_worksets: BTreeSet<String>,
         }
 
         impl Removal {
@@ -58,8 +64,12 @@ macro_rules! removal {
             pub fn diff(&self) -> ModelDiff {
                 ModelDiff {
                     $( $field: deleted(&self.$field), )*
+                    component_overrides: deleted(&self.component_overrides),
                     properties: deleted(&self.properties),
                     classifications: deleted(&self.classifications),
+                    space_conditions: deleted(&self.space_conditions),
+                    element_options: deleted(&self.element_options),
+                    element_worksets: deleted(&self.element_worksets),
                     ..ModelDiff::default()
                 }
             }
@@ -75,6 +85,11 @@ macro_rules! removal {
                         }
                     }
                 )*
+                for key in &self.component_overrides {
+                    if let Some(record) = base.component_overrides.get(key) {
+                        rows.push(ModelMutation::SetComponentOverride(SetComponentOverride { component: record.component.clone(), name: record.name.clone(), value: record.value.clone() }));
+                    }
+                }
                 for id in &self.properties {
                     for (set, properties) in base.properties.get(id).into_iter().flatten() {
                         for (property, value) in properties {
@@ -86,6 +101,17 @@ macro_rules! removal {
                     for (system, code) in base.classifications.get(id).into_iter().flatten() {
                         rows.push(ModelMutation::SetElementClassification(SetElementClassification { id: id.clone(), system: system.clone(), code: code.clone() }));
                     }
+                }
+                for id in &self.space_conditions {
+                    if let Some(record) = base.space_conditions.get(id) {
+                        rows.push(ModelMutation::SetSpaceConditions(SetSpaceConditions::stating(id, record)));
+                    }
+                }
+                for id in &self.element_options {
+                    if let Some(member) = base.element_options.get(id) { rows.push(ModelMutation::SetElementOption(super::super::set_element_option::SetElementOption { id: id.clone(), option: Some(member.target.clone()) })); }
+                }
+                for id in &self.element_worksets {
+                    if let Some(member) = base.element_worksets.get(id) { rows.push(ModelMutation::SetElementWorkset(super::super::set_element_workset::SetElementWorkset { id: id.clone(), workset: Some(member.target.clone()) })); }
                 }
                 rows.reverse();
                 rows
@@ -104,6 +130,10 @@ removal! {
     sheets => CreateSheet(create_sheet, sheet);
     viewports => CreateViewport(create_viewport, viewport);
     sheet_revisions => CreateSheetRevision(create_sheet_revision, sheet_revision);
+    clash_sets => CreateClashSet(create_clash_set, clash_set);
+    rules => CreateRule(create_rule, rule);
+    issues => CreateIssue(create_issue, issue);
+    issue_comments => CreateIssueComment(create_issue_comment, issue_comment);
     walls => CreateWall(create_wall, wall);
     curtain_walls => CreateCurtainWall(create_curtain_wall, curtain_wall);
     curtain_panel_overrides => CreateCurtainPanelOverride(create_curtain_panel_override, curtain_panel_override);
@@ -120,10 +150,15 @@ removal! {
     area_schemes => CreateAreaScheme(create_area_scheme, area_scheme);
     openings => CreateOpening(create_opening, opening);
     wall_sweeps => CreateWallSweep(create_wall_sweep, wall_sweep);
+    components => CreateComponent(create_component, component);
+    mep_elements => CreateMepElement(create_mep_element, mep);
     dimensions => CreateDimension(create_dimension, dimension);
     tags => CreateTag(create_tag, tag);
     text_notes => CreateTextNote(create_text_note, text_note);
     leaders => CreateLeader(create_leader, leader);
+    load_cases => CreateLoadCase(create_load_case, load_case);
+    supports => CreateSupport(create_support, support);
+    loads => CreateLoad(create_load, load);
 }
 //#endregion 🔖️Removal
 
@@ -137,7 +172,7 @@ impl Removal {
         let properties: usize = self.properties.iter().map(|id| base.properties.get(id).map_or(0, |sets| sets.values().map(|set| set.len()).sum::<usize>())).sum::<usize>();
         let classifications: usize = self.classifications.iter().map(|id| base.classifications.get(id).map_or(0, |set| set.len())).sum();
         let records = self.len();
-        records + properties + classifications
+        records + properties + classifications + self.space_conditions.len() + self.component_overrides.len() + self.element_options.len() + self.element_worksets.len()
     }
 }
 
@@ -202,6 +237,10 @@ pub fn closure(base: &ModelSnapshot, roots: &[String]) -> Result<Removal, Refusa
     removal.schedules.extend(base.schedules.iter().filter(|(_, row)| row.storeys.iter().any(|storey| removal.storeys.contains(storey))).map(|(id, _)| id.clone()));
     removal.viewports.extend(base.viewports.iter().filter(|(_, row)| removal.sheets.contains(&row.sheet) || removal.views.contains(&row.view)).map(|(id, _)| id.clone()));
     removal.sheet_revisions.extend(base.sheet_revisions.iter().filter(|(_, row)| removal.sheets.contains(&row.sheet)).map(|(id, _)| id.clone()));
+    let scoped = |storeys: &[String]| storeys.iter().any(|storey| removal.storeys.contains(storey));
+    removal.clash_sets.extend(base.clash_sets.iter().filter(|(_, row)| scoped(&row.a.storeys) || scoped(&row.b.storeys)).map(|(id, _)| id.clone()));
+    removal.rules.extend(base.rules.iter().filter(|(_, row)| scoped(&row.scope.storeys)).map(|(id, _)| id.clone()));
+    removal.issue_comments.extend(base.issue_comments.iter().filter(|(_, row)| removal.issues.contains(&row.issue)).map(|(id, _)| id.clone()));
     let on = |storey: &String| removal.storeys.contains(storey);
     let (walls, curtain_walls, columns, beams, slabs, roofs, stairs, railings, spaces) = (
         base.walls.iter().filter(|(_, row)| on(&row.storey)).map(|(id, _)| id.clone()).collect::<Vec<_>>(),
@@ -233,6 +272,15 @@ pub fn closure(base: &ModelSnapshot, roots: &[String]) -> Result<Removal, Refusa
     removal.openings.extend(hosted);
     let swept: Vec<String> = base.wall_sweeps.iter().filter(|(_, row)| removal.walls.contains(&row.host)).map(|(id, _)| id.clone()).collect();
     removal.wall_sweeps.extend(swept);
+    removal.components.extend(base.components.iter().filter(|(_, row)| on(&row.storey) || row.host.as_ref().is_some_and(|host| removal.walls.contains(host))).map(|(id, _)| id.clone()).collect::<Vec<_>>());
+    removal.mep_elements.extend(base.mep_elements.iter().filter(|(_, row)| on(&row.storey)).map(|(id, _)| id.clone()).collect::<Vec<_>>());
+    removal.component_overrides.extend(base.component_overrides.iter().filter(|(_, row)| removal.components.contains(&row.component)).map(|(key, _)| key.clone()).collect::<Vec<_>>());
+    removal.element_options.extend(base.element_options.keys().filter(|id| removal.contains(id)).cloned().collect::<Vec<_>>());
+    removal.element_worksets.extend(base.element_worksets.keys().filter(|id| removal.contains(id)).cloned().collect::<Vec<_>>());
+    let supports: Vec<String> = base.supports.iter().filter(|(_,row)| removal.contains(&row.member)).map(|(id,_)|id.clone()).collect();
+    removal.supports.extend(supports);
+    let loads: Vec<String> = base.loads.iter().filter(|(_,row)| removal.contains(&row.member) || removal.load_cases.contains(&row.load_case)).map(|(id,_)|id.clone()).collect();
+    removal.loads.extend(loads);
     annotated(base, &mut removal);
     if let Some((storey, by)) = pinned(base, &removal) {
         return Err(Refusal { code: OutcomeCode::TargetReferenced, target: storey.clone(), message: format!("Storey \"{storey}\" is still the top constraint of \"{by}\".") });
@@ -242,6 +290,7 @@ pub fn closure(base: &ModelSnapshot, roots: &[String]) -> Result<Removal, Refusa
     }
     removal.properties = base.properties.keys().filter(|id| removal.contains(id)).cloned().collect();
     removal.classifications = base.classifications.keys().filter(|id| removal.contains(id)).cloned().collect();
+    removal.space_conditions = base.space_conditions.keys().filter(|id| removal.spaces.contains(*id)).cloned().collect();
     Ok(removal)
 }
 

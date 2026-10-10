@@ -42,7 +42,7 @@ pub mod set_has_header;
 
 /// 📐️ Typed content mutation for `stdio.csv`. `NoMutation` was dropped: the derive requires every
 /// variant to wrap exactly one leaf payload, and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = CsvSnapshot, diff = CsvDiff, schema = "s.stdio.csv")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum CsvMutation {

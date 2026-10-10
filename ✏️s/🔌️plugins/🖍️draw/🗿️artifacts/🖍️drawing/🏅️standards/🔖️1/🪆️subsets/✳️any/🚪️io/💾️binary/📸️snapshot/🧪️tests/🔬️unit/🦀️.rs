@@ -47,7 +47,7 @@ fn representative_drawing_document() -> DrawingSnapshot {
         ].into(),
     );
 
-    let text_layer = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("Label")).to_string().into()).expect("nonempty authored identity"), "Label"), x: 4.0, y: 5.0, content: "semio \"drawing\"\ndsl".into(), size: 12.0 });
+    let text_layer = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("Label")).to_string().into()).expect("nonempty authored identity"), "Label"), x: 4.0, y: 5.0, content: "semio \"drawing\"\ndsl".into(), size: 12.0, font_family: crate::DrawingFontFamily::Anta });
     let image_layer = create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image", "src-1");
     let trace_layer = create_drawing_trace_layer(crate::schema::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace", "src-1");
     let boolean_layer = create_drawing_boolean_layer(crate::schema::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "xor", [rect_id, line_id].into_iter().collect());

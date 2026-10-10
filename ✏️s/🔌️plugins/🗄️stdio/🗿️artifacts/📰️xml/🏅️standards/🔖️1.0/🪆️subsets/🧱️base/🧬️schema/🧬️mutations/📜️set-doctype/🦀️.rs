@@ -3,7 +3,7 @@ use crate::schema::diff::XmlDiff;
 use crate::schema::snapshot::XmlDoctype;
 use crate::XmlSnapshot;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetDoctypeMutation {

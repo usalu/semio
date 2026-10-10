@@ -52,3 +52,5 @@ impl Locale {
         Ok(locale)
     }
 }
+
+semio_framework_value::artifact_retire_leaf!(Locale, Terminology);

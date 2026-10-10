@@ -40,8 +40,12 @@
       "id": "s.stdio.mp3.standard.mpeg1-layer3.representation.document",
       "standard": "s.stdio.mp3.standard.mpeg1-layer3",
       "representation": "document",
-      "mimes": ["audio/mpeg"],
-      "extensions": [".mp3"],
+      "mimes": [
+        "audio/mpeg"
+      ],
+      "extensions": [
+        ".mp3"
+      ],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
@@ -49,7 +53,21 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1", "status": "implemented", "from": "s.stdio.mp3.standard.mpeg1-layer3.dialect.source", "to": "s.stdio.mp3.standard.mpeg1-layer3.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.mp3.v1", "artifact_kind": "s.stdio.mp3", "artifact_schema": "stdio.mp3", "extension": "semio", "pack_schema_hash": "ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0", "runtime_capability_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.codec-stdio-mp3-extension-semio.v1" } }
+    {
+      "id": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.mp3.standard.mpeg1-layer3.dialect.source",
+      "to": "s.stdio.mp3.standard.mpeg1-layer3.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.mp3.v1",
+        "artifact_kind": "s.stdio.mp3",
+        "artifact_schema": "stdio.mp3",
+        "extension": "semio",
+        "pack_schema_hash": "f9b717aff034cbe4b3512df0c279ba08e5d23acb51aedc332ad23cbec39ed5bf",
+        "runtime_capability_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.codec-stdio-mp3-extension-semio.v1"
+      }
+    }
   ],
   "mutations": [],
   "inferences": [],

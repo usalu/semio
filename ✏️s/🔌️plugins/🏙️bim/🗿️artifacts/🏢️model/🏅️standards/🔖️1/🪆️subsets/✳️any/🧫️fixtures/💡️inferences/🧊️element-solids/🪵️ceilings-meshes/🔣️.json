@@ -258,38 +258,38 @@
     "c-holed": {
       "family": "Ceiling",
       "volume": 1.4375,
-      "volume_tolerance": 1e-9,
+      "volume_tolerance": 1e-09,
       "min": [
-        0,
-        0,
+        0.0,
+        0.0,
         2.6375
       ],
       "max": [
-        6,
-        4,
+        6.0,
+        4.0,
         2.7
       ],
-      "bounds_tolerance": 1e-9,
+      "bounds_tolerance": 1e-09,
       "curved": false,
       "thickness": 0.0625,
       "top_z": 2.7,
-      "fall": 0
+      "fall": 0.0
     },
     "c-sloped": {
       "family": "Ceiling",
       "volume": 0.4,
-      "volume_tolerance": 1e-9,
+      "volume_tolerance": 1e-09,
       "min": [
-        0,
-        0,
+        0.0,
+        0.0,
         2.629791458122
       ],
       "max": [
-        5,
-        4,
+        5.0,
+        4.0,
         2.9
       ],
-      "bounds_tolerance": 1e-9,
+      "bounds_tolerance": 1e-09,
       "curved": false,
       "thickness": 0.02,
       "top_z": 2.9,
@@ -298,18 +298,18 @@
     "c-diagonal-slope": {
       "family": "Ceiling",
       "volume": 0.24,
-      "volume_tolerance": 1e-9,
+      "volume_tolerance": 1e-09,
       "min": [
-        0,
-        0,
+        0.0,
+        0.0,
         5.11865353111
       ],
       "max": [
-        4,
-        3,
+        4.0,
+        3.0,
         5.6
       ],
-      "bounds_tolerance": 1e-9,
+      "bounds_tolerance": 1e-09,
       "curved": false,
       "thickness": 0.02,
       "top_z": 5.6,

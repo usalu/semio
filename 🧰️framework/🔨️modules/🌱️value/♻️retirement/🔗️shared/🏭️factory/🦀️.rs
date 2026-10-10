@@ -29,7 +29,7 @@ impl<T:Send+Sync+'static> FactorySharedRetirement<T> {
         match Self::admit(original.take().expect("observed original snapshot alias"),Arc::clone(factory),grant){Ok(admitted)=>Ok(Some(admitted)),Err((error,alias,capability))=>{*original=Some(alias);drop(capability);Err(error)}}
     }
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
-        if self.alias.is_some(){return Ok(RetirementDemand {release_bytes:super::arc_bytes::<T>(),depth:1,..Default::default()});}
+        if let Some(alias)=self.alias.as_ref(){return Ok(RetirementDemand {release_bytes:if Arc::weak_count(alias)==0{super::arc_bytes::<T>()}else{0},depth:1,..Default::default()});}
         if let Some(value)=self.pending.as_ref(){return Ok(RetirementDemand {capacity_bytes:self.factory.as_ref().expect("pending value retains original factory").retirement_birth_bytes(value),depth:2,..Default::default()});}
         if let Some(unique)=self.unique.as_ref(){let mut demand=crate::factory_ticket_demands(unique,copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"shared factory payload depth overflow"))?;return Ok(demand);}
         if self.factory.is_some(){return Ok(RetirementDemand {depth:1,..Default::default()});}
@@ -45,8 +45,8 @@ impl<T:Send+Sync+'static> ErasedSnapshotRetirement for FactorySharedRetirement<T
         let demand=self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         if let Some(alias)=self.alias.as_ref(){
-            if Arc::weak_count(alias)!=0{return Ok(RetainedCloneStep::Progress(empty));}
-            let unique=Arc::into_inner(self.alias.take().unwrap());let released_bytes=if unique.is_some(){super::arc_bytes::<T>()}else{0};
+            let extent=if Arc::weak_count(alias)==0{super::arc_bytes::<T>()}else{0};
+            let unique=Arc::into_inner(self.alias.take().unwrap());let released_bytes=if unique.is_some(){extent}else{0};
             *self.pending=unique;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes,..empty}));
         }
         let child=RetainedCloneGrant {maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
@@ -71,6 +71,7 @@ impl<T:Send+Sync+'static> ErasedSnapshotRetirement for FactorySharedRetirement<T
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.demands(copy)?.capacity_bytes)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
+    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError> {self.demands(body)}
 }
 impl<T:Send+Sync+'static> Drop for FactorySharedRetirement<T> {
     fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"shared factory retirement abandoned original snapshot or capability custody");if self.terminal_is_empty(){unsafe {ManuallyDrop::drop(&mut self.alias);ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.unique);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.closing_factory);}}}

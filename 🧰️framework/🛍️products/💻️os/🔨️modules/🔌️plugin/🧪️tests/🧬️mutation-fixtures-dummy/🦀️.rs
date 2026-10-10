@@ -1,6 +1,7 @@
 #[path = "../../🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{DummyMutation, SetDummyCount};
+crate::app::mutation_fixture::wire::fixture_operation_text!(DummyMutation);
 
 // 🧪️ Proves each `artifact_app_laws` primitive against a minimal dummy `ArtifactApp` before any real app
 // adopts them.
@@ -20,7 +21,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[artifact(extension = "testkit-dummy")]
 pub(crate) struct DummySnapshot {
     count: i32,
@@ -111,7 +112,7 @@ impl MutationDiff<DummySnapshot> for DummyDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 enum DummyCommand {
     #[dsl(key = "increment")]
     Increment,
@@ -159,14 +160,11 @@ const DUMMY_TOOL_ID: &str = "increment";
 const DUMMY_PAYLOAD_SCHEMA: &str = "semio.testkit-dummy.command.v1";
 
 struct DummyFixtureJob {
-    command: Option<Box<DummyCommand>>,
-    completion: Option<ArtifactToolCompletion<DummyApp>>,
+    /// 📄️ A factory that does not own the admitted retained wire pages alongside its typed payload is
+    /// refused with `interactive-job.dispatch`, so the owners hold them beside the command and completion.
+    owners: crate::app::mutation_fixture::job_close::FixtureJobOwners<DummyApp>,
     count: i32,
-    /// 📄️ See `TxnFixtureJob::raw` — a factory that does not own the admitted retained wire pages
-    /// alongside its typed payload is refused with `interactive-job.dispatch`.
-    raw: Option<action_bus::RetainedToolWireInput>,
     page: usize,
-    closing: bool,
 }
 
 impl semio_framework_job::InteractiveJob for DummyFixtureJob {
@@ -177,14 +175,14 @@ impl semio_framework_job::InteractiveJob for DummyFixtureJob {
         if cx.should_yield() {
             return semio_framework_job::StepOutcome::Yield;
         }
-        if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
+        if self.owners.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
             self.page += 1;
             return semio_framework_job::StepOutcome::Yield;
         }
-        let Some(DummyCommand::Increment) = self.command.as_deref() else {
+        let Some(DummyCommand::Increment) = self.owners.command.as_deref() else {
             return semio_framework_job::StepOutcome::Cancelled;
         };
-        self.completion.as_ref().expect("dummy fixture completion").complete(Ok(Emit::mutations(vec![SetDummyCount { value: self.count + 1 }.into()])), crate::app::EphemeralEmit::default()).expect("one exact dummy completion");
+        self.owners.completion.as_ref().expect("dummy fixture completion").complete(Ok(Emit::mutations(vec![SetDummyCount { value: self.count + 1 }.into()])), crate::app::EphemeralEmit::default()).expect("one exact dummy completion");
         semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
             state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
             output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
@@ -192,28 +190,31 @@ impl semio_framework_job::InteractiveJob for DummyFixtureJob {
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(raw) = self.raw.as_mut() {
-            if raw.terminal_is_empty() {
-                self.raw = None;
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-            return raw.close_step(1, maximum_bytes);
-        }
-        if self.command.take().is_some() || self.completion.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.owners.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(body)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.raw.is_none() && self.command.is_none() && self.completion.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 
@@ -249,7 +250,7 @@ impl ToolJobFactory for DummyFixtureFactory {
         if checkpoint.is_some() {
             return Err((semio_framework::ToolJobFactoryError::new("dummy fixture resume starts a fresh command owner"), input, checkpoint));
         }
-        payload.raw = Some(input);
+        payload.owners.raw = Some(input);
         Ok(payload)
     }
 }
@@ -324,23 +325,18 @@ impl ArtifactApp for DummyApp {
     }
 
     async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = DummyFixtureJob { command: Some(request.command), completion: Some(request.completion), count: request.snapshot.count, raw: None, page: 0, closing: false };
+        let job = DummyFixtureJob { owners: crate::app::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::app::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained", 4_096))
+        Some(crate::app::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained"))
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
+        Some(crate::app::mutation_fixture::wire::funded_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained"))
     }
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
-    }
+
     fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
@@ -484,8 +480,7 @@ store::space_members! {
 impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
     /// 🚪️ This roster exists to BE a non-default roster, never to open a member: the law that uses it
     /// drives the registered ladder (construct, attach, dispatch, settle, exchange, close) and admits
-    /// no child, so the un-openable operation is the honest declaration. `PackMemberSnapshotOpen`
-    /// additionally demands `RetireOwned`, which the dummy snapshot does not implement.
+    /// no child, so the un-openable operation is the honest declaration.
     type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {

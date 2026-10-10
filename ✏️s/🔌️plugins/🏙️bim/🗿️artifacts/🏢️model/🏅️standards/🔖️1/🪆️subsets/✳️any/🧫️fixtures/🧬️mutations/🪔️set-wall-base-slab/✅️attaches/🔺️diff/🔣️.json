@@ -1,1 +1,10 @@
-{}
+{
+  "walls": {
+    "w-south": {
+      "base_slab": {
+        "value": "sl-ground"
+      },
+      "entry": "Patched"
+    }
+  }
+}

@@ -73,7 +73,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -166,7 +166,8 @@
           "x": 0,
           "y": 0,
           "content": "AB",
-          "size": 5
+          "size": 5,
+          "fontFamily": "anta"
         }
       ],
       "assets": {}
@@ -191,7 +192,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -235,7 +236,8 @@
                 1
               ]
             },
-            "stroke": null
+            "stroke": null,
+            "fontFamily": "anta"
           },
           "sourcePath": [
             0
@@ -310,7 +312,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -499,7 +501,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -617,7 +619,8 @@
           "x": 3,
           "y": 4,
           "content": "Grüße 😀",
-          "size": 16
+          "size": 16,
+          "fontFamily": "anta"
         }
       ],
       "assets": {}
@@ -642,7 +645,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -686,7 +689,8 @@
                 1
               ]
             },
-            "stroke": null
+            "stroke": null,
+            "fontFamily": "anta"
           },
           "sourcePath": [
             0
@@ -819,7 +823,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -1058,7 +1062,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -1300,7 +1304,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -1542,7 +1546,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -1796,7 +1800,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -1949,7 +1953,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,
@@ -2178,7 +2182,7 @@
       },
       "booleans": {
         "tolerance": 0.005,
-        "epsilon": 1e-08,
+        "epsilon": 1E-08,
         "maxDepth": 32,
         "maxReferences": 256,
         "maxEdges": 65536,

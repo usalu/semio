@@ -1,0 +1,7 @@
+{
+  "mutation": "setComponent",
+  "id": "cmp-lamp",
+  "system": {
+    "value": null
+  }
+}

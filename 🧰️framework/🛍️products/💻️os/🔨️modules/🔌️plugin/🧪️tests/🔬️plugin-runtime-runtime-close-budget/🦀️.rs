@@ -101,13 +101,25 @@ mod runtime_close_budget_tests {
         }
     }
 
-    /// 🚪️ LAW: real retirement resets the stall clock — one released item after a long fruitless run
-    /// puts the ladder back on full credit, so a slow-but-moving close can never be killed.
+    /// 🚪️ LAW: real retirement on ANY independent currency resets the stall clock — one handed-off item,
+    /// copied byte, retained capacity byte or released byte after a long fruitless run puts the ladder
+    /// back on full credit, so a slow-but-moving close can never be killed.
     #[test]
-    fn released_ownership_resets_the_structural_stall_clock() {
-        let (stalled, since) = stall_state();
-        for step in 0..u64::from(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT) {
-            let _ = runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1 + step));
+    fn retired_ownership_on_any_axis_resets_the_structural_stall_clock() {
+        let moved = [
+            RetainedCloneProgress { copied_items: 1, ..Default::default() },
+            RetainedCloneProgress { copied_bytes: 1, ..Default::default() },
+            RetainedCloneProgress { retained_capacity_bytes: 1, ..Default::default() },
+            RetainedCloneProgress { released_bytes: 1, ..Default::default() },
+        ];
+        for receipt in moved {
+            let (stalled, since) = stall_state();
+            for step in 0..u64::from(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT) {
+                let _ = runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1 + step));
+            }
+            assert_eq!(runtime_close_stall_verdict(false, Some(crate::app::PluginLifecycleStep::Progress(receipt)), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
+            assert_eq!(stalled.load(Ordering::SeqCst), 0);
+            assert_eq!(runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1_000_000 + RUNTIME_CLOSE_STALL_CREDIT_US)).0, RuntimeCloseStatus::Ready);
         }
         assert_eq!(runtime_close_stall_verdict(false, Some(crate::app::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
         assert_eq!(stalled.load(Ordering::SeqCst), 0);

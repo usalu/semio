@@ -1,1 +1,14 @@
-{}
+{
+  "ceiling_types": {
+    "ct-board": {
+      "entry": "Patched",
+      "layers": [
+        {
+          "function": "Finish",
+          "material": "m-board",
+          "thickness": 0.025
+        }
+      ]
+    }
+  }
+}

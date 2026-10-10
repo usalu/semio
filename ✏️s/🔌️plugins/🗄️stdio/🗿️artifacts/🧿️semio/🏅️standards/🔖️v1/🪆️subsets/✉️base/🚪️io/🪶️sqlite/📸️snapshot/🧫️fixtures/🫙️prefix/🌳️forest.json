@@ -1,0 +1,13 @@
+{
+  "contract": "stdio.semio.original-value-forest/v1",
+  "schema": "stdio.semio.value",
+  "key": "duplicate-雪\u0000é",
+  "text": "original-雪\u0000é-مرحبا",
+  "integerLexeme": "18446744073709551617000001",
+  "floatLexeme": "-0.00000000000000000000000000001e+300",
+  "octets": [0, 255, 128, 13, 10, 1],
+  "nodeId": "original-node-雪\u0000é",
+  "kinds": ["map", "null", "bool", "int", "float", "str", "bytes", "list", "ref"],
+  "stops": [0, 1, 7, 31, 89, 233],
+  "interiorPhases": ["text", "octets"]
+}

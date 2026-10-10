@@ -100,9 +100,9 @@
           }
         }
       ],
-      "phase": "New",
       "name": "Mansard roof",
       "overhang": 0.3,
+      "phase": "New",
       "roof_type": "rt-tiles",
       "shape": {
         "Mansard": {

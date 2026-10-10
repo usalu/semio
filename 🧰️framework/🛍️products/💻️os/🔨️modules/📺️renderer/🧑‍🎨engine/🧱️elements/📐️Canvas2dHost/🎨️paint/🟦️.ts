@@ -30,7 +30,7 @@ export type CanvasSceneNode = {
   readonly blendMode?: string;
   readonly fillRule?: string;
   readonly visible?: boolean;
-  readonly text?: { readonly content?: string; readonly size?: number };
+  readonly text?: { readonly content?: string; readonly size?: number; readonly fontFamily: "Anta"|"Kelly Slab"|"Share Tech Mono"|"Noto Emoji" };
   readonly image?: { readonly src?: string; readonly width?: number; readonly height?: number };
 };
 
@@ -129,8 +129,9 @@ export function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasSceneN
     if (hasStroke) ctx.stroke(path);
   }
   if (layer.text?.content) {
+    if (!["Anta","Kelly Slab","Share Tech Mono","Noto Emoji"].includes(layer.text.fontFamily)) throw new Error("Canvas text requires an explicit catalog family");
     const size = layer.text.size ?? 14;
-    ctx.font = `${size}px ui-sans-serif, system-ui, sans-serif`;
+    ctx.font = `${size}px "${layer.text.fontFamily}"`;
     ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
     let index = 0;

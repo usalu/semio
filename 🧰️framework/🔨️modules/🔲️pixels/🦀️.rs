@@ -940,6 +940,8 @@ pub fn encode_png(image: &RasterImage) -> Result<Vec<u8>, RasterError> {
 pub mod png_encoding;
 #[path = "📷️png/📥️decode/🦀️.rs"]
 pub mod png_decoding;
+#[path = "📸️jpeg/📥️decode/🦀️.rs"]
+pub mod jpeg_decoding;
 #[path = "🖼️image/📥️decode/🦀️.rs"]
 pub mod image_decoding;
 
@@ -986,15 +988,17 @@ fn assemble_png(width: u32, height: u32, color_type: u8, bit_depth: u8, compress
     out
 }
 
-/// 📥️ Synchronously reconstructs canonical RGBA with the bounded PNG candidate decoder.
-/// Use [png_decoding::PngDecodeJob] for caller-scheduled progress and cancellation.
+/// 📥️ Reconstructs cold synchronous callers through the existing scanline codec.
+/// Caller-scheduled image preparation uses [png_decoding::PngDecodeJob] with explicit grants.
 pub fn decode_png(data: &[u8]) -> Result<RasterImage, RasterError> {
-    if data.len() > 67108864 {
-        return Err(RasterError::Codec("PNG byte limit exceeded".into()));
-    }
-    let mut job = png_decoding::PngDecodeJob::new(png_decoding::PngDecodeInput { data: std::sync::Arc::new(data.to_vec()), max_pixels: 16777216, max_bytes: 67108864, max_chunks: 65536 }).map_err(|e| RasterError::Codec(e.to_string()))?;
-    while !job.advance(4096).map_err(|e| RasterError::Codec(e.to_string()))?.done {}
-    job.into_result().map_err(|e| RasterError::Codec(e.to_string()))
+    if data.len() > 67108864 { return Err(RasterError::Codec("PNG byte limit exceeded".into())); }
+    let mut source = PngScanlineDecoder::new(data)?;
+    let (width,height) = (source.width(),source.height());
+    let extent = (width as usize).checked_mul(height as usize).filter(|pixels| *pixels <= 16777216).and_then(|pixels|pixels.checked_mul(4)).ok_or_else(||RasterError::Codec("PNG pixel limit exceeded".into()))?;
+    let mut image = RasterImage {width,height,pixels:Vec::with_capacity(extent)};
+    while let Some(row) = source.next_row()? { image.pixels.extend_from_slice(&row); }
+    if image.pixels.len() != extent { return Err(RasterError::Codec("PNG decoded extent mismatch".into())); }
+    Ok(image)
 }
 //#endregion PngCodec
 

@@ -2,7 +2,7 @@ use super::super::compute::dependency;
 use super::super::{kinds, plan, ModelInferenceSession};
 use super::*;
 use crate::{ModelDiff, ModelInference};
-use protocol::{DiffAlgebra, DiffRegions, Inference};
+use protocol::{DiffRegions, Inference};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_value::DslValue;
 use serde_json::Value;
@@ -81,8 +81,37 @@ fn dependencies(snapshot: &ModelSnapshot) -> BTreeMap<ModelNode, DslValue> {
     plan::build(snapshot, kinds::closure(kinds::ALL)).into_iter().map(|step| (step.key.clone(), dependency(snapshot, &step.key))).collect()
 }
 
+fn json_of(snapshot: &ModelSnapshot) -> Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(snapshot)).expect("a snapshot prints as JSON")
+}
+
+fn entry(tag: &str, row: &Value) -> Value {
+    let mut members = row.as_object().cloned().unwrap_or_default();
+    members.insert("entry".into(), Value::from(tag));
+    Value::Object(members)
+}
+
 fn between(base: &ModelSnapshot, other: &ModelSnapshot) -> ModelDiff {
-    <ModelDiff as DiffAlgebra<ModelSnapshot>>::between(base, other)
+    let (before, after) = (json_of(base), json_of(other));
+    let mut diff = serde_json::Map::new();
+    for (collection, rows) in after.as_object().into_iter().flatten().filter(|(name, _)| name.as_str() != "project") {
+        let (old, new) = (before[collection].as_object().cloned().unwrap_or_default(), rows.as_object().cloned().unwrap_or_default());
+        let mut delta = serde_json::Map::new();
+        old.keys().filter(|id| !new.contains_key(*id)).for_each(|id| {
+            delta.insert(id.clone(), serde_json::json!({ "entry": "deleted" }));
+        });
+        for (id, row) in &new {
+            match old.get(id) {
+                None => delta.insert(id.clone(), entry("created", row)),
+                Some(known) if known != row => delta.insert(id.clone(), entry("replaced", row)),
+                Some(_) => None,
+            };
+        }
+        if !delta.is_empty() {
+            diff.insert(collection.clone(), Value::Object(delta));
+        }
+    }
+    from_json_str(&Value::Object(diff).to_string(), JsonMemberPolicy::Reject).expect("the delta decodes")
 }
 
 #[test]

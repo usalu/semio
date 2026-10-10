@@ -17,21 +17,21 @@ pub use map::{Image, Map};
 
 //#region 🔖️Vocabulary
 /// 🔚️ One end of a wall axis.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum WallEnd {
     Start,
     End,
 }
 
 /// 🧭️ The coordinate of the plan an alignment sets: the `x` or the `y` of the extent edge it names.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum AlignAxis {
     X,
     Y,
 }
 
 /// 📐️ The edge of the extent of an element that an alignment sets: the lower edge, the middle or the upper edge along the coordinate.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum AlignEdge {
     Min,
     Center,
@@ -40,7 +40,7 @@ pub enum AlignEdge {
 
 /// 🔁️ How an array repeats its sources: `count` further copies, each one the previous translated by `spacing` (a linear array), or each
 /// one turned by a further `step` radians about `center` (a radial array).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum ArrayPattern {
     Linear { count: u32, spacing: Point2 },
     Radial { count: u32, center: Point2, step: f64 },

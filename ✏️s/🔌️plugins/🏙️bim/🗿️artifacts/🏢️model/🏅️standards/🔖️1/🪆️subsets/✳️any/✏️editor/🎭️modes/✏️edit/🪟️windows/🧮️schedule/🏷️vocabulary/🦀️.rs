@@ -19,6 +19,7 @@ pub fn field_label(labels: &BimLabels, field: ScheduleField) -> String {
         Host => labels.sf_host,
         Number => labels.sf_number,
         Usage => labels.sf_usage,
+        Surface => labels.sf_surface,
         Swing => labels.sf_swing,
         Leaves => labels.sf_leaves,
         Panes => labels.sf_panes,
@@ -41,6 +42,9 @@ pub fn field_label(labels: &BimLabels, field: ScheduleField) -> String {
         LayerArea => labels.sf_layer_area,
         LayerVolume => labels.sf_layer_volume,
         LayerMass => labels.sf_layer_mass,
+        FinishArea => labels.sf_finish_area,
+        UValue => labels.sf_u_value,
+        GValue => labels.sf_g_value,
     };
     label.as_str().to_string()
 }
@@ -80,6 +84,7 @@ pub fn category_label(labels: &BimLabels, category: ScheduleCategory) -> String 
         Stair => labels.sc_stair,
         Railing => labels.sc_railing,
         Space => labels.sc_space,
+        Finish => labels.sc_finish,
         Material => labels.sc_material,
     };
     label.as_str().to_string()

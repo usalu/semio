@@ -1,1 +1,8 @@
-{}
+{
+  "spaces": {
+    "sp-1": {
+      "entry": "Patched",
+      "storey": "st-first"
+    }
+  }
+}

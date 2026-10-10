@@ -199,18 +199,73 @@ mod typed_command_full_operation_tests {
             self.closing = true;
         }
 
-        fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-            if !self.closing || grant.maximum_items == 0 {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+            use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+            if !self.closing || !grant.permits_one() {
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
             }
             if self.prepared.take().is_some() || self.request.take().is_some() {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
-            Ok(store::SnapshotRetirementStep::Complete)
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+        }
+
+        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(0)
+        }
+
+        fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(0)
+        }
+
+        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(0)
+        }
+
+        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(usize::from(!self.terminal_is_empty()))
         }
 
         fn terminal_is_empty(&self) -> bool {
             self.closing && self.request.is_none() && self.prepared.is_none()
+        }
+    }
+
+    struct PublicationPresenceLocalRootRetirement {
+        root: Option<std::sync::Arc<PublicationPresence>>,
+    }
+
+    impl store::ErasedSnapshotRetirement for PublicationPresenceLocalRootRetirement {
+        fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+            use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+            if self.root.is_none() {
+                return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
+            }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+            }
+            self.root.take();
+            Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.root.is_none()
+        }
+
+        fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(0)
+        }
+
+        fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(0)
+        }
+
+        fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(0)
+        }
+
+        fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(usize::from(self.root.is_some()))
         }
     }
 
@@ -224,11 +279,57 @@ mod typed_command_full_operation_tests {
         }
     }
 
+    fn close_mounted<A: ArtifactApp>(mounted: &mut MountedTypedCommandFullOperation<A>, context: &str) {
+        for _ in 0..100_000 {
+            if mounted.terminal_is_empty() {
+                return;
+            }
+            let quoted = plugin_demand_grant(mounted.retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+            assert!(quoted.maximum_copy_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES && quoted.maximum_release_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
+            match mounted.retirement_step(quoted).unwrap() {
+                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted), "{context}"),
+                PluginLifecycleStep::Complete(progress) => {
+                    assert!(progress.fits(quoted), "{context}");
+                    return;
+                }
+                PluginLifecycleStep::AwaitingInput { reason } => panic!("{context} awaited input: {reason}"),
+                PluginLifecycleStep::Blocked { reason } => panic!("{context} blocked: {reason}"),
+            }
+        }
+    }
+
+    fn close_app<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, context: &str) {
+        for _ in 0..100_000 {
+            if app.close_terminal_is_empty() {
+                return;
+            }
+            let quoted = plugin_demand_grant(app.close_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+            assert!(quoted.maximum_copy_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES && quoted.maximum_release_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
+            match app.close_step(quoted).unwrap() {
+                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted), "{context}"),
+                PluginLifecycleStep::Complete(progress) => {
+                    assert!(progress.fits(quoted), "{context}");
+                    return;
+                }
+                PluginLifecycleStep::AwaitingInput { reason } => panic!("{context} awaited input: {reason}"),
+                PluginLifecycleStep::Blocked { reason } => panic!("{context} blocked: {reason}"),
+            }
+        }
+    }
+
+    fn advance_registry(registry: &mut ToolLatestWinsRegistry, context: &str) {
+        let quoted = plugin_demand_grant(registry.advance_demands().unwrap());
+        assert!(quoted.maximum_copy_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES && quoted.maximum_release_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
+        let (semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) = registry.advance(quoted).unwrap();
+        assert!(progress.fits(quoted), "{context}");
+    }
+
     pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
+        let bytes = fixture["maximumBytes"].as_u64().unwrap() as usize;
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 128 };
         assert_eq!(grant.maximum_items, 1);
-        assert_eq!(grant.maximum_bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
+        assert_eq!(bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
         for case in fixture["publicationCases"].as_array().unwrap() {
             let boundary = case["cancelAt"].as_str().unwrap();
             let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
@@ -271,7 +372,7 @@ mod typed_command_full_operation_tests {
                 terminal_seen: true,
                 worker_resume_pending: false,
                 publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
-                pending_artifact_publication: None,
+                pending_artifact_publication: None, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                 pending_child_publication: None,
                 owned_child_group: None,
                 owned_child_committed: false,
@@ -293,7 +394,7 @@ mod typed_command_full_operation_tests {
                 published_window_config: false,
                 command_logged: false,
                 interaction_revalidated: false,
-                terminal_fault: None,
+                retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None,
                 stage: MountedTypedCommandFullOperationStage::Publishing,
             };
             if boundary != "producer" {
@@ -339,37 +440,11 @@ mod typed_command_full_operation_tests {
             assert!(!mounted.ui_pending);
             let token = cancelled.token;
             assert!(mounted.acknowledge_result_page(token).unwrap());
-            for _ in 0..64 {
-                if mounted.terminal_is_empty() {
-                    break;
-                }
-                match mounted.retirement_step(grant.maximum_items, grant.maximum_bytes).unwrap() {
-                    PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                    }
-                    PluginCloseStep::Complete => break,
-                    PluginCloseStep::AwaitingInput { reason } => panic!("cancelled exact publication close awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("cancelled exact publication close blocked: {reason}"),
-                }
-            }
+            close_mounted(&mut mounted, boundary);
             assert!(mounted.terminal_is_empty(), "{boundary}");
             assert_eq!(cancellations.active_operation_count(), 0);
             drop(before);
-            for _ in 0..100_000 {
-                if app.close_terminal_is_empty() {
-                    break;
-                }
-                match app.close_step(grant.maximum_items, grant.maximum_bytes).unwrap() {
-                    PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                    }
-                    PluginCloseStep::Complete => break,
-                    PluginCloseStep::AwaitingInput { reason } => panic!("cancelled publication app close awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("cancelled publication app close blocked: {reason}"),
-                }
-            }
+            close_app(&mut app, boundary);
             assert!(app.close_terminal_is_empty(), "{boundary}");
         }
         for case in fixture["linearizationCases"].as_array().unwrap() {
@@ -427,18 +502,18 @@ mod typed_command_full_operation_tests {
 
     fn fixture_latest_wins_key(scope: &Value) -> semio_framework_value::ordered::SharedOwner<String> {
         let parts = [scope["document"].as_str().unwrap(), scope["controller"].as_str().unwrap(), scope["tool"].as_str().unwrap(), scope["target"].as_str().unwrap()];
+        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         let mut copy = ToolLatestWinsKeyCopy::new(scope["instance"].as_u64().unwrap() as u32, parts).unwrap();
-        assert_eq!(copy.advance(parts, 0, 4_096), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        assert_eq!(copy.advance(parts, 1, 0), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let page = plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
+        assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_items: 0, ..page }), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_copy_bytes: 0, ..page }), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         for _ in 0..100_000 {
-            match copy.advance(parts, 1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
-                PluginCloseStep::Complete => return copy.take_key(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap(),
-                PluginCloseStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= 4_096);
+            match copy.advance(parts, page) {
+                RetainedCloneStep::Complete(progress) => {
+                    assert!(progress.fits(page));
+                    return copy.take_key(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
                 }
-                PluginCloseStep::AwaitingInput { reason } => panic!("full-domain key awaited input: {reason}"),
-                PluginCloseStep::Blocked { reason } => panic!("full-domain key blocked: {reason}"),
+                RetainedCloneStep::Progress(progress) => assert!(progress.fits(page)),
             }
         }
         panic!("full-domain key did not progress under the production grant")
@@ -451,7 +526,8 @@ mod typed_command_full_operation_tests {
         let scope=&fixture["first"];
         let parts=[scope["document"].as_str().unwrap(),scope["controller"].as_str().unwrap(),scope["tool"].as_str().unwrap(),scope["target"].as_str().unwrap()];
         let mut copy=ToolLatestWinsKeyCopy::new(scope["instance"].as_u64().unwrap() as u32,parts).unwrap();
-        for turn in 0..100_000 {if copy.advance(parts,1,TYPED_OPERATION_RESULT_PAGE_BYTES)==PluginCloseStep::Complete {break;}assert!(turn<99_999);}
+        let page=plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
+        for turn in 0..100_000 {if matches!(copy.advance(parts,page),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {break;}assert!(turn<99_999);}
         let pointer=copy.key.as_ref().unwrap().as_ptr();
         let expected=copy.key.as_ref().unwrap().clone();
         assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&expected).unwrap()).unwrap(),expected);
@@ -515,7 +591,7 @@ mod typed_command_full_operation_tests {
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
-                    pending_artifact_publication: None,
+                    pending_artifact_publication: None, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
@@ -537,7 +613,7 @@ mod typed_command_full_operation_tests {
                     published_window_config: false,
                     command_logged: false,
                 interaction_revalidated: false,
-                    terminal_fault: None,
+                    retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None,
                     stage: MountedTypedCommandFullOperationStage::Publishing,
                 };
                 if boundary != "producer" {
@@ -602,36 +678,10 @@ mod typed_command_full_operation_tests {
                 let expected = serde_json::json!({ "count": if committed { 42 } else { 0 }, "generation": u64::from(committed), "sameRoot": !committed });
                 assert_eq!(actual, expected, "{boundary}, delayed ACK={delayed_ack}");
                 assert!(mounted.acknowledge_result_page(final_page.token).unwrap());
-                for _ in 0..100_000 {
-                    if mounted.terminal_is_empty() {
-                        break;
-                    }
-                    match mounted.retirement_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                        PluginCloseStep::Pending { released_items, released_bytes } => {
-                            assert!(released_items <= 1);
-                            assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                        }
-                        PluginCloseStep::Complete => {}
-                        PluginCloseStep::AwaitingInput { reason } => panic!("document cancellation close awaited input: {reason}"),
-                        PluginCloseStep::Blocked { reason } => panic!("document cancellation close blocked: {reason}"),
-                    }
-                }
+                close_mounted(&mut mounted, "document cancellation close");
                 assert!(mounted.terminal_is_empty());
                 drop(before);
-                for _ in 0..100_000 {
-                    if app.close_terminal_is_empty() {
-                        break;
-                    }
-                    match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                        PluginCloseStep::Pending { released_items, released_bytes } => {
-                            assert!(released_items <= 1);
-                            assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                        }
-                        PluginCloseStep::Complete => {}
-                        PluginCloseStep::AwaitingInput { reason } => panic!("document cancellation app close awaited input: {reason}"),
-                        PluginCloseStep::Blocked { reason } => panic!("document cancellation app close blocked: {reason}"),
-                    }
-                }
+                close_app(&mut app, "document cancellation app close");
                 assert!(app.close_terminal_is_empty());
                 eprintln!("real mounted Document publication {boundary}, delayed ACK={delayed_ack}: count/revision/root retained and close terminal");
             }
@@ -667,14 +717,14 @@ mod typed_command_full_operation_tests {
                 if registry.take_outcome(first_operation.0) == Some(true) {
                     break;
                 }
-                let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+                advance_registry(&mut registry, "exact key admission");
             }
             assert!(!first_lease.token.is_cancelled_now());
             for _ in 0..100_000 {
                 if registry.can_begin() {
                     break;
                 }
-                let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+                advance_registry(&mut registry, "exact key supersession");
             }
             assert!(registry.can_begin());
             let next_operation = semio_framework_job::allocate_operation_id();
@@ -696,15 +746,7 @@ mod typed_command_full_operation_tests {
                     accepted = result;
                     break;
                 }
-                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                    PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                    }
-                    PluginCloseStep::Complete => {}
-                    PluginCloseStep::AwaitingInput { reason } => panic!("exact key comparison awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("exact key comparison blocked: {reason}"),
-                }
+                advance_registry(&mut registry, "exact key comparison");
             }
             assert!(accepted);
             assert_eq!(first_lease.token.is_cancelled_now(), oracle, "{}", case["id"]);
@@ -717,15 +759,7 @@ mod typed_command_full_operation_tests {
                 if registry.terminal_is_empty() {
                     break;
                 }
-                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                    PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                    }
-                    PluginCloseStep::Complete => {}
-                    PluginCloseStep::AwaitingInput { reason } => panic!("exact key close awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("exact key close blocked: {reason}"),
-                }
+                advance_registry(&mut registry, "exact key close");
             }
             assert!(registry.terminal_is_empty());
             eprintln!("exact latest-wins key {} matched independent serde scope equality and retired its 8192-byte identity", case["id"]);
@@ -836,15 +870,7 @@ mod typed_command_full_operation_tests {
                 if result.is_some() {
                     break;
                 }
-                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                    PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                    }
-                    PluginCloseStep::Complete => {}
-                    PluginCloseStep::AwaitingInput { reason } => panic!("full-map retained admission awaited input: {reason}"),
-                    PluginCloseStep::Blocked { reason } => panic!("full-map retained admission blocked: {reason}"),
-                }
+                advance_registry(&mut registry, "full-map retained admission");
             }
             assert_eq!(result, Some(true), "completed target {index} must not consume permanent admission capacity");
             assert!(key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(key.next_release_byte_demand(),1)).unwrap().value.is_none());
@@ -853,7 +879,7 @@ mod typed_command_full_operation_tests {
                 if registry.can_begin() {
                     break;
                 }
-                registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+                advance_registry(&mut registry, "full-map retained reclamation");
             }
             assert!(registry.can_begin());
             lease.finish();
@@ -865,7 +891,7 @@ mod typed_command_full_operation_tests {
             if registry.terminal_is_empty() {
                 break;
             }
-            registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+            advance_registry(&mut registry, "full-map retained close");
         }
         assert!(registry.terminal_is_empty());
     }
@@ -943,7 +969,7 @@ mod typed_command_full_operation_tests {
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
-                    pending_artifact_publication: pending,
+                    pending_artifact_publication: pending, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
@@ -965,7 +991,7 @@ mod typed_command_full_operation_tests {
                     published_window_config: false,
                     command_logged: false,
                 interaction_revalidated: false,
-                    terminal_fault: None,
+                    retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None,
                     stage: if id == 1 { MountedTypedCommandFullOperationStage::Worker } else { MountedTypedCommandFullOperationStage::Publishing },
                 },
             );
@@ -1023,7 +1049,7 @@ mod typed_command_full_operation_tests {
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: None,
-                    pending_artifact_publication: None,
+                    pending_artifact_publication: None, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
@@ -1045,16 +1071,16 @@ mod typed_command_full_operation_tests {
                     published_window_config: false,
                     command_logged: false,
                 interaction_revalidated: false,
-                    terminal_fault: None,
+                    retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None,
                     stage: MountedTypedCommandFullOperationStage::AwaitingAck,
                 },
             );
         }
         app.tool_operations.get_mut(1).unwrap().stage = MountedTypedCommandFullOperationStage::Retiring;
         assert!(app.tool_operations.get(1).unwrap().publication.is_some());
-        app.maintenance_stage = 0;
-        app.maintenance_tool_cursor = 2;
-        assert_eq!(app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap(), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        let quoted = plugin_demand_grant(app.typed_operation_retirement_demands(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+        let released = app.retire_typed_operation_unit(1, quoted).unwrap();
+        assert!(matches!(released, PluginLifecycleStep::Progress(progress) if progress.fits(quoted) && progress != Default::default()), "one bounded retirement unit releases the retiring operation's publication: {released:?}");
         assert!(app.tool_operations.get(1).unwrap().publication.is_none());
         assert_eq!(app.tool_operations.get(2).unwrap().stage, MountedTypedCommandFullOperationStage::AwaitingAck);
         assert!(app.tool_operations.get(2).unwrap().result_page_presented);
@@ -1064,41 +1090,30 @@ mod typed_command_full_operation_tests {
         let cancellation_state = app.tool_cancellations.state.clone();
         let lock = cancellation_state.lock().unwrap();
         for _ in 0..64 {
-            let first = app.tool_operations.get_mut(1).unwrap();
-            if first.terminal_is_empty() {
+            if app.tool_operations.get(1).unwrap().terminal_is_empty() {
                 break;
             }
-            first.retirement_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+            let quoted = plugin_demand_grant(app.typed_operation_retirement_demands(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+            app.retire_typed_operation_unit(1, quoted).unwrap();
         }
         assert!(app.tool_operations.get(1).unwrap().terminal_is_empty());
         assert_eq!(app.tool_cancellations.active_operation_count(), 2);
         app.maintenance_stage = 18;
         app.maintenance_cancellation_cursor = TOOL_CANCELLATION_SLOTS + 1;
-        let locked_step = app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+        let quoted = plugin_demand_grant(app.maintenance_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+        let locked_step = app.maintenance_step(quoted).unwrap();
         assert!(
-            matches!(locked_step, PluginCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES),
+            matches!(locked_step, PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) if progress.fits(quoted)),
             "a bounded maintenance turn never exceeds its own grant: {locked_step:?}"
         );
         assert_eq!(app.maintenance_cancellation_cursor, TOOL_CANCELLATION_SLOTS + 1);
         assert_eq!(app.tool_cancellations.active_operation_count(), 2);
         drop(lock);
         app.maintenance_stage = 18;
-        app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+        let quoted = plugin_demand_grant(app.maintenance_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap());
+        app.maintenance_step(quoted).unwrap();
         assert_eq!(app.tool_cancellations.active_operation_count(), 1);
-        for _ in 0..100_000 {
-            if app.close_terminal_is_empty() {
-                break;
-            }
-            match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
-                PluginCloseStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                }
-                PluginCloseStep::Complete => break,
-                PluginCloseStep::AwaitingInput { reason } => panic!("fairness fixture close awaited input: {reason}"),
-                PluginCloseStep::Blocked { reason } => panic!("fairness fixture close blocked: {reason}"),
-            }
-        }
+        close_app(&mut app, "fairness fixture close");
         assert!(app.close_terminal_is_empty());
     }
 
@@ -1247,7 +1262,7 @@ mod typed_command_full_operation_tests {
         let initial_root = presence.local_read().unwrap();
         let factory = TwoTurnPublicationPresencePreparationFactory;
         let mut publication = presence.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&factory), Some(root_factory.clone())).expect("two-turn presence publication admits");
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 64, maximum_release_bytes: 64, maximum_depth: 128 };
         assert!(matches!(presence.advance_publish_one(&mut publication, grant), Ok(store::ArtifactStoreOneItemAdvance::Progress(_))));
         assert!(std::ptr::eq(initial_root.get(), presence.local()));
         assert_eq!(presence.generation_now(), 0);
@@ -1294,20 +1309,21 @@ mod typed_command_full_operation_tests {
         let pointer=child.genesis.as_ref().unwrap().initial_pack.as_ptr();
         let bytes=child.next_close_byte_demand();
         assert!(bytes>0);
+        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+        let yielded=RetainedCloneStep::Progress(RetainedCloneProgress::default());
         for _ in 0..4 {
-            assert_eq!(child.close_one(1,bytes-1),PluginCloseStep::Pending{released_items:0,released_bytes:0});
+            assert_eq!(child.close_one(RetainedCloneGrant::one_release_turn(bytes-1,1)),yielded);
             assert_eq!(child.genesis.as_ref().unwrap().initial_pack.as_ptr(),pointer);
             assert_eq!(child.genesis.as_ref().unwrap().reference.artifact_id,reference["artifactId"].as_str().unwrap());
         }
-        assert_eq!(child.close_one(0,bytes),PluginCloseStep::Pending{released_items:0,released_bytes:0});
-        assert_eq!(child.close_one(1,bytes),PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
+        assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..RetainedCloneGrant::one_release_turn(bytes,1)}),yielded);
+        assert_eq!(child.close_one(RetainedCloneGrant::one_release_turn(bytes,1)),RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}));
         for child in std::iter::once(&mut child).chain(decoded.iter_mut()) {
             for _ in 0..32 {
-                let demand=child.next_close_byte_demand();
-                match child.close_one(1,demand) {
-                    PluginCloseStep::Pending{released_items,released_bytes}=>assert!(released_items<=1&&released_bytes<=demand),
-                    PluginCloseStep::Complete=>break,
-                    _=>panic!("exact private genesis owner release failed"),
+                let grant=RetainedCloneGrant::one_release_turn(child.next_close_byte_demand(),1);
+                match child.close_one(grant) {
+                    RetainedCloneStep::Progress(progress)=>assert!(progress.fits(grant)),
+                    RetainedCloneStep::Complete(_)=>break,
                 }
             }
             assert!(child.genesis.is_none());
@@ -1332,23 +1348,22 @@ mod typed_command_full_operation_tests {
             op_schema: SchemaId("demo.member.json-number".into()),
             labels: vec![LocalizedLabel::native("ä🧩", "ß🎯")],
         };
-        assert_eq!(child.close_one(0, TYPED_OPERATION_RESULT_PAGE_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let page = plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
+        assert_eq!(child.close_one(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..page }), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         assert_eq!(child.ops[0].len(), wire_bytes);
         let mut bytes = 0;
         let mut complete = false;
         for _ in 0..wire_bytes + 128 {
-            match child.close_one(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
-                PluginCloseStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
-                    bytes += released_bytes;
+            match child.close_one(page) {
+                RetainedCloneStep::Progress(progress) => {
+                    assert!(progress.fits(page));
+                    bytes += progress.released_bytes;
                 }
-                PluginCloseStep::Complete => {
+                RetainedCloneStep::Complete(_) => {
                     complete = true;
                     break;
                 }
-                PluginCloseStep::AwaitingInput { reason } => panic!("admitted child wire awaited input: {reason}"),
-                PluginCloseStep::Blocked { .. } => panic!("admitted child wire must retire under the maximum production grant"),
             }
         }
         assert!(complete);
@@ -1415,7 +1430,7 @@ mod typed_command_full_operation_tests {
     }
 
     /// ♻️ The seven per-lane `Closing` arms collapsed into ONE shared
-    /// `PendingArtifactStorePublication::retirement_turn` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END),
+    /// `MountedTypedCommandFullOperation::granted_retirement_step` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END),
     /// so the retained one-item retirement seam is that call, not a per-lane `close_step`.
     ///
     /// 🧵️ The one-page publisher suspends in EXACTLY one place: the task lane's spawn. Every
@@ -1426,7 +1441,7 @@ mod typed_command_full_operation_tests {
         let source = include_str!("../../🦀️.rs");
         let admission_marker = ["async fn admit_command_json_with_", "proof(&self"].concat();
         let admission_start = source.rfind(&admission_marker).expect("production raw JSON admission");
-        let admission_end = source[admission_start..].find("pub async fn new(app: A)").map(|offset| admission_start + offset).expect("admission route end");
+        let admission_end = source[admission_start..].find("pub async fn new(app: A, actor").map(|offset| admission_start + offset).expect("admission route end");
         let admission = &source[admission_start..admission_end];
         let reserve = admission.find(".begin_exact_wire").expect("maximum extent authority");
         let encode = admission.find("semio_framework_pack_json::to_json_string(&(verb, wire_args))").expect("bounded wire encoder");
@@ -1442,7 +1457,7 @@ mod typed_command_full_operation_tests {
         let publisher_start = source.rfind("fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
         let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority").map(|offset| publisher_start + offset).expect("publisher end");
         let publisher = &source[publisher_start..publisher_end];
-        for retained_seam in ["pending_artifact_publication", "begin_apply_batch", "advance_apply_batch", "ArtifactStoreOneItemAdvance::Published", "pending.retirement_turn(grant.maximum_items, grant.maximum_bytes)"] {
+        for retained_seam in ["pending_artifact_publication", "begin_apply_batch", "advance_apply_batch", "ArtifactStoreOneItemAdvance::Published", "pending_publication_outcome.pending()"] {
             assert!(publisher.contains(retained_seam), "production publisher lost its retained one-item seam: {retained_seam}");
         }
         for forbidden in [".apply_one(", "artifact_mutations.last().cloned()", "config_mutations.last().cloned()", "draft_mutations.last().cloned()", "presence.last().cloned()", "transient.last().cloned()"] {
@@ -1452,7 +1467,7 @@ mod typed_command_full_operation_tests {
         let pending_advance = publisher[freshness..].find("\n            if let Some(pending) = mounted.pending_artifact_publication.as_mut()").map(|offset| freshness + offset).expect("pending publication advance");
         assert!(freshness < pending_advance, "document freshness must fail closed before every retained lane advance");
         assert!(publisher[..pending_advance].contains("pending.begin_close()"));
-        assert!(publisher[..pending_advance].contains("pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)"));
+        assert!(publisher[..pending_advance].contains("self.handoff_mounted_durable_publication(mounted)?"));
         assert!(!publisher.contains("dispatch_emit_group("));
         let publisher_awaits: Vec<&str> = publisher.match_indices(".await").map(|(index, _)| publisher[..index].rsplit('\n').next().unwrap_or_default().trim()).collect();
         assert_eq!(
@@ -1517,7 +1532,7 @@ mod typed_command_full_operation_tests {
         assert!(hook < admission && admission < authority && authority < event && event < generic_gate);
 
         let command_start = end;
-        let command_end = source[command_start..].find("fn addressed_preview_view(").map(|offset| command_start + offset).expect("manifest command route end");
+        let command_end = source[command_start..].find("async fn fill_agent_revisions(").map(|offset| command_start + offset).expect("manifest command route end");
         let command_route = &source[command_start..command_end];
         let command_hook = command_route.find("A::host_configuration_mutation(command_id, Some(&args))?").expect("manifest command host configuration owner hook");
         let command_admission = command_route[command_hook..].find("self.admit_host_configuration_json(command_id, Some(&args)).await?").expect("manifest command bounded host admission") + command_hook;
@@ -1542,7 +1557,7 @@ mod child_complete_group_candidate_tests{
     mod reader{include!("./🧩️child-operations/📖️reader/🦀️.rs");}
     use candidate::{ChildGroupSources,ChildGroupSource};
     use semio_framework_os_kernel::os_spr::operation_bytes::{OwnedOperationBytes,OperationByteOutput,OperationByteCloseStep};
-    use semio_framework_value::{NativeEncodeControl,list::PagedList};
+    use semio_framework_value::{ErasedSnapshotRetirement,NativeEncodeControl,list::PagedList};
     use semio_framework_ui_locale::LocalizedLabel;
     struct Group{owner:String,slot:String,child_id:String,schema:String,ops:PagedList<OwnedOperationBytes,2>,labels:PagedList<LocalizedLabel,2>}
     struct Groups(Vec<Group>);
@@ -1632,8 +1647,9 @@ mod child_complete_group_candidate_tests{
         for case in corpus["cases"].as_array().unwrap(){
             let field=case["field"].as_str().unwrap();let large="m".repeat(8194);assert_eq!(large.len(),8194);let mut child=super::ChildEmit::open("","",0);
             match field{"owner"=>child.owner=large,"slot"=>child.slot=large,"child_id"=>child.child_id=large,"op_schema"=>child.op_schema.0=large,_=>{let keys:Vec<&str>=field.split('.').collect();assert_eq!(keys.len(),3);let label=semio_framework_ui_locale::LocalizedLabel::from_fn(|terminology,locale|if terminology.as_str()==keys[1]&&locale.as_str()==keys[2]{large.clone()}else{String::new()});child.labels.push(label);}}
-            assert_eq!(child.close_one(0,4096),super::PluginCloseStep::Pending{released_items:0,released_bytes:0});let mut complete=false;let mut physical=0;
-            for _ in 0..8194+128{match child.close_one(1,4096){super::PluginCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);physical+=released_bytes;},super::PluginCloseStep::Complete=>{complete=true;break},step=>panic!("natural child semantic owner refused original grant: {step:?}")}}
+            use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};let page=super::plugin_page_grant(4096);
+            assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..page}),RetainedCloneStep::Progress(RetainedCloneProgress::default()));let mut complete=false;let mut physical=0;
+            for _ in 0..8194+128{match child.close_one(page){RetainedCloneStep::Progress(progress)=>{assert!(progress.fits(page));physical+=progress.released_bytes;},RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(page));complete=true;break}}}
             assert!(complete,"actual ChildEmit full8194 semantic owner remained held at original1/4096: {field}");assert!(physical>=8194);assert!(child.ops.is_empty());assert!(child.labels.is_empty());assert!(child.owner.is_empty());assert!(child.slot.is_empty());assert!(child.child_id.is_empty());assert!(child.op_schema.0.is_empty());
         }
     }

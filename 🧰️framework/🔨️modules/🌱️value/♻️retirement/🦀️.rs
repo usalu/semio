@@ -248,39 +248,61 @@ impl<T:RetireOwned> RetirementCursor for VectorIterator<T> {
 impl<T:RetireOwned> Drop for VectorIterator<T> {fn drop(&mut self) {assert!(std::thread::panicking() || self.0.len()==0,"owned iterator retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.0)}}}
 impl<T:RetireOwned> RetireOwned for std::vec::IntoIter<T> {fn retirement(self)->Box<dyn RetirementCursor> {Box::new(VectorIterator(ManuallyDrop::new(self)))}}
 
-struct UnorderedSet<T: RetireOwned>(ManuallyDrop<std::collections::hash_set::IntoIter<T>>);
+/// 🧺️ Drains one hashed element per turn; the standard table backing is not priced, only the element scaffolds and this cursor shell.
+struct UnorderedSet<T: RetireOwned>{head:ManuallyDrop<Option<T>>,rest:ManuallyDrop<std::collections::hash_set::IntoIter<T>>}
+impl<T: RetireOwned> UnorderedSet<T> {
+    fn new(mut rest:std::collections::hash_set::IntoIter<T>)->Self {Self{head:ManuallyDrop::new(rest.next()),rest:ManuallyDrop::new(rest)}}
+}
 impl<T: RetireOwned> RetirementCursor for UnorderedSet<T> {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}self.0.next().map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
-    fn terminal_is_empty(&self)->bool {self.0.len()==0}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
+    fn terminal_is_empty(&self)->bool {self.head.is_none()}
+    fn next_birth_bytes(&self,_:usize)->Option<usize> {self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
+    fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
 }
 impl<T: RetireOwned> Drop for UnorderedSet<T> {
-    fn drop(&mut self) {assert!(std::thread::panicking() || self.0.len()==0,"owned set retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.0)};}
+    fn drop(&mut self) {assert!(std::thread::panicking() || self.terminal_is_empty(),"owned set retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.head);ManuallyDrop::drop(&mut self.rest)};}
 }
 impl<T: RetireOwned + std::hash::Hash + Eq> RetireOwned for std::collections::HashSet<T> {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(UnorderedSet(ManuallyDrop::new(self.into_iter())))}
+    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(UnorderedSet::new(self.into_iter()))}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<UnorderedSet<T>>())}
+    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
 }
 
-struct UnorderedMap<K: RetireOwned,V: RetireOwned>(ManuallyDrop<std::collections::hash_map::IntoIter<K,V>>);
+/// 🧺️ Drains one hashed entry per turn; the standard table backing is not priced, only the entry scaffolds and this cursor shell.
+struct UnorderedMap<K: RetireOwned,V: RetireOwned>{head:ManuallyDrop<Option<(K,V)>>,rest:ManuallyDrop<std::collections::hash_map::IntoIter<K,V>>}
+impl<K: RetireOwned,V: RetireOwned> UnorderedMap<K,V> {
+    fn new(mut rest:std::collections::hash_map::IntoIter<K,V>)->Self {Self{head:ManuallyDrop::new(rest.next()),rest:ManuallyDrop::new(rest)}}
+}
 impl<K: RetireOwned,V: RetireOwned> RetirementCursor for UnorderedMap<K,V> {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}self.0.next().map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
-    fn terminal_is_empty(&self)->bool {self.0.len()==0}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete,|entry|RetirementStep::Child(entry.retirement()))}
+    fn terminal_is_empty(&self)->bool {self.head.is_none()}
+    fn next_birth_bytes(&self,_:usize)->Option<usize> {self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
+    fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
 }
 impl<K: RetireOwned,V: RetireOwned> Drop for UnorderedMap<K,V> {
-    fn drop(&mut self) {assert!(std::thread::panicking() || self.0.len()==0,"owned map retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.0)};}
+    fn drop(&mut self) {assert!(std::thread::panicking() || self.terminal_is_empty(),"owned map retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.head);ManuallyDrop::drop(&mut self.rest)};}
 }
 impl<K: RetireOwned + std::hash::Hash + Eq,V: RetireOwned> RetireOwned for std::collections::HashMap<K,V> {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(UnorderedMap(ManuallyDrop::new(self.into_iter())))}
+    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(UnorderedMap::new(self.into_iter()))}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<UnorderedMap<K,V>>())}
+    fn controlled_retirement_supported()->bool {K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
+
+/// 🧺️ Drains one ordered element per turn; the standard node backing is not priced, only the element scaffolds and this cursor shell.
 struct OrderedSet<T: RetireOwned + Ord>(ManuallyDrop<std::collections::BTreeSet<T>>);
 impl<T: RetireOwned + Ord> RetirementCursor for OrderedSet<T> {
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}self.0.pop_first().map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
     fn terminal_is_empty(&self)->bool {self.0.is_empty()}
+    fn next_birth_bytes(&self,_:usize)->Option<usize> {self.0.first().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
+    fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
 }
 impl<T: RetireOwned + Ord> Drop for OrderedSet<T> {
     fn drop(&mut self) {assert!(std::thread::panicking() || self.0.is_empty(),"owned ordered set retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.0)};}
 }
 impl<T: RetireOwned + Ord> RetireOwned for std::collections::BTreeSet<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {Box::new(OrderedSet(ManuallyDrop::new(self)))}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<OrderedSet<T>>())}
+    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
 }
 impl<T: RetireOwned + Ord> RetireOwned for std::collections::BinaryHeap<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {self.into_vec().retirement()}
@@ -294,6 +316,7 @@ impl<T: RetireOwned> RetireOwned for std::cmp::Reverse<T> {
     fn retirement_element_copy_bytes()->usize {T::retirement_element_copy_bytes()}
 }
 
+/// 🧺️ Drains one ordered entry per turn; the standard node backing is not priced, only the entry scaffolds and this cursor shell.
 struct OrderedMap<K: RetireOwned + Ord, V: RetireOwned>(ManuallyDrop<std::collections::BTreeMap<K, V>>);
 impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V> {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
@@ -303,6 +326,10 @@ impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V>
     fn terminal_is_empty(&self) -> bool {
         self.0.is_empty()
     }
+    fn next_birth_bytes(&self, _: usize) -> Option<usize> {
+        if self.0.is_empty() { Some(0) } else { sequence_birth_bytes(&[deferred_birth_bytes::<K>(), deferred_birth_bytes::<V>()]) }
+    }
+    fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
 }
 impl<K: RetireOwned + Ord, V: RetireOwned> Drop for OrderedMap<K, V> {
     fn drop(&mut self) {
@@ -314,6 +341,8 @@ impl<K: RetireOwned + Ord, V: RetireOwned> RetireOwned for std::collections::BTr
     fn retirement(self) -> Box<dyn RetirementCursor> {
         Box::new(OrderedMap(ManuallyDrop::new(self)))
     }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<OrderedMap<K, V>>()) }
+    fn controlled_retirement_supported() -> bool { K::controlled_retirement_supported() && V::controlled_retirement_supported() }
 }
 impl<T: RetireOwned> RetireOwned for Option<T> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
@@ -392,8 +421,56 @@ impl<T: Copy + Send + 'static, const N: usize> RetireOwned for [T; N] {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         leaf(self)
     }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(leaf_birth_bytes::<Self>()) }
-    fn controlled_retirement_supported() -> bool { true }
+    fn terminal_is_empty(&self) -> bool { self.items.iter().all(Option::is_none) }
+    fn next_birth_bytes(&self, _: usize) -> Option<usize> { self.items.iter().rev().flatten().next().map_or(Some(0), RetireOwned::retirement_birth_bytes) }
+    fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
+}
+impl<T: RetireOwned, const N: usize> Drop for FixedArray<T, N> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "owned fixed array retired before terminal-empty");
+        unsafe { ManuallyDrop::drop(&mut self.items) };
+    }
+}
+fn plain_elements<T: RetireOwned>() -> bool { !std::mem::needs_drop::<T>() && T::retirement_element_copy_bytes() != 0 }
+
+/// 🧱️ Drains a fixed array of trivial elements as bounded logical copy work, as [`Collection`] does, instead of one child cursor per element.
+struct PlainArray<T: RetireOwned, const N: usize> {
+    items: ManuallyDrop<[T; N]>,
+    remaining: usize,
+}
+impl<T: RetireOwned, const N: usize> RetirementCursor for PlainArray<T, N> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
+        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
+        if self.remaining == 0 { return RetirementStep::Complete; }
+        let width = size_of::<T>();
+        if width == 0 {
+            self.remaining = 0;
+            return RetirementStep::ProcessedBytes(0);
+        }
+        let count = (grant.maximum_copy_bytes / width).min(self.remaining);
+        if count == 0 { return RetirementStep::BudgetExhausted; }
+        self.remaining -= count;
+        RetirementStep::ProcessedBytes(count * width)
+    }
+    fn terminal_is_empty(&self) -> bool { self.remaining == 0 }
+    fn next_work_byte_demand(&self) -> Result<usize, crate::ValueError> { Ok(if self.remaining != 0 { T::retirement_element_copy_bytes() } else { 0 }) }
+    fn allows_admitted_narrow_work(&self) -> bool { self.remaining != 0 }
+    fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
+    fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
+}
+impl<T: RetireOwned, const N: usize> Drop for PlainArray<T, N> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "owned plain array retired before terminal-empty");
+        unsafe { ManuallyDrop::drop(&mut self.items) };
+    }
+}
+impl<T: RetireOwned, const N: usize> RetireOwned for [T; N] {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        if plain_elements::<T>() { return Box::new(PlainArray { items: ManuallyDrop::new(self), remaining: N }); }
+        Box::new(FixedArray { items: ManuallyDrop::new(self.map(Some)) })
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(if plain_elements::<T>() { size_of::<PlainArray<T, N>>() } else { size_of::<FixedArray<T, N>>() }) }
+    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
 }
 
 struct Sequence(ManuallyDrop<Vec<Box<dyn RetirementCursor>>>);
@@ -535,12 +612,13 @@ impl<T:RetireOwned> ArtifactOwnedValueRetirementFactory<T> for OwnedValueRetirem
     fn retire_owned(&self,value:T,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,T)> {admit_owned_retirement(value,grant)}
 }
 
+/// 🔗️ Retires one store-owned snapshot alias as a lease: the last alias to close retires the payload, every other alias only drops its count, so sequentially closed owners of one Arc never wait on each other.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SharedValueRetirementFactory<T>(PhantomData<fn() -> T>);
 impl<T> Default for SharedValueRetirementFactory<T> { fn default()->Self {Self(PhantomData)} }
 impl<T:RetireOwned+Sync> SnapshotRetirementFactory<T> for SharedValueRetirementFactory<T> {
     fn retirement_birth_bytes(&self,_:&Arc<T>)->usize {shared::shared_retirement_birth_bytes::<T>()}
-    fn retire(&self,value:Arc<T>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,Arc<T>)> {shared::admit_shared_retirement(value,grant,false)}
+    fn retire(&self,value:Arc<T>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,Arc<T>)> {shared::admit_shared_retirement(value,grant,true)}
 }
 
 #[cfg(test)]
@@ -554,6 +632,8 @@ pub mod controlled;
 
 #[path="🔗️shared/🦀️.rs"]
 pub mod shared;
+#[path="🔐️mutex/🦀️.rs"]
+mod owned_mutex;
 
 #[path="📋️queue/🦀️.rs"]
 pub mod queue;

@@ -43,7 +43,7 @@ impl SnapshotReadReturnRetirement {
   if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"returned read witness exceeds admitted depth"));}
   if grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(registry)=self.registry.as_ref(){
-   if registry.contains(self.index,self.generation){return Ok(RetainedCloneStep::Progress(Default::default()));}
+   if registry.strong_count()==1&&registry.contains(self.index,self.generation){return Ok(RetainedCloneStep::Progress(Default::default()));}
    let last=self.registry.take().expect("original returned read registry").into_inner();
    let released=if let Some(registry)=last{*self.last_registry=Some(registry);demand.release_bytes}else{0};
    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));

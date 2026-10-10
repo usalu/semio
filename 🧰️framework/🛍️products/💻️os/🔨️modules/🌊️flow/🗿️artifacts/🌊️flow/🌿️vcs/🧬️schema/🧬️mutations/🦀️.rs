@@ -51,6 +51,10 @@ pub fn retire_flow_mutation(mutation: FlowMutation) {
 }
 //#endregion 🧬️Aggregate
 
+#[path = "🔏️canonical/🦀️.rs"]
+mod canonical;
+pub use canonical::prepared_operation_wire_source;
+
 //#region 🔤️Codecs
 
 

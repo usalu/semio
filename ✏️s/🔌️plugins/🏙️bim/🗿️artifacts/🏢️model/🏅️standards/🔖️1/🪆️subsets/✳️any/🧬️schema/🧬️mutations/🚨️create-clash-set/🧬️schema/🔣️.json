@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-clash-set/schema.json",
+  "title": "CreateClashSet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "clash_set"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createClashSet"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Clash set id",
+          "de": "Kollisionssatz-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "clash_set": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ClashSet",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Clash set",
+          "de": "Kollisionssatz"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

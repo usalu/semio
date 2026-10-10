@@ -57,6 +57,7 @@ impl semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJ
             JsonWriteNode::Number(Number::UInt(value)) => N::U64(value),
             JsonWriteNode::Number(Number::Float(value)) => N::F64(value),
             JsonWriteNode::String(value) => N::String(value),
+            JsonWriteNode::NativeString(_) => return Err("authored SnapshotPatch str/DslValue source cannot yield native UTF8 text".into()),
             JsonWriteNode::Array(length) => N::Array(length),
             JsonWriteNode::Object(length) => N::Object(length),
         })

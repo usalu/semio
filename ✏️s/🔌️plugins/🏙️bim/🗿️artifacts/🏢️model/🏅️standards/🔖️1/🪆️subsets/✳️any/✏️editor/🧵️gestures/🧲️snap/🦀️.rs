@@ -3,14 +3,14 @@
 //! inside a pixel tolerance expressed in metres; nothing within reach leaves the pointer free.
 
 use super::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::segment_of;
+use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use crate::ModelSnapshot;
 use semio_framework_geometry::bulge::{intersect, BulgeSeg, Extent};
 use std::f64::consts::FRAC_PI_4;
 use value_derive::{FromValue, ToValue};
 
 /// 🧲️ What a snapped point sits on, ranked from the strongest to the weakest.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue)]
 pub enum SnapKind {
     Endpoint,
     Intersection,
@@ -65,7 +65,8 @@ fn storey_elements(snapshot: &ModelSnapshot, storey: &str) -> Vec<(String, Vec<P
         rows.push((id.clone(), vec![from_point2(column.position)], None));
     }
     for (id, beam) in snapshot.beams.iter().filter(|(_, beam)| beam.storey == storey) {
-        rows.push((id.clone(), vec![from_point2(beam.start), from_point2(beam.end)], Some(BulgeSeg::line(pt(from_point2(beam.start)), pt(from_point2(beam.end))))));
+        let (start, end) = axis_ends(&beam.axis);
+        rows.push((id.clone(), vec![start, end], Some(segment_of(&beam.axis))));
     }
     for (id, slab) in snapshot.slabs.iter().filter(|(_, slab)| slab.storey == storey) {
         rows.push((id.clone(), slab.boundary.iter().map(|vertex| from_point2(vertex.point)).collect(), None));

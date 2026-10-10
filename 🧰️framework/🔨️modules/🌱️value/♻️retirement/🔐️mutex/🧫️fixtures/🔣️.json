@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"id":"ordinary-original","poisoned":false,"owner":"original owned gesture data","expected":{"preserved":true,"terminal":true}},{"id":"poisoned-original","poisoned":true,"owner":"Originalität 🧬","expected":{"preserved":true,"terminal":true}}]}

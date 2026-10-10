@@ -23,7 +23,7 @@ pub use self::set_line_ending::{SetLineEndingMutation, SetLineEndingPayload};
 pub use self::set_trailing_newline::{SetTrailingNewlineMutation, SetTrailingNewlinePayload};
 pub use self::splice_text::{SpliceTextMutation, SpliceTextPayload, TextSplice};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
 #[mutations(snapshot = TxtSnapshot, diff = TxtDiff, schema = "s.stdio.txt")]
 pub enum TxtMutation {

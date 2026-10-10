@@ -1,0 +1,464 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "ins": {
+      "name": "Insulation",
+      "category": "Insulation",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.04,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt": {
+      "name": "Insulated brick",
+      "layers": [
+        {
+          "material": "m",
+          "thickness": 0.2,
+          "function": "Structure"
+        },
+        {
+          "material": "ins",
+          "thickness": 0.1,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {
+    "st": {
+      "name": "Slab 250",
+      "layers": [
+        {
+          "material": "m",
+          "thickness": 0.25,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "roof_types": {
+    "rt": {
+      "name": "Flat roof",
+      "layers": [
+        {
+          "material": "ins",
+          "thickness": 0.2,
+          "function": "Structure"
+        },
+        {
+          "material": "m",
+          "thickness": 0.2,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {
+    "win": {
+      "name": "Window",
+      "width": 1.2,
+      "height": 1.2,
+      "sill": 0.9,
+      "frame_width": 0.05,
+      "frame_depth": 0.08,
+      "panes": 2,
+      "material": "m",
+      "u_value": 1.1,
+      "g_value": 0.5,
+      "frame_fraction": 0.25
+    }
+  },
+  "door_types": {
+    "dr": {
+      "name": "Door",
+      "width": 1,
+      "height": 2.1,
+      "frame_width": 0.05,
+      "frame_depth": 0.08,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m",
+      "u_value": 1.8
+    }
+  },
+  "sites": {
+    "site": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 0,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg": {
+      "site": "site",
+      "name": "Building",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-0": {
+      "building": "bldg",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-0",
+      "wall_type": "wt",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-0",
+      "wall_type": "wt",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 3
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    },
+    "w-north": {
+      "storey": "st-0",
+      "wall_type": "wt",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 3
+          },
+          "end": {
+            "x": 0,
+            "y": 3
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "North"
+    },
+    "w-west": {
+      "storey": "st-0",
+      "wall_type": "wt",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 3
+          },
+          "end": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "West"
+    },
+    "w-part": {
+      "storey": "st-0",
+      "wall_type": "wt",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 4,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 3
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Partition"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {
+    "sl": {
+      "storey": "st-0",
+      "slab_type": "st",
+      "boundary": [
+        {
+          "point": {
+            "x": 0,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 3
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0,
+            "y": 3
+          },
+          "bulge": 0
+        }
+      ],
+      "holes": [],
+      "offset": 0,
+      "phase": "New",
+      "name": "Slab"
+    }
+  },
+  "roofs": {
+    "rf": {
+      "storey": "st-0",
+      "roof_type": "rt",
+      "footprint": [
+        {
+          "point": {
+            "x": -0.2,
+            "y": -0.2
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8.2,
+            "y": -0.2
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8.2,
+            "y": 3.2
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": -0.2,
+            "y": 3.2
+          },
+          "bulge": 0
+        }
+      ],
+      "shape": "Flat",
+      "overhang": 0,
+      "base_offset": 0,
+      "phase": "New",
+      "name": "Roof"
+    }
+  },
+  "openings": {
+    "o-a": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "win"
+        }
+      },
+      "offset": 2,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Window A"
+    },
+    "o-b": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "win"
+        }
+      },
+      "offset": 6,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Window B"
+    },
+    "o-part": {
+      "host": "w-part",
+      "kind": {
+        "Door": {
+          "door_type": "dr"
+        }
+      },
+      "offset": 1.5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Partition door"
+    }
+  },
+  "stairs": {},
+  "railings": {},
+  "spaces": {
+    "sp-a": {
+      "storey": "st-0",
+      "number": "0.01",
+      "name": "West room",
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 2,
+            "y": 1.5
+          }
+        }
+      },
+      "usage": "Office",
+      "phase": "New",
+      "zone": "z-a"
+    },
+    "sp-b": {
+      "storey": "st-0",
+      "number": "0.02",
+      "name": "East room",
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 6,
+            "y": 1.5
+          }
+        }
+      },
+      "usage": "Office",
+      "phase": "New",
+      "zone": "z-b"
+    }
+  },
+  "properties": {},
+  "classifications": {},
+  "zones": {
+    "z-a": {
+      "name": "Zone A",
+      "category": "Thermal",
+      "occupancy_density": 0.1
+    },
+    "z-b": {
+      "name": "Zone B",
+      "category": "Thermal",
+      "occupancy_density": 0.1
+    }
+  },
+  "space_conditions": {
+    "sp-a": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 20,
+      "cooling_setpoint": 26,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    },
+    "sp-b": {
+      "occupancy": "Office",
+      "occupancy_density": 0.1,
+      "heating_setpoint": 22,
+      "cooling_setpoint": 27,
+      "ventilation_rate": 1.5,
+      "lighting_power_density": 8,
+      "equipment_power_density": 12,
+      "schedule": "Office 08-18"
+    }
+  }
+}

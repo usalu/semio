@@ -28,4 +28,4 @@ base64 = "0.22.1"
 percent-encoding = "2.3.2"
 png = "0.17.16"
 serde_json = { workspace = true }
-image = { version = "0.25", default-features = false }
+image = { version = "0.25", default-features = false, features = ["jpeg"] }

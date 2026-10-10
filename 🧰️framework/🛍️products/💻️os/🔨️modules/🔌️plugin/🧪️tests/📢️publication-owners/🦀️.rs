@@ -8,19 +8,6 @@ use std::sync::Arc;
 const _: () = assert!(!std::mem::needs_drop::<State>() && !std::mem::needs_drop::<Mutation>());
 const _: () = assert!(std::mem::size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
 
-impl semio_framework_value::retirement::RetireOwned for State {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::leaf(self.revision)
-    }
-}
-
-impl semio_framework_value::retirement::RetireOwned for Mutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let Self::ChangePublicationTransient(value) = self;
-        semio_framework_value::retirement::leaf(value.revision)
-    }
-}
-
 fn footprint(_: &Mutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(std::mem::size_of::<Mutation>()))
 }

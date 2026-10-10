@@ -2,34 +2,16 @@
 //!
 //! Everything here is pure and total: a malformed input yields an empty or degenerate value that the caller turns into an absent solid.
 
+pub use crate::standards::v1::subsets::any::schema::authored::plan::{mark, point, segment_of as seg};
+use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
-use crate::{Axis, Layer, ModelSnapshot, Point2, Profile, StairFlight, Vertex as PlanVertex};
-use semio_framework_geometry::bulge::BulgeSeg;
+use crate::{Layer, ModelSnapshot, Profile, StairFlight, Vertex as PlanVertex};
 use semio_framework_geometry::loops::Vertex;
 use semio_framework_geometry::{Point, Vec2};
 
 //#region 🔖️Conversion
-/// 📍️ An authored plan point as a geometry point.
-pub fn point(p: &Point2) -> Point {
-    Point::new(p.x, p.y)
-}
-
-/// 📍️ A geometry point as an authored plan point.
-pub fn mark(p: Point) -> Point2 {
-    Point2 { x: p.x, y: p.y }
-}
-
-/// 〰️ The bulged segment of an authored axis (line, or arc by its bulge `tan(sweep / 4)`).
-pub fn seg(axis: &Axis) -> BulgeSeg {
-    match axis {
-        Axis::Line { start, end } => BulgeSeg::line(point(start), point(end)),
-        Axis::Arc { start, end, bulge } => BulgeSeg::new(point(start), point(end), *bulge),
-    }
-}
-
 /// ▭️ The extents `(across, depth)` of a profile: the `x` and `y` extents of its flattened outline, the one definition frames, solids, rooms, bodies and plan share.
 pub fn extents_of(profile: &Profile) -> (f64, f64) {
-    use crate::standards::v1::subsets::any::schema::inferences::element_solids::{profile_extents, profile_polygon};
     profile_extents(&profile_polygon(profile))
 }
 

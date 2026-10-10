@@ -1,0 +1,30 @@
+{
+  "interruptionPhases": [
+    "header",
+    "validate",
+    "decode",
+    "source-handoff",
+    "decoder",
+    "png",
+    "jpeg",
+    "image-handoff"
+  ],
+  "handoffBytes": 32,
+  "jpegCases": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "schema": "https://semio.tech/framework/pixels/image-decode-funding-fixture",
+  "axes": [
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumDepth",
+    "releaseForCapacity"
+  ]
+}

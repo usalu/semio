@@ -11,6 +11,37 @@ const root = resolve(import.meta.dir, "../../../../..");
 const owner = "🧰️framework/🔨️modules/🌱️value";
 const fixture = JSON.parse(readFileSync(join(root, owner, "🧫️fixtures/🧩️neutral-owner/🔣️.json"), "utf8"));
 const validValue = new Ajv({strict:false}).compile(JSON.parse(readFileSync(join(root, owner, "🧬️schema/🔣️.json"), "utf8")));
+test("ordered map clone quotes preserve independent original and interrupted candidates", () => {
+  const path = join(root, owner, "🧬️retained-clone/🗺️ordered-map");
+  const law = JSON.parse(readFileSync(join(path, "🧫️fixtures/🎟️clone/🔣️.json"), "utf8"));
+  const validate = new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(path, "🧬️schema/🎟️clone/🔣️.json"), "utf8")));
+  expect(validate(law)).toBe(true);
+  for (const row of law.cases) {
+    const original = Array.from({length:row.entryCount}, (_, key) => key);
+    const independent = applyPatch({keys:[]}, original.map(value => ({op:"add" as const,path:"/keys/-",value})), true, false).newDocument.keys;
+    expect(original).toEqual(row.expectedKeys);
+    expect(independent).toEqual(row.expectedKeys);
+    for (const stop of law.interruptAfter) {
+      const candidate = original.slice(0, Math.min(stop, original.length));
+      const canceled = applyPatch({original,candidate}, [{op:"remove",path:"/candidate"}], true, false).newDocument;
+      expect(canceled.original).toEqual(row.expectedKeys);
+      expect(original).toEqual(row.expectedKeys);
+    }
+  }
+  console.log("[DEBUG] Ordered map clone neutral corpus matches independent RFC6902 outputs and interruption custody");
+});
+test("original shared clone preserves independent original values and cancellation",()=>{
+ const path=join(root,owner,"🧬️retained-clone/🔗️shared"),law=JSON.parse(readFileSync(join(path,"🧫️fixtures/🔣️.json"),"utf8"));
+ expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(path,"🧬️schema/🔣️.json"),"utf8")))(law)).toBe(true);
+ for(const text of law.texts){for(const order of law.closeOrders){
+  const original={source:{text},output:{text}};
+  const first=applyPatch(original,[{op:"remove",path:order==="sourceFirst"?"/source":"/output"}],true,false).newDocument;
+  expect((first.source??first.output).text).toBe(text);
+  expect(original.source.text).toBe(text);
+  for(const stop of law.interruptAfter){const pending={source:{text},candidate:stop===2?{text}:undefined};const closed=applyPatch(pending,[{op:"remove",path:"/source"}],true,false).newDocument;expect(pending.source.text).toBe(text);if(stop===2)expect(closed.candidate!.text).toBe(text);}
+ }}
+ console.log("[DEBUG] Original shared clone independent RFC6902 original/output close and cancellation values verified");
+});
 test("typed read leases preserve independent sparse visitation and payload outputs", () => {
   const path = join(root, owner, "🔗️read"), law = JSON.parse(readFileSync(join(path,"🧫️fixtures/🔣️.json"),"utf8"));
   for (const row of law.cases) {
@@ -174,18 +205,20 @@ test("owned projected fields preserve native value paths and exact alias closure
 test("owned source birth funds original custody before allocation", () => {
   const source=join(root,owner,"🧬️retained-clone/🔗️source");
   const law=JSON.parse(readFileSync(join(source,"🧫️fixtures/🎟️owned-birth/🔣️.json"),"utf8"));
+  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(source,"🧬️schema/🎟️owned-birth/🔣️.json"),"utf8")))(law)).toBe(true);
   const original={owner:law.owner,authority:law.authority,allocated:false};
   for(const refusal of law.refusals){
-    const demand={items:law.birth.items,capacity:law.ownerCapacity+law.authorityCapacity,depth:law.birth.depth};
+    const demand={items:law.birth.items,copy:law.birth.sourceAliasCopies,capacity:law.ownerCapacity+law.authorityCapacity,depth:law.birth.depth};
     const grant=applyPatch(demand,[{op:"replace",path:`/${refusal.currency}`,value:demand[refusal.currency as keyof typeof demand]-refusal.shortBy}],true,false).newDocument;
     expect(grant[refusal.currency as keyof typeof demand]).toBeLessThan(demand[refusal.currency as keyof typeof demand]);
     const refused=applyPatch(original,[],true,false).newDocument;expect(refused).toEqual(original);
-    expect(refusal.kind).toBe({items:"WorkLimit",capacity:"OwnershipLimit",depth:"DepthLimit"}[refusal.currency as "items"|"capacity"|"depth"]);
+    expect(refusal.kind).toBe({items:"WorkLimit",copy:"OwnershipLimit",capacity:"OwnershipLimit",depth:"DepthLimit"}[refusal.currency as "items"|"copy"|"capacity"|"depth"]);
   }
   const admitted=applyPatch(original,[{op:"replace",path:"/allocated",value:true}],true,false).newDocument;
-  expect(admitted.owner).toBe(original.owner);expect(admitted.authority).toBe(original.authority);expect(admitted.allocated).toBe(true);expect(law.birth.copyBytes).toBe(0);expect(law.birth.releaseBytes).toBe(0);
+  expect(admitted.owner).toBe(original.owner);expect(admitted.authority).toBe(original.authority);expect(admitted.allocated).toBe(true);expect(law.birth.sourceAliasCopies).toBe(1);expect(law.birth.releaseBytes).toBe(0);
   expect(law.sharedAuthorityRetainsAlias).toBe(true);
   const shared=applyPatch({original:original.authority,aliases:["issuer","source"]},[{op:"remove",path:"/aliases/1"}],true,false).newDocument;expect(shared.original).toBe(original.authority);expect(shared.aliases).toEqual(["issuer"]);
+  for(const order of law.closeOrders){const live={owner:law.owner,authority:law.authority,aliases:["source","projection"],released:false};const first=applyPatch(live,[{op:"remove",path:order==="sourceFirst"?"/aliases/0":"/aliases/1"}],true,false).newDocument;expect(first.owner).toBe(law.owner);expect(first.authority).toBe(law.authority);expect(first.released).toBe(false);expect(first.aliases).toEqual([order==="sourceFirst"?"projection":"source"]);const terminal=applyPatch(first,[{op:"remove",path:"/aliases/0"},{op:"replace",path:"/released",value:true}],true,false).newDocument;expect(terminal.aliases).toEqual([]);expect(terminal.released).toBe(true);}
   console.log("[DEBUG] owned source birth independent RFC6902 oracle preserves original owners on all refused currencies");
 });
 

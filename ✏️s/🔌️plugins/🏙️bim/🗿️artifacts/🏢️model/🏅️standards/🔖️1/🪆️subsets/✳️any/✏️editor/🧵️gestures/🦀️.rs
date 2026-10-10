@@ -13,6 +13,10 @@ pub mod annotate;
 pub mod area;
 #[path = "🧱️chain/🦀️.rs"]
 pub mod chain;
+#[path = "🏗️frame/🦀️.rs"]
+pub mod frame;
+#[path = "🦴️structure/🦀️.rs"]
+pub mod structure;
 #[path = "🪟️opening/🦀️.rs"]
 pub mod opening;
 #[path = "🫧️overlay/🦀️.rs"]
@@ -29,6 +33,8 @@ pub mod session;
 pub mod snap;
 #[path = "🔪️split/🦀️.rs"]
 pub mod split;
+#[path = "🧷️sweep/🦀️.rs"]
+pub mod sweep;
 #[path = "🚚️transform/🦀️.rs"]
 pub mod transform;
 #[path = "👯️duplicate/🦀️.rs"]
@@ -37,18 +43,22 @@ pub mod duplicate;
 pub mod reshape;
 #[path = "⌨️typed/🦀️.rs"]
 pub mod typed;
+#[path = "🪑️place/🦀️.rs"]
+pub mod place;
+#[path = "🌀️route/🦀️.rs"]
+pub mod route;
 #[path = "🖼️viewports/🦀️.rs"]
 pub mod viewports;
 
 use self::plane::P;
-use self::session::{Modifiers, Pointer, Preview, Step, Surface, Tool, ToolContext, ToolEvent};
+use self::session::{GestureKey, Modifiers, Pointer, Preview, Step, Surface, Tool, ToolContext, ToolEvent};
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{fault, select_effect};
 use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use crate::editor::bim::transient::BimWindowTransient;
 use crate::editor::bim::BimDispatchCtx;
 use crate::{ModelMutation, ModelSnapshot};
-use semio_framework_plugin::{ArtifactInstanceOperationOwner, ArtifactView, Effect, Emit, Fault, NoConfigMutation, PluginCloseStep};
+use semio_framework_plugin::{ArtifactInstanceOperationOwner, ArtifactView, Effect, Emit, Fault, NoConfigMutation, PluginLifecycleStep};
 use std::collections::BTreeMap;
 
 //#region 🔖️Registry
@@ -62,6 +72,10 @@ pub const GESTURE_KEYBINDINGS: &[(&str, &str)] = &[("escape", "canvasEscape"), (
 pub fn build_tool(utility: &str, window_kind: &str) -> Box<dyn Tool> {
     use opening::Kind as Opening;
     match utility {
+        "support" => Box::new(structure::Structure::new("support")),
+        "load-point" => Box::new(structure::Structure::new("load-point")),
+        "load-line" => Box::new(structure::Structure::new("load-line")),
+        "load-area" => Box::new(structure::Structure::new("load-area")),
         "select" if window_kind == sheet::WINDOW_KIND_ID => Box::<viewports::Arrange>::default(),
         "viewport" => Box::<viewports::Place>::default(),
         "select" if window_kind != world::WINDOW_KIND_ID => Box::new(select::Select::default()),
@@ -71,6 +85,10 @@ pub fn build_tool(utility: &str, window_kind: &str) -> Box<dyn Tool> {
         "wall-arc" => Box::new(chain::Chain::new(chain::Kind::WallArc)),
         "curtain-wall" => Box::new(chain::Chain::new(chain::Kind::CurtainWall)),
         "beam" => Box::new(chain::Chain::new(chain::Kind::Beam)),
+        "beam-arc" => Box::new(chain::Chain::new(chain::Kind::BeamArc)),
+        "column-tilt" => Box::<frame::Tilt>::default(),
+        "curtain-grid" => Box::<frame::Lines>::default(),
+        "curtain-cell" => Box::<frame::Cell>::default(),
         "railing" => Box::new(chain::Chain::new(chain::Kind::Railing)),
         "ramp" => Box::new(chain::Chain::new(chain::Kind::Ramp)),
         "grid" => Box::new(chain::Chain::new(chain::Kind::Grid)),
@@ -80,6 +98,7 @@ pub fn build_tool(utility: &str, window_kind: &str) -> Box<dyn Tool> {
         "ceiling" => Box::new(area::Area::new(area::Kind::Ceiling)),
         "ceiling-space" => Box::new(area::Area::new(area::Kind::CeilingFromSpace)),
         "split-wall" => Box::<split::Split>::default(),
+        "sweep" => Box::<sweep::Sweeping>::default(),
         "copy" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Copy)),
         "mirror" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Mirror)),
         "array" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Array)),
@@ -94,6 +113,8 @@ pub fn build_tool(utility: &str, window_kind: &str) -> Box<dyn Tool> {
         "text-note" => Box::new(annotate::Annotate::new(annotate::Kind::Note)),
         "leader" => Box::new(annotate::Annotate::new(annotate::Kind::Leader)),
         "roof" => Box::new(area::Area::new(area::Kind::Roof)),
+        "component" => Box::<place::Place>::default(),
+        "route" => Box::<route::Route>::default(),
         "column" => Box::new(point::Point::new(point::Kind::Column)),
         "space" => Box::new(point::Point::new(point::Kind::Space)),
         "stair" => Box::new(point::Point::new(point::Kind::Stair)),
@@ -134,9 +155,18 @@ impl ToolSession {
     /// ⌨️ Feeds one typed line to the tool as a click at the point it names: a press, the release and a move to the same exact point, in one step. An empty line finishes the gesture, as
     /// Enter does; a line that names no point is refused and leaves the gesture untouched.
     pub fn enter(&mut self, ctx: &mut ToolContext<'_>, line: &str) -> (Step, Preview) {
+        if let Some(step) = self.tool.line(ctx, line) {
+            return (step, self.tool.preview(ctx));
+        }
         let Some(entry) = typed::parse(line) else { return (Step::refuse(typed::INVALID), self.tool.preview(ctx)) };
         let Some(at) = typed::resolve(&entry, self.tool.anchor(), self.last) else { return self.advance(ctx, &ToolEvent::Finish) };
         self.click(ctx, at)
+    }
+
+    /// 🔑️ Offers a key to the tool; the flag says whether the tool took it (a tool that has no use for the key leaves it to its other meaning).
+    pub fn key(&mut self, ctx: &mut ToolContext<'_>, key: GestureKey) -> (bool, Step, Preview) {
+        let step = self.tool.key(ctx, key);
+        (step.is_some(), step.unwrap_or_default(), self.tool.preview(ctx))
     }
 
     fn click(&mut self, ctx: &mut ToolContext<'_>, at: P) -> (Step, Preview) {
@@ -196,6 +226,14 @@ impl GestureOwner {
         }
     }
 
+    /// 🔑️ Offers `key` to the session of `window` for `utility`; the flag says whether the tool took it. A window without a session of that utility has nothing to take it.
+    pub fn key(&mut self, window: &str, utility: &str, ctx: &mut ToolContext<'_>, key: GestureKey) -> (bool, Step, Preview) {
+        match self.sessions.get_mut(window).filter(|session| session.utility() == utility) {
+            Some(session) => session.key(ctx, key),
+            None => (false, Step::default(), Preview::default()),
+        }
+    }
+
     fn session(&mut self, window: &str, window_kind: &str, utility: &str) -> &mut ToolSession {
         if self.sessions.get(window).is_none_or(|session| session.utility() != utility) {
             self.sessions.insert(window.to_string(), ToolSession::new(utility, window_kind));
@@ -213,13 +251,17 @@ impl ArtifactInstanceOperationOwner for GestureOwner {
         self
     }
 
-    fn maintenance_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(PluginCloseStep::Complete)
+    fn retirement_demands(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand::default())
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    fn maintenance_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        Ok(PluginLifecycleStep::Complete(Default::default()))
+    }
+
+    fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         self.sessions.clear();
-        Ok(PluginCloseStep::Complete)
+        Ok(PluginLifecycleStep::Complete(Default::default()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -291,7 +333,7 @@ pub fn pointer_of(ctx: &BimDispatchCtx, surface: &Surface, reach: f64, raw: &Raw
 macro_rules! canvas_pointer {
     ($(#[$meta:meta])* $name:ident, $keyword:literal $(, $extra:ident : $ty:ty)*) => {
         $(#[$meta])*
-        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+        #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
         #[value(default)]
         #[dsl(keyword = $keyword)]
         pub struct $name {
@@ -339,6 +381,7 @@ enum Feed<'a> {
     Event(ToolEvent),
     Line(&'a str),
     Cursor { delta: Option<P>, start: P },
+    Key(GestureKey),
 }
 
 /// ➡️ Advances the addressed window's gesture by `event` and answers the emit; the new preview is left in `ctx.transient_out` when it differs from the window's current one.
@@ -361,14 +404,18 @@ pub fn run_typed(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>
 }
 
 fn settle(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, surface: Surface, feed: Feed<'_>) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
+    settle_taken(ctx, doc, surface, feed).map(|(emit, _)| emit)
+}
+
+fn settle_taken(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, surface: Surface, feed: Feed<'_>) -> Result<(Emit<ModelMutation, NoConfigMutation>, bool), Fault> {
     let Some(owner) = ctx.gestures.clone() else { return Err(fault(RETAINED_ROUTE, "gesture commands are reachable only through their retained route")) };
     let snapshot = doc.snapshot;
     let operation = doc.operation_optional();
     let window = ctx.view.as_ref().and_then(|view| view.window_id.clone()).unwrap_or_default();
     let seed = operation.map_or("", |operation| operation.authoring_seed.as_str());
     let labels = ctx.labels();
-    let instance = operation.map(|operation| operation.app_instance_id);
-    let (step, preview) = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| {
+    let instance = Some(&owner);
+    let (taken, step, preview) = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| {
         let mut tool = ToolContext::new(snapshot, inference, surface, seed);
         tool.instance = instance;
         tool.selected = &ctx.selected;
@@ -376,18 +423,32 @@ fn settle(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, surfa
         tool.labels = labels;
         owner.with_mut::<GestureOwner, _>(|owner| {
             Ok(match &feed {
-                Feed::Event(event) => owner.advance(&window, &ctx.window_kind, &ctx.utility, &mut tool, event),
-                Feed::Line(line) => owner.enter(&window, &ctx.window_kind, &ctx.utility, &mut tool, line),
-                Feed::Cursor { delta, start } => owner.cursor(&window, &ctx.window_kind, &ctx.utility, &mut tool, *delta, *start),
+                Feed::Event(event) => with_taken(owner.advance(&window, &ctx.window_kind, &ctx.utility, &mut tool, event)),
+                Feed::Line(line) => with_taken(owner.enter(&window, &ctx.window_kind, &ctx.utility, &mut tool, line)),
+                Feed::Cursor { delta, start } => with_taken(owner.cursor(&window, &ctx.window_kind, &ctx.utility, &mut tool, *delta, *start)),
+                Feed::Key(key) => owner.key(&window, &ctx.utility, &mut tool, *key),
             })
         })
     })?;
     let text = preview.to_text();
     let addressed = ctx.view.as_ref().is_some_and(|view| view.window_id.is_some());
-    if addressed && text != ctx.window_transient.preview {
+    if taken && addressed && text != ctx.window_transient.preview {
         ctx.transient_out = Some(BimWindowTransient { preview: text, pointer_generation: ctx.window_transient.pointer_generation + 1, ..ctx.window_transient.clone() });
     }
-    emit_of(step, ctx)
+    emit_of(step, ctx).map(|emit| (emit, taken))
+}
+
+fn with_taken((step, preview): (Step, Preview)) -> (bool, Step, Preview) {
+    (true, step, preview)
+}
+
+/// 🔑️ Offers `key` to the gesture of the addressed window and answers the emit of what the tool did, or `None` when the tool took no use of the key, so the key keeps its other meaning.
+pub fn run_key(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, key: GestureKey) -> Result<Option<Emit<ModelMutation, NoConfigMutation>>, Fault> {
+    if ctx.gestures.is_none() {
+        return Err(fault(RETAINED_ROUTE, "gesture commands are reachable only through their retained route"));
+    }
+    let Some((surface, _)) = surface_of(ctx, doc.snapshot) else { return Ok(None) };
+    settle_taken(ctx, doc, surface, Feed::Key(key)).map(|(emit, taken)| taken.then_some(emit))
 }
 
 /// ⌨️ The point a keyboard cursor starts from when the pointer never was in the window and the gesture hangs on nothing: the centre of the view (the plan and the section centre their camera, the world has no plan point).

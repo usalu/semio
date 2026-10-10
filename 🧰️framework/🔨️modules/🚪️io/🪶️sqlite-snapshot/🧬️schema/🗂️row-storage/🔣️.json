@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","title":"Original Row Index Storage","type":"object","additionalProperties":false,"required":["indices","used","remaining"],"properties":{"indices":{"type":"array","items":{"type":"integer","minimum":0}},"used":{"type":"array","items":{"type":"integer","minimum":0,"maximum":1}},"remaining":{"type":"integer","minimum":0}}}

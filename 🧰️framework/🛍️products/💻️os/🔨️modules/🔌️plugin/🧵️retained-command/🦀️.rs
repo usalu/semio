@@ -176,6 +176,9 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
         0
     }
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize>;
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
+        Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "artifact command normal-work demand is undeclared"))
+    }
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault>;
     fn checkpoint_byte(&self, _index: usize) -> Option<u8> { None }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
@@ -242,7 +245,7 @@ pub struct ArtifactRetainedCommandInputs<A: ArtifactApp> {
     pub history: Arc<HistoryView>,
     pub interaction_state: Arc<protocol::InteractionState>,
     pub interaction_hover: Arc<InteractionHoverState>,
-    pub context: Option<Arc<ArtifactOwnedToolJobContext<A>>>,
+    pub context: Option<ArtifactOwnedContextHandle<A>>,
     pub operation: AppOperationContext,
     pub completion: ArtifactToolCompletion<A>,
 }
@@ -254,7 +257,7 @@ pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
     pub history: Arc<HistoryView>,
     pub interaction_state: Arc<protocol::InteractionState>,
     pub interaction_hover: Arc<InteractionHoverState>,
-    pub context: Option<Arc<ArtifactOwnedToolJobContext<A>>>,
+    pub context: Option<ArtifactOwnedContextHandle<A>>,
     pub operation: AppOperationContext,
     pub completion: ArtifactToolCompletion<A>,
     pub command_id: fn(&A::Command) -> &'static str,
@@ -302,7 +305,7 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     history: Option<Arc<HistoryView>>,
     interaction_state: Option<Arc<protocol::InteractionState>>,
     interaction_hover: Option<Arc<InteractionHoverState>>,
-    context: Option<Arc<ArtifactOwnedToolJobContext<A>>>,
+    context: Option<ArtifactOwnedContextHandle<A>>,
     operation: Option<AppOperationContext>,
     completion: Option<ArtifactToolCompletion<A>>,
     command_id: fn(&A::Command) -> &'static str,
@@ -332,6 +335,7 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     download:Option<ArtifactDownloadOutput>,
     download_retirement:Option<ControlledRetirement<ArtifactDownloadOutput>>,
     completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
+    context_retirement:Option<ControlledRetirement<ArtifactOwnedContextHandle<A>>>,
     ephemeral: Option<EphemeralEmit<A>>,
     phase: ArtifactRetainedCommandPhase,
     checkpoint_pending: bool,
@@ -364,7 +368,9 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         }
         if self.ephemeral.is_some(){return Err(Self::unadmitted_input());}
         if let Some(work)=self.work.as_ref(){return if work.terminal_is_empty(){Ok(RetirementDemand{release_bytes:work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?,depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:work.next_close_copy_byte_demand()?,capacity_bytes:work.next_close_capacity_byte_demand(copy)?,release_bytes:work.next_close_release_byte_demand()?,depth:work.next_close_depth_demand()?})};}
-        if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.context.is_some()||self.operation.is_some(){return Err(Self::unadmitted_input());}
+        if self.context.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if let Some(owner)=self.context_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
+        if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.operation.is_some(){return Err(Self::unadmitted_input());}
         if self.completion.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(owner)=self.completion_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
         Ok(Default::default())
@@ -428,6 +434,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             download:None,
             download_retirement:None,
             completion_retirement:None,
+            context_retirement:None,
             ephemeral: None,
             phase,
             checkpoint_pending: false,
@@ -838,6 +845,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
             && self.interaction_state.is_none()
             && self.interaction_hover.is_none()
             && self.context.is_none()
+            && self.context_retirement.is_none()
             && self.operation.is_none()
             && self.completion.is_none()
             && self.completion_retirement.is_none()
@@ -888,6 +896,7 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
             download:None,
             download_retirement:None,
             completion_retirement:None,
+            context_retirement:None,
             ephemeral: None,
             phase: ArtifactRetainedCommandPhase::Complete,
             checkpoint_pending: false,
@@ -924,3 +933,4 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+                                     

@@ -1,0 +1,9 @@
+{
+  "schema":"https://semio.tech/framework/value/paged-utf8/append-funding",
+  "cases":[{"text":"","repeat":1},{"text":"Image","repeat":1},{"text":"Änderung🧬","repeat":1300}],
+  "cancelAfter":[0,1,3,7,17],
+  "deniedAxes":["items","copyBytes","capacityBytes","depth"],
+  "chunkBytes":1024,
+  "metadataCopyAxes":["sourceIdentity","destinationIdentity","pendingHeader","position","length","publishedHeader"],
+  "oracle":"JSON Patch and UTF-8"
+}

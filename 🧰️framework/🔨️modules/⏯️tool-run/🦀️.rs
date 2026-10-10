@@ -20,6 +20,16 @@ use std::sync::OnceLock;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 
+#[path="👥️entities/🦀️.rs"]
+pub mod entities;
+#[path="📊️progress/📸️clone/🦀️.rs"]
+pub mod progress_clone;
+#[path="📊️progress/💍️steps/➕️insert/🦀️.rs"]
+pub mod step_ring_insert;
+#[path="📊️progress/🪟️presentation/🦀️.rs"]
+pub mod presentation;
+#[path="📽️tick/🔐️source/🦀️.rs"]
+pub mod tick_source;
 //#region 🔖️Limits
 /// 💍️ Newest steps kept by a `ToolRunStepRing`.
 pub const TOOL_RUN_STEP_RING_CAPACITY: usize = 64;
@@ -60,7 +70,7 @@ pub const TOOL_RUN_GROUP_ID_PREFIX: &str = "toolRun:";
 
 //#region 🔖️Identity
 /// 🪪️ Per-instance run id; `run` is monotone and never reused.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
 pub struct ToolRunId {
     pub app_instance_id: u32,
     pub run: u64,
@@ -74,7 +84,7 @@ impl ToolRunId {
 }
 
 /// 🧿️ Run id plus the staleness generation and the committed revision the overlay was folded from.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
 pub struct ToolRunIdentity {
     pub id: ToolRunId,
     pub generation: u32,
@@ -109,7 +119,7 @@ pub struct ToolRunFreshness {
 
 //#region 🔖️Lifecycle
 /// 🚦️ Lifecycle state of a non-empty ledger slot; "no run" is the absence of a slot.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunState {
@@ -530,6 +540,7 @@ impl ToolRunMachine {
 
 //#region 🔖️Progress
 /// 🚥️ Verdict of one traced attempt; colours are framework semantic tokens.
+#[derive(semio_framework_value::RetireOwned)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -571,7 +582,7 @@ impl ToolRunVerdict {
 }
 
 /// 🪧️ Severity of one step-log entry.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunStepKind {
@@ -607,7 +618,7 @@ impl ToolRunStepKind {
 }
 
 /// 🪝️ One positional template argument.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, semio_framework_value::RetireOwned)]
 pub enum ToolRunStepArg {
     Unsigned(u64),
     Float(f64),
@@ -715,7 +726,7 @@ impl ToolRunStepRing {
 }
 
 /// 📟️ One counter value by index into `ToolRunDefinition.counters`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
 pub struct ToolRunCounter {
     pub counter: u16,
     pub value: u64,
@@ -746,6 +757,7 @@ impl ToolRunProgress {
 
 //#region 🔖️Trace
 /// 👻️ What one trace record shows; meshes and shapes index the plugin's existing lanes.
+#[derive(semio_framework_value::RetireOwned)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ToolRunTraceSubject {
     Instance3d { mesh: u32, position: [f32; 3], rotation: [f32; 4], scale: f32 },
@@ -772,6 +784,7 @@ impl ToolRunTraceSubject {
 }
 
 /// ✏️ One trace delta operation.
+#[derive(semio_framework_value::RetireOwned)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ToolRunTraceOp {
     Upsert { key: u64, verdict: ToolRunVerdict, reason: u16, subject: ToolRunTraceSubject },
@@ -853,7 +866,7 @@ impl ToolRunTraceDelta {
 }
 
 /// 🧭️ Echoed by a renderer in its window instance view state; `page` is the next page it expects.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunTraceCursor {
@@ -1070,6 +1083,7 @@ impl ToolRunTraceStore {
 
 //#region 🔖️Tick
 /// 📽️ One job report: provisional ops, trace pages, steps and optional progress.
+#[derive(semio_framework_value::RetireOwned)]
 #[derive(Clone, Debug, PartialEq)]
 pub struct ToolRunTick {
     pub identity: ToolRunIdentity,
@@ -2364,6 +2378,10 @@ pub fn tool_run_format(template: &str, value: impl Fn(&str) -> Option<String>) -
     out
 }
 //#endregion 🔖️Labels
+
+#[cfg(test)]
+#[global_allocator]
+static TOOL_RUN_ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

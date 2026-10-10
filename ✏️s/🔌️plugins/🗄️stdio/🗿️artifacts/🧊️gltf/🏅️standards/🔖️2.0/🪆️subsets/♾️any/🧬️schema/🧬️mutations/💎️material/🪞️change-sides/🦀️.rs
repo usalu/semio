@@ -10,7 +10,7 @@ pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/doubleSided"
 pub fn touched_paths(payload: &GltfChangeMaterialDoubleSidedPayload) -> Vec<String> {
     vec![format!("document/materials/{}/doubleSided", payload.material)]
 }
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialDoubleSidedRejection {
     pub code: String,
@@ -21,7 +21,7 @@ pub struct GltfChangeMaterialDoubleSidedRejection {
 fn failure(value: GltfMaterialAnimationFailure) -> GltfChangeMaterialDoubleSidedRejection {
     GltfChangeMaterialDoubleSidedRejection { code: value.code.into(), path: value.path, detail: value.detail.into() }
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialDoubleSidedPayload {
     pub material: usize,
@@ -55,7 +55,7 @@ pub fn inverse(p: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) ->
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeMaterialDoubleSidedMutation {

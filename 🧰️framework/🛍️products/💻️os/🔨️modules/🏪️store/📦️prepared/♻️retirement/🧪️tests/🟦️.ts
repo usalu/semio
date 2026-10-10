@@ -1,0 +1,10 @@
+/** 🧪️ SQL owner conservation independently audits portable interrupted candidate custody. */
+import {expect,test} from "bun:test";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import {PreparedCandidateRetirement} from "../🟦️.ts";
+import fixtures from "../🧫️fixtures/🔣️.json";
+import schema from "../🧬️schema/🔣️.json";
+test("prepared candidate closure retains actual edit, root and seal providers across denied and interrupted turns",()=>{
+ expect(new Ajv({strict:true}).compile(schema)(fixtures)).toBe(true);const db=new Database(":memory:");db.run("CREATE TABLE custody(field TEXT PRIMARY KEY,live INTEGER)");for(const grant of fixtures.copyGrants){for(const turns of fixtures.cancelTurns){const edit={forwards:[fixtures.payload],inverse:[fixtures.payload]},post={text:fixtures.payload},authority={actor:fixtures.identities[0]};const candidate={edit,post,authority,identities:[...fixtures.identities]};const issuer=<T>(field:string,value:T)=>{let empty=false;db.run("INSERT INTO custody VALUES(?,1)",[field]);return{retireOwned(original:T){expect(original).toBe(value);return{closeStep(){empty=true;db.run("UPDATE custody SET live=0 WHERE field=?",[field]);return true;},terminalIsEmpty(){return empty;}};},closeStep(){expect(empty).toBe(true);return true;},terminalIsEmpty(){return empty;}};};db.run("DELETE FROM custody");const owner=new PreparedCandidateRetirement(candidate,{edit:issuer("edit",edit),post:issuer("post",post),authority:issuer("authority",authority)});expect(owner.closeStep(0)).toBe(false);expect(db.query("SELECT SUM(live) AS count FROM custody").get()).toEqual({count:3});for(let at=0;at<turns&&!owner.terminalIsEmpty();at++)owner.closeStep(1);while(!owner.closeStep(grant)){}expect(owner.terminalIsEmpty()).toBe(true);expect(db.query("SELECT SUM(live) AS count FROM custody").get()).toEqual({count:0});expect(candidate.identities).toEqual([]);console.log(`[DEBUG] Portable prepared candidate grant=${grant} interruptedTurn=${turns} originalOwners=3 terminal=true`);}}db.close();
+});

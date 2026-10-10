@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 128 144.5" width="128mm" height="144.5mm" xmlns="http://www.w3.org/2000/svg" class="sheet"
+    version="1.1" data-unit="mm"><title>Model</title><desc>Views of Model, one group per view (plan, ceiling plan, section, elevation) at the scale of the view, paper millimetres.</desc><style>
+      .plan{font-family:sans-serif}
+      path{stroke:#000;stroke-linecap:round;stroke-linejoin:round;fill:none}
+      .cut{stroke-width:0.5}
+      .projection{stroke-width:0.25}
+      .hidden{stroke-width:0.18}
+      .annotation{stroke-width:0.13}
+      .hidden{stroke-dasharray:1.5 0.75}
+      path.region{fill-rule:evenodd}
+      path.region.cut{fill:#1a1a1a}
+      path.region.projection{fill:#e6e6e6}
+      text{fill:#000;stroke:none;font-size:3.2px}
+      text.title{font-size:5px;font-weight:bold}
+      text.space-tag{text-anchor:middle}
+      text.grid-label{font-size:3.5px;text-anchor:middle;dominant-baseline:central}
+    </style><g id="view-v-plan-st-first" class="view plan" transform="translate(10,10)" data-view="v-plan-st-first"
+        data-kind="plan" data-building="bldg-1" data-name="Plan First" data-scale="100" data-storey="st-first"
+        aria-label="Plan First"><title>Plan First</title><text x="8" y="6.5" class="title">Plan First</text><g
+            class="layer regions"/><g class="layer lines"><path d="M 14 19 L 94 19" class="line annotation grid-line"
+                data-element="g-1" data-id="g-1/GridLine/0"/><path d="M 14 19 A 3 3 0 0 0 8 19 A 3 3 0 0 0 14 19 Z"
+                class="line annotation grid-bubble" data-element="g-1" data-id="g-1/GridBubble/0"/><path
+                d="M 100 19 A 3 3 0 0 0 94 19 A 3 3 0 0 0 100 19 Z" class="line annotation grid-bubble"
+                data-element="g-1" data-id="g-1/GridBubble/1"/></g><g class="layer texts"><text x="11" y="19"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/0">1</text><text x="97" y="19"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/1">1</text></g></g><g
+        id="view-v-plan-st-ground" class="view plan" transform="translate(10,46)" data-view="v-plan-st-ground"
+        data-kind="plan" data-building="bldg-1" data-name="Plan Ground" data-scale="100" data-storey="st-ground"
+        aria-label="Plan Ground"><title>Plan Ground</title><text x="8" y="6.5" class="title">Plan Ground</text><g
+            class="layer regions"><path d="M 95.5 79 L 95.5 16 L 92.5 19 L 92.5 76 Z" class="region cut wall-cut"
+                data-element="w-east" data-id="w-east/WallCut/0"/><path d="M 95.5 16 L 12.5 16 L 15.5 19 L 92.5 19 Z"
+                class="region cut wall-cut" data-element="w-north" data-id="w-north/WallCut/0"/><path
+                d="M 12.5 79 L 28 79 L 28 76 L 15.5 76 Z" class="region cut wall-cut" data-element="w-south"
+                data-id="w-south/WallCut/0"/><path d="M 40 79 L 95.5 79 L 92.5 76 L 40 76 Z" class="region cut wall-cut"
+                data-element="w-south" data-id="w-south/WallCut/1"/><path d="M 12.5 16 L 12.5 79 L 15.5 76 L 15.5 19 Z"
+                class="region cut wall-cut" data-element="w-west" data-id="w-west/WallCut/0"/><path
+                d="M 52.5 49 L 55.5 49 L 55.5 46 L 52.5 46 Z" class="region cut column-cut" data-element="col-1"
+                data-id="col-1/ColumnCut/0"/></g><g class="layer lines"><path d="M 28 76 L 40 76"
+                class="line projection window-sill" data-element="o-win" data-id="o-win/WindowSill/0"/><path
+                d="M 28 79 L 40 79" class="line projection window-sill" data-element="o-win"
+                data-id="o-win/WindowSill/1"/><path d="M 28 77.5 L 40 77.5" class="line projection window-glazing"
+                data-element="o-win" data-id="o-win/WindowGlazing/0"/><path d="M 28 78 L 40 78 L 40 77 L 28 77 Z"
+                class="line cut window-frame" data-element="o-win" data-id="o-win/WindowFrame/0"/><path
+                d="M 14 77.5 L 94 77.5" class="line annotation grid-line" data-element="g-1" data-id="g-1/GridLine/0"/><path
+                d="M 14 77.5 A 3 3 0 0 0 8 77.5 A 3 3 0 0 0 14 77.5 Z" class="line annotation grid-bubble"
+                data-element="g-1" data-id="g-1/GridBubble/0"/><path
+                d="M 100 77.5 A 3 3 0 0 0 94 77.5 A 3 3 0 0 0 100 77.5 Z" class="line annotation grid-bubble"
+                data-element="g-1" data-id="g-1/GridBubble/1"/></g><g class="layer texts"><text x="11" y="77.5"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/0">1</text><text x="97" y="77.5"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/1">1</text></g></g></svg>

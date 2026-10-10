@@ -13,7 +13,7 @@ use semio_framework_diagnostic::TextError;
 
 //#region 🔖️JsonModel
 /// 🍃️ One `object` member, in source order.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct JsonMember {
     pub key: String,
@@ -24,7 +24,7 @@ pub struct JsonMember {
 /// permits arbitrary precision, so re-emitting a lossy `f64` round-trip would silently corrupt
 /// real documents carrying e.g. 19-digit ids or high-precision decimals). `Object` is a `Vec` of
 /// [`JsonMember`] (never a map) so decode->encode preserves member insertion order exactly.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[derive(Default)]
 pub enum JsonValue {
@@ -81,7 +81,7 @@ pub enum JsonValue {
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.json` snapshot.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.json")]
 pub struct JsonSnapshot {

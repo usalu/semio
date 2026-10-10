@@ -15,6 +15,10 @@ pub trait ErasedSnapshotRetirement: Send {
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError>;
     fn next_release_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_depth_demand(&self) -> Result<usize, ValueError>;
+    /// 📏️ Quotes all four axes of the next turn in one pass. A nesting owner overrides it to ask its child once: the four axis methods each re-derive the child's quote, so a chain of `d` wrappers would otherwise cost `4^d` quotes per turn.
+    fn next_demand(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand { copy_bytes: self.next_copy_byte_demand()?, capacity_bytes: self.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: self.next_release_byte_demand()?, depth: self.next_depth_demand()? })
+    }
 }
 
 pub trait SnapshotRetirementFactory<P>: crate::FactoryRetirement + Send + Sync {

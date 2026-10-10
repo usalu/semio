@@ -10,6 +10,7 @@ and oracle meet on one fixture.
 
 * `maps`: the image of points and directions under a translation, a rotation about a pivot and a reflection about a line
   (`shapely.affinity.translate`, `rotate`, `affine_transform` with the reflection matrix);
+* `frames`: the image of a free-standing component (origin, rotation, mirror flag) under the same maps, derived from where shapely sends the two axis vectors of its family frame;
 * `loops`: the mirror image of a closed bulged loop keeps its area and centroid mirrored and runs counter-clockwise (arcs sampled into 4096 chords);
 * `offsets`: the parallel curve of a line (`LineString.offset_curve`) and of an arc (concentric circle);
 * `trims`: the end of a wall moved onto the carrier of another axis (infinite line or full circle intersections);
@@ -81,6 +82,29 @@ def maps(cases):
 
 
 # endregion 🔖️Maps
+
+
+# region 🔖️Frames
+def frame_image(kind, case, instance):
+    """🪑️ The image of a free-standing component under a map: its origin goes where shapely sends the point, and its family frame (x right, y depth, the x axis flipped when the instance is mirrored, turned by
+    its rotation) goes where shapely sends the two axis vectors. The image is again a frame turned by `rotation` (its y axis points at `rotation + 90 degrees`) and mirrored exactly when the two axes are left-handed."""
+    rotation, mirrored = instance["rotation"], instance["mirrored"]
+    right = (-1.0 if mirrored else 1.0) * numpy.array([math.cos(rotation), math.sin(rotation)])
+    depth = numpy.array([-math.sin(rotation), math.cos(rotation)])
+    origin = numpy.array(image(kind, case, (0.0, 0.0)))
+    moved_right = numpy.array(image(kind, case, tuple(right))) - origin
+    moved_depth = numpy.array(image(kind, case, tuple(depth))) - origin
+    turned = math.atan2(moved_depth[1], moved_depth[0]) - math.pi / 2
+    turned = math.atan2(math.sin(turned), math.cos(turned))
+    return {"position": image(kind, case, tuple(instance["position"])), "rotation": turned, "mirrored": float(moved_right[0] * moved_depth[1] - moved_right[1] * moved_depth[0]) < 0}
+
+
+def frames(cases):
+    """🪑️ Images of the component frames of every frame case."""
+    return [{**case, "images": [frame_image(case["kind"], case, instance) for instance in case["instances"]]} for case in cases]
+
+
+# endregion 🔖️Frames
 
 
 # region 🔖️Loops
@@ -342,6 +366,7 @@ def expectations(committed):
     return {
         "description": committed["description"],
         "maps": maps(committed["maps"]),
+        "frames": frames(committed["frames"]),
         "loops": loops(committed["loops"]),
         "offsets": offsets(committed["offsets"]),
         "trims": trims(committed["trims"]),

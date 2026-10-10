@@ -3,7 +3,7 @@
 
 use crate::editor::bim::entities::{ordered_storeys, storey_of, ENTITIES};
 use crate::editor::bim::kit::bim_window_action;
-use crate::editor::bim::modes::edit::windows::{plan, schedule, section, world};
+use crate::editor::bim::modes::edit::windows::{plan, schedule, section, sheet, world};
 use crate::editor::bim::terminology::{bim_labels, BimLabels};
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::SeverityCounts;
 use crate::ModelSnapshot;
@@ -25,7 +25,7 @@ pub fn addressed_kind(view_state: &ViewModel) -> Option<&str> {
 
 //#region 🔖️Status
 fn count_on(snapshot: &ModelSnapshot, storey: &str) -> usize {
-    ENTITIES.iter().filter(|row| !row.library && !matches!(row.kind, "site" | "building" | "storey" | "grid" | "view")).map(|row| (row.ids)(snapshot).iter().filter(|id| storey_of(snapshot, id).as_deref() == Some(storey)).count()).sum()
+    ENTITIES.iter().filter(|row| !row.library && !matches!(row.kind, "site" | "building" | "storey" | "grid" | "view" | "curtain-panel-override")).map(|row| (row.ids)(snapshot).iter().filter(|id| storey_of(snapshot, id).as_deref() == Some(storey)).count()).sum()
 }
 
 /// 📟️ The status line of the addressed window: the storey it shows (or all), how many elements that is and how many are selected.
@@ -72,7 +72,7 @@ pub fn engagements(snapshot: &ModelSnapshot, view_state: &ViewModel, plan_storey
     let text = status(snapshot, view_state, plan_storey, selected);
     let found = problems(bim_labels(view_state), found);
     let kind = addressed_kind(view_state);
-    let input = matches!(kind, Some(plan::WINDOW_KIND_ID | world::WINDOW_KIND_ID | section::WINDOW_KIND_ID)).then(|| entry(&window, bim_labels(view_state)));
+    let input = matches!(kind, Some(plan::WINDOW_KIND_ID | world::WINDOW_KIND_ID | section::WINDOW_KIND_ID | sheet::WINDOW_KIND_ID)).then(|| entry(&window, bim_labels(view_state)));
     HashMap::from([(
         window.clone(),
         WindowEngagement {
@@ -120,7 +120,7 @@ fn plan_measures(snapshot: &ModelSnapshot, config: &plan::config::BimPlanWindowC
 
 /// 📤️ One download toggle per export format: each runs the stepped, cancellable `exportModel` job.
 fn export_toggles(labels: &BimLabels) -> Vec<WindowMeasure> {
-    [("ifc", labels.export_ifc.as_str()), ("glb", labels.export_glb.as_str()), ("svg", labels.export_svg.as_str()), ("csv", labels.export_csv.as_str())]
+    [("ifc2x3", labels.export_ifc2x3.as_str()), ("ifc4", labels.export_ifc4.as_str()), ("glb", labels.export_glb.as_str()), ("svg", labels.export_svg.as_str()), ("csv", labels.export_csv.as_str())]
         .into_iter()
         .map(|(format, label)| WindowMeasure::Toggle { id: format!("bim.measure.world.export.{format}"), icon_id: "download".into(), label: Some(label.to_string()), pressed: false, text: None, on_change: bim_window_action("exportModel", Some(DslValue::object([("format".to_string(), DslValue::String(format.to_string()))]))) })
         .collect()
@@ -143,6 +143,7 @@ fn world_measures(snapshot: &ModelSnapshot, config: &world::config::BimWorldWind
         ("demolished".to_string(), labels.phase_demolished.as_str().to_string()),
         ("temporary".to_string(), labels.phase_temporary.as_str().to_string()),
     ];
+    let energy_modes = vec![("u_value".to_string(), labels.env_mode_u_value.as_str().to_string()), ("boundary".to_string(), labels.env_mode_boundary.as_str().to_string())];
     let axes = vec![("x".to_string(), labels.axis_x.as_str().to_string()), ("y".to_string(), labels.axis_y.as_str().to_string()), ("z".to_string(), labels.axis_z.as_str().to_string())];
     let storeys = storey_items(snapshot)
         .into_iter()
@@ -156,6 +157,9 @@ fn world_measures(snapshot: &ModelSnapshot, config: &world::config::BimWorldWind
         WindowMeasure::Toggle { id: "bim.measure.world.section".into(), icon_id: "scissors".into(), label: Some(labels.measure_section_enabled.as_str().to_string()), pressed: config.section_enabled, text: None, on_change: view_action("section_enabled") },
         select("bim.measure.world.section-axis", labels.measure_section_axis.as_str(), &config.section_axis, axes, "section_axis"),
         number("bim.measure.world.section-offset", labels.measure_section_offset.as_str(), config.section_offset, None, 0.1, "section_offset"),
+        WindowMeasure::Toggle { id: "bim.measure.world.energy".into(), icon_id: "thermometer".into(), label: Some(labels.measure_env_overlay.as_str().to_string()), pressed: config.energy_overlay, text: Some(world::envelope::legend_text(labels, labels.locale().as_str().starts_with("de"), world::envelope::mode(config))), on_change: view_action("energy_overlay") },
+        select("bim.measure.world.energy-mode", labels.measure_env_mode.as_str(), world::envelope::mode(config).key(), energy_modes, "energy_mode"),
+        WindowMeasure::Toggle { id: "bim.measure.world.show-all".into(), icon_id: "eye".into(), label: Some(labels.clash_show_all.as_str().to_string()), pressed: !(config.isolated_elements.is_empty() && config.section_box.is_empty()), text: None, on_change: bim_window_action("viewClash", Some(DslValue::object([("first".to_string(), DslValue::String(String::new())), ("second".to_string(), DslValue::String(String::new())), ("mode".to_string(), DslValue::String("clear".to_string()))]))) },
         WindowMeasure::Toggle { id: "bim.measure.world.analyse".into(), icon_id: "refresh".into(), label: Some(labels.measure_analyse.as_str().to_string()), pressed: false, text: None, on_change: bim_window_action("analyseModel", None) },
         WindowMeasure::measure_group("bim.measure.world.export", labels.measure_export.as_str(), export_toggles(labels)),
     ]
@@ -177,6 +181,23 @@ fn schedule_measures(snapshot: &ModelSnapshot, config: &schedule::config::BimSch
     measures
 }
 
+fn sheet_measures(snapshot: &ModelSnapshot, config: &sheet::config::BimSheetWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
+    let shown = sheet::active_sheet(snapshot, config).unwrap_or_default();
+    let items = crate::editor::bim::entities::sheets::sheet_choices(snapshot, labels);
+    let export = |format: &str, only: Option<&str>, label: &str, id: &str| {
+        let mut args = vec![("format".to_string(), DslValue::String(format.to_string())), ("locale".to_string(), DslValue::String(labels.locale().as_str().to_string()))];
+        if let Some(sheet) = only {
+            args.push(("sheet".to_string(), DslValue::String(sheet.to_string())));
+        }
+        WindowMeasure::Toggle { id: format!("bim.measure.sheet.export.{id}"), icon_id: "download".into(), label: Some(label.to_string()), pressed: false, text: None, on_change: bim_window_action("exportSheets", Some(DslValue::object(args))) }
+    };
+    let mut measures = vec![select("bim.measure.sheet.shown", labels.kind_sheet.as_str(), &shown, items, "sheet")];
+    if !shown.is_empty() {
+        measures.push(WindowMeasure::measure_group("bim.measure.sheet.export", labels.measure_export_sheets.as_str(), vec![export("svg", Some(shown.as_str()), labels.export_sheet_svg.as_str(), "svg"), export("pdf", None, labels.export_sheets_pdf.as_str(), "pdf")]));
+    }
+    measures
+}
+
 /// 🎚️ The measures of the addressed window, from that window's own config.
 pub fn measures<C>(snapshot: &ModelSnapshot, cfg: &ConfigView<'_, C>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
     let (Some(window), Some(kind)) = (view_state.window_id.clone(), addressed_kind(view_state)) else { return HashMap::new() };
@@ -186,6 +207,7 @@ pub fn measures<C>(snapshot: &ModelSnapshot, cfg: &ConfigView<'_, C>, view_state
         world::WINDOW_KIND_ID => world_measures(snapshot, &world::config::current(cfg), labels),
         section::WINDOW_KIND_ID => section_measures(snapshot, &section::config::current(cfg), labels),
         schedule::WINDOW_KIND_ID => schedule_measures(snapshot, &schedule::config::current(cfg), labels),
+        sheet::WINDOW_KIND_ID => sheet_measures(snapshot, &sheet::config::current(cfg), labels),
         _ => Vec::new(),
     };
     HashMap::from([(window, measures)])

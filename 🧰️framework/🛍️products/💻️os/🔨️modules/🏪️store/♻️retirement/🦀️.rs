@@ -112,19 +112,13 @@ artifact_retire_struct!(super::ArtifactLink { target, pin, role });
 artifact_retire_struct!(super::OwnerRef { parent, slot, child_id });
 impl<S: Send + 'static> RetireOwned for super::ArtifactChild<S> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
-        semio_framework_value::artifact_retirement_sequence![self.child_id, self.target]
+        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.child_id), semio_framework_value::retirement::deferred(self.target)])
     }
-}
-impl RetireOwned for super::LinkPin {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Head => sequence(Vec::new()),
-            Self::Checkpoint { id } => id.retirement(),
-            Self::Snapshot { blob } => blob.retirement(),
-        }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.child_id), semio_framework_value::retirement::deferred_birth_bytes_for(&self.target)])
     }
+    fn controlled_retirement_supported() -> bool { true }
 }
-
 artifact_retire_struct!(super::ArtifactBackboneRef { uri });
 artifact_retire_struct!(super::MigrationProvenance { document_id, dialect, checkpoint_id, migrated_at });
 artifact_retire_struct!(super::OpenToolTransaction { transaction, edit_id });

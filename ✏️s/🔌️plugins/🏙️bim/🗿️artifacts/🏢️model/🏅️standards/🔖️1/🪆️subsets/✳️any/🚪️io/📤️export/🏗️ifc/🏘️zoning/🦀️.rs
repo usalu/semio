@@ -35,7 +35,7 @@ fn totals(entity: u64, totals: &ZoneTotals) -> (u64, &'static str, Vec<Quantity>
 pub fn emit(x: &mut Export<'_>) {
     let model = x.model;
     for (id, zone) in &model.zones {
-        let entity = x.ifc.rooted("IFCZONE", id, &zone.name, "", vec![opt_text(&zone.category)]);
+        let entity = x.ifc.rooted("IFCZONE", id, &zone.name, "", x.by(vec![opt_text(&zone.category)], vec![opt_text(&zone.category), unset()]));
         x.links.elements.insert(id.clone(), entity);
         x.links.authoring.push((entity, vec![("Id", label(id)), ("Category", label(&zone.category)), ("OccupancyDensity", number(zone.occupancy_density))]));
         let common = property_set(x, &format!("{id}:Pset_ZoneCommon"), "Pset_ZoneCommon", vec![("Reference", typed("IFCIDENTIFIER", text(id)))]);

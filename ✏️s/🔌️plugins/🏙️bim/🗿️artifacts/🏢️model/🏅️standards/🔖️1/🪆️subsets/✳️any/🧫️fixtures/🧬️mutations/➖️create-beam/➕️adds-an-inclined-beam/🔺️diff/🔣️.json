@@ -1,1 +1,25 @@
-{}
+{
+  "beams": {
+    "b-b": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 4.0,
+            "y": 3.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 3.0
+          }
+        }
+      },
+      "beam_type": "bt-40x60",
+      "end_top_offset": -0.7,
+      "entry": "Created",
+      "name": "Inclined beam",
+      "phase": "New",
+      "storey": "st-ground",
+      "top_offset": -0.2
+    }
+  }
+}

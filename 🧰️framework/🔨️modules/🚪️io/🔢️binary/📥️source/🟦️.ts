@@ -1,8 +1,9 @@
 /** 🧾️ Cooperative MIME-qualified encoded bytes with private publication. */
+import type {RetainedCloneGrant,RetainedCloneProgress} from "../../../🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
 import {decodeBase64Quad} from "../../🔤️base64/🟦️.ts";
 export type BinarySourceInput={mime:string;data:string;minBytes:number;maxBytes:number;maxSourceBytes:number;maxWork:number};
-export type BinarySourceProgress={phase:"header"|"validate"|"decode"|"complete";sourceCompleted:number;sourceTotal:number;bytes:number;totalBytes:number;work:number;done:boolean};
-export type BinarySourceOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:BinarySourceProgress)=>void};
+export type BinarySourceProgress={phase:"header"|"validate"|"decode"|"complete"|"transferred";sourceCompleted:number;sourceTotal:number;bytes:number;totalBytes:number;work:number;done:boolean};
+export type BinarySourceOptions={signal?:AbortSignal;workBudget?:number;workGrant:RetainedCloneGrant;onProgress?:(progress:BinarySourceProgress)=>void};
 const fail=(message:string):never=>{throw new RangeError(message);};
 const abort=():never=>{throw new DOMException("Binary source cancelled","AbortError");};
 const integer=(v:number,min:number,max:number)=>Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -21,8 +22,7 @@ export class BinarySourceJob{
   this.source=input.data;this.sourceLength=input.data.length;this.mime=input.mime;this.limits={minBytes:input.minBytes,maxBytes:input.maxBytes,maxSourceBytes:input.maxSourceBytes,maxWork:input.maxWork};
   this.url=input.data.slice(0,5).toLowerCase()==="data:";this.phase=this.url?"header":"validate";this.at=this.url?5:0;this.read=this.at;this.sourceTotal=this.sourceLength*2;
  }
- private check():void{if(this.cancelled)abort();if(this.failed!==undefined)throw this.failed;}
- private release():void{this.source="";this.binary=new Uint8Array(0);this.output=undefined;}
+ private check():void{if(this.cancelled)abort();if(this.phase==="transferred")fail("Binary source is incomplete");if(this.failed!==undefined)throw this.failed;}
  private headerStep():void{
   if(this.at>=this.sourceLength||this.at>=4096)fail("Missing or excessive data URL header");
   const value=this.source.charCodeAt(this.at++);this.read++;
@@ -53,7 +53,7 @@ export class BinarySourceJob{
   if(this.at===this.sourceLength){
    if(this.quadAt)fail("Invalid base64 length");
    if(validating){if(this.totalBytes<this.limits.minBytes)fail("Encoded source is too short");this.binary=new Uint8Array(this.totalBytes);this.at=this.bodyStart;this.phase="decode";}
-   else{this.output=this.binary;this.binary=new Uint8Array(0);this.source="";this.phase="complete";}
+   else{this.output=this.binary;this.binary=new Uint8Array(0);this.phase="complete";}
    return;
   }
   const value=this.token();
@@ -64,17 +64,23 @@ export class BinarySourceJob{
   }else if(validating)this.totalBytes++;else this.binary[this.bytes++]=value;
   if(this.totalBytes>this.limits.maxBytes)fail("Encoded source byte limit exceeded");
  }
- advance(budget:number):BinarySourceProgress{
-  if(!integer(budget,1,Number.MAX_SAFE_INTEGER))fail("Binary source work grant must be a positive integer");this.check();
-  try{for(let i=0;i<budget&&this.phase!=="complete";i++){if(this.work>=this.limits.maxWork)fail("Binary source work limit exceeded");if(this.phase==="header")this.headerStep();else this.sourceStep();this.work++;}}
-  catch(error){this.failed=error;this.release();throw error;}
-  return {phase:this.phase,sourceCompleted:this.read,sourceTotal:this.sourceTotal,bytes:this.bytes,totalBytes:this.totalBytes,work:this.work,done:this.phase==="complete"};
+ progress():BinarySourceProgress{return {phase:this.phase,sourceCompleted:this.read,sourceTotal:this.sourceTotal,bytes:this.bytes,totalBytes:this.totalBytes,work:this.work,done:this.phase==="complete"};}
+ nextCopyByteDemand():number{return this.phase==="complete"||this.phase==="transferred"?0:32;}
+ nextCapacityByteDemand():number{return this.phase==="validate"&&this.at===this.sourceLength&&!this.quadAt?this.totalBytes:0;}
+ private grant(value:RetainedCloneGrant):void{for(const field of ["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"]as const)if(!integer(value[field],0,Number.MAX_SAFE_INTEGER))fail("Invalid binary source funding");}
+ advance(source:string,grant:RetainedCloneGrant):{progress:BinarySourceProgress;receipt:RetainedCloneProgress}{
+  this.grant(grant);this.check();if(source!==this.source)fail("Original binary source changed");const receipt:RetainedCloneProgress={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};
+  try{for(let i=0;i<grant.maximumItems&&this.phase!=="complete";i++){const copy=this.nextCopyByteDemand(),capacity=this.nextCapacityByteDemand();if(grant.maximumDepth<1||copy>grant.maximumCopyBytes-receipt.copiedBytes||capacity>grant.maximumCapacityBytes-receipt.retainedCapacityBytes)break;if(this.work>=this.limits.maxWork)fail("Binary source work limit exceeded");if(this.phase==="header")this.headerStep();else this.sourceStep();this.work++;receipt.copiedItems++;receipt.copiedBytes+=copy;receipt.retainedCapacityBytes+=capacity;}}
+  catch(error){this.failed=error;throw error;}
+  return {progress:this.progress(),receipt};
  }
- cancel():void{this.cancelled=true;this.release();}
+ cancel():void{this.cancelled=true;}
+ takeResult(grant:RetainedCloneGrant):{value:Uint8Array;receipt:RetainedCloneProgress}|undefined{this.grant(grant);const value=this.result();if(grant.maximumItems<1||grant.maximumCopyBytes<24||grant.maximumDepth<1)return;this.output=undefined;this.phase="transferred";return {value,receipt:{copiedItems:1,copiedBytes:24,retainedCapacityBytes:0,releasedBytes:0}};}
+
  result():Uint8Array{this.check();if(this.phase!=="complete"||!this.output)fail("Binary source is incomplete");return this.output!;}
 }
-export async function decodeBinarySource(input:BinarySourceInput,options:BinarySourceOptions={}):Promise<Uint8Array>{
+export async function decodeBinarySource(input:BinarySourceInput,options:BinarySourceOptions):Promise<Uint8Array>{
  if(options.signal?.aborted)abort();const job=new BinarySourceJob(input);
- try{for(;;){if(options.signal?.aborted)abort();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);if(options.signal?.aborted)abort();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}
+ try{for(;;){if(options.signal?.aborted)abort();const step=job.advance(input.data,{...options.workGrant,maximumItems:Math.min(options.workGrant.maximumItems,options.workBudget??4096)}),progress=step.progress;if(!progress.done&&!step.receipt.copiedItems)fail("Binary source funding does not admit the next transition");options.onProgress?.(progress);if(options.signal?.aborted)abort();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}
  catch(error){job.cancel();throw error;}
 }

@@ -1,0 +1,60 @@
+{
+  "width": 128.0,
+  "height": 144.5,
+  "views": {
+    "v-plan-st-first": {
+      "name": "Plan First",
+      "kind": "plan",
+      "scale": 100,
+      "regions": 0,
+      "lines": 3,
+      "texts": 2,
+      "styles": {
+        "cut": 0,
+        "projection": 0,
+        "hidden": 0,
+        "annotation": 3
+      },
+      "arcs": 4,
+      "pocheArea": 0.0,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 0.0,
+        "hidden": 0.0,
+        "annotation": 8.0
+      },
+      "notation": {},
+      "printed": []
+    },
+    "v-plan-st-ground": {
+      "name": "Plan Ground",
+      "kind": "plan",
+      "scale": 100,
+      "regions": 6,
+      "lines": 7,
+      "texts": 2,
+      "styles": {
+        "cut": 7,
+        "projection": 3,
+        "hidden": 0,
+        "annotation": 3
+      },
+      "arcs": 4,
+      "pocheArea": 8.13,
+      "lineLength": {
+        "cut": 2.6,
+        "projection": 3.5999999999999996,
+        "hidden": 0.0,
+        "annotation": 8.0
+      },
+      "notation": {},
+      "printed": []
+    }
+  },
+  "audit": {
+    "sampledPocheArea": {
+      "v-plan-st-first": 0.0,
+      "v-plan-st-ground": 8.13
+    }
+  }
+}

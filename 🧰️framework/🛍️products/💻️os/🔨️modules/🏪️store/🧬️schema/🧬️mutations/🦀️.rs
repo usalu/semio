@@ -38,6 +38,9 @@ pub enum SpaceHistoryMutation {
 }
 //#endregion 🔖️Aggregate
 
+#[path = "🔏️canonical/🦀️.rs"]
+mod canonical;
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

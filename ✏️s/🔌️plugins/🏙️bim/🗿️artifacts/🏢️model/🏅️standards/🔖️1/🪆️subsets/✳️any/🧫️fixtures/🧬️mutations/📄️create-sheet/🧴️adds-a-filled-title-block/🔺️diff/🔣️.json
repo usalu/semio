@@ -1,1 +1,21 @@
-{}
+{
+  "sheets": {
+    "sh-2": {
+      "checked_by": "AB",
+      "date": "2026-10-09",
+      "drawn_by": "UG",
+      "entry": "Created",
+      "name": "Details",
+      "number": "A-104",
+      "orientation": "Landscape",
+      "paper": {
+        "Iso": {
+          "size": "A3"
+        }
+      },
+      "project": "House on the hill",
+      "revision": "B",
+      "scale_label": "As indicated"
+    }
+  }
+}

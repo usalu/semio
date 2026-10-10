@@ -1,6 +1,7 @@
 use super::*;
 use semio_framework_value::retained_clone::ordered_map::{BoundedOrdGrant, RetainedOrderedMap, RetainedOrderedMapInsertCursor, RetainedOrderedMapInsertGrant, RetainedOrderedMapInsertStep};
 use semio_framework_value::retained_clone::*;
+use semio_framework_value::RetirementDemand;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep};
 use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned};
 use semio_framework_value_derive::{RetainedClone, RetireOwned};
@@ -163,6 +164,10 @@ fn fixture_labels(fixture: &Fixture) -> RetainedOrderedMap<String, String> {
             if cursor.terminal_is_empty() {
                 break;
             }
+            let copy = cursor.next_close_copy_byte_demand().expect("fixture labels copy demand").max(turn.maximum_copy_bytes);
+            let close = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(copy).expect("fixture labels capacity demand"), maximum_release_bytes: cursor.next_close_release_byte_demand().expect("fixture labels release demand"), maximum_depth: cursor.next_close_depth_demand().expect("fixture labels depth demand").max(1) };
+            let step = cursor.close_step(close).expect("fixture labels cursor closes");
+            assert!(step.progress().fits(close));
         }
         assert!(cursor.terminal_is_empty());
     }
@@ -175,6 +180,11 @@ fn grant(fixture: &Fixture) -> RetainedCloneGrant {
 
 fn assert_progress(progress: RetainedCloneProgress, grant: RetainedCloneGrant) {
     assert!(progress.fits(grant));
+}
+
+fn quoted_close_grant<T: RetainedClone>(cursor: &T::Cursor, maximum_items: usize, copy_floor: usize) -> RetainedCloneGrant {
+    let copy = cursor.next_close_copy_byte_demand().expect("retained clone copy demand").max(copy_floor);
+    RetainedCloneGrant { maximum_items, maximum_copy_bytes: copy, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(copy).expect("retained clone capacity demand"), maximum_release_bytes: cursor.next_close_release_byte_demand().expect("retained clone release demand"), maximum_depth: cursor.next_close_depth_demand().expect("retained clone depth demand").max(1) }
 }
 
 fn close_cursor<T: RetainedClone>(cursor: &mut T::Cursor) {

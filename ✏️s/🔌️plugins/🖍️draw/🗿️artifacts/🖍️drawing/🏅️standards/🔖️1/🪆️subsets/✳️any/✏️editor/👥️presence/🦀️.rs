@@ -8,7 +8,7 @@ use store::ArtifactPack;
 /// selection/hover moved to the framework's typed `PresencePeer.interaction` broadcast (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); this facet keeps only genuinely
 /// drawing-specific presence.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "drawing.presence")]
 #[dsl(layout = "lines")]
@@ -58,17 +58,21 @@ impl protocol::DiffAlgebra<DrawingPresence> for DrawingPresenceDiff {
     }
 }
 
-impl semio_framework_value::retirement::RetireOwned for DrawingPresence {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let store::Viewport2d { x, y, zoom } = self.camera;
-        semio_framework_value::retirement::sequence(vec![
-            semio_framework_value::retirement::RetireOwned::retirement(self.engagement_input),
-            semio_framework_value::retirement::leaf(x),
-            semio_framework_value::retirement::leaf(y),
-            semio_framework_value::retirement::leaf(zoom),
-        ])
+/// 🏭️ Original Draw presence aliases use their typed fields and retained physical backing.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+pub struct DrawingPresenceRetirementFactory;
+
+impl store::SnapshotRetirementFactory<DrawingPresence> for DrawingPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _: &std::sync::Arc<DrawingPresence>) -> usize {
+        semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<DrawingPresence>()
+    }
+
+    fn retire(&self, source: std::sync::Arc<DrawingPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<DrawingPresence>)> {
+        semio_framework_value::retirement::shared::admit_shared_retirement(source, grant, true)
     }
 }
+
+
 
 impl store::ArtifactDsl for DrawingPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;

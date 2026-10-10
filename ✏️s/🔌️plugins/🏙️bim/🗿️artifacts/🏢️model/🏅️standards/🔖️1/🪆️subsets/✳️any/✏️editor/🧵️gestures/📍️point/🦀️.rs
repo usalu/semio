@@ -39,7 +39,7 @@ impl Point {
         let count = ctx.snapshot.columns.values().filter(|column| column.storey == storey).count();
         let name = ctx.name_of(|labels| labels.kind_column, count);
         let id = ctx.mint("column");
-        let column = Column { storey, column_type, position: point2(at), rotation: 0.0, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: crate::Phase::New, name };
+        let column = Column { storey, column_type, position: point2(at), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: crate::Phase::New, name };
         Step::write(ctx, ModelMutation::CreateColumn(crate::mutations::create_column::CreateColumn { id, column }))
     }
 

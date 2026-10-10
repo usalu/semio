@@ -1,0 +1,225 @@
+{
+  "type": "object",
+  "required": [
+    "stages",
+    "cases",
+    "demand",
+    "events",
+    "detach",
+    "readReturn"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "stages": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "body",
+          "frame",
+          "advance"
+        ]
+      }
+    },
+    "demand": {
+      "$ref": "#/definitions/demand"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "grant",
+          "advanced"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "grant": {
+            "$ref": "#/definitions/grant"
+          },
+          "advanced": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "detach": {
+      "type": "object",
+      "required": [
+        "live",
+        "detached",
+        "retained",
+        "allocated",
+        "released"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "live": {
+          "type": "object"
+        },
+        "detached": {
+          "type": "object"
+        },
+        "retained": {
+          "type": "object"
+        },
+        "allocated": {
+          "const": 0
+        },
+        "released": {
+          "const": 0
+        }
+      }
+    },
+    "readReturn": {
+      "type": "object",
+      "required": [
+        "refusals",
+        "original",
+        "success",
+        "allocated",
+        "released",
+        "exportConsumer"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "refusals": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "busy",
+              "stale",
+              "already-returned",
+              "changed-owner"
+            ]
+          },
+          "minItems": 4,
+          "uniqueItems": true
+        },
+        "original": {
+          "type": "object"
+        },
+        "success": {
+          "type": "object"
+        },
+        "allocated": {
+          "const": 0
+        },
+        "released": {
+          "const": 0
+        },
+        "exportConsumer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phases",
+            "denied",
+            "identity",
+            "preserved"
+          ],
+          "properties": {
+            "phases": {
+              "const": [
+                "producer",
+                "pending-read",
+                "active-read",
+                "terminal"
+              ]
+            },
+            "denied": {
+              "const": [
+                "items",
+                "copy",
+                "capacity",
+                "release",
+                "depth"
+              ]
+            },
+            "identity": {
+              "const": "original-read"
+            },
+            "preserved": {
+              "const": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "demand": {
+      "type": "object",
+      "required": [
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "copy": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copy": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

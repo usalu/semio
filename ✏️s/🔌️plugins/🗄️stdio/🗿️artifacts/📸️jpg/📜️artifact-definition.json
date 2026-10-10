@@ -64,7 +64,7 @@
         "artifact_kind": "s.stdio.jpg",
         "artifact_schema": "stdio.jpg",
         "extension": "jpg",
-        "pack_schema_hash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
+        "pack_schema_hash": "c243665f7783cf5feb236fb92a7613c5a3ff10c4b30e26b138f7cbe2bca0d38f",
         "runtime_capability_id": "s.stdio.jpg.standard.jfif-1-01.codec.codec-stdio-jpg-extension-jpg.v1"
       }
     }

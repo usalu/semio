@@ -25,7 +25,7 @@ pub mod windows;
 
 //#region 🔖️Values
 /// ▭️ A rectangle on the paper in millimetres from the top left corner of the sheet, x to the right and y downward.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PaperRect {
     pub x: f64,
     pub y: f64,
@@ -59,7 +59,7 @@ impl PaperRect {
 
 /// 🧭️ The map from the coordinates of a view (metres, y up: north in a plan, the elevation above the datum in a section or elevation) to the window of its viewport: the point `(min_x, max_y)` lands on the top left corner of the
 /// window, `mm` paper millimetres per metre, y flips.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct ViewMap {
     pub min_x: f64,
     pub max_y: f64,
@@ -74,7 +74,7 @@ impl ViewMap {
 }
 
 /// 🖼️ One viewport placed on the paper.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PlacedViewport {
     pub viewport: String,
     pub view: String,
@@ -88,7 +88,7 @@ pub struct PlacedViewport {
 }
 
 /// 🏷️ What a cell of the title block holds.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum TitleField {
     Project,
     Number,
@@ -103,10 +103,24 @@ pub enum TitleField {
 impl TitleField {
     /// 🔢️ Every field in the order the title block lists them.
     pub const ALL: [TitleField; 8] = [Self::Project, Self::Number, Self::Title, Self::Scale, Self::DrawnBy, Self::CheckedBy, Self::Date, Self::Revision];
+
+    /// 🔤️ The stable slug of the field.
+    pub fn slug(self) -> &'static str {
+        match self {
+            Self::Project => "project",
+            Self::Number => "number",
+            Self::Title => "title",
+            Self::Scale => "scale",
+            Self::DrawnBy => "drawn-by",
+            Self::CheckedBy => "checked-by",
+            Self::Date => "date",
+            Self::Revision => "revision",
+        }
+    }
 }
 
 /// 🧾️ One cell of the title block: the field, its rectangle and the text to print.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct TitleCell {
     pub field: TitleField,
     pub rect: PaperRect,
@@ -114,14 +128,14 @@ pub struct TitleCell {
 }
 
 /// 🧾️ The title block: its rectangle and its cells.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct TitleBlock {
     pub rect: PaperRect,
     pub cells: Vec<TitleCell>,
 }
 
 /// 🧾️ One row of the revision table.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct RevisionRow {
     pub revision: String,
     pub mark: String,
@@ -132,14 +146,14 @@ pub struct RevisionRow {
 }
 
 /// 🧾️ The revision table: its rectangle (header row included, no height without rows) and its rows.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct RevisionTable {
     pub rect: PaperRect,
     pub rows: Vec<RevisionRow>,
 }
 
 /// ⚠️ What the layout of a sheet found wrong.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum SheetIssue {
     ViewportOutside,
     ViewportsOverlap,
@@ -148,6 +162,16 @@ pub enum SheetIssue {
 }
 
 impl SheetIssue {
+    /// 🔤️ The stable slug of the issue.
+    pub fn slug(self) -> &'static str {
+        match self {
+            Self::ViewportOutside => "viewport-outside",
+            Self::ViewportsOverlap => "viewports-overlap",
+            Self::ViewportOverTitleBlock => "viewport-over-title-block",
+            Self::ViewportEmpty => "viewport-empty",
+        }
+    }
+
     /// 🌐️ The message in a locale (`en` or `de`) about the viewports `ids` (one or two); none for an unknown locale.
     pub fn message(self, locale: &str, ids: &[String]) -> Option<String> {
         let (first, second) = (ids.first().map_or("", String::as_str), ids.get(1).map_or("", String::as_str));
@@ -166,7 +190,7 @@ impl SheetIssue {
 }
 
 /// ⚠️ One finding of a sheet: what it is and the viewports it names.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SheetFinding {
     pub issue: SheetIssue,
     pub viewports: Vec<String>,
@@ -180,7 +204,7 @@ impl SheetFinding {
 }
 
 /// 📄️ The layout of one sheet: its identity, its paper (the name, and the width and height as it lies), the frame, the placed viewports in id order, the title block, the revision table and the findings.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SheetLayout {
     pub sheet: String,
     pub number: String,
@@ -260,6 +284,51 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
 /// 📖️ The snapshot collections the layout of a sheet reads.
 pub const READS: &[&str] = &["sheets", "viewports", "sheet_revisions", "views"];
 //#endregion 🔖️Dependency
+
+//#region 🔖️Metrics
+#[derive(value_derive::ToValue)]
+struct ViewportMetrics {
+    scale: u32,
+    mm: f64,
+    window: Vec<f64>,
+    cropped: bool,
+    empty: bool,
+}
+
+#[derive(value_derive::ToValue)]
+struct SheetMetrics {
+    paper: String,
+    size: Vec<f64>,
+    frame: Vec<f64>,
+    title: Vec<f64>,
+    title_text: BTreeMap<String, String>,
+    revisions: Vec<f64>,
+    revision_rows: Vec<String>,
+    viewports: BTreeMap<String, ViewportMetrics>,
+    findings: Vec<String>,
+}
+
+fn rect_of(rect: &PaperRect) -> Vec<f64> {
+    vec![rect.x, rect.y, rect.width, rect.height]
+}
+
+/// 📏️ The canonical JSON table `sheet → { paper, size, frame, title, title_text, revisions, revision_rows, viewports: id → { scale, mm, window, cropped, empty }, findings: ["<slug>|<ids>"] }` the sheet oracle compares; rectangles are `[x, y, width, height]` in paper millimetres.
+pub fn metrics_json(layouts: &BTreeMap<String, SheetLayout>) -> String {
+    let table: BTreeMap<String, SheetMetrics> = layouts
+        .iter()
+        .map(|(id, layout)| {
+            let viewports = layout.viewports.iter().map(|placed| (placed.viewport.clone(), ViewportMetrics { scale: placed.scale, mm: placed.map.mm, window: rect_of(&placed.window), cropped: placed.cropped, empty: placed.empty })).collect();
+            let title_text = layout.title_block.cells.iter().map(|cell| (cell.field.slug().to_string(), cell.value.clone())).collect();
+            let revision_rows = layout.revisions.rows.iter().map(|row| format!("{}|{}|{}|{}", row.mark, row.date, row.description, row.author)).collect();
+            let mut findings: Vec<String> = layout.findings.iter().map(|finding| format!("{}|{}", finding.issue.slug(), finding.viewports.join(","))).collect();
+            findings.sort();
+            let metrics = SheetMetrics { paper: layout.paper.clone(), size: vec![layout.width, layout.height], frame: rect_of(&layout.frame), title: rect_of(&layout.title_block.rect), title_text, revisions: rect_of(&layout.revisions.rect), revision_rows, viewports, findings };
+            (id.clone(), metrics)
+        })
+        .collect();
+    semio_framework_pack_json::to_json_string(&table)
+}
+//#endregion 🔖️Metrics
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

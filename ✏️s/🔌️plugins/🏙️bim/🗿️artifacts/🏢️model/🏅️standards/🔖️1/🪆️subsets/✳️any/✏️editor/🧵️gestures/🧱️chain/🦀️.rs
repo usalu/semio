@@ -1,19 +1,17 @@
-//! 🧱️ The point-chain tools: wall (straight and arc), curtain wall, beam, railing, grid line and the measure. A click sets a point; the rubber band follows the pointer to the
+//! 🧱️ The point-chain tools: wall (straight and arc), curtain wall, beam (straight and arc), railing, grid line and the measure. A click sets a point; the rubber band follows the pointer to the
 //! next snapped point; a wall segment, a curtain wall segment, a beam or a grid line is written the moment its last point is clicked, so each is one history row, and a chain
 //! of walls goes on from the end of the last one until it closes on its first point, is finished or escapes. A railing and a ramp are written whole when the chain finishes. The measure
 //! writes nothing, ever.
 
 use super::plane::{axis_of, bulge_through, dist, flatten, point2, same, P};
 use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
-use crate::{Beam, CurtainWall, GridLine, LocationLine, Phase, Profile, Railing, Ramp, TopConstraint, Vertex, Wall};
+use crate::{Beam, CurtainWall, GridLine, LocationLine, Phase, Railing, Ramp, TopConstraint, Vertex, Wall};
 use crate::ModelMutation;
 
 /// 📏️ The shortest segment a chain writes, in metres.
 const MIN_LENGTH: f64 = 1e-3;
 /// 📏️ The chord tolerance an arc preview is flattened to, in metres.
 const FLATTEN_TOLERANCE: f64 = 0.005;
-/// 🪟️ The default spacing of a curtain wall grid, in metres.
-const CURTAIN_SPACING: f64 = 1.5;
 /// 🛤️ The default height of a railing and the spacing of its posts, in metres.
 const RAILING_HEIGHT: f64 = 1.0;
 const RAILING_POSTS: f64 = 1.2;
@@ -27,6 +25,7 @@ pub enum Kind {
     WallArc,
     CurtainWall,
     Beam,
+    BeamArc,
     Railing,
     Ramp,
     Grid,
@@ -71,24 +70,21 @@ impl Chain {
 
     fn curtain(&self, ctx: &mut ToolContext<'_>, start: P, end: P) -> Step {
         let Some(storey) = ctx.storey().map(str::to_string) else { return Step::refuse(STOREY_MISSING) };
-        let snapshot = ctx.snapshot;
-        let panel = snapshot.materials.iter().find(|(_, material)| material.category == crate::MaterialCategory::Glass).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone());
-        let mullion = snapshot.materials.iter().find(|(_, material)| material.category == crate::MaterialCategory::Metal).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone());
-        let (Some(panel_material), Some(mullion_material)) = (panel, mullion) else { return Step::refuse(TYPE_MISSING) };
-        let count = snapshot.curtain_walls.values().filter(|wall| wall.storey == storey).count();
+        let Some(curtain_wall_type) = ctx.library_type(&ctx.snapshot.curtain_wall_types) else { return Step::refuse(TYPE_MISSING) };
+        let count = ctx.snapshot.curtain_walls.values().filter(|wall| wall.storey == storey).count();
         let name = ctx.name_of(|labels| labels.kind_curtain_wall, count);
         let id = ctx.mint("curtain-wall");
-        let curtain_wall = CurtainWall { storey, axis: axis_of(start, end, 0.0), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_spacing: CURTAIN_SPACING, v_spacing: CURTAIN_SPACING, mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel_material, mullion_material, phase: crate::Phase::New, name };
+        let curtain_wall = CurtainWall { storey, curtain_wall_type, axis: axis_of(start, end, 0.0), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: Phase::New, name };
         Step::write(ctx, ModelMutation::CreateCurtainWall(crate::mutations::create_curtain_wall::CreateCurtainWall { id, curtain_wall }))
     }
 
-    fn beam(&self, ctx: &mut ToolContext<'_>, start: P, end: P) -> Step {
+    fn beam(&self, ctx: &mut ToolContext<'_>, start: P, end: P, bulge: f64) -> Step {
         let Some(storey) = ctx.storey().map(str::to_string) else { return Step::refuse(STOREY_MISSING) };
         let Some(beam_type) = ctx.library_type(&ctx.snapshot.beam_types) else { return Step::refuse(TYPE_MISSING) };
         let count = ctx.snapshot.beams.values().filter(|beam| beam.storey == storey).count();
         let name = ctx.name_of(|labels| labels.kind_beam, count);
         let id = ctx.mint("beam");
-        let beam = Beam { storey, beam_type, start: point2(start), end: point2(end), top_offset: 0.0, phase: crate::Phase::New, name };
+        let beam = Beam { storey, beam_type, axis: axis_of(start, end, bulge), top_offset: 0.0, end_top_offset: None, phase: Phase::New, name };
         Step::write(ctx, ModelMutation::CreateBeam(crate::mutations::create_beam::CreateBeam { id, beam }))
     }
 
@@ -165,7 +161,7 @@ impl Chain {
                 }
                 Step::default()
             }
-            Kind::Wall | Kind::CurtainWall | Kind::Beam | Kind::Grid | Kind::WallArc => self.advance(ctx, at),
+            Kind::Wall | Kind::CurtainWall | Kind::Beam | Kind::Grid | Kind::WallArc | Kind::BeamArc => self.advance(ctx, at),
         }
     }
 
@@ -175,7 +171,7 @@ impl Chain {
             self.anchor = Some(at);
             return Step::default();
         };
-        if self.kind == Kind::WallArc {
+        if matches!(self.kind, Kind::WallArc | Kind::BeamArc) {
             let Some(end) = self.pending else {
                 if dist(start, at) >= MIN_LENGTH {
                     self.pending = Some(at);
@@ -183,7 +179,7 @@ impl Chain {
                 return Step::default();
             };
             let Some(bulge) = bulge_through(start, at, end) else { return Step::default() };
-            let step = self.wall(ctx, start, end, bulge);
+            let step = if self.kind == Kind::BeamArc { self.beam(ctx, start, end, bulge) } else { self.wall(ctx, start, end, bulge) };
             self.after(&step, end);
             return step;
         }
@@ -193,7 +189,7 @@ impl Chain {
         let step = match self.kind {
             Kind::Wall => self.wall(ctx, start, at, 0.0),
             Kind::CurtainWall => self.curtain(ctx, start, at),
-            Kind::Beam => self.beam(ctx, start, at),
+            Kind::Beam => self.beam(ctx, start, at, 0.0),
             _ => self.grid(ctx, start, at),
         };
         self.after(&step, at);
@@ -273,7 +269,7 @@ impl Tool for Chain {
             marks.push(length_label(start, end));
         }
         match (self.kind, self.anchor, self.pending, hover) {
-            (Kind::WallArc, Some(start), Some(end), _) => {
+            (Kind::WallArc | Kind::BeamArc, Some(start), Some(end), _) => {
                 marks.push(Mark::path(&self.arc_marks(start, end, hover), false, Style::Ghost));
                 marks.push(Mark::path(&[start, end], false, Style::Guide));
             }

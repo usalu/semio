@@ -2,12 +2,18 @@
 //! a sloped slab is the faceted brep of its inferred solid. A roof is an `IfcRoof` aggregating one `IfcSlab` (`ROOF`) per layer, each a faceted brep of the roof solid.
 
 use super::brep::{brep_definition, mesh_where};
+use super::data::label;
 use super::frames::{ccw, cw};
-use super::writer::{en, real, rf};
+use super::writer::{en, real, rf, unset};
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::LayerQuantity;
 use crate::{RoofShape, Slab};
+
+/// 🏷️ The `Semio_Authoring` row that holds the authored roof record: the shape, overhang and offsets IFC has no slot for.
+pub const RECORD_ROW: &str = "Roof";
+/// 🏷️ The `Semio_Authoring` row that holds the authored record of a sloped slab (a brep has no boundary to read back).
+pub const SLAB_ROW: &str = "Slab";
 
 fn shape_of(shape: &RoofShape) -> &'static str {
     match shape {
@@ -29,18 +35,18 @@ pub fn group_volumes(solid: &ElementSolid, rows: &[LayerQuantity]) -> Vec<f64> {
 
 fn slab(x: &mut Export<'_>, id: &str, row: &Slab) {
     let model = x.model;
-    let (Some(storey), Some(kind), Some(level)) = (x.storeys.get(&row.storey).copied(), model.slab_types.get(&row.slab_type), x.inferred.storey_levels.get(&row.storey)) else {
-        x.skip("slab", id, "its storey or type is missing");
+    let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.slab_types.get(&row.slab_type), x.solid(id).map(|solid| solid.bounds)) else {
+        x.skip("slab", id, "its storey, type or inferred solid is missing");
         return;
     };
-    let thickness: f64 = kind.layers.iter().map(|layer| layer.thickness).sum();
-    if thickness <= 0.0 || row.boundary.len() < 3 {
+    let layers: f64 = kind.layers.iter().map(|layer| layer.thickness).sum();
+    if layers <= 0.0 || row.boundary.len() < 3 {
         x.skip("slab", id, "it has no thickness or boundary");
         return;
     }
-    let top = level.elevation + row.offset;
     let sloped = row.slope.is_some_and(|slope| slope.angle.abs() > 1e-12);
-    let origin = x.ifc.axis3([0.0, 0.0, if sloped { 0.0 } else { top - thickness - storey.elevation }], None, None);
+    let thickness = if sloped { layers } else { bounds.max.z - bounds.min.z };
+    let origin = x.ifc.axis3([0.0, 0.0, if sloped { 0.0 } else { bounds.min.z - storey.elevation }], None, None);
     let placement = x.ifc.place(Some(storey.placement), origin);
     let shape = if sloped {
         let Some(solid) = x.solid(id) else {
@@ -58,11 +64,14 @@ fn slab(x: &mut Export<'_>, id: &str, row: &Slab) {
     };
     let element = x.product("IFCSLAB", id, &row.name, placement, shape, vec![en("FLOOR")]);
     x.contain(&row.storey, id, element);
+    if sloped {
+        x.links.authoring.push((element, vec![(SLAB_ROW, label(&semio_framework_pack_json::to_json_string(row)))]));
+    }
     if let Some(object) = x.links.types.get(&("slab", row.slab_type.clone())).copied() {
         x.links.typed.entry(object).or_default().push(element);
     }
     if let Some(set) = x.links.layer_sets.get(&("slab", row.slab_type.clone())).copied() {
-        let usage = x.ifc.add("IFCMATERIALLAYERSETUSAGE", vec![rf(set), en("AXIS3"), en("NEGATIVE"), real(thickness)]);
+        let usage = x.ifc.add("IFCMATERIALLAYERSETUSAGE", x.by(vec![rf(set), en("AXIS3"), en("NEGATIVE"), real(layers)], vec![rf(set), en("AXIS3"), en("NEGATIVE"), real(layers), unset()]));
         x.links.materials.entry(usage).or_default().push(element);
     }
     x.quantify(element, "Qto_SlabBaseQuantities", id, |row| {
@@ -89,6 +98,10 @@ fn roof(x: &mut Export<'_>, id: &str, row: &crate::Roof) {
     let origin = x.ifc.place(Some(storey.placement), x.ifc.origin);
     let roof = x.product("IFCROOF", id, &row.name, origin, None, vec![en(shape_of(&row.shape))]);
     x.contain(&row.storey, id, roof);
+    if let Some(object) = x.links.types.get(&("roof", row.roof_type.clone())).copied() {
+        x.links.typed.entry(object).or_default().push(roof);
+    }
+    x.links.authoring.push((roof, vec![(RECORD_ROW, label(&semio_framework_pack_json::to_json_string(row)))]));
     x.quantify(roof, "Qto_RoofBaseQuantities", id, |row| vec![Quantity::Area("ProjectedArea", row.gross_area)]);
     let volumes = x.measure(id).map(|row| group_volumes(solid, &row.layers));
     let mut parts = Vec::new();

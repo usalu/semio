@@ -12,7 +12,10 @@
 pub use messages::{render, row_of, Row, LOCALES};
 pub use index::{categories, category_of, DiagnosticIndex, ElementFindings, SeverityCounts};
 
+use super::super::components::ComponentValue;
 use super::super::curtain_layout::CurtainLayout;
+use super::super::mep::clash::MepClashes;
+use super::super::mep::MepValue;
 use super::super::element_solids::roofs::RoofFallback;
 use super::super::element_solids::stairs::stringer_ignored;
 use super::super::element_solids::{dep_object, dep_records, dep_types, dep_value};
@@ -43,7 +46,7 @@ pub mod wall_depth;
 
 //#region 🔖️Values
 /// 🚦️ How serious a finding is: `Error` breaks the model, `Warning` is probably unintended, `Info` is worth knowing.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum Severity {
     Info,
     Warning,
@@ -51,7 +54,7 @@ pub enum Severity {
 }
 
 /// 🏷️ What a finding is about; the slug and the texts of a code are in [`messages::row_of`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum DiagnosticCode {
     ClashWallWall,
     ClashWallColumn,
@@ -128,6 +131,9 @@ pub enum DiagnosticCode {
     RampSlope,
     RampNoRun,
     RefRailingHost,
+    RefViewportSheet,
+    RefViewportView,
+    RefRevisionSheet,
     RailingHostUnresolved,
     PropertyRequiredMissing,
     PropertyKindMismatch,
@@ -161,6 +167,18 @@ pub enum DiagnosticCode {
     FamilyDomain,
     FamilyOutline,
     RefProfileFamily,
+    ComponentOutsideStorey,
+    ComponentInWall,
+    RefComponentFamily,
+    RefComponentHost,
+    ComponentOverride,
+    MepDegenerate,
+    MepClash,
+    TerminalUnconnected,
+    EnergyThermalMissing,
+    EnergyOpenBoundary,
+    EnergyConditionsMissing,
+    InferenceFault,
 }
 
 impl DiagnosticCode {
@@ -176,11 +194,13 @@ impl DiagnosticCode {
         Self::RoofFlatCurved, Self::RoofFlatSkeleton, Self::RoofFlatDegenerate, Self::RoofFlatPitch, Self::RoofOverhangCollapsed, Self::RoofGableToHip,
         Self::AnnotationAnchorMissing, Self::AnnotationAnchorUnresolved, Self::AnnotationStyleMissing, Self::DimensionZero, Self::DimensionLockViolated, Self::TagEmpty,
         Self::ClashBeamCeiling, Self::ClashCeilingCeiling, Self::RefCeilingType, Self::CeilingOutsideStorey,
-        Self::RampSlope, Self::RampNoRun, Self::RefRailingHost, Self::RailingHostUnresolved,
+        Self::RampSlope, Self::RampNoRun, Self::RefRailingHost, Self::RefViewportSheet, Self::RefViewportView, Self::RefRevisionSheet, Self::RailingHostUnresolved,
         Self::PropertyRequiredMissing, Self::PropertyKindMismatch, Self::PropertyOutOfRange, Self::PropertyNotAllowed, Self::ClassificationUnknownCode, Self::RefClassificationSystem,
         Self::RefWallSweepHost, Self::RefAttachTarget, Self::WallAttachCycle, Self::WallAttachUnreached, Self::WallAttachCollapsed, Self::WallSweepAboveWall, Self::WallSweepNoRun, Self::OpeningRevealDepth,
         Self::CurtainOverrideOutOfGrid, Self::CurtainDoorNotAtBase, Self::CurtainGridLineOutside, Self::CurtainDuplicateOverride, Self::RefCurtainWallType, Self::RefCurtainPanel, Self::RefCurtainOverrideHost, Self::ColumnTiltInvalid,
-        Self::FamilySyntax, Self::FamilyKind, Self::FamilyCycle, Self::FamilyUnknown, Self::FamilyDivisionByZero, Self::FamilyNegative, Self::FamilyDependency, Self::FamilyDomain, Self::FamilyOutline, Self::RefProfileFamily,
+        Self::FamilySyntax, Self::FamilyKind, Self::FamilyCycle, Self::FamilyUnknown, Self::FamilyDivisionByZero, Self::FamilyNegative, Self::FamilyDependency, Self::FamilyDomain, Self::FamilyOutline, Self::RefProfileFamily, Self::ComponentOutsideStorey, Self::ComponentInWall, Self::RefComponentFamily, Self::RefComponentHost, Self::ComponentOverride, Self::MepDegenerate, Self::MepClash, Self::TerminalUnconnected,
+        Self::EnergyThermalMissing, Self::EnergyOpenBoundary, Self::EnergyConditionsMissing,
+        Self::InferenceFault,
     ];
 
     /// 🏷️ The stable slug, for example `clash.wall-wall`.
@@ -206,7 +226,7 @@ impl DiagnosticCode {
 
 /// ⚠️ One finding. `elements` are the ids involved (ordered), `missing` the referenced ids that do not exist, `storey` the storey it is on when it has one,
 /// `values` the numbers of the message (areas, volumes, lengths, levels).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Diagnostic {
     pub code: DiagnosticCode,
     pub severity: Severity,
@@ -264,6 +284,9 @@ pub struct Inputs<'a> {
     pub rooms: Option<&'a StoreyRooms>,
     pub fallbacks: BTreeMap<&'a str, RoofFallback>,
     pub curtains: BTreeMap<&'a str, &'a CurtainLayout>,
+    pub components: BTreeMap<&'a str, &'a ComponentValue>,
+    pub meps: BTreeMap<&'a str, &'a MepValue>,
+    pub clashes: Option<&'a MepClashes>,
 }
 
 /// 🪜️ The storeys of a building.
@@ -276,6 +299,8 @@ pub fn storey_findings(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'
     let mut found = references::storey(snapshot, storey);
     found.extend(validity::storey(snapshot, storey, inputs));
     found.extend(wall_depth::storey(snapshot, storey, inputs));
+    found.extend(super::super::components::findings::storey(storey, inputs));
+    found.extend(super::super::mep::findings::storey(storey, inputs));
     found
 }
 
@@ -294,7 +319,7 @@ pub fn model_findings(view: &references::ReferenceView) -> Vec<Diagnostic> {
 //#region 🔖️Dependency
 /// 📖️ The snapshot collections the diagnostics read: all of them.
 pub const READS: &[&str] = &[
-    "project", "materials", "wall_types", "slab_types", "ceiling_types", "ceilings", "roof_types", "column_types", "beam_types", "window_types", "door_types", "sites", "buildings", "storeys", "grids", "walls", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "columns", "beams", "slabs", "roofs", "openings", "wall_sweeps", "stairs", "railings", "ramps", "spaces", "dimensions", "tags", "text_notes", "leaders", "annotation_styles", "properties", "classifications", "property_templates", "classification_systems",
+    "project", "materials", "wall_types", "slab_types", "ceiling_types", "ceilings", "roof_types", "column_types", "beam_types", "window_types", "door_types", "sites", "buildings", "storeys", "grids", "walls", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "columns", "beams", "slabs", "roofs", "openings", "wall_sweeps", "stairs", "railings", "ramps", "spaces", "dimensions", "tags", "text_notes", "leaders", "annotation_styles", "sheets", "viewports", "sheet_revisions", "views", "properties", "classifications", "property_templates", "classification_systems",
 ];
 
 fn present<'a, T>(ids: impl IntoIterator<Item = &'a String>, library: &BTreeMap<String, T>) -> DslValue {

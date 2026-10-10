@@ -202,7 +202,7 @@ async fn the_clear_height_follows_the_storey_height() {
 async fn curtain_walls_close_a_room_with_their_mullion_depth() {
     let mut snapshot = room(4.0, 3.0);
     snapshot.walls.remove("w-north");
-    snapshot.curtain_wall_types.insert("cwt".into(), crate::CurtainWallType { name: "Facade".into(), u_grid: crate::CurtainGrid::Spacing { spacing: 1.0 }, v_grid: crate::CurtainGrid::Spacing { spacing: 1.0 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: crate::CurtainPanel::Glass, panel_material: "m".into(), mullion_material: "m".into() });
+    snapshot.curtain_wall_types.insert("cwt".into(), crate::CurtainWallType { name: "Facade".into(), u_grid: crate::CurtainGrid::Spacing { spacing: 1.0 }, v_grid: crate::CurtainGrid::Spacing { spacing: 1.0 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: crate::CurtainPanel::Glass, panel_material: "m".into(), mullion_material: "m".into(), u_value: None, g_value: None, frame_fraction: None });
     snapshot.curtain_walls.insert("cw".into(), crate::CurtainWall { phase: crate::Phase::New, storey: "st-0".into(), curtain_wall_type: "cwt".into(), axis: line((4.0, 3.0), (0.0, 3.0)), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, name: "Curtain".into() });
     let found = rooms(&snapshot)["sp"].clone();
     assert_eq!(found.status, SpaceStatus::Inferred);

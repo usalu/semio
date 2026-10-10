@@ -320,6 +320,7 @@ pub fn create_drawing_text_layer(identity: DrawingIdentity, name: &str) -> Drawi
         y: 0.0,
         content: "Text".into(),
         size: 24.0,
+        font_family:crate::DrawingFontFamily::Anta,
     })
 }
 
@@ -609,7 +610,7 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                     blend_mode: text.base.blend_mode.to_string_owner(),
                     visible: text.base.visible,
                     fill_rule: None,
-                    text: Some(DrawingSceneText { content: text.content.to_string_owner(), size: text.size }),
+                    text: Some(DrawingSceneText { content: text.content.to_string_owner(), size: text.size,font_family:text.font_family }),
                     image: None,
                 }),
                 DrawingLayerNode::Image(image) => {
@@ -883,6 +884,8 @@ pub mod geometry;
 pub mod scene_raster;
 #[path = "🎬️scene/📋️prepare/🦀️.rs"]
 pub mod scene_preparation;
+#[path = "🎬️scene/🔤️text/🦀️.rs"]
+pub mod scene_text;
 #[path = "🎬️scene/🔀️booleans/🦀️.rs"]
 pub mod scene_booleans;
 #[path = "🎬️scene/🔍️trace/🦀️.rs"]
@@ -1218,3 +1221,6 @@ pub mod scene_identity;
 
 #[path="🎬️scene/👁️view/🦀️.rs"]
 pub mod scene_view;
+
+#[path="📝️text/🔤️family/🦀️.rs"]
+pub mod font_family;

@@ -5,7 +5,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use semio_framework_job::StepContext;
 use std::mem::ManuallyDrop;
-use store::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, SnapshotRetirementStep};
+use store::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberSnapshotOpenOperation, MemberSnapshotOpenStep};
 
 const HEADER: &[u8] = b"\x89SEM\r\n\x1a\n\x18\0\0\0stdio.semio.flow.pack v1";
 const MAX_NODES: usize = 256;
@@ -351,50 +351,41 @@ impl SemioFlowSnapshotDecode {
     }
 }
 
-impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.terminal {
-            return Ok(SnapshotRetirementStep::Complete);
-        }
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        self.reject(MemberOpenDiagnostic::Cancelled);
-        if let Some(active) = self.active.as_mut() {
-            return match active.close_step(1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
-                    self.active.take();
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Flow decoder retirement reported false terminal")),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Flow decoder retirement exceeded grant")),
-                step => Ok(step),
-            };
-        }
-        if let Some(snapshot) = self.snapshot.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(snapshot));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(request) = self.request.as_mut() {
-            return match request.close_step(1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if request.terminal_is_empty() => {
-                    self.request.take();
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Flow decoder input reported false terminal")),
-                step => Ok(step),
-            };
-        }
-        self.scalar.fill(0);
-        self.terminal = true;
-        Ok(SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.terminal && self.request.is_none() && self.snapshot.is_none() && self.active.is_none()
+impl SemioFlowSnapshotDecode {
+    fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(active) = self.active.as_ref() { return store::artifact_retirement_box_demands(active, body); }
+        if self.snapshot.is_some() { return store::artifact_retirement_owned_birth_demands(&self.snapshot); }
+        if self.request.is_some() { return store::artifact_retirement_owner_demands(&self.request, body); }
+        Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.terminal), ..Default::default() })
     }
 }
 
+impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::{retained_clone::{RetainedCloneProgress, RetainedCloneStep}, ValueError, ValueRefusalKind};
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let body = if grant.maximum_copy_bytes == 0 { grant.maximum_release_bytes } else { grant.maximum_copy_bytes };
+        let demand = self.retirement_demands(body)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "Flow decoder close exceeds original admitted depth")); }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        self.reject(MemberOpenDiagnostic::Cancelled);
+        if self.active.is_some() { return store::artifact_retirement_box_close_step(&mut self.active, grant); }
+        if self.snapshot.is_some() { return store::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant); }
+        if self.request.is_some() { return store::artifact_retirement_owner_close(&mut self.request, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        self.scalar.fill(0);
+        self.terminal = true;
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.terminal && self.request.is_none() && self.snapshot.is_none() && self.active.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
+}
 impl MemberSnapshotOpenOperation for SemioFlowSnapshotDecode {
     type Snapshot = SemioFlowSnapshot;
     fn begin_birth_bytes(request: &MemberOpenRequest) -> Result<usize, MemberOpenDiagnostic> {

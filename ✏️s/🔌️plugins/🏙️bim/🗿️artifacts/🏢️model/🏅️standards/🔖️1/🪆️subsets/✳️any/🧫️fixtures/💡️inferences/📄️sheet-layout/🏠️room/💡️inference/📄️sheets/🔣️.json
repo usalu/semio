@@ -1,0 +1,212 @@
+{
+  "sh-custom": {
+    "paper": "500 × 350",
+    "size": [
+      500,
+      350
+    ],
+    "frame": [
+      20.0,
+      10.0,
+      470.0,
+      330.0
+    ],
+    "title": [
+      310.0,
+      292.0,
+      180.0,
+      48.0
+    ],
+    "title_text": {
+      "project": "Room",
+      "number": "A-902",
+      "title": "Custom",
+      "scale": "1:100",
+      "drawn-by": "UG",
+      "checked-by": "AB",
+      "date": "2026-10-09",
+      "revision": ""
+    },
+    "revisions": [
+      310.0,
+      292.0,
+      180.0,
+      0.0
+    ],
+    "revision_rows": [],
+    "viewports": {
+      "vp-custom": {
+        "scale": 100,
+        "mm": 10.0,
+        "window": [
+          30.0,
+          30.0,
+          100.0,
+          30.0
+        ],
+        "cropped": true,
+        "empty": false
+      },
+      "vp-custom-b": {
+        "scale": 100,
+        "mm": 10.0,
+        "window": [
+          100.0,
+          40.0,
+          20.0,
+          20.0
+        ],
+        "cropped": true,
+        "empty": false
+      }
+    },
+    "findings": [
+      "viewports-overlap|vp-custom,vp-custom-b"
+    ]
+  },
+  "sh-notes": {
+    "paper": "A4",
+    "size": [
+      210.0,
+      297.0
+    ],
+    "frame": [
+      20.0,
+      10.0,
+      180.0,
+      277.0
+    ],
+    "title": [
+      20.0,
+      239.0,
+      180.0,
+      48.0
+    ],
+    "title_text": {
+      "project": "Room",
+      "number": "A-901",
+      "title": "Notes",
+      "scale": "As indicated",
+      "drawn-by": "UG",
+      "checked-by": "AB",
+      "date": "2026-10-09",
+      "revision": ""
+    },
+    "revisions": [
+      20.0,
+      239.0,
+      180.0,
+      0.0
+    ],
+    "revision_rows": [],
+    "viewports": {
+      "vp-camera": {
+        "scale": 100,
+        "mm": 10.0,
+        "window": [
+          30.0,
+          30.0,
+          10.0,
+          10.0
+        ],
+        "cropped": false,
+        "empty": true
+      },
+      "vp-outside": {
+        "scale": 50,
+        "mm": 20.0,
+        "window": [
+          150.0,
+          200.0,
+          160.0,
+          120.0
+        ],
+        "cropped": true,
+        "empty": false
+      }
+    },
+    "findings": [
+      "viewport-empty|vp-camera",
+      "viewport-outside|vp-outside",
+      "viewport-over-title-block|vp-outside"
+    ]
+  },
+  "sh-plans": {
+    "paper": "A3",
+    "size": [
+      420.0,
+      297.0
+    ],
+    "frame": [
+      20.0,
+      10.0,
+      390.0,
+      277.0
+    ],
+    "title": [
+      230.0,
+      239.0,
+      180.0,
+      48.0
+    ],
+    "title_text": {
+      "project": "Room",
+      "number": "A-101",
+      "title": "Plan and elevation",
+      "scale": "1:25, 1:50, 1:100",
+      "drawn-by": "UG",
+      "checked-by": "AB",
+      "date": "2026-10-09",
+      "revision": "B"
+    },
+    "revisions": [
+      230.0,
+      221.0,
+      180.0,
+      18.0
+    ],
+    "revision_rows": [
+      "A|2026-10-01|Issued for permit|UG",
+      "B|2026-10-05|Section added|AB"
+    ],
+    "viewports": {
+      "vp-detail": {
+        "scale": 25,
+        "mm": 40.0,
+        "window": [
+          240.0,
+          30.0,
+          160.0,
+          120.0
+        ],
+        "cropped": true,
+        "empty": false
+      },
+      "vp-plan": {
+        "scale": 100,
+        "mm": 10.0,
+        "window": [
+          30.0,
+          30.0,
+          80.0,
+          60.0
+        ],
+        "cropped": true,
+        "empty": false
+      },
+      "vp-south": {
+        "scale": 50,
+        "mm": 20.0,
+        "window": [
+          30.0,
+          110.0,
+          200.0,
+          60.0
+        ],
+        "cropped": true,
+        "empty": false
+      }
+    },
+    "findings": []
+  }
+}

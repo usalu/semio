@@ -1,1 +1,72 @@
-{}
+{
+  "schedules": {
+    "sch-doors": {
+      "category": "Door",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Swing"
+            }
+          },
+          "total": false
+        },
+        {
+          "heading": "Fire rating",
+          "key": {
+            "Property": {
+              "name": "FireRating",
+              "set": "Pset_DoorCommon"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Count"
+            }
+          },
+          "total": true
+        }
+      ],
+      "entry": "Created",
+      "filter": [],
+      "group": [],
+      "itemize": true,
+      "name": "Doors",
+      "phases": [
+        "New"
+      ],
+      "sort": [
+        {
+          "descending": false,
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          }
+        }
+      ],
+      "storeys": [
+        "st-ground"
+      ]
+    }
+  }
+}

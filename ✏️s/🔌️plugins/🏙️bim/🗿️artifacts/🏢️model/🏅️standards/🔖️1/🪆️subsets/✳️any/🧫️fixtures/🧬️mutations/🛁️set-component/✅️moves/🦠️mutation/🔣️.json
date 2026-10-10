@@ -1,0 +1,8 @@
+{
+  "mutation": "setComponent",
+  "id": "cmp-table",
+  "position": {
+    "x": 2.5,
+    "y": 3.5
+  }
+}

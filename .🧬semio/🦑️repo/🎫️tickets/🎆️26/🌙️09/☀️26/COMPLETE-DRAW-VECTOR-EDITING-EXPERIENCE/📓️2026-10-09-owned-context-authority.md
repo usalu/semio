@@ -1,0 +1,9 @@
+# Actual Mounted Job Context Authority
+
+The genuine ExportDocument builder moves the entire captured request context into ArtifactRetainedCommandInputs. Its registered serializer worker can complete an output while that input owner still carries immutable context. Therefore accepted direct serializer output laws alone do not prove that a mounted export can finish operation closure, cancellation, or repeated dispatch.
+
+The actual ArtifactOwnedToolJobContext retains original presence-local SnapshotRead Arc, presence-peers root Arc, view model, child content Arc, draft Arc, transient Arc, optional window configuration and transient snapshots, tool-run view, provisional DSL value vector, and gesture slot Arc, alongside inline identity and generation metadata. These must have authentic issuer/retirement authorities before full mounted job teardown can pass. Retaining unsupported original context is a correct interim refusal; treating it as empty or blindly dropping its fields is not completion.
+
+The execution owner is auditing the actual production route and must define or reuse concrete context authorities. Required proof uses original pointer identities, denied item/copy/capacity/release/depth grants with no heap changes, independently observed physical allocation and release receipts, separate terminal frame disposal, and repeated genuine mounted operations with cancellation/stale-source cases. Arbitrary fixture-only positive context acceptance is insufficient. Public type erasure must preserve issuer identity and full original metadata.
+
+The existing direct writer laws remain useful for accepted PNG/SVG/PDF output and diagnostic handoff. They do not replace a mounted command/context lifecycle law or the full editor journeys.

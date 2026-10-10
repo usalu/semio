@@ -1,0 +1,16 @@
+{
+  "mutation": "createComponent",
+  "id": "cmp-table",
+  "component": {
+    "storey": "st-ground",
+    "family": "fam-table",
+    "position": {
+      "x": 5,
+      "y": 2
+    },
+    "elevation": 0,
+    "rotation": 0,
+    "mirrored": false,
+    "name": "Again"
+  }
+}

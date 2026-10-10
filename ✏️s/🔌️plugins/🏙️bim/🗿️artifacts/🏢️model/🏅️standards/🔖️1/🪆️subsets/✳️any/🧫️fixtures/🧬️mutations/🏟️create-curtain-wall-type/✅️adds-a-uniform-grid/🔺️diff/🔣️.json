@@ -1,1 +1,33 @@
-{}
+{
+  "curtain_wall_types": {
+    "cwt-3": {
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.08
+        }
+      },
+      "entry": "Created",
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.05
+        }
+      },
+      "mullion_material": "m-steel",
+      "name": "Facade 1 x 1",
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.0
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.0
+        }
+      }
+    }
+  }
+}

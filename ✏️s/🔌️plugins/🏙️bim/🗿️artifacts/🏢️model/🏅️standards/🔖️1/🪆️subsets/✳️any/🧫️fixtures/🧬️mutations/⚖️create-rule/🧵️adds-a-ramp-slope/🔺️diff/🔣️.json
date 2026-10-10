@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "r-1": {
+      "entry": "Created",
+      "kind": "MaxRampSlope",
+      "limit": 0.0833,
+      "name": "Ramp slope 1:12",
+      "scope": {
+        "filter": "",
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "severity": "Error"
+    }
+  }
+}

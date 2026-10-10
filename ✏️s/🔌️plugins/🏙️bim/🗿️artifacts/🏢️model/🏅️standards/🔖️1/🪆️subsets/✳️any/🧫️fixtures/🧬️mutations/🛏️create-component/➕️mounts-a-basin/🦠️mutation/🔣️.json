@@ -1,0 +1,17 @@
+{
+  "mutation": "createComponent",
+  "id": "cmp-new",
+  "component": {
+    "storey": "st-ground",
+    "family": "fam-basin",
+    "position": {
+      "x": 6,
+      "y": 0.3
+    },
+    "elevation": 0.85,
+    "rotation": 0,
+    "mirrored": false,
+    "host": "w-south",
+    "name": "Basin 2"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.pack.original-value-stack-storage",
+  "type": "object",
+  "required": ["cases", "deniedAxes", "capacityTargets", "symbols", "interruptions", "recordBodies"],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {"type": "array", "minItems": 3, "items": {"type": "object", "required": ["roots", "pending", "close"], "additionalProperties": false, "properties": {"roots": {"type": "integer", "minimum": 0, "maximum": 2}, "pending": {"type": "boolean"}, "close": {"type": "array", "items": {"enum": ["pending", "frame", "backing", "complete"]}}}}},
+    "deniedAxes": {"const": ["items", "copy", "capacity", "release", "depth"]},
+    "capacityTargets": {"const": [1, 513, 8193]},
+    "symbols": {"const": ["", "a", "axis", "A€𐍈"]},
+    "interruptions": {"const": [0, 1, 4, 8]},
+    "recordBodies": {"const": ["0000", "020161046178697300", "010841e282acf0908d8800"]}
+  }
+}

@@ -1,1 +1,9 @@
-{}
+{
+  "area_schemes": {
+    "as-nsa": {
+      "entry": "Patched",
+      "measure": "Gross",
+      "name": "Gross sales area"
+    }
+  }
+}

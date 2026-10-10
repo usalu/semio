@@ -213,6 +213,22 @@ impl crate::value::ToValue for HybridLogicalTimestamp {
             ("logical".to_string(), crate::value::ToValue::to_value(&self.logical)),
         ])
     }
+
+    fn to_value_controlled(&self, control: &mut crate::value::NativeEncodeControl<'_>) -> Result<crate::value::DslValue, crate::value::ValueError> {
+        control.scoped_depth(64, |control| control.scoped_stage(|control| {
+            control.begin_stage(3)?;
+            control.step()?;
+            control.step()?;
+            control.step()?;
+            control.begin_stage(3)?;
+            let mut output = crate::value::DslValue::object_encoding_controlled(3, control)?;
+            for (key, field) in [("actor", self.actor), ("physical_ms", self.physical_ms), ("logical", self.logical)] {
+                crate::value::DslValue::push_encoding_controlled(output.get_mut(), key, crate::value::ToValue::to_value_controlled(&field, control)?, control)?;
+                control.step()?;
+            }
+            Ok(crate::value::DslValue::Object(output.take()))
+        }))
+    }
 }
 impl crate::value::FromValue for HybridLogicalTimestamp {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {

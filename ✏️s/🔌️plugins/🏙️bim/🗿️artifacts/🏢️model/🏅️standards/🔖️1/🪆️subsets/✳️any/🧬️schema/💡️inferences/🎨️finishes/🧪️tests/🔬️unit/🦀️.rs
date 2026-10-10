@@ -1,5 +1,5 @@
 use super::*;
-use super::super::element_solids::ElementSolid;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::{Assigned, CeilingPatch, Entry, ModelDiff, SpacePatch};

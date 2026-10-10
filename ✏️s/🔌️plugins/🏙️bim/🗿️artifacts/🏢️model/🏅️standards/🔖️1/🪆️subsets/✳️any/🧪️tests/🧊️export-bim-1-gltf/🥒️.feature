@@ -16,3 +16,12 @@ Feature: Load the binary glTF export of the BIM house with three.js and measure 
     And the authored house snapshot it is exported from shared://🏗️ifc/🏠️house/📸️snapshot/🔣️.json
     When the file is parsed by GLTFLoader and every node, primitive and vertex is counted and measured
     Then the counts, the element nodes per kind and storey and the world bounds equal the subject's within 1e-9
+
+  @id-export-gltf-components
+  @level-quick
+  @mode-differential
+  Scenario: The components and MEP elements of the equipped room are element nodes whose per-element volume three.js sums from the stored vertices equals the subject's report
+    Given the committed components export shared://🧊️gltf/🪑️components/🪑️components.glb
+    And the authored components snapshot it is exported from shared://🏗️ifc/🪑️components/📸️snapshot/🔣️.json
+    When the file is parsed by GLTFLoader and every node, primitive and vertex is counted and measured, and the signed tetrahedra of every element node are summed
+    Then the counts, the element nodes per kind and storey, the volume of every element and the world bounds equal the subject's within 1e-9

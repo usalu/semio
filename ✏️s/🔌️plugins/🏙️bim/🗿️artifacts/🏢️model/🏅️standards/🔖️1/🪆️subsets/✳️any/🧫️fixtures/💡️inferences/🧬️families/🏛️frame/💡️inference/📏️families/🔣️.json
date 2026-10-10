@@ -1,0 +1,146 @@
+{
+  "fam-hea": {
+    "category": "Profile",
+    "parameters": {
+      "b": {
+        "kind": "Length",
+        "formula": "200 mm",
+        "value": {
+          "Length": {
+            "value": 0.2
+          }
+        }
+      },
+      "h": {
+        "kind": "Length",
+        "formula": "190 mm",
+        "value": {
+          "Length": {
+            "value": 0.19
+          }
+        }
+      },
+      "tf": {
+        "kind": "Length",
+        "formula": "10 mm",
+        "value": {
+          "Length": {
+            "value": 0.01
+          }
+        }
+      },
+      "tw": {
+        "kind": "Length",
+        "formula": "6.5 mm",
+        "value": {
+          "Length": {
+            "value": 0.0065
+          }
+        }
+      }
+    },
+    "issues": [],
+    "solids": {
+      "s-hea": {
+        "visible": true,
+        "material": "m-steel",
+        "volume": 0.005105000000000002,
+        "area": 1.17721,
+        "triangles": 44,
+        "min": [
+          -0.1,
+          -0.095,
+          0.0
+        ],
+        "max": [
+          0.1,
+          0.095,
+          1.0
+        ]
+      }
+    },
+    "outline_area": 0.005105000000000002,
+    "outline_vertices": 12
+  },
+  "fam-rhs": {
+    "category": "Profile",
+    "parameters": {
+      "depth": {
+        "kind": "Length",
+        "formula": "60 mm",
+        "value": {
+          "Length": {
+            "value": 0.06
+          }
+        }
+      },
+      "width": {
+        "kind": "Length",
+        "formula": "100 mm",
+        "value": {
+          "Length": {
+            "value": 0.1
+          }
+        }
+      }
+    },
+    "issues": [],
+    "solids": {
+      "s-rhs": {
+        "visible": true,
+        "material": "m-steel",
+        "volume": 0.006,
+        "area": 0.332,
+        "triangles": 12,
+        "min": [
+          -0.05,
+          -0.03,
+          0.0
+        ],
+        "max": [
+          0.05,
+          0.03,
+          1.0
+        ]
+      }
+    },
+    "outline_area": 0.006,
+    "outline_vertices": 4
+  },
+  "fam-table": {
+    "category": "Furniture",
+    "parameters": {
+      "width": {
+        "kind": "Length",
+        "formula": "1.6 m",
+        "value": {
+          "Length": {
+            "value": 1.6
+          }
+        }
+      }
+    },
+    "issues": [],
+    "solids": {
+      "s-top": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.07680000000000001,
+        "area": 5.312000000000001,
+        "triangles": 12,
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          1.6,
+          1.6,
+          0.03
+        ]
+      }
+    },
+    "outline_area": 0.0,
+    "outline_vertices": 0
+  }
+}

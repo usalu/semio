@@ -1,0 +1,10 @@
+{
+  "component_overrides": {
+    "cmp-table.depth": {
+      "component": "cmp-table",
+      "entry": "Created",
+      "name": "depth",
+      "value": "0.9 m"
+    }
+  }
+}

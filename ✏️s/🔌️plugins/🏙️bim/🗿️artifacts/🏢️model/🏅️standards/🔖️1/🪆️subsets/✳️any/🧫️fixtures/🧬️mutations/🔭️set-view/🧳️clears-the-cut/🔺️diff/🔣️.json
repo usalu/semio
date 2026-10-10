@@ -1,1 +1,10 @@
-{}
+{
+  "views": {
+    "v-ground": {
+      "cut_height": {
+        "value": null
+      },
+      "entry": "Patched"
+    }
+  }
+}

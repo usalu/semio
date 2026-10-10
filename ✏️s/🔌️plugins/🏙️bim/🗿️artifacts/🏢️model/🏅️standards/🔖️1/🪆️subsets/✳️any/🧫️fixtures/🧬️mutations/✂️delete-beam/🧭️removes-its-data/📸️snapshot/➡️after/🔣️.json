@@ -34,6 +34,18 @@
       "site": "site-1"
     }
   },
+  "classification_systems": {
+    "cs-din-276": {
+      "edition": "",
+      "entries": [
+        {
+          "code": "340",
+          "title": "Wände"
+        }
+      ],
+      "name": "DIN 276"
+    }
+  },
   "classifications": {},
   "column_types": {
     "ct-400": {
@@ -180,17 +192,5 @@
       "wall_type": "wt-300"
     }
   },
-  "window_types": {},
-  "classification_systems": {
-    "cs-din-276": {
-      "name": "DIN 276",
-      "edition": "",
-      "entries": [
-        {
-          "code": "340",
-          "title": "Wände"
-        }
-      ]
-    }
-  }
+  "window_types": {}
 }

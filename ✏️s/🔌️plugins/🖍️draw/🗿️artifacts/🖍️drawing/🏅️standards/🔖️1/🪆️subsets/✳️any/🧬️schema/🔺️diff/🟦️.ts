@@ -1,3 +1,4 @@
+import {parseDrawingFontFamily,type DrawingFontFamily} from "../📝️text/🔤️family/🟦️.ts";
 import {SHAPE_COORDINATE_FIELDS,type ShapeCoordinateField} from "../🔷️shape/✏️coordinates/🟦️.ts";
 import {parseFillRule,type FillRule} from "../🎨️fill/🌀️rule/🟦️.ts";
 /** 🔺️ Mirrors Rust `DrawingDiff` (sparse field delta over the drawing artifact; sibling `🦀️.rs`,
@@ -110,6 +111,7 @@ export interface DrawingLayerPatch {
   pathSegments?: PathGeometrySegment[];
   textContent?: string;
   textSize?: number;
+  fontFamily?: DrawingFontFamily;
   imageKey?:string;
   imageWidth?:number;
   imageHeight?:number;
@@ -263,6 +265,7 @@ export function parseDrawingLayerPatch(value: unknown, at = "$"): DrawingLayerPa
     imageWidth:row.imageWidth==null?undefined:drawingDrawingDiffGuardNumber(row.imageWidth,`${at}.imageWidth`),
     imageHeight:row.imageHeight==null?undefined:drawingDrawingDiffGuardNumber(row.imageHeight,`${at}.imageHeight`),
     textContent: text("textContent"),
+    fontFamily:row.fontFamily===undefined?undefined:parseDrawingFontFamily(row.fontFamily),
     textSize: row["textSize"] == null ? undefined : drawingDrawingDiffGuardNumber(row["textSize"], `${at}.textSize`),
     pathSegments: row["pathSegments"] == null ? undefined : drawingDrawingDiffGuardArray(row["pathSegments"], `${at}.pathSegments`).map((item, index) => parsePathGeometrySegment(item, `${at}.pathSegments[${index}]`)),
   };

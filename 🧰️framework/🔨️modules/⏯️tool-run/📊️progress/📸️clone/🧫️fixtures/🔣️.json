@@ -1,0 +1,1 @@
+{"interruptAfter":[0,1,9,40],"deniedAxes":["items","copy","capacity","release","depth"],"preservedFields":["identity","sequence","state","stage","completed","total","counters","unitsPerSecond","conflicts","steps"],"maximumLeaves":{"counters":8,"steps":64,"arguments":4}}

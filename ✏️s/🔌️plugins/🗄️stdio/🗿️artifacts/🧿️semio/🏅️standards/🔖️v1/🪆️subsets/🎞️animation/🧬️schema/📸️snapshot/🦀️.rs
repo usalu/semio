@@ -6,22 +6,17 @@
 //! full spec shape (typed `target`/`interpolation`, the 4-variant `AnimValue` union). Named structs
 //! throughout — no bare tuples (f6-final-summary.md §4.3), rotation reuses the shared
 //! `engine::geometry::SemioQuaternion{x,y,z,w}` instead of a local 4-field redefinition.
-
 use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-
-
 use framework_schema::ArtifactSchema;
-
 //#region 🔖️Ids
 pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation";
 //#endregion 🔖️Ids
-
 //#region 🔖️Target
 /// 🎯️ Which property of a node a channel drives — gltf `channel.target.path`, widened with a
 /// `Custom` escape hatch for engine/extension-defined paths gltf's own spec leaves open
 /// (`KHR_*` animation-pointer style extensions target arbitrary properties by name).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[derive(Default)]
 pub enum AnimTargetProperty {
@@ -34,7 +29,6 @@ pub enum AnimTargetProperty {
         name: String,
     },
 }
-
 /// 🎯️ A channel's animated node + which of its properties is driven.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -44,7 +38,6 @@ pub struct AnimTarget {
     pub property: AnimTargetProperty,
 }
 //#endregion 🔖️Target
-
 //#region 🔖️Interpolation
 /// 📈️ gltf `sampler.interpolation` — how `keyframes` are resampled between `t` values.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
@@ -56,16 +49,14 @@ pub enum AnimInterpolation {
     Step,
     CubicSpline,
 }
-
 //#endregion 🔖️Interpolation
-
 //#region 🔖️Value
 /// 🎞️ One keyframe's payload — a tagged union over the shapes a channel's `AnimTargetProperty` can
 /// take: `Scalar` for a single animated number (e.g. a custom/extension property), `Vec3` for
 /// translation/scale, `Quat` for rotation (reuses the shared named quaternion, never a bare
 /// `[f64;4]`), `Weights` for morph-target weight vectors (arity = mesh's own primitive count, not
 /// fixed — hence `Vec<f64>`, not a fixed array).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum AnimValue {
     Scalar { value: f64 },
@@ -73,14 +64,12 @@ pub enum AnimValue {
     Quat { value: SemioQuaternion },
     Weights { values: Vec<f64> },
 }
-
 impl Default for AnimValue {
     fn default() -> Self {
         AnimValue::Scalar { value: 0.0 }
     }
 }
 //#endregion 🔖️Value
-
 //#region 🔖️Keyframe
 /// ⏱️ One sample point on a channel's timeline. Real GIFs/glTF exporters expect `t` non-decreasing
 /// across a channel's own `keyframes` (a `SubsetValidator` referential invariant, see the
@@ -93,7 +82,6 @@ pub struct AnimKeyframe {
     pub value: AnimValue,
 }
 //#endregion 🔖️Keyframe
-
 //#region 🔖️Channel
 /// 🎚️ One animated property track: gltf `channel` + its `sampler`, flattened into a single owned
 /// keyframe list (this snapshot does not separately model gltf's accessor-indirection — the
@@ -108,7 +96,6 @@ pub struct AnimChannel {
     pub keyframes: Vec<AnimKeyframe>,
 }
 //#endregion 🔖️Channel
-
 //#region 🔖️Timeline
 /// 🎬️ One gltf `animation` entry — an optional display `name` (gltf's own `animation.name` is
 /// optional and not spec-required to be unique, hence `Option<String>` rather than a name key) plus
@@ -122,7 +109,6 @@ pub struct AnimTimeline {
     pub channels: Vec<AnimChannel>,
 }
 //#endregion 🔖️Timeline
-
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -134,91 +120,20 @@ pub struct SemioAnimationSnapshot {
     #[value(default)]
     pub timelines: Vec<AnimTimeline>,
 }
-
 impl Default for SemioAnimationSnapshot {
     fn default() -> Self {
         Self { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
-
 //#region 🔖️TextPrimitives
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️TextPrimitives
-
 //#region 🔖️BinaryPrimitives
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️BinaryPrimitives
-
 //#region 🔖️HandcraftedArtifactCodecs
-
-
 //#region 🔖️DslFreeFunctions
-
-
-
 //#endregion 🔖️DslFreeFunctions
-
-
 //#endregion 🔖️HandcraftedArtifactCodecs
-
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.animation` document — one timeline exercising every `AnimValue`
 /// variant (`Scalar`/`Vec3`/`Quat`/`Weights`) and every `AnimTargetProperty` kind (incl. `Custom`).
@@ -257,16 +172,9 @@ pub(crate) fn demo_animation_snapshot() -> SemioAnimationSnapshot {
     }
 }
 //#endregion 🔖️Demo
-
 //#region 🔖️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-
-
-
-
-
-
-
+                                       

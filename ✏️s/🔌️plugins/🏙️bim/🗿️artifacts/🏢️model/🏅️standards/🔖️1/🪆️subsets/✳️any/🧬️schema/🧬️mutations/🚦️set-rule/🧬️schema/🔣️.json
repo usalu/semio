@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-rule/schema.json",
+  "title": "SetRule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setRule"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Rule",
+          "de": "Regel"
+        },
+        "ref": {
+          "kind": "rule"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "kind": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RuleKind",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Check",
+          "de": "Prüfung"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "limit": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Limit",
+          "de": "Grenzwert"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "severity": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RuleSeverity",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Severity",
+          "de": "Schwere"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "scope": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RuleScope",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Scope",
+          "de": "Geltungsbereich"
+        },
+        "group": "value",
+        "order": 60
+      }
+    }
+  }
+}

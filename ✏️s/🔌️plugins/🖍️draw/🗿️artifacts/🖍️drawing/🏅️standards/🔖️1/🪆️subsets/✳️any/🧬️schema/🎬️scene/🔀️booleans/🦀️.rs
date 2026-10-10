@@ -48,7 +48,7 @@ impl DocumentBooleanJob{
  fn push(&mut self,index:usize)->Result<(),DocumentSceneError>{if self.stack.len()>=self.input.limits.max_depth{return Err(invalid("Boolean document dependency depth exceeded"));}if !self.visiting.insert(index){return Err(invalid("Cyclic Boolean document operands"));}self.stack.push(Frame{index,at:0});Ok(())}
  fn index(&mut self)->Result<(),DocumentSceneError>{
   let Some(n)=self.input.plan.nodes.get(self.nodes)else{self.phase="validation";return Ok(());};if n.id.is_empty()||n.id.len()>4096||self.ids.contains_key(&n.id){return Err(invalid("Invalid or duplicate Boolean document node"));}crate::schema::scene_preparation::validate_scene_source_address(&n.source_path,n.locked_ancestors)?;matrix(n.transform)?;
-  if let DocumentSceneContent::Path{segments,..}=&n.content{if segments.len()>65536{return Err(invalid("Invalid Boolean document path"));}self.source_segments+=segments.len();if self.source_segments>65536{return Err(invalid("Boolean document source segment cap exceeded"));}}
+  if let DocumentSceneContent::Path{segments,..}|DocumentSceneContent::Glyphs{segments,..}=&n.content{if segments.len()>65536{return Err(invalid("Invalid Boolean document path"));}self.source_segments+=segments.len();if self.source_segments>65536{return Err(invalid("Boolean document source segment cap exceeded"));}}
   let children=refs(n);if children.len()>1024{return Err(invalid("Invalid Boolean document references"));}self.references+=children.len();if self.references>self.input.limits.max_references{return Err(invalid("Boolean document reference cap exceeded"));}
   if let DocumentSceneContent::Boolean{operation,reference_transform,..}=&n.content{BooleanOperation::parse(operation).map_err(|e|invalid(e.to_string()))?;matrix(*reference_transform)?;}
   self.ids.insert(n.id.clone(),self.nodes);self.nodes+=1;Ok(())
@@ -58,7 +58,7 @@ impl DocumentBooleanJob{
   let top=*self.stack.last().unwrap();let n=&self.input.plan.nodes[top.index];let children=refs(n);
   if let Some(key)=children.get(top.at){let index=self.ids[key];self.stack.last_mut().unwrap().at+=1;if if cycles{self.visited.contains(&index)}else{self.cache.contains_key(&index)}{return Ok(());}return self.push(index);}
   if cycles{self.stack.pop();self.visiting.remove(&top.index);self.visited.insert(top.index);self.order.push(top.index);return Ok(());}
-  if !matches!(n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Group{..}|DocumentSceneContent::Boolean{..}){return Err(invalid(format!("Unsupported Boolean operand: {}",n.id)));}
+  if !matches!(n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Glyphs{..}|DocumentSceneContent::Group{..}|DocumentSceneContent::Boolean{..}){return Err(invalid(format!("Unsupported Boolean operand: {}",n.id)));}
   self.current=top.index;self.operand_at=0;self.copy_at=0;self.copied=0;self.operand=None;self.operands=Vec::new();self.phase="operands";Ok(())
  }
  fn requirements(&mut self)->Result<(),DocumentSceneError>{
@@ -69,14 +69,14 @@ impl DocumentBooleanJob{
   let children=refs(&self.input.plan.nodes[index]);let Some(key)=children.get(self.ref_at)else{self.requirement_current=None;return Ok(());};let child=self.ids[key];let factor=self.quality[&index];let incoming=self.impact.get(&child).copied().unwrap_or(1.0);self.impact.insert(child,incoming.max(factor));self.ref_at+=1;Ok(())
  }
  fn prepare(&mut self)->Result<(),DocumentSceneError>{
-  let n=&self.input.plan.nodes[self.current];let children=refs(n);let count=if matches!(n.content,DocumentSceneContent::Path{..}){1}else{children.len()};
+  let n=&self.input.plan.nodes[self.current];let children=refs(n);let count=if matches!(n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Glyphs{..}){1}else{children.len()};
   let factor=self.quality.get(&self.current).copied().unwrap_or(1.0);let mut limits=self.input.limits;limits.tolerance/=factor;limits.epsilon/=factor;if limits.tolerance<1e-6||limits.epsilon<1e-12{return Err(invalid("Boolean document precision exceeds supported tolerance"));}
   if self.operand.is_none(){
    if self.operand_at==count{if self.operands.is_empty(){self.operands.push(PathBooleanOperand{segments:Vec::new(),transform:IDENTITY,tolerance:limits.tolerance,fill_rule:BooleanFillRule::Nonzero});}let operation=if let DocumentSceneContent::Boolean{operation,..}=&n.content{BooleanOperation::parse(operation).map_err(|e|invalid(e.to_string()))?}else{BooleanOperation::Union};let operands=std::mem::take(&mut self.operands);self.child=Some(PathBooleanJob::new(config(limits,operation,operands)).map_err(|e|invalid(e.to_string()))?);self.phase="geometry";return Ok(());}
-   let(transform,fill_rule)=if let DocumentSceneContent::Path{fill_rule,..}=&n.content{(n.transform,if *fill_rule==crate::FillRule::Evenodd{BooleanFillRule::Evenodd}else{BooleanFillRule::Nonzero})}else{(IDENTITY,BooleanFillRule::Nonzero)};
+   let(transform,fill_rule)=if let DocumentSceneContent::Path{fill_rule,..}|DocumentSceneContent::Glyphs{fill_rule,..}=&n.content{(n.transform,if *fill_rule==crate::FillRule::Evenodd{BooleanFillRule::Evenodd}else{BooleanFillRule::Nonzero})}else{(IDENTITY,BooleanFillRule::Nonzero)};
    self.operand=Some(PathBooleanOperand{segments:Vec::new(),transform,tolerance:limits.tolerance,fill_rule});self.copy_at=0;return Ok(());
   }
-  let next=if let DocumentSceneContent::Path{segments,..}=&n.content{segments.get(self.copy_at).map(crate::standards::v1::subsets::any::schema::component::to_kernel_segment)}else{self.cache[&self.ids[&children[self.operand_at]]].get(self.copy_at).cloned()};
+  let next=if let DocumentSceneContent::Path{segments,..}|DocumentSceneContent::Glyphs{segments,..}=&n.content{segments.get(self.copy_at).map(crate::standards::v1::subsets::any::schema::component::to_kernel_segment)}else{self.cache[&self.ids[&children[self.operand_at]]].get(self.copy_at).cloned()};
   if let Some(next)=next{if self.copied>=self.input.limits.max_edges{return Err(invalid("Boolean document operand segment budget exceeded"));}self.operand.as_mut().unwrap().segments.push(next);self.copied+=1;self.copy_at+=1;return Ok(());}
   self.operands.push(self.operand.take().unwrap());self.operand_at+=1;Ok(())
  }

@@ -1,1 +1,16 @@
-{}
+{
+  "railings": {
+    "rl-1": {
+      "entry": "Patched",
+      "host": {
+        "value": {
+          "edge": 0,
+          "element": "rp-host",
+          "inset": 0.05,
+          "side": "Left"
+        }
+      },
+      "path": []
+    }
+  }
+}

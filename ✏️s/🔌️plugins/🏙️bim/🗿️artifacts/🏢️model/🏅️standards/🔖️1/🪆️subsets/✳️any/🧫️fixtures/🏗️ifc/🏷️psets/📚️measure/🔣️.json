@@ -1,0 +1,205 @@
+{
+  "schema": "IFC4",
+  "counts": {
+    "IfcProject": 1,
+    "IfcProjectLibrary": 1,
+    "IfcRelDeclares": 2,
+    "IfcPropertySetTemplate": 4,
+    "IfcSimplePropertyTemplate": 9,
+    "IfcPropertyEnumeration": 2,
+    "IfcClassification": 3,
+    "IfcClassificationReference": 9,
+    "IfcRelAssociatesClassification": 3
+  },
+  "templates": {
+    "Pset_DoorCommon": {
+      "type": "PSET_TYPEDRIVENOVERRIDE",
+      "applicable": "IfcDoor,IfcDoorType",
+      "properties": [
+        {
+          "name": "FireExit",
+          "type": "P_SINGLEVALUE",
+          "measure": "IfcBoolean",
+          "description": "required=false;",
+          "values": []
+        },
+        {
+          "name": "Width",
+          "type": "P_SINGLEVALUE",
+          "measure": "IfcLengthMeasure",
+          "description": "description=Clear width%3B keep %3D and %3B apart;required=true;minimum=0.6;maximum=3;",
+          "values": []
+        },
+        {
+          "name": "Leaves",
+          "type": "P_ENUMERATEDVALUE",
+          "measure": "IfcInteger",
+          "description": "required=false;default=1;",
+          "values": [
+            [
+              "IFCINTEGER",
+              1
+            ],
+            [
+              "IFCINTEGER",
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    "Pset_SpaceCommon": {
+      "type": "PSET_OCCURRENCEDRIVEN",
+      "applicable": "IfcSpace",
+      "properties": [
+        {
+          "name": "NetPlannedArea",
+          "type": "P_SINGLEVALUE",
+          "measure": "IfcAreaMeasure",
+          "description": "required=false;minimum=0;",
+          "values": []
+        },
+        {
+          "name": "Category",
+          "type": "P_SINGLEVALUE",
+          "measure": "IfcLabel",
+          "description": "required=false;default=Office;",
+          "values": []
+        }
+      ]
+    },
+    "Pset_WallCommon": {
+      "type": "PSET_TYPEDRIVENOVERRIDE",
+      "applicable": "IfcWall,IfcWallType",
+      "properties": [
+        {
+          "name": "FireRating",
+          "type": "P_ENUMERATEDVALUE",
+          "measure": "IfcLabel",
+          "description": "required=false;",
+          "values": [
+            [
+              "IFCLABEL",
+              "EI30"
+            ],
+            [
+              "IFCLABEL",
+              "EI60"
+            ],
+            [
+              "IFCLABEL",
+              "EI90"
+            ]
+          ]
+        },
+        {
+          "name": "ThermalTransmittance",
+          "type": "P_SINGLEVALUE",
+          "measure": "IfcReal",
+          "description": "unit=W/(m2.K);required=true;default=0.35;minimum=0;maximum=5;",
+          "values": []
+        },
+        {
+          "name": "IsExternal",
+          "type": "P_SINGLEVALUE",
+          "measure": "IfcBoolean",
+          "description": "required=false;default=false;",
+          "values": []
+        }
+      ]
+    },
+    "Pset_WindowTypeCommon": {
+      "type": "PSET_TYPEDRIVENONLY",
+      "applicable": "IfcWindowType",
+      "properties": [
+        {
+          "name": "Reference",
+          "type": "P_SINGLEVALUE",
+          "measure": "IfcLabel",
+          "description": "description=Catalogue reference;required=false;",
+          "values": []
+        }
+      ]
+    }
+  },
+  "systems": {
+    "DIN 276|2018-12": {
+      "source": "https://www.din.de",
+      "entries": [
+        {
+          "code": "300",
+          "title": "Building construction",
+          "parent": "",
+          "sort": "000000"
+        },
+        {
+          "code": "330",
+          "title": "Exterior walls",
+          "parent": "300",
+          "sort": "000001"
+        },
+        {
+          "code": "331",
+          "title": "Load-bearing exterior walls",
+          "parent": "330",
+          "sort": "000002"
+        },
+        {
+          "code": "340",
+          "title": "Interior walls",
+          "parent": "300",
+          "sort": "000003"
+        }
+      ]
+    },
+    "Omniclass|": {
+      "source": "",
+      "entries": [
+        {
+          "code": "21-02 10 10",
+          "title": "Columns",
+          "parent": "",
+          "sort": "000000"
+        }
+      ]
+    },
+    "Uniclass 2015|": {
+      "source": "",
+      "entries": [
+        {
+          "code": "EF",
+          "title": "Elements and functions",
+          "parent": "",
+          "sort": "000000"
+        },
+        {
+          "code": "EF_25",
+          "title": "Wall and barrier elements",
+          "parent": "EF",
+          "sort": "000001"
+        },
+        {
+          "code": "EF_25_10",
+          "title": "Walls",
+          "parent": "EF_25",
+          "sort": "000002"
+        },
+        {
+          "code": "EF_30",
+          "title": "Roof, floor and paving elements",
+          "parent": "EF",
+          "sort": "000003"
+        }
+      ]
+    }
+  },
+  "declares": [
+    "IFCPROJECT:IFC Psets>IFCPROJECTLIBRARY:IFC Psets Library",
+    "IFCPROJECTLIBRARY:IFC Psets Library>IFCPROPERTYSETTEMPLATE:Pset_DoorCommon,IFCPROPERTYSETTEMPLATE:Pset_SpaceCommon,IFCPROPERTYSETTEMPLATE:Pset_WallCommon,IFCPROPERTYSETTEMPLATE:Pset_WindowTypeCommon"
+  ],
+  "associated": [
+    "IFCPROJECTLIBRARY:IFC Psets Library>DIN 276|2018-12",
+    "IFCPROJECTLIBRARY:IFC Psets Library>Omniclass|",
+    "IFCPROJECTLIBRARY:IFC Psets Library>Uniclass 2015|"
+  ]
+}

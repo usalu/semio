@@ -1,1 +1,25 @@
-{}
+{
+  "viewports": {
+    "vp-1": {
+      "crop": {
+        "max": {
+          "x": 6.0,
+          "y": 4.0
+        },
+        "min": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      "entry": "Created",
+      "label": "Section through the hall",
+      "position": {
+        "x": 220.0,
+        "y": 20.0
+      },
+      "scale": 50,
+      "sheet": "sh-1",
+      "view": "v-section"
+    }
+  }
+}

@@ -38,11 +38,11 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             let target_exists = row["targetExists"].as_bool().unwrap();
             let mut registry = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["openedActor"].as_str().unwrap().to_owned().into()));
             registry.register::<IdentityWindowOwner>().unwrap();
-            drop(registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(source).await.unwrap());
+            let original=registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(source).await.unwrap(); crate::component::window_mutation::close_test_original_with_pump(original,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
             let target_before = if target_exists {
                 let before = registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(target).await.unwrap();
-                let witness = (before.generation, before.revision, Arc::as_ptr(&before.snapshot.snapshot) as *const ());
-                drop(before);
+                let witness = (before.generation, before.revision, before.snapshot.get::<IdentityWindowOwner>().unwrap() as *const _ as *const ());
+                crate::component::window_mutation::close_test_original_with_pump(before,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
                 Some(witness)
             } else {
                 None
@@ -56,13 +56,14 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             let unchanged = match target_before {
                 Some((generation, revision, pointer)) if !row["accepted"].as_bool().unwrap() => {
                     let after = registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(target).await.unwrap();
-                    let unchanged = after.generation == generation && after.revision == revision && Arc::as_ptr(&after.snapshot.snapshot) as *const () == pointer && after_ids == before_ids;
-                    drop(after);
+                    let unchanged = after.generation == generation && after.revision == revision && after.snapshot.get::<IdentityWindowOwner>().unwrap() as *const _ as *const () == pointer && after_ids == before_ids;
+                    crate::component::window_mutation::close_test_original_with_pump(after,||{let demand=registry.maintenance_retirements_demands(4096).unwrap();registry.maintenance_retirements_step(retained_pack_load_tests::quoted(demand,4096)).unwrap();});
                     unchanged
                 }
                 None => after_ids == before_ids && !after_ids.iter().any(|(kind, id)| kind == IdentityWindowOwner::WINDOW_KIND_ID && id == target),
                 Some(_) => true,
             };
+            while !registry.direct_ingress_terminal_is_empty(){let grant=retained_pack_load_tests::quoted(registry.direct_ingress_demands(4096).unwrap(),4096);registry.close_direct_ingress(grant).unwrap();}
             let mut closed = false;
             for _ in 0..65_536 {
                 if matches!(registry.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 }).unwrap(), PluginLifecycleStep::Complete(_)) {
@@ -72,7 +73,7 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             }
             let id = row["id"].as_str().unwrap().to_owned();
             let terminal_empty = closed && registry.terminal_is_empty();
-            eprintln!("Window Pack identity {id}: admitted={admitted}, target_exists={target_exists}, target_unchanged_or_absent={unchanged}, terminal_empty={terminal_empty}");
+            eprintln!("[DEBUG] Window Pack identity {id}: admitted={admitted}, target_exists={target_exists}, target_unchanged_or_absent={unchanged}, terminal_empty={terminal_empty}");
             observed.push((id, admitted, row["accepted"].as_bool().unwrap(), unchanged, terminal_empty));
         }
         observed

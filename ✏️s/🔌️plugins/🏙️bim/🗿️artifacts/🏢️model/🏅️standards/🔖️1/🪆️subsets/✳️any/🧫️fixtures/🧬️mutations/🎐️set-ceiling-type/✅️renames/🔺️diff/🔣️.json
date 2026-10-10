@@ -1,1 +1,8 @@
-{}
+{
+  "ceiling_types": {
+    "ct-board": {
+      "entry": "Patched",
+      "name": "Plasterboard 12.5 (renamed)"
+    }
+  }
+}

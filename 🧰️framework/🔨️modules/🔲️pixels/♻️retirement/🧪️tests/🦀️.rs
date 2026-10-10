@@ -10,7 +10,7 @@ unsafe impl GlobalAlloc for PhysicalAllocator {
  unsafe fn alloc(&self,layout:Layout)->*mut u8 {let pointer=unsafe{System.alloc(layout)};if !pointer.is_null(){let _=TRACK.try_with(|track|if let Some((allocated,released))=track.get(){track.set(Some((allocated+layout.size(),released)));});}pointer}
  unsafe fn dealloc(&self,pointer:*mut u8,layout:Layout){let _=TRACK.try_with(|track|if let Some((allocated,released))=track.get(){track.set(Some((allocated,released+layout.size())));});unsafe{System.dealloc(pointer,layout);}}
 }
-fn observed<T>(step:impl FnOnce()->T)->(T,(usize,usize)){TRACK.with(|track|{assert!(track.get().is_none());track.set(Some((0,0)));});let output=step();let bytes=TRACK.with(|track|track.replace(None).unwrap());(output,bytes)}
+pub(crate) fn observed<T>(step:impl FnOnce()->T)->(T,(usize,usize)){TRACK.with(|track|{assert!(track.get().is_none());track.set(Some((0,0)));});let output=step();let bytes=TRACK.with(|track|track.replace(None).unwrap());(output,bytes)}
 pub(crate) fn drain<T:RetireOwned>(value:T)->(usize,usize){
  let mut owner=ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("unsupported test owner: {error}"));let mut allocated=0;let mut released=0;
  for _ in 0..2_000_000 {if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{owner.next_release_byte_demand().unwrap()}).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};

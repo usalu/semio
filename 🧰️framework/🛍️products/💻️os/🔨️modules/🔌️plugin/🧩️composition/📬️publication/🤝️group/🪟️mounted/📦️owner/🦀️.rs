@@ -123,7 +123,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
             captured_child_content:Some(std::sync::Arc::clone(&self.child_content_root)),captured_child_content_generation:self.child_content_generation,
             result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,
             ui_pending:true,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,
-            command_logged:false,interaction_revalidated:false,terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing,
+            command_logged:false,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing,
         };
         self.tool_operations.insert_admitted(operation_id,mounted);
         self.release_reserved_emit_slot(operation_id);
@@ -263,29 +263,28 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         let output=owner.output.take().unwrap();self.typed_composed_outbox.push(ComposedGestureResult{operation,mutations:output.mutations,inverse_group:output.inverse_group}).unwrap_or_else(|_|unreachable!("validated fixed private receiver retains its exact original free slot"));
         owner.closing=true;mounted.owned_child_committed=true;mounted.owned_child_result_pending=true;mounted.command_logged=true;mounted.published_artifact=true;mounted.artifact_generation=self.store.generation_now();mounted.canonical_revision=self.store.content_revision_now();mounted.operation.base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(mounted.canonical_revision[..8].try_into().unwrap()));mounted.operation.generation=semio_framework_job::Generation(mounted.artifact_generation);page.token=mounted.next_token();mounted.queue_page(page)
     }
-    fn private_child_group_close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, Fault> {
+    fn private_child_group_close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         let Some((_,operation))=self.private_child_groups.next_id_from(0) else {
-            let release_bytes=self.private_child_groups.empty_backing_byte_demand().ok_or_else(||plugin_sdk_fault("private group registry still owns its original slot"))?;
+            let release_bytes=self.private_child_groups.empty_backing_byte_demand().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"private group registry still owns its original slot"))?;
             return Ok(semio_framework_value::RetirementDemand { release_bytes, depth:usize::from(release_bytes!=0), ..Default::default() });
         };
         self.private_child_group_operation_close_demands(operation,body)
     }
     fn next_closing_private_child_group(&self)->Option<u64>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|index|self.private_child_groups.entry(index).and_then(|(operation,owner)|(owner.closing&&self.tool_operations.get(*operation).is_none_or(|mounted|!mounted.owned_child_result_pending)).then_some(*operation)))}
-    fn private_child_group_operation_close_demands(&self, operation:u64, body:usize) -> Result<semio_framework_value::RetirementDemand, Fault> {
+    fn private_child_group_operation_close_demands(&self, operation:u64, body:usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         let Some(owner)=self.private_child_groups.get(operation)else{return Ok(Default::default());};
         if owner.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:MountedPrivateChildGroup::<M>::frame_birth_bytes(),depth:1,..Default::default()});}
-        mounted_child_group_receipt::mounted_nested_retirement_demand(owner.retirement_demands(body).map_err(|error|plugin_sdk_fault(error.to_string()))?,1).map_err(|error|plugin_sdk_fault(error.to_string()))
+        mounted_child_group_receipt::mounted_nested_retirement_demand(owner.retirement_demands(body)?,1)
     }
     fn private_child_groups_terminal_is_empty(&self)->bool{self.private_child_groups.is_empty()&&self.private_child_groups.empty_backing_byte_demand()==Some(0)}
     fn close_private_child_group_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,Fault>{
-        let demand=self.private_child_group_close_demands(grant.maximum_copy_bytes)?;
+        let demand=self.private_child_group_close_demands(grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
         if self.private_child_groups_terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});}
         if !mounted_child_group_receipt::mounted_retirement_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         let Some((_,operation))=self.private_child_groups.next_id_from(0)else{
-            return match self.private_child_groups.close_empty_backing_step(grant.maximum_items.min(1),grant.maximum_release_bytes){
-                PluginCloseStep::Pending{released_items,released_bytes}=>Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}}),
-                PluginCloseStep::Complete=>Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()}),
-                _=>Err(plugin_sdk_fault("private group empty backing retained an unexpected active owner")),
+            return match self.private_child_groups.close_empty_backing_step(RetainedCloneGrant{maximum_items:grant.maximum_items.min(1),..grant})?{
+                RetainedCloneStep::Progress(progress)=>Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}),
+                RetainedCloneStep::Complete(progress)=>Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress}),
             };
         };
         self.close_private_child_group_operation_step(operation,grant)
@@ -293,7 +292,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
     fn close_private_child_group_operation_step(&mut self,operation:u64,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,Fault>{
         let Some(original)=self.private_child_groups.get(operation)else{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});};
         let terminal=original.terminal_is_empty();
-        let demand=self.private_child_group_operation_close_demands(operation,grant.maximum_copy_bytes)?;
+        let demand=self.private_child_group_operation_close_demands(operation,grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
         if !mounted_child_group_receipt::mounted_retirement_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         if terminal{drop(self.private_child_groups.remove(operation));return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}});}
         let owner=self.private_child_groups.get_mut(operation).ok_or_else(||plugin_sdk_fault("private group changed during its exact bounded close"))?;

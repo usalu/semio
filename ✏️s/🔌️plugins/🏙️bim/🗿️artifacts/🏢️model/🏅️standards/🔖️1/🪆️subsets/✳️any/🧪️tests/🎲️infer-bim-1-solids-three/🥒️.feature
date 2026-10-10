@@ -1,7 +1,7 @@
 @capability-bim-1-infer
 @oracle-bim-1-three-mesh
 @comparison-floating-point-v1
-Feature: Measure the blessed element solid meshes of walls, curtain walls, fillers and ceilings with three.js
+Feature: Measure the blessed element solid meshes of walls, curtain walls, fillers, ceilings, components and MEP runs with three.js
   Each case of `🧫️fixtures/💡️inferences/🧊️element-solids` commits the authored snapshot and the meshes of the solids the subject inferred from it
   (welded positions and triangle indices, one per element). three.js loads them as `BufferGeometry` and measures volume (signed tetrahedra), area
   (`Triangle.getArea`), bounds (`Box3`) and triangle count. The subject reports the same numbers from its live `element-solids` inference, so a
@@ -15,5 +15,8 @@ Feature: Measure the blessed element solid meshes of walls, curtain walls, fille
     And the committed joined room case shared://💡️inferences/🧊️element-solids/🧩️room-joins/🔣️.json
     And the committed curtain wall case shared://💡️inferences/🧊️element-solids/🏬️curtain-grid/🔣️.json
     And the committed ceilings case shared://💡️inferences/🧊️element-solids/🪵️ceilings-meshes/🔣️.json
+    And the committed frame case shared://💡️inferences/🧊️element-solids/📐️frame-tilt-joins/🔣️.json
+    And the committed curtain panel override case shared://💡️inferences/🧊️element-solids/🪟️curtain-overrides/🔣️.json
+    And the committed components and MEP case shared://💡️inferences/🧊️element-solids/🪑️components-mep/🔣️.json
     When every committed mesh is loaded as a BufferGeometry
     Then the measured volume, area, bounds and triangle count equal the subject's element solids

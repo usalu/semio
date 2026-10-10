@@ -1,6 +1,6 @@
 //! 🧪️ The sheet export as a whole: print order, file stems, which layouts an export takes, and the two writers over the house with its sheet set.
 
-use super::testkit::{house_with_sheets, inferred, labels};
+use super::testkit::{house_with_sheets, inferred, labels, read_room, room, ROOM_DIR};
 use super::*;
 
 #[test]
@@ -53,4 +53,24 @@ fn the_pdf_of_the_set_has_one_page_per_sheet_and_the_pdf_of_one_sheet_one_page()
 #[test]
 fn the_dialects_are_the_stdio_ones() {
     assert_eq!((PDF_DIALECT.artifact_kind, PDF_DIALECT.standard.0), ("s.stdio.pdf", "1.7"));
+}
+
+#[test]
+fn the_committed_room_files_are_the_current_export() {
+    let (model, labels) = (room(), labels());
+    let inferred = inferred(&model);
+    let mut files: Vec<(String, Vec<u8>)> = ordered(&model)
+        .iter()
+        .map(|id| (format!("{}.svg", file_stem(&inferred.sheet_layouts[id].number)), sheet_svg(&model, &inferred, id, &labels).expect("the sheet has a layout").expect("the sheet is written").into_bytes()))
+        .collect();
+    files.push(("sheets.pdf".into(), sheets_pdf(&model, &inferred, None, &labels).expect("the set is written")));
+    if std::env::var("BIM_BLESS").is_ok() {
+        std::fs::create_dir_all(ROOM_DIR).expect("the fixture directory");
+        for (name, bytes) in &files {
+            std::fs::write(format!("{ROOM_DIR}/{name}"), bytes).expect("the file is written");
+        }
+    }
+    for (name, bytes) in &files {
+        assert!(read_room(name) == *bytes, "{name}: the committed export drifted: rewrite it with BIM_BLESS=1");
+    }
 }

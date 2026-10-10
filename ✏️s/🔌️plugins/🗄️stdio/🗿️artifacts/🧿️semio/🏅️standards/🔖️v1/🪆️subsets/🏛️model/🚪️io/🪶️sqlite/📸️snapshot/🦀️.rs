@@ -83,20 +83,6 @@ fn optional_integer(row:SqliteRow<'_>,index:usize)->Result<Option<i64>,ValueErro
 fn model_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 /// ⏱️ Checks each Model reconstruction frontier.
 fn model_checkpoint(control:&mut SqliteSnapshotControl<'_>,completed:usize,total:usize)->Result<(),ValueError>{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,total)}
-/// 🏛️ Binds Model row declarations to the shared paid index.
-fn model_rows<'a>(db:&'a SqliteDatabase,name:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<RowIndex<'a>,ValueError>{RowIndex::new(db,name,columns,float_columns(name),control,match name{"semio_model_property_set"=>"invalid Semio model property-set owner or identity","semio_model_property"=>"invalid Semio model property owner or identity","semio_model_relation"=>"invalid Semio model relation owner or identity",_=>"invalid Semio model row identity or columns"})}
-/// 🪪️ Validates Model text identities through shared paid ordering.
-fn model_unique_text(rows:&RowIndex<'_>,column:usize,message:&str,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{rows.unique_text(rows.indices(),column,control,message)}
-/// 🔢️ Orders an already paid typed entity partition by contiguous authored ordinals.
-fn ordered(mut indices:Vec<usize>,rows:&RowIndex<'_>,column:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<usize>,ValueError>{
- semio_framework_os_kernel::sqlite_snapshot::transfer::heap_sort(&mut indices,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(rows.row(*a)?.integer(column)?.cmp(&rows.row(*b)?.integer(column)?)))?;
- for(ordinal,&index)in indices.iter().enumerate(){if rows.row(index)?.integer(column)?!=number(ordinal)?{return Err(model_invalid("Semio model ordinals must be contiguous"));}model_checkpoint(control,ordinal+1,indices.len())?;}Ok(indices)
-}
-/// 👪️ Groups only the Model owner and ordinal columns.
-fn model_groups(rows:&RowIndex<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<usize>,ValueError>{rows.grouped_by(2,control,"Semio model ordinals must be contiguous",|row|Ok((0,Some(row.integer(1)?))))}
-/// 🔎️ Selects one Model owner's exact shared index range.
-fn model_group_range(rows:&RowIndex<'_>,indices:&[usize],owner:i64,control:&mut SqliteSnapshotControl<'_>)->Result<std::ops::Range<usize>,ValueError>{rows.range_by(indices,(0,Some(owner)),control,|row|Ok((0,Some(row.integer(1)?))))}
-
 fn class(value:&ElementClass)->(&'static str,Option<&str>){match value{ElementClass::Wall=>("wall",None),ElementClass::Slab=>("slab",None),ElementClass::Column=>("column",None),ElementClass::Beam=>("beam",None),ElementClass::Door=>("door",None),ElementClass::Window=>("window",None),ElementClass::Roof=>("roof",None),ElementClass::Stair=>("stair",None),ElementClass::Furniture=>("furniture",None),ElementClass::Other{name}=>("other",Some(name))}}
 fn relation(value:&RelationKind)->(&'static str,Option<&str>){match value{RelationKind::Aggregates=>("aggregates",None),RelationKind::ContainedIn=>("contained_in",None),RelationKind::ConnectsTo=>("connects_to",None),RelationKind::FillsVoid=>("fills_void",None),RelationKind::VoidsElement=>("voids_element",None),RelationKind::Other{label}=>("other",Some(label))}}
 fn restore_placement(row:SqliteRow<'_>)->Result<SemioTransform,ValueError>{Ok(SemioTransform{translation:SemioPoint3{x:row.real(1)?,y:row.real(2)?,z:row.real(3)?},rotation:SemioQuaternion{x:row.real(4)?,y:row.real(5)?,z:row.real(6)?,w:row.real(7)?},scale:SemioPoint3{x:row.real(8)?,y:row.real(9)?,z:row.real(10)?}})}
@@ -126,111 +112,7 @@ semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHE
 }
 
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
-    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{
- control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
- let document=single_float_row(database,"semio_model_document")?;identity(document,2)?;if document.rowid!=1{return Err(model_invalid("invalid Semio model document identifier"));}
- let entities=model_rows(database,"semio_model_entity",5,control)?;
- let mut spatial_rows=model_rows(database,"semio_model_spatial",4,control)?;
- let mut element_rows=model_rows(database,"semio_model_element",4,control)?;
- let mut placements=model_rows(database,"semio_model_placement",11,control)?;
- let mut geometries=model_rows(database,"semio_model_geometry_reference",3,control)?;
- model_unique_text(&entities,4,"invalid Semio model entity ownership or identity",control)?;
- let mut spatial_count=0;let mut element_count=0;
- for(index,&position)in entities.indices().iter().enumerate(){let row=entities.row(position)?;if row.integer(1)?!=1{return Err(model_invalid("invalid Semio model entity ownership or identity"));}match row.text(2)?{"spatial"=>spatial_count+=1,"element"=>element_count+=1,_=>return Err(model_invalid("unknown Semio model entity kind"))}model_checkpoint(control,index+1,entities.indices().len())?;}
- let mut spatial_order=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(spatial_count,control)?;
- let mut element_order=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(element_count,control)?;
- for &position in entities.indices(){match entities.row(position)?.text(2)?{"spatial"=>spatial_order.push(position),"element"=>element_order.push(position),_=>unreachable!()}model_checkpoint(control,spatial_order.len()+element_order.len(),entities.indices().len())?;}
- let spatial_order=ordered(spatial_order,&entities,3,control)?;let element_order=ordered(element_order,&entities,3,control)?;
- let mut parents=spatial_rows.parent_positions(3,control,"dangling Semio model spatial parent")?;
- RowIndex::cycles(&mut parents,control,"cyclic Semio model spatial hierarchy")?;
- let mut psets=model_rows(database,"semio_model_property_set",4,control)?;
- let mut properties=model_rows(database,"semio_model_property",8,control)?;
- let mut completed=0;
- for &index in psets.indices(){let row=psets.row(index)?;if element_rows.get(row.integer(1)?,control)?.is_none(){return Err(model_invalid("invalid Semio model property-set owner or identity"));}row.integer(2)?;completed+=1;model_checkpoint(control,completed,0)?;}
- for &index in properties.indices(){let row=properties.row(index)?;if psets.get(row.integer(1)?,control)?.is_none(){return Err(model_invalid("invalid Semio model property owner or identity"));}row.integer(2)?;completed+=1;model_checkpoint(control,completed,0)?;}
- let pset_order=model_groups(&psets,control)?;let property_order=model_groups(&properties,control)?;
- let mut snapshot=native::Owned::new(Self{schema:String::new(),spatial:Vec::new(),elements:Vec::new(),relations:Vec::new()});
- snapshot.get_mut().spatial=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(spatial_order.len(),control)?;
- snapshot.get_mut().elements=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(element_order.len(),control)?;
- for index in spatial_order{
-  let entity=entities.row(index)?;let row=spatial_rows.take(entity.rowid,control)?.ok_or_else(||model_invalid("missing Semio model spatial detail"))?;
-  let mut node=native::Owned::new(SpatialNode{id:String::new(),kind:SpatialKind::Site,name:String::new(),parent_id:None,placement:SemioTransform::default()});
-  node.get_mut().parent_id=optional_integer(row,3)?.map(|id|{let parent=entities.get(id,control)?.ok_or_else(||model_invalid("dangling Semio model spatial parent"))?;reconstruct_text(control,parent.text(4)?)}).transpose()?;
-  node.get_mut().kind=match row.text(1)?{"site"=>SpatialKind::Site,"building"=>SpatialKind::Building,"storey"=>SpatialKind::Storey,"space"=>SpatialKind::Space,_=>return Err(model_invalid("unknown Semio spatial kind"))};
-  node.get_mut().id=reconstruct_text(control,entity.text(4)?)?;
-  node.get_mut().name=reconstruct_text(control,row.text(2)?)?;
-  node.get_mut().placement=restore_placement(placements.take(entity.rowid,control)?.ok_or_else(||model_invalid("missing spatial placement"))?)?;
-  snapshot.get_mut().spatial.push(node.take());completed+=1;model_checkpoint(control,completed,0)?;
- }
- for index in element_order{
-  let entity=entities.row(index)?;let row=element_rows.take(entity.rowid,control)?.ok_or_else(||model_invalid("missing Semio model element detail"))?;
-  let mut element=native::Owned::new(SemioModelElement{id:String::new(),class:ElementClass::Wall,placement:SemioTransform::default(),geometry:GeometryRef::None,spatial_id:None,psets:Vec::new()});
-  let other=row.optional_text(2)?;
-  element.get_mut().class=match row.text(1)?{
-   "wall"=>ElementClass::Wall,"slab"=>ElementClass::Slab,"column"=>ElementClass::Column,"beam"=>ElementClass::Beam,"door"=>ElementClass::Door,"window"=>ElementClass::Window,"roof"=>ElementClass::Roof,"stair"=>ElementClass::Stair,"furniture"=>ElementClass::Furniture,
-   "other"=>ElementClass::Other{name:reconstruct_text(control,other.ok_or_else(||model_invalid("missing custom Semio element class name"))?)?},
-   _=>return Err(model_invalid("unknown Semio model element class"))
-  };
-  if row.text(1)?!="other"&&other.is_some(){return Err(model_invalid("unexpected custom Semio element class name"));}
-  element.get_mut().spatial_id=optional_integer(row,3)?.map(|id|{if spatial_rows.get(id,control)?.is_none(){return Err(model_invalid("dangling Semio element spatial reference"));}let entity=entities.get(id,control)?.ok_or_else(||model_invalid("dangling Semio element spatial reference"))?;reconstruct_text(control,entity.text(4)?)}).transpose()?;
-  let reference=geometries.take(entity.rowid,control)?.ok_or_else(||model_invalid("missing Semio model geometry reference"))?;let target=reference.optional_text(2)?;
-  element.get_mut().geometry=match reference.text(1)?{
-   "none" if target.is_none()=>GeometryRef::None,
-   "brep"=>GeometryRef::Brep{brep_id:reconstruct_text(control,target.ok_or_else(||model_invalid("missing Semio BRep geometry identity"))?)?},
-   "mesh"=>GeometryRef::Mesh{mesh_id:reconstruct_text(control,target.ok_or_else(||model_invalid("missing Semio mesh geometry identity"))?)?},
-   _=>return Err(model_invalid("invalid Semio model geometry reference shape"))
-  };
-  let range=model_group_range(&psets,&pset_order,entity.rowid,control)?;
-  element.get_mut().psets=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(range.len(),control)?;
-  for pset_index in range{
-   let source=psets.row(pset_order[pset_index])?;let pset=psets.take(source.rowid,control)?.ok_or_else(||model_invalid("invalid Semio model property-set owner or identity"))?;
-   let mut set=native::Owned::new(PropertySet{name:String::new(),properties:Vec::new()});
-   let range=model_group_range(&properties,&property_order,pset.rowid,control)?;
-   set.get_mut().properties=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(range.len(),control)?;
-   for property_index in range{
-    let source=properties.row(property_order[property_index])?;let property=properties.take(source.rowid,control)?.ok_or_else(||model_invalid("invalid Semio model property owner or identity"))?;
-    let mut field=native::Owned::new(Property{key:String::new(),value:PsetValue::Boolean{value:false}});
-    field.get_mut().value=match property.text(4)?{
-     "text" if property.is_null(6)?&&property.is_null(7)?=>PsetValue::Text{value:reconstruct_text(control,property.text(5)?)?},
-     "number" if property.is_null(5)?&&property.is_null(7)?=>PsetValue::Number{value:property.real(6)?},
-     "boolean" if property.is_null(5)?&&property.is_null(6)?=>PsetValue::Boolean{value:match property.integer(7)?{0=>false,1=>true,_=>return Err(model_invalid("invalid Semio model boolean property"))}},
-     _=>return Err(model_invalid("invalid Semio model property variant shape"))
-    };
-    field.get_mut().key=reconstruct_text(control,property.text(3)?)?;
-    set.get_mut().properties.push(field.take());completed+=1;model_checkpoint(control,completed,0)?;
-   }
-   set.get_mut().name=reconstruct_text(control,pset.text(3)?)?;
-   element.get_mut().psets.push(set.take());
-  }
-  element.get_mut().id=reconstruct_text(control,entity.text(4)?)?;
-  element.get_mut().placement=restore_placement(placements.take(entity.rowid,control)?.ok_or_else(||model_invalid("missing element placement"))?)?;
-  snapshot.get_mut().elements.push(element.take());
- }
- if spatial_rows.remaining()!=0||element_rows.remaining()!=0||placements.remaining()!=0||geometries.remaining()!=0||psets.remaining()!=0||properties.remaining()!=0{return Err(model_invalid("orphan or contradictory Semio model entity detail"));}
- let relations=model_rows(database,"semio_model_relation",8,control)?;
- model_unique_text(&relations,3,"invalid Semio model relation owner or identity",control)?;
- let mut relation_order=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(relations.indices().len(),control)?;
- for &index in relations.indices(){relation_order.push(index);model_checkpoint(control,relation_order.len(),relations.indices().len())?;}
- let relation_order=ordered(relation_order,&relations,2,control)?;
- snapshot.get_mut().relations=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(relation_order.len(),control)?;
- for index in relation_order{
-  let row=relations.row(index)?;if row.integer(1)?!=1{return Err(model_invalid("invalid Semio model relation owner or identity"));}
-  let mut edge=native::Owned::new(ModelRelation{id:String::new(),kind:RelationKind::Aggregates,from:String::new(),to:String::new()});let other=row.optional_text(5)?;
-  edge.get_mut().kind=match row.text(4)?{
-   "aggregates"=>RelationKind::Aggregates,"contained_in"=>RelationKind::ContainedIn,"connects_to"=>RelationKind::ConnectsTo,"fills_void"=>RelationKind::FillsVoid,"voids_element"=>RelationKind::VoidsElement,
-   "other"=>RelationKind::Other{label:reconstruct_text(control,other.ok_or_else(||model_invalid("missing custom Semio relation label"))?)?},
-   _=>return Err(model_invalid("unknown Semio model relation kind"))
-  };
-  if row.text(4)?!="other"&&other.is_some(){return Err(model_invalid("unexpected custom Semio model relation label"));}
-  edge.get_mut().id=reconstruct_text(control,row.text(3)?)?;
-  let from=entities.get(row.integer(6)?,control)?.ok_or_else(||model_invalid("dangling Semio model relation source"))?;edge.get_mut().from=reconstruct_text(control,from.text(4)?)?;
-  let to=entities.get(row.integer(7)?,control)?.ok_or_else(||model_invalid("dangling Semio model relation target"))?;edge.get_mut().to=reconstruct_text(control,to.text(4)?)?;
-  snapshot.get_mut().relations.push(edge.take());completed+=1;model_checkpoint(control,completed,0)?;
- }
- snapshot.get_mut().schema=reconstruct_text(control,document.text(1)?)?;
- model_checkpoint(control,completed,completed)?;
- Ok(snapshot.take())
-    }
+    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 
 fn float_columns(table:&str)->&'static [FloatColumn]{match table{"semio_model_property"=>&[FloatColumn::Binary64(6)],"semio_model_placement"=>&[FloatColumn::Binary64(1),FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10)],_=>&[]}}
@@ -253,3 +135,5 @@ pub(crate) mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
 pub(crate) mod native_decoding;
+
+#[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

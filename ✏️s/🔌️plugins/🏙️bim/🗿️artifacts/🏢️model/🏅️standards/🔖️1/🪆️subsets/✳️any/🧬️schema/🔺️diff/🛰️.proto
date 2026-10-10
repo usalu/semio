@@ -4,6 +4,9 @@ package semio.s.bim.model.diff;
 // 🔺️ BIM model diff schema — a sparse per-collection keyed delta.
 
 message ModelDiff {
+  map<string,StructuralSupportEntry> supports = 25000;
+  map<string,LoadCaseEntry> load_cases = 25001;
+  map<string,StructuralLoadEntry> loads = 25002;
   optional ProjectPatch project = 1;
   map<string, MaterialEntry> materials = 2;
   map<string, WallTypeEntry> wall_types = 3;
@@ -34,24 +37,32 @@ message ModelDiff {
   map<string, CeilingEntry> ceilings = 28;
   map<string, ZoneEntry> zones = 29;
   map<string, AreaSchemeEntry> area_schemes = 30;
-  map<string, ViewEntry> views = 31;
-  map<string, SheetEntry> sheets = 32;
-  map<string, ViewportEntry> viewports = 33;
-  map<string, SheetRevisionEntry> sheet_revisions = 34;
-  map<string, DimensionEntry> dimensions = 35;
-  map<string, TagEntry> tags = 36;
-  map<string, TextNoteEntry> text_notes = 37;
-  map<string, LeaderEntry> leaders = 38;
-  map<string, AnnotationStyleEntry> annotation_styles = 39;
-  map<string, FamilyEntry> families = 40;
-  map<string, FamilyParameterEntry> family_parameters = 41;
-  map<string, FamilySolidEntry> family_solids = 42;
-  map<string, WallSweepEntry> wall_sweeps = 43;
-  map<string, ScheduleEntry> schedules = 44;
-  map<string, PropertyTemplateEntry> property_templates = 45;
-  map<string, ClassificationSystemEntry> classification_systems = 46;
-  map<string, PropertySetEntry> properties = 47;
-  map<string, ClassificationSetEntry> classifications = 48;
+  map<string, SpaceConditionsEntry> space_conditions = 31;
+  map<string, ViewEntry> views = 32;
+  map<string, SheetEntry> sheets = 33;
+  map<string, ViewportEntry> viewports = 34;
+  map<string, SheetRevisionEntry> sheet_revisions = 35;
+  map<string, DimensionEntry> dimensions = 36;
+  map<string, TagEntry> tags = 37;
+  map<string, TextNoteEntry> text_notes = 38;
+  map<string, LeaderEntry> leaders = 39;
+  map<string, AnnotationStyleEntry> annotation_styles = 40;
+  map<string, FamilyEntry> families = 41;
+  map<string, FamilyParameterEntry> family_parameters = 42;
+  map<string, FamilySolidEntry> family_solids = 43;
+  map<string, ComponentEntry> components = 44;
+  map<string, ComponentOverrideEntry> component_overrides = 45;
+  map<string, MepElementEntry> mep_elements = 46;
+  map<string, ClashSetEntry> clash_sets = 47;
+  map<string, RuleEntry> rules = 48;
+  map<string, IssueEntry> issues = 49;
+  map<string, IssueCommentEntry> issue_comments = 50;
+  map<string, WallSweepEntry> wall_sweeps = 51;
+  map<string, ScheduleEntry> schedules = 52;
+  map<string, PropertyTemplateEntry> property_templates = 53;
+  map<string, ClassificationSystemEntry> classification_systems = 54;
+  map<string, PropertySetEntry> properties = 55;
+  map<string, ClassificationSetEntry> classifications = 56;
 }
 
 message Assigned {
@@ -69,6 +80,17 @@ message ClassificationSystemPatch {
   optional string edition = 2;
   optional string source = 3;
   optional ClassificationItemList entries = 4;
+}
+
+message SpaceConditionsPatch {
+  optional string occupancy = 1;
+  optional double occupancy_density = 2;
+  optional double heating_setpoint = 3;
+  optional double cooling_setpoint = 4;
+  optional double ventilation_rate = 5;
+  optional double lighting_power_density = 6;
+  optional double equipment_power_density = 7;
+  optional string schedule = 8;
 }
 
 message DimensionPatch {
@@ -135,6 +157,69 @@ message FamilySolidPatch {
   optional string material = 4;
   optional string visible = 5;
   optional ExprPoint3 offset = 6;
+}
+
+message ComponentPatch {
+  optional string storey = 1;
+  optional string family = 2;
+  optional Point2 position = 3;
+  optional double elevation = 4;
+  optional double rotation = 5;
+  optional bool mirrored = 6;
+  optional string host = 7;
+  optional MepSystem system = 8;
+  optional string name = 9;
+}
+
+message ComponentOverridePatch {
+  optional string component = 1;
+  optional string name = 2;
+  optional string value = 3;
+}
+
+message MepElementPatch {
+  optional string storey = 1;
+  optional MepSystem system = 2;
+  optional MepShape shape = 3;
+  optional Point3List path = 4;
+  optional string name = 5;
+}
+
+message ClashSetPatch {
+  optional string name = 1;
+  optional ElementSelector a = 2;
+  optional ElementSelector b = 3;
+  optional double tolerance = 4;
+  optional double clearance = 5;
+}
+
+message RulePatch {
+  optional string name = 1;
+  optional RuleKind kind = 2;
+  optional double limit = 3;
+  optional RuleSeverity severity = 4;
+  optional RuleScope scope = 5;
+}
+
+message IssuePatch {
+  optional string title = 1;
+  optional string description = 2;
+  optional IssueStatus status = 3;
+  optional IssuePriority priority = 4;
+  optional string assignee = 5;
+  optional string author = 6;
+  optional string created = 7;
+  optional StringList labels = 8;
+  optional StringList elements = 9;
+  optional ClashRef clash = 10;
+  optional IssueViewpoint viewpoint = 11;
+}
+
+message IssueCommentPatch {
+  optional string issue = 1;
+  optional string author = 2;
+  optional string date = 3;
+  optional string text = 4;
 }
 
 message SheetPatch {
@@ -235,6 +320,9 @@ message WindowTypePatch {
   optional double frame_depth = 6;
   optional uint32 panes = 7;
   optional string material = 8;
+  optional double u_value = 9;
+  optional double g_value = 10;
+  optional double frame_fraction = 11;
 }
 
 message DoorTypePatch {
@@ -246,6 +334,7 @@ message DoorTypePatch {
   optional DoorLeaves leaves = 6;
   optional Swing swing = 7;
   optional string material = 8;
+  optional double u_value = 9;
 }
 
 message SitePatch {
@@ -303,6 +392,9 @@ message CurtainWallTypePatch {
   optional CurtainPanel panel = 6;
   optional string panel_material = 7;
   optional string mullion_material = 8;
+  optional double u_value = 9;
+  optional double g_value = 10;
+  optional double frame_fraction = 11;
 }
 
 message CurtainPanelOverridePatch {
@@ -693,6 +785,12 @@ message AreaSchemeEntry {
   optional AreaSchemePatch patch = 3;
 }
 
+message SpaceConditionsEntry {
+  EntryKind entry = 1;
+  optional SpaceConditions record = 2;
+  optional SpaceConditionsPatch patch = 3;
+}
+
 message ViewEntry {
   EntryKind entry = 1;
   optional View record = 2;
@@ -765,6 +863,48 @@ message FamilySolidEntry {
   optional FamilySolidPatch patch = 3;
 }
 
+message ComponentEntry {
+  EntryKind entry = 1;
+  optional Component record = 2;
+  optional ComponentPatch patch = 3;
+}
+
+message ComponentOverrideEntry {
+  EntryKind entry = 1;
+  optional ComponentOverride record = 2;
+  optional ComponentOverridePatch patch = 3;
+}
+
+message MepElementEntry {
+  EntryKind entry = 1;
+  optional MepElement record = 2;
+  optional MepElementPatch patch = 3;
+}
+
+message ClashSetEntry {
+  EntryKind entry = 1;
+  optional ClashSet record = 2;
+  optional ClashSetPatch patch = 3;
+}
+
+message RuleEntry {
+  EntryKind entry = 1;
+  optional Rule record = 2;
+  optional RulePatch patch = 3;
+}
+
+message IssueEntry {
+  EntryKind entry = 1;
+  optional Issue record = 2;
+  optional IssuePatch patch = 3;
+}
+
+message IssueCommentEntry {
+  EntryKind entry = 1;
+  optional IssueComment record = 2;
+  optional IssueCommentPatch patch = 3;
+}
+
 message WallSweepEntry {
   EntryKind entry = 1;
   optional WallSweep record = 2;
@@ -833,8 +973,20 @@ message AnnotationAnchorList {
   repeated AnnotationAnchor items = 1;
 }
 
+message Point3List {
+  repeated Point3 items = 1;
+}
+
+message ElementClassList {
+  repeated ElementClass items = 1;
+}
+
 message StringList {
   repeated string items = 1;
+}
+
+message PhaseList {
+  repeated Phase items = 1;
 }
 
 message LayerList {
@@ -869,6 +1021,14 @@ message ScheduleGroupList {
   repeated ScheduleGroup items = 1;
 }
 
-message PhaseList {
-  repeated Phase items = 1;
-}
+message StructuralLocation { message Point { double station = 1; } message Line { double start = 1; double end = 2; } oneof location { Point point = 1; Line line = 2; bool area = 3; } }
+message Restraints { bool x = 1; bool y = 2; bool z = 3; bool rx = 4; bool ry = 5; bool rz = 6; }
+message StructuralSupport { string name = 1; string member = 2; StructuralLocation location = 3; Point3 offset = 4; Restraints restraints = 5; }
+message LoadCase { string name = 1; string category = 2; double factor = 3; }
+message StructuralLoad { string name = 1; string load_case = 2; string member = 3; StructuralLocation location = 4; Point3 force = 5; Point3 moment = 6; }
+message StructuralSupportPatch { optional string name = 1; optional string member = 2; optional StructuralLocation location = 3; optional Point3 offset = 4; optional Restraints restraints = 5; }
+message StructuralSupportEntry { oneof entry { StructuralSupport created = 1; bool deleted = 2; StructuralSupport replaced = 3; StructuralSupportPatch patched = 4; } }
+message LoadCasePatch { optional string name = 1; optional string category = 2; optional double factor = 3; }
+message LoadCaseEntry { oneof entry { LoadCase created = 1; bool deleted = 2; LoadCase replaced = 3; LoadCasePatch patched = 4; } }
+message StructuralLoadPatch { optional string name = 1; optional string load_case = 2; optional string member = 3; optional StructuralLocation location = 4; optional Point3 force = 5; optional Point3 moment = 6; }
+message StructuralLoadEntry { oneof entry { StructuralLoad created = 1; bool deleted = 2; StructuralLoad replaced = 3; StructuralLoadPatch patched = 4; } }

@@ -1,1 +1,8 @@
-{}
+{
+  "ceilings": {
+    "ce-living": {
+      "entry": "Patched",
+      "offset": 0.5
+    }
+  }
+}

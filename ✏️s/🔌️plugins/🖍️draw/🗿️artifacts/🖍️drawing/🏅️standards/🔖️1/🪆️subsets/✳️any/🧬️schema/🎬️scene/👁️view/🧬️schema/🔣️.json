@@ -53,21 +53,6 @@
       "stroke": {
         "type": "object"
       },
-      "text": {
-        "type": "object",
-        "required": [
-          "content",
-          "size"
-        ],
-        "properties": {
-          "content": {
-            "type": "string"
-          },
-          "size": {
-            "type": "number"
-          }
-        }
-      },
       "image": {
         "type": "object",
         "required": [

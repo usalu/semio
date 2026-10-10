@@ -1,15 +1,15 @@
 //! 🧰️ Kit types, designs, placed pieces, connections, typed child handles and history pins.
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,RowIndex};
+
+use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
 use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot,SemioKitType,SemioKitDesign,SemioKitPiece,SemioKitConnection};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use crate::standards::v1::subsets::base::schema::{geometry::{SemioPoint3,SemioQuaternion},child::validate_semio_child_identity};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🔍️ Resolves a retained, paid identity frontier with bounded text comparisons.
@@ -83,27 +83,9 @@ fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Resu
 /// 🚫️ Reports an authored Kit relationship refusal.
 fn kit_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 /// 🗃️ Binds declared Kit logical and IEEE columns to paid borrowed source positions.
-fn kit_rows<'a>(db:&'a SqliteDatabase,table:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<RowIndex<'a>,ValueError>{RowIndex::new(db,table,columns,float_columns(table),control,"invalid Semio kit row identity or columns")}
-/// 🔗️ Constructs one consumed descriptor inside its actual first-party retirement guard.
-fn kit_reference(references:&mut RowIndex<'_>,id:i64,control:&mut SqliteSnapshotControl<'_>)->Result<Owned<semio_framework_artifact_reference::ArtifactRef>,ValueError>{
- let row=references.take(id,control)?.ok_or_else(||kit_invalid("dangling or multiply owned Semio kit reference"))?;
- let mut target=Owned::new(semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}});
- target.get_mut().artifact_id=reconstruct_text(control,row.text(1)?)?;target.get_mut().dialect.artifact_kind=reconstruct_text(control,row.text(2)?)?;target.get_mut().dialect.standard=reconstruct_text(control,row.text(3)?)?;target.get_mut().dialect.subset=reconstruct_text(control,row.text(4)?)?;Ok(target)
-}
 /// 🔢️ Accepts only the original canonical unsigned decimal spelling without formatting allocation.
 fn kit_blob_size(text:&str)->Result<u64,ValueError>{
  if text.is_empty()||text.len()>20||(text.len()>1&&text.as_bytes()[0]==b'0')||!text.bytes().all(|byte|byte.is_ascii_digit()){return Err(kit_invalid("invalid Semio kit blob identity or size"))}text.parse::<u64>().map_err(|error|kit_invalid(&error.to_string()))
-}
-/// 📦️ Restores a consumed blob descriptor with guarded partial literal fields.
-fn kit_blob(blobs:&mut RowIndex<'_>,id:i64,control:&mut SqliteSnapshotControl<'_>)->Result<Owned<store::BlobRef>,ValueError>{
- let row=blobs.take(id,control)?.ok_or_else(||kit_invalid("dangling or multiply owned Semio kit blob pin"))?;let mut blob=Owned::new(store::BlobRef{hash:String::new(),size:kit_blob_size(row.text(2)?)?,media_type:String::new()});blob.get_mut().hash=reconstruct_text(control,row.text(1)?)?;blob.get_mut().media_type=reconstruct_text(control,row.text(3)?)?;Ok(blob)
-}
-/// 🪆️ Restores paid ordered handles while protecting each target before later child identity copying.
-fn children<S:Send+'static>(database:&SqliteDatabase,table:&str,subset:&str,references:&mut RowIndex<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<store::ArtifactChild<S>>,ValueError>{
- let rows=kit_rows(database,table,5,control)?;let order=rows.ordered(2,control,"relationship ordinals must be contiguous and unique")?;rows.unique_text(rows.indices(),3,control,"invalid Semio kit child ownership or identity")?;
- let mut result=Owned::new(semio_framework_os_kernel::sqlite_snapshot::transfer::reserve::<store::ArtifactChild<S>>(order.len(),control)?);
- for index in order{let row=rows.row(index)?;if row.integer(1)?!=1{return Err(kit_invalid("invalid Semio kit child ownership or identity"))}let mut target=kit_reference(references,row.integer(4)?,control)?;validate_semio_child_identity(row.text(3)?,target.get_mut(),subset).map_err(|error|kit_invalid(&error))?;let mut child=Owned::new(store::ArtifactChild::<S>::new(String::new(),target.take()));child.get_mut().child_id=reconstruct_text(control,row.text(3)?)?;result.get_mut().push(child.take());}
- control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,result.get_mut().len(),rows.len())?;Ok(result.take())
 }
 impl ArtifactSqliteSnapshot for SemioKitSnapshot{
 fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
@@ -130,45 +112,7 @@ semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHE
 }
 
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
-    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>, declared_schema: &str)->Result<Self,ValueError> {
-control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;let document=single_float_row(database,"semio_kit_document")?;identity(document,2)?;if document.rowid!=1{return Err(kit_invalid("invalid Semio kit document identifier"))}
-let types=kit_rows(database,"semio_kit_type",6,control)?;let designs=kit_rows(database,"semio_kit_design",5,control)?;let type_order=types.ordered(2,control,"relationship ordinals must be contiguous and unique")?;let design_order=designs.ordered(2,control,"relationship ordinals must be contiguous and unique")?;
-for rows in [&types,&designs]{rows.unique_text(rows.indices(),3,control,"invalid Semio kit native ownership or identity")?;for &index in rows.indices(){if rows.row(index)?.integer(1)?!=1{return Err(kit_invalid("invalid Semio kit native ownership or identity"))}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,rows.len())?;}}
-let mut pieces=kit_rows(database,"semio_kit_piece",15,control)?;let mut connections=kit_rows(database,"semio_kit_connection",8,control)?;
-for rows in [&pieces,&connections]{for &index in rows.indices(){if designs.get(rows.row(index)?.integer(1)?,control)?.is_none(){return Err(kit_invalid("invalid Semio kit relationship owner or identity"))}}}
-let piece_order=pieces.grouped_by(2,control,"Semio kit ordinals must be contiguous",|row|Ok((0,Some(row.integer(1)?))))?;let connection_order=connections.grouped_by(2,control,"Semio kit ordinals must be contiguous",|row|Ok((0,Some(row.integer(1)?))))?;
-let mut snapshot=Owned::new(Self{schema:String::new(),types:Vec::new(),designs:Vec::new(),objects:Vec::new(),models:Vec::new(),properties:None,representations:Vec::new()});
-snapshot.get_mut().types=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(type_order.len(),control)?;
-for index in type_order{let row=types.row(index)?;let mut native=Owned::new(SemioKitType{id:String::new(),name:String::new(),category:String::new()});native.get_mut().id=reconstruct_text(control,row.text(3)?)?;native.get_mut().name=reconstruct_text(control,row.text(4)?)?;native.get_mut().category=reconstruct_text(control,row.text(5)?)?;snapshot.get_mut().types.push(native.take());}
-snapshot.get_mut().designs=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(design_order.len(),control)?;
-for index in design_order{
- let row=designs.row(index)?;let mut design=Owned::new(SemioKitDesign{id:String::new(),name:String::new(),pieces:Vec::new(),connections:Vec::new()});design.get_mut().id=reconstruct_text(control,row.text(3)?)?;design.get_mut().name=reconstruct_text(control,row.text(4)?)?;
- let range=pieces.range_by(&piece_order,(0,Some(row.rowid)),control,|row|Ok((0,Some(row.integer(1)?))))?;pieces.unique_text(&piece_order[range.clone()],3,control,"duplicate Semio kit piece native identifier")?;design.get_mut().pieces=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(range.len(),control)?;
- for ordinal in range{let piece=pieces.take_index(piece_order[ordinal],control)?.ok_or_else(||kit_invalid("duplicate Semio kit piece ownership"))?;let mut native=Owned::new(SemioKitPiece{id:String::new(),type_id:String::new(),transform:SemioTransform::default()});native.get_mut().id=reconstruct_text(control,piece.text(3)?)?;let kind=types.get(piece.integer(4)?,control)?.ok_or_else(||kit_invalid("dangling Semio kit piece type"))?;native.get_mut().type_id=reconstruct_text(control,kind.text(3)?)?;native.get_mut().transform=SemioTransform{translation:SemioPoint3{x:piece.real(5)?,y:piece.real(6)?,z:piece.real(7)?},rotation:SemioQuaternion{x:piece.real(8)?,y:piece.real(9)?,z:piece.real(10)?,w:piece.real(11)?},scale:SemioPoint3{x:piece.real(12)?,y:piece.real(13)?,z:piece.real(14)?}};design.get_mut().pieces.push(native.take());}
- let range=connections.range_by(&connection_order,(0,Some(row.rowid)),control,|row|Ok((0,Some(row.integer(1)?))))?;connections.unique_text(&connection_order[range.clone()],3,control,"duplicate Semio kit connection native identifier")?;design.get_mut().connections=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(range.len(),control)?;
- for ordinal in range{let connection=connections.take_index(connection_order[ordinal],control)?.ok_or_else(||kit_invalid("duplicate Semio kit connection ownership"))?;let connecting=pieces.get(connection.integer(4)?,control)?.ok_or_else(||kit_invalid("dangling Semio kit connecting piece"))?;let connected=pieces.get(connection.integer(6)?,control)?.ok_or_else(||kit_invalid("dangling Semio kit connected piece"))?;if connecting.integer(1)?!=row.rowid||connected.integer(1)?!=row.rowid{return Err(kit_invalid("Semio kit connection crosses its owning design"))}
-  let mut native=Owned::new(SemioKitConnection{id:String::new(),connecting_piece_id:String::new(),connecting_port:String::new(),connected_piece_id:String::new(),connected_port:String::new()});native.get_mut().id=reconstruct_text(control,connection.text(3)?)?;native.get_mut().connecting_piece_id=reconstruct_text(control,connecting.text(3)?)?;native.get_mut().connecting_port=reconstruct_text(control,connection.text(5)?)?;native.get_mut().connected_piece_id=reconstruct_text(control,connected.text(3)?)?;native.get_mut().connected_port=reconstruct_text(control,connection.text(7)?)?;design.get_mut().connections.push(native.take());
- }snapshot.get_mut().designs.push(design.take());
-}
-let mut references=kit_rows(database,"semio_kit_reference",5,control)?;for &index in references.indices(){let row=references.row(index)?;for column in 1..5{row.text(column)?;}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,references.len())?;}
-snapshot.get_mut().objects=children::<SemioObjectSnapshot>(database,"semio_kit_object_child","object",&mut references,control)?;snapshot.get_mut().models=children::<SemioModelSnapshot>(database,"semio_kit_model_child","model",&mut references,control)?;
-let table=database.table("semio_kit_value_child")?;if !table.rows.is_empty(){let row=SqliteRow::new(table.single_row()?,float_columns("semio_kit_value_child"))?;identity(row,4)?;if row.integer(1)?!=1{return Err(kit_invalid("invalid Semio kit value child owner"))}let mut target=kit_reference(&mut references,row.integer(3)?,control)?;validate_semio_child_identity(row.text(2)?,target.get_mut(),"value").map_err(|error|kit_invalid(&error))?;let mut child=Owned::new(store::ArtifactChild::<SemioValueSnapshot>::new(String::new(),target.take()));child.get_mut().child_id=reconstruct_text(control,row.text(2)?)?;snapshot.get_mut().properties=Some(child.take());}
-let mut blobs=kit_rows(database,"semio_kit_blob",4,control)?;for &index in blobs.indices(){let row=blobs.row(index)?;row.text(1)?;kit_blob_size(row.text(2)?)?;row.text(3)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,blobs.len())?;}
-let representations=kit_rows(database,"semio_kit_representation",8,control)?;let representation_order=representations.ordered(2,control,"relationship ordinals must be contiguous and unique")?;snapshot.get_mut().representations=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(representation_order.len(),control)?;
-for index in representation_order{
- let row=representations.row(index)?;if row.integer(1)?!=1{return Err(kit_invalid("invalid Semio kit representation ownership or identity"))}let checkpoint=row.optional_text(6)?;let blob=if row.is_null(7)?{None}else{Some(row.integer(7)?)};
- let mut pin=Owned::new(store::LinkPin::Head);*pin.get_mut()=match row.text(5)?{
-  "head" if checkpoint.is_none()&&blob.is_none()=>store::LinkPin::Head,
-  "checkpoint" if blob.is_none()=>store::LinkPin::Checkpoint{id:reconstruct_text(control,checkpoint.ok_or_else(||kit_invalid("missing Semio kit checkpoint pin"))?)?},
-  "snapshot" if checkpoint.is_none()=>{let mut blob=kit_blob(&mut blobs,blob.ok_or_else(||kit_invalid("missing Semio kit snapshot pin"))?,control)?;store::LinkPin::Snapshot{blob:blob.take()}},
-  _=>return Err(kit_invalid("invalid Semio kit link pin shape"))
- };
- let mut target=kit_reference(&mut references,row.integer(4)?,control)?;let mut link=Owned::new(store::ArtifactLink{target:target.take(),role:String::new(),pin:pin.take()});let kind=types.get(row.integer(3)?,control)?.ok_or_else(||kit_invalid("dangling Semio kit representation type role"))?;link.get_mut().role=reconstruct_text(control,kind.text(3)?)?;snapshot.get_mut().representations.push(link.take());
-}
-if references.remaining()!=0||blobs.remaining()!=0||pieces.remaining()!=0||connections.remaining()!=0{return Err(kit_invalid("orphan Semio kit reference or blob pin descriptor"))}
-snapshot.get_mut().schema=reconstruct_text(control,document.text(1)?)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot.take())
-
-    }
+    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 
 fn float_columns(table:&str)->&'static [FloatColumn]{match table{"semio_kit_piece"=>&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13),FloatColumn::Binary64(14)],_=>&[]}}
@@ -189,3 +133,5 @@ pub(crate) mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
 pub(crate) mod native_decoding;
+
+#[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

@@ -1,5 +1,5 @@
 {
-  "wall_types": {
+  "classifications": {
     "wt-spare": {
       "entry": "Deleted"
     }
@@ -9,7 +9,7 @@
       "entry": "Deleted"
     }
   },
-  "classifications": {
+  "wall_types": {
     "wt-spare": {
       "entry": "Deleted"
     }

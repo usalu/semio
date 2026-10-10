@@ -6,14 +6,14 @@
 //! addresses the cell (`curtain_panel_overrides`, keyed by wall, `u` and `v`); overrides outside the grid and grid lines outside the extent are reported, never dropped silently.
 
 use super::super::storey_levels::{vertical_of, StoreyLevel};
-use super::super::wall_layout::axis_length;
+use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
 use crate::{CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 
 //#region 🔖️Values
 /// 🎯️ The panel of one in-grid cell that its override sets, with the id of the override.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct CellPanel {
     pub u: u32,
     pub v: u32,
@@ -25,7 +25,7 @@ pub struct CellPanel {
 /// (metres from the start of the axis, first `0`, last `length`) and `v_edges` (metres above the base, first `0`, last `height`), so there are `u_panels * v_panels` of them.
 /// `panel` is the default panel of the type (none while the type is missing), `overrides` the in-grid overrides ordered by row, column and id, `stray` the ids of the overrides
 /// outside the grid, `repeated` the ids of overrides that address a cell already addressed by an earlier id, `ignored_u` and `ignored_v` the grid lines outside the extent or repeated.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct CurtainLayout {
     pub base_z: f64,
     pub top_z: f64,

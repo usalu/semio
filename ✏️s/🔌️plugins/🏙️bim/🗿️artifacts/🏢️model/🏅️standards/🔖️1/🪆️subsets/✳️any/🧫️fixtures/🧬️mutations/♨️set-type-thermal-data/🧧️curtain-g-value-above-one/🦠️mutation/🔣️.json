@@ -1,0 +1,7 @@
+{
+  "mutation": "setTypeThermalData",
+  "id": "cwt",
+  "g_value": {
+    "value": 1.5
+  }
+}

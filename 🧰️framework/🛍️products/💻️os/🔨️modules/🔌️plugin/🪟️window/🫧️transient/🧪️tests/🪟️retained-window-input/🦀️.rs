@@ -57,20 +57,24 @@ fn retained_window_input_preserves_owner_generation() {
     let mut identities = std::collections::BTreeSet::new();
     let mut digests = std::collections::BTreeSet::new();
     let mut owner = WindowTransientStore::<ReplacementWindow>::new(Default::default());
+    let factory=ReplacementWindow::build_owners().state_retirement;
     for row in fixture["cases"].as_array().unwrap() {
         let snapshot = WindowTransientSnapshot {
             window_id: row["windowId"].as_str().unwrap().into(),
             window_kind_id: if row["windowKindId"] == "canvas" { "canvas" } else { "world" },
             generation: row["generation"].as_u64().unwrap(),
             document_generation: row["documentGeneration"].as_u64().unwrap(),
-            snapshot: Arc::new(owner.current_read_erased().unwrap()),
+            snapshot: owner.current_read_erased().unwrap(),
         };
         assert_eq!(snapshot.generation(), row["generation"].as_u64().unwrap());
         let digest = crate::app::test_window_transient_context_identity(Some(&snapshot));
-        assert_eq!(digest, crate::app::test_window_transient_context_identity(Some(&snapshot.clone())));
+        let duplicate=snapshot.try_duplicate().unwrap();
+        assert_eq!(digest, crate::app::test_window_transient_context_identity(Some(&duplicate)));
+        crate::component::window_mutation::close_test_original_with_pump(duplicate,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
         assert_ne!(digest, crate::app::test_window_transient_context_identity(None));
         digests.insert(digest);
         identities.insert((snapshot.window_id().to_owned(), snapshot.window_kind_id().to_owned(), snapshot.generation(), snapshot.document_generation()));
+        crate::component::window_mutation::close_test_original_with_pump(snapshot,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
     }
     assert_eq!(identities.len(), fixture["expectedUniqueOwners"].as_u64().unwrap() as usize);
     assert_eq!(digests.len(), identities.len());
@@ -124,13 +128,13 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
             }
         }
         assert!(publication.terminal_is_empty());
-        assert_eq!(old.capture(Some(&view(id))).unwrap().unwrap().snapshot.get::<ReplacementWindow>().unwrap().revision, revision.as_u64().unwrap());
+        let observed=old.capture(Some(&view(id))).unwrap().unwrap(); assert_eq!(observed.snapshot.get::<ReplacementWindow>().unwrap().revision, revision.as_u64().unwrap()); crate::component::window_mutation::close_test_original_with_pump(observed,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();}); crate::component::window_mutation::close_test_original_with_pump(authority,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();});
     }
     let authority = old.capture(Some(&view("canvas-left"))).unwrap().unwrap();
     let mut pending = old.begin(semio_framework_job::OperationId(2), &authority, mutation("canvas-left", 9)).unwrap();
     let mut replacement = WindowTransientOwnerRegistry::for_document_generation(expected["documentGeneration"].as_u64().unwrap());
     replacement.register::<ReplacementWindow>().unwrap();
-    assert_eq!(replacement.begin(semio_framework_job::OperationId(3), &authority, mutation("canvas-left", 9)).is_ok(), expected["oldPublicationAccepted"].as_bool().unwrap());
+    let rejected=replacement.begin(semio_framework_job::OperationId(3),&authority,mutation("canvas-left",9)).err().unwrap(); assert!(!expected["oldPublicationAccepted"].as_bool().unwrap()); crate::component::window_mutation::close_test_original(rejected.mutation);
     assert!(replacement.advance(pending.as_mut(), grant).is_err());
     for _ in 0..1024 {
         if matches!(pending.close_step(grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
@@ -145,11 +149,11 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
         .map(|id| {
             let snapshot = replacement.capture(Some(&view(id))).unwrap().unwrap().snapshot;
             assert_eq!(snapshot.document_generation(), 1);
-            (id.clone(), serde_json::json!(snapshot.get::<ReplacementWindow>().unwrap().revision))
+            let result=(id.clone(),serde_json::json!(snapshot.get::<ReplacementWindow>().unwrap().revision)); crate::component::window_mutation::close_test_original_with_pump(snapshot,||{let demand=replacement.maintenance_demands(4096).unwrap();replacement.maintenance_step(quoted(demand,1)).unwrap();}); result
         })
         .collect();
     assert_eq!(serde_json::Value::Object(actual), expected["after"]);
-    drop(authority);
+    crate::component::window_mutation::close_test_original_with_pump(authority,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();});
     for registry in [&mut old, &mut replacement] {
         assert_eq!(registry.close_step(RetainedCloneGrant { maximum_items: 0, ..original_transient_grant() }).unwrap(), PluginLifecycleStep::Progress(Default::default()));
         assert!(!registry.terminal_is_empty());
@@ -162,9 +166,13 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
     }
 }
 
+fn quoted(demand:RetirementDemand,items:usize)->RetainedCloneGrant {
+    RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}
+}
+
 struct PausedPartitionDisposer {
     paused: Arc<std::sync::atomic::AtomicBool>,
-    inner: Box<dyn ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>>>,
+    inner: Option<Box<dyn ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>>>>,
 }
 
 impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPartitionDisposer {
@@ -180,8 +188,10 @@ impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPa
     fn terminal_is_empty(&self, owner: &WindowTransientStore<ReplacementWindow>) -> bool {
         !self.paused.load(std::sync::atomic::Ordering::Acquire) && self.inner.terminal_is_empty(owner)
     }
-}
 
+    fn terminal_is_empty(&self,_:&WindowTransientStore<ReplacementWindow>)->bool {self.inner.is_none() && !self.paused.load(std::sync::atomic::Ordering::Acquire)}
+    fn terminal_frame_release_bytes(&self)->Option<usize>{self.inner.is_none().then_some(std::mem::size_of::<Self>())}
+}
 #[test]
 fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
@@ -250,13 +260,11 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
     };
     let captured = registry.capture(Some(&view)).unwrap().unwrap();
     publish(&mut registry, &captured, expected["firstRevision"].as_u64().unwrap());
-    assert_eq!(registry.begin(semio_framework_job::OperationId(2), &captured, mutation(expected["staleRevision"].as_u64().unwrap())).is_ok(), expected["staleBeginAccepted"].as_bool().unwrap());
-    let mut live = captured.clone();
-    registry.refresh(&mut live).unwrap();
-    assert_ne!(live.generation, captured.generation);
+    let rejected=registry.begin(semio_framework_job::OperationId(2),&captured,mutation(expected["staleRevision"].as_u64().unwrap())).err().unwrap(); assert!(!expected["staleBeginAccepted"].as_bool().unwrap()); crate::component::window_mutation::close_test_original(rejected.mutation);
+    let captured_generation=captured.generation; let mut live=captured; for _ in 0..1024 {let demand=registry.refresh_demands(&live,4096).unwrap();if matches!(registry.refresh(&mut live,quoted(demand,1)).unwrap(),crate::component::window_mutation::WindowAuthorityRefreshStep::Ready(_)){break;}} assert_ne!(live.generation,captured_generation);
     assert!(expected["refreshedBeginAccepted"].as_bool().unwrap());
     publish(&mut registry, &live, expected["liveRevision"].as_u64().unwrap());
-    drop((captured, live));
+    crate::component::window_mutation::close_test_original_with_pump(live,||{let demand=registry.maintenance_demands(4096).unwrap();registry.maintenance_step(quoted(demand,1)).unwrap();});
     for _ in 0..2048 {
         if matches!(registry.close_step(original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
             break;

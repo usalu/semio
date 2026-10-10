@@ -1,1 +1,8 @@
-{}
+{
+  "annotation_styles": {
+    "as-plan": {
+      "entry": "Patched",
+      "gap": 0.2
+    }
+  }
+}

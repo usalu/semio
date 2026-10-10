@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 /// 🧪️ F6: `dsl::DslScalar` — a plain unit-variant enum binds as `DslField` directly (no
 /// `DslVariants`/`Statements` needed), so `DeflateSnapshot`'s `compression_level_hint` field and
 /// `DeflateMutation::SetCompressionParams`'s `level_hint` argument can both embed it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DeflateLevelHint {
     Fastest,
@@ -56,7 +56,7 @@ impl DeflateLevelHint {
 /// `store::ArtifactPack` below — NOT a replacement (same treatment as `BinarySnapshot`).
 /// `DslRecord` only gives this type `DslField` so it can be embedded as a block in a record; it does not touch the artifact's own
 /// honest hex-text/raw-binary envelope format.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate")]
 pub struct DeflateSnapshot {

@@ -612,7 +612,7 @@ where
 {
     fn drop(&mut self) {
         assert!(
-            self.terminal && self.request.is_none() && self.owners.is_none() && self.history.is_none() && self.initial.is_none() && self.pending_edit.is_none() && self.envelope.is_none() && self.runtime.is_none() && self.active.is_none(),
+            std::thread::panicking() || (self.terminal && self.request.is_none() && self.owners.is_none() && self.history.is_none() && self.initial.is_none() && self.pending_edit.is_none() && self.envelope.is_none() && self.runtime.is_none() && self.active.is_none()),
             "member-open reached Drop before exact adoption or bounded rejection retirement"
         );
     }

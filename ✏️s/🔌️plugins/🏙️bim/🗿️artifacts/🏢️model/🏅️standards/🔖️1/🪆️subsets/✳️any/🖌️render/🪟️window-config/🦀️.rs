@@ -47,7 +47,7 @@ macro_rules! bim_window_config {
             }
         }
 
-        #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+        #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
         #[value(tag = "kind", rename_all = "kebab-case")]
         pub enum $mutation {
             Replace { config: $config },

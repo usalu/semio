@@ -14,6 +14,31 @@ impl ChildTextView<'_>{
 }
 fn fault(kind:ValueRefusalKind,detail:&'static str)->ValueError{ValueError::new(kind,detail)}
 
+/// 🎟️ A nested owner receives one item and one level less depth than its parent, with every byte axis unchanged.
+pub fn nested_grant(grant:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth.saturating_sub(1),..grant}}
+/// 🚦️ An under-granted axis yields, while a depth below the quote is refused.
+pub fn grant_funds(demand:RetirementDemand,grant:RetainedCloneGrant)->Result<bool,ValueError>{
+    if grant.maximum_items==0{return Ok(false)}
+    if grant.maximum_depth<demand.depth{return Err(fault(ValueRefusalKind::DepthLimit,"child retirement turn exceeds its admitted depth"))}
+    Ok(grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes)
+}
+/// 📏️ A parent forwarding into a nested owner needs one level more than that owner.
+pub fn deeper(demand:RetirementDemand)->RetirementDemand{RetirementDemand{depth:demand.depth+1,..demand}}
+/// 📏️ Reads the four independent quotes of an erased owner.
+pub fn quote(owner:&dyn ErasedSnapshotRetirement)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(0)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
+/// 🤝️ Hands one retained authority off without moving payload.
+pub fn handoff()->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}
+/// 💤️ A turn that cannot yet fund its quote spends nothing.
+pub fn yielded()->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress::default())}
+/// 🔁️ A parent never completes through its child's receipt; it completes only when it is itself terminal on entry.
+pub fn settle(step:RetainedCloneStep)->RetainedCloneStep{RetainedCloneStep::Progress(step.progress())}
+/// 📏️ Quotes the removal of the retained tail element.
+pub fn pop_demand<T,const N:usize>(list:&PagedList<T,N>)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{depth:list.next_pop_depth_demand().map_err(ValueError::from)?,..Default::default()})}
+/// 📏️ Quotes the physical release of the next whole empty backing allocation.
+pub fn release_demand<T,const N:usize>(list:&PagedList<T,N>)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{release_bytes:list.next_release_allocation_bytes().map_err(ValueError::from)?,depth:list.next_release_depth_demand().map_err(ValueError::from)?,..Default::default()})}
+/// ♻️ Releases one whole empty backing allocation under the granted release axis.
+pub fn release_page<T,const N:usize>(list:&mut PagedList<T,N>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let step=list.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..Default::default()}))}
+
 /// 🏷️ Locale and terminology fields borrow exact semantic owners rather than synthesizing strings.
 pub trait PagedChildLabels:Send+Sync{fn len(&self)->usize;fn text(&self,label:usize,terminology:Terminology,locale:Locale)->Option<ChildTextView<'_>>;}
 pub struct PagedChildGroup<'a>{pub owner:ChildTextView<'a>,pub slot:ChildTextView<'a>,pub child_id:ChildTextView<'a>,pub schema:ChildTextView<'a>,pub operations:&'a dyn OperationSourceCollection,pub labels:&'a dyn PagedChildLabels}

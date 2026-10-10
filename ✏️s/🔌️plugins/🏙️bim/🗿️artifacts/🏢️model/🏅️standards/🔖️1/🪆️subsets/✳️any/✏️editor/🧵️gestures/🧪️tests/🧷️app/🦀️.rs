@@ -11,9 +11,10 @@ const WINDOW: &str = "bim-plan";
 fn on_a_big_stack<F: std::future::Future<Output = ()>>(test: impl FnOnce() -> F + Send + 'static) {
     std::thread::Builder::new()
         .name("bim-gesture-app".into())
-        .stack_size(8 * 1024 * 1024)
+        .stack_size(std::env::var("BIM_STACK_MB").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(8) * 1024 * 1024)
         .spawn(move || {
             let mut future = std::pin::pin!(test());
+            eprintln!("[DEBUG] future bytes {} app {} bimapp {}", std::mem::size_of_val(&future), std::mem::size_of_val(&crate::editor::bim::unit_tests::context::bim_app()), std::mem::size_of::<crate::editor::bim::unit_tests::context::BimApp>());
             let mut context = std::task::Context::from_waker(std::task::Waker::noop());
             while future.as_mut().poll(&mut context).is_pending() {
                 std::thread::yield_now();
@@ -224,4 +225,23 @@ fn an_offset_previews_in_the_window_transient_and_its_closing_click_writes_one_u
         history_verb(&mut app, "undo").await;
         assert_eq!(app.snapshot().expect("snapshot").walls.len(), 4, "one row undoes it");
     });
+}
+
+#[test]
+fn debug_stack_probe() {
+    let phase: usize = std::env::var("BIM_PHASE").ok().and_then(|v| v.parse().ok()).unwrap_or(99);
+    let mb: usize = std::env::var("BIM_STACK_MB").ok().and_then(|v| v.parse().ok()).unwrap_or(2);
+    eprintln!("[DEBUG] sizes ActionDefinition {} AppDefinition {}", std::mem::size_of::<semio_framework_plugin::ActionDefinition>(), std::mem::size_of::<semio_framework_plugin::AppDefinition>());
+    std::thread::Builder::new().name("probe".into()).stack_size(mb * 1024 * 1024).spawn(move || {
+        use crate::editor::bim as b;
+        match phase {
+            1 => {}
+            2 => { let _ = b::modes::edit::definition(); }
+            3 => { let _ = b::modes::edit::windows::plan::definition(); let _ = b::modes::edit::windows::world::definition(); let _ = b::modes::edit::windows::sheet::definition(); let _ = b::modes::edit::windows::schedule::definition(); let _ = b::modes::edit::windows::family::definition(); let _ = b::modes::edit::windows::section::definition(); }
+            4 => { let _ = b::create_bim_app(); }
+            5 => { let d = b::create_bim_app(); let _ = semio_framework_plugin::AppActionRegistry::from_definition(&d); }
+            _ => {}
+        }
+    }).unwrap().join().unwrap();
+    eprintln!("[DEBUG] phase {phase} ok at {mb} MB");
 }

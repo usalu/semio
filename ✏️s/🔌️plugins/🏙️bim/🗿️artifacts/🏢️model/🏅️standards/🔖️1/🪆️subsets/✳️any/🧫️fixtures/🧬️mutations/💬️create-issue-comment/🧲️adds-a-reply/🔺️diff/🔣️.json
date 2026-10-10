@@ -1,0 +1,11 @@
+{
+  "issue_comments": {
+    "c-3": {
+      "author": "UG",
+      "date": "2026-10-09T11:30:00+02:00",
+      "entry": "Created",
+      "issue": "i-1",
+      "text": "Fixed in the next revision."
+    }
+  }
+}

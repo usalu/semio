@@ -1,10 +1,7 @@
 {
   "classification_systems": {
     "cs-uni": {
-      "entry": "Created",
-      "name": "Uniclass 2015",
       "edition": "2024-03",
-      "source": "https://www.thenbs.com/our-tools/uniclass",
       "entries": [
         {
           "code": "EF",
@@ -12,13 +9,13 @@
         },
         {
           "code": "EF_25",
-          "title": "Walls and barriers",
-          "parent": "EF"
+          "parent": "EF",
+          "title": "Walls and barriers"
         },
         {
           "code": "EF_25_10",
-          "title": "Walls",
-          "parent": "EF_25"
+          "parent": "EF_25",
+          "title": "Walls"
         },
         {
           "code": "Pr",
@@ -26,15 +23,18 @@
         },
         {
           "code": "Pr_20",
-          "title": "Structure and general products",
-          "parent": "Pr"
+          "parent": "Pr",
+          "title": "Structure and general products"
         },
         {
           "code": "Pr_20_93",
-          "title": "Structural units and assemblies",
-          "parent": "Pr_20"
+          "parent": "Pr_20",
+          "title": "Structural units and assemblies"
         }
-      ]
+      ],
+      "entry": "Created",
+      "name": "Uniclass 2015",
+      "source": "https://www.thenbs.com/our-tools/uniclass"
     }
   }
 }

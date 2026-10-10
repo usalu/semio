@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
+import factorySelectorSchema from "../../🧬️schema/🎯️factory-selector/🔣️.json";
 import { describe, expect, it } from "vitest";
-import { projectNativeCodecReceiptPublicationV1 } from "../../♻️native-receipt/🟦️.ts";
+import { projectNativeCodecReceiptPublicationV1, selectNativeCodecPublicationFactoryV1 } from "../../♻️native-receipt/🟦️.ts";
 const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/♻️native-receipt/🔣️.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/♻️native-receipt/🔣️.json",import.meta.url),"utf8"));
 describe("native codec receipt publication",()=>{
@@ -25,5 +27,16 @@ describe("native codec receipt publication",()=>{
   expect(projected.catalog.nativeCodecs[0].packSchemaHash).toBe(receipt.packSchemaHash);
   expect(projected.catalog.nativeCodecs[0].protocolSourceSha256).toBe(receipt.protocolSourceSha256);
   expect(JSON.stringify(input)).toBe(before);
+ });
+});
+
+describe("native codec publication factory selection",()=>{
+ for(const row of fixture.selectionCases)it(row.id,()=>{
+  const oracle=new Ajv2020({strict:false}).compile({type:"object",required:["factoryId","rows"],properties:{factoryId:factorySelectorSchema,rows:{type:"array",contains:{type:"object",required:["factory_id","artifact"],properties:{factory_id:{const:row.factoryId},artifact:{type:"string",pattern:"^[a-z][a-z0-9-]*$"}}},minContains:1,maxContains:1}}});
+  expect(Boolean(oracle(row))).toBe(row.accepted);
+  const before=JSON.stringify(row.rows);
+  if(!row.accepted)expect(()=>selectNativeCodecPublicationFactoryV1(row.rows,row.factoryId)).toThrow();
+  else{const selected=selectNativeCodecPublicationFactoryV1(row.rows,row.factoryId);expect(selected.artifact).toBe(row.artifact);expect(selected.factory_id).toBe(row.factoryId);expect(row.rows.includes(selected)).toBe(true);}
+  expect(JSON.stringify(row.rows)).toBe(before);
  });
 });

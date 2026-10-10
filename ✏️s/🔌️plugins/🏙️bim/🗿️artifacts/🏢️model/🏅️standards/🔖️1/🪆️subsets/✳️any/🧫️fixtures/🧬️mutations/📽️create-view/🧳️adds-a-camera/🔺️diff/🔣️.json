@@ -1,1 +1,24 @@
-{}
+{
+  "views": {
+    "v-eye": {
+      "building": "bldg-1",
+      "camera": {
+        "azimuth": 0.8,
+        "distance": 25.0,
+        "pitch": 0.5,
+        "target": {
+          "x": 4.0,
+          "y": 3.0
+        },
+        "target_height": 1.5
+      },
+      "depth": 100.0,
+      "detail": "Medium",
+      "entry": "Created",
+      "hidden": [],
+      "kind": "Perspective",
+      "name": "Eye level",
+      "scale": 100
+    }
+  }
+}

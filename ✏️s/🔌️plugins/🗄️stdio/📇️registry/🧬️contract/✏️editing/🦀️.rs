@@ -814,6 +814,14 @@ pub trait BoundedNativeEditingEditor: SnapshotEditingEditor {
 
 pub type ArtifactPreparationFactory<S, M> = std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<S, M>>;
 
+fn retained_copy_close_demands(bytes:&Vec<u8>,reserved:bool,complete:bool)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{release_bytes:bytes.capacity(),depth:usize::from(bytes.capacity()!=0||reserved||complete),..Default::default()}}
+fn retained_copy_close_step(bytes:&mut Vec<u8>,reserved:&mut bool,complete:&mut bool,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+ use semio_framework_job::InteractiveJobCloseStep;use semio_framework_value::retained_clone::RetainedCloneProgress;let demand=retained_copy_close_demands(bytes,*reserved,*complete);
+ if demand.depth==0{return InteractiveJobCloseStep::Complete{progress:Default::default()};}if grant.maximum_items==0||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Pending{progress:Default::default()};}
+ if bytes.capacity()!=0{let original=std::mem::take(bytes);let released_bytes=original.capacity();drop(original);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}};}
+ *reserved=false;*complete=false;InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}
+}
+
 /// 🧵️ Copies one immutable UTF-8 owner through fixed byte grants without cloning the whole value
 /// in a scheduler turn.
 #[derive(Default)]
@@ -863,30 +871,8 @@ impl RetainedTextCopy {
         std::mem::take(&mut self.bytes)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        if !self.bytes.is_empty() {
-            if maximum_bytes == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            let released_bytes = maximum_bytes.min(self.bytes.len());
-            self.bytes.truncate(self.bytes.len() - released_bytes);
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
-        }
-        if self.bytes.capacity() != 0 {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.bytes = Vec::new();
-            self.reserved = false;
-            self.complete = false;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        self.reserved = false;
-        self.complete = false;
-        InteractiveJobCloseStep::Complete
-    }
-
+    pub fn close_demands(&self)->semio_framework_value::RetirementDemand{retained_copy_close_demands(&self.bytes,self.reserved,self.complete)}
+    pub fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{retained_copy_close_step(&mut self.bytes,&mut self.reserved,&mut self.complete,grant)}
     pub fn terminal_is_empty(&self) -> bool {
         self.bytes.is_empty() && self.bytes.capacity() == 0 && !self.reserved && !self.complete
     }
@@ -941,30 +927,8 @@ impl RetainedBytesCopy {
         std::mem::take(&mut self.bytes)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        if !self.bytes.is_empty() {
-            if maximum_bytes == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            let released_bytes = maximum_bytes.min(self.bytes.len());
-            self.bytes.truncate(self.bytes.len() - released_bytes);
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
-        }
-        if self.bytes.capacity() != 0 {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.bytes = Vec::new();
-            self.reserved = false;
-            self.complete = false;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        self.reserved = false;
-        self.complete = false;
-        InteractiveJobCloseStep::Complete
-    }
-
+    pub fn close_demands(&self)->semio_framework_value::RetirementDemand{retained_copy_close_demands(&self.bytes,self.reserved,self.complete)}
+    pub fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{retained_copy_close_step(&mut self.bytes,&mut self.reserved,&mut self.complete,grant)}
     pub fn terminal_is_empty(&self) -> bool {
         self.bytes.is_empty() && self.bytes.capacity() == 0 && !self.reserved && !self.complete
     }
@@ -1004,14 +968,16 @@ where
         }
     }
 
+    fn begin_demand(&self,mutation:&M,lane:semio_framework_plugin::plugin_app_close_prelude::store::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{if(self.route.recognizes)(mutation){self.route.factory.begin_demand(mutation,lane)}else{self.fallback.begin_demand(mutation,lane)}}
     fn begin(
         &self,
         request: semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M>,
-    ) -> Result<Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparation<S, M>>, semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M>> {
+        grant:semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparation<S, M>>,semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError,semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M>)> {
         if (self.route.recognizes)(&request.mutation) {
-            self.route.factory.begin(request)
+            self.route.factory.begin(request,grant)
         } else {
-            self.fallback.begin(request)
+            self.fallback.begin(request,grant)
         }
     }
 }

@@ -1,1 +1,8 @@
-{}
+{
+  "ramps": {
+    "rp-1": {
+      "entry": "Patched",
+      "landing_start": 2.0
+    }
+  }
+}

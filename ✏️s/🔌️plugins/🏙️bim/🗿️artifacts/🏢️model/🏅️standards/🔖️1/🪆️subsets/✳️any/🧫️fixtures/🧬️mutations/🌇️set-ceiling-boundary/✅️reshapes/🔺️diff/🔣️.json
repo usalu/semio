@@ -1,1 +1,37 @@
-{}
+{
+  "ceilings": {
+    "ce-living": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 9.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 9.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      ],
+      "entry": "Patched"
+    }
+  }
+}

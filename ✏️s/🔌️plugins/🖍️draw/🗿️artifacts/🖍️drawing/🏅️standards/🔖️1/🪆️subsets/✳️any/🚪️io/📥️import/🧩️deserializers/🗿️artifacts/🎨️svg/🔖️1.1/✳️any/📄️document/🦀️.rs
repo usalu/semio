@@ -5,8 +5,8 @@ use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::attributes::bind_svg_attribute;
 type Style=BTreeMap<String,SvgAttributeValue>;
-const INHERITED:&[&str]=&["fill","fill-rule","fill-opacity","stroke","stroke-width","stroke-opacity","stroke-linecap","stroke-linejoin","stroke-dasharray","visibility","font-size","color"];
-const UNSUPPORTED:&[&str]=&["clip-path","mask","filter","vector-effect","stroke-dashoffset","font-family","font-weight","font-style","text-anchor"];
+const INHERITED:&[&str]=&["fill","fill-rule","fill-opacity","stroke","stroke-width","stroke-opacity","stroke-linecap","stroke-linejoin","stroke-dasharray","visibility","font-size","font-family","color"];
+const UNSUPPORTED:&[&str]=&["clip-path","mask","filter","vector-effect","stroke-dashoffset","font-weight","font-style","text-anchor"];
 fn attr<'a>(attrs:&'a [SvgAttr],key:&str)->Option<&'a SvgAttributeValue> {attrs.iter().find(|item|item.name==key).map(|item|&item.value)}
 fn text_attr<'a>(attrs:&'a [SvgAttr],key:&str)->Option<&'a str> {attr(attrs,key).and_then(SvgAttributeValue::text)}
 fn local(name:&str)->&str {name.rsplit(':').next().unwrap_or(name)}
@@ -225,7 +225,7 @@ impl SvgImportJob {
             if children.iter().any(|node|matches!(node,SvgNode::Element {..})){return Err("Positioned SVG text spans are not supported yet".into());}
             let size=nonnegative(length(field("font-size"),16.0)?)?;
             let mut content=semio_framework_value::paged::PagedUtf8::default();for node in children{if let SvgNode::Text{text}|SvgNode::CData{text}=node{content.try_push_str(&text).map_err(|error|error.into_message())?;}}
-            self.append(DrawingLayerNode::Text(DrawingTextBody {base,x:length(attr(&attrs,"x"),0.0)?,y:length(attr(&attrs,"y"),0.0)?-size,content,size}));
+            self.append(DrawingLayerNode::Text(DrawingTextBody {font_family:match value("font-family"){Some(family)=>crate::DrawingFontFamily::from_catalog_family(family).map_err(str::to_owned)?,None=>crate::DrawingFontFamily::Anta},base,x:length(attr(&attrs,"x"),0.0)?,y:length(attr(&attrs,"y"),0.0)?-size,content,size}));
         }else{
             let segments=geometry(tag,&attrs)?;
             if let Some(paint)=value("fill").filter(|paint|paint.starts_with("url(")){base.attributes.fill=gradient_fill(paint,&self.gradients,&segments,self.user_viewport,fraction(field("fill-opacity"))?)?;}

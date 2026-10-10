@@ -218,6 +218,7 @@ fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
             semio_framework_plugin::ActionArgOption::new("name", LocalizedLabel::native("Name", "Name")),
             semio_framework_plugin::ActionArgOption::new("textContent", LocalizedLabel::native("Text Content", "Textinhalt")),
             semio_framework_plugin::ActionArgOption::new("textSize", LocalizedLabel::native("Text Size", "Schriftgröße")),
+            semio_framework_plugin::ActionArgOption::new("fontFamily",LocalizedLabel::native("Font Family","Schriftfamilie")),
             semio_framework_plugin::ActionArgOption::new("imageKey", LocalizedLabel::native("Image Asset Key", "Bildressourcenschlüssel")),
             semio_framework_plugin::ActionArgOption::new("imageWidth", LocalizedLabel::native("Image Width", "Bildbreite")),
             semio_framework_plugin::ActionArgOption::new("imageHeight", LocalizedLabel::native("Image Height", "Bildhöhe")),
@@ -1200,7 +1201,7 @@ use export_job::DrawingExportCommandJobFactory;
 const DRAWING_IMAGE_RAW_BYTES:usize=89_481_584;
 const DRAWING_IMAGE_TOOL_IDS: &[&str] = &["importImage"];
 const DRAWING_IMAGE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importImage", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importImage", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Interaction] },
 ];
 #[path="🎮️commands/📥️import-image/🧵️admission/🦀️.rs"]
 mod image_job;
@@ -1769,18 +1770,13 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_framework_plugin::no_draft_store_disposer())
     }
 
-    /// ♻️ A returned presence read is retired through the bounded transient root cursor, the same
-    /// factory every other presence-carrying plugin installs. `SharedValueRetirementFactory` — what
-    /// this used to be — answers `Blocked` for as long as the returned `Arc` has any other strong
-    /// reference, and the app close ladder has no way to release that reference, so every fixture
-    /// that had published presence once blocked forever on "presence returned local owner is held
-    /// during app close" and then aborted the test binary out of `FixedOperationRegistry::drop`.
+    /// 👥️ Returned local reads retain the actual Draw presence fields and original Arc backing.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(std::sync::Arc::new(drawing::presence::DrawingPresenceRetirementFactory))
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(std::sync::Arc::new(drawing::presence::DrawingPresenceRetirementFactory))
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {

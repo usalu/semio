@@ -17,9 +17,9 @@
           "g": 0.6,
           "b": 0.6
         },
-        "density": 2400.0,
-        "conductivity": 1.0,
-        "specific_heat": 900.0
+        "density": 2400,
+        "conductivity": 1,
+        "specific_heat": 900
       },
       "m-steel": {
         "name": "Steel",
@@ -29,9 +29,9 @@
           "g": 0.62,
           "b": 0.65
         },
-        "density": 7850.0,
-        "conductivity": 1.0,
-        "specific_heat": 900.0
+        "density": 7850,
+        "conductivity": 1,
+        "specific_heat": 900
       },
       "m-wood": {
         "name": "Oak",
@@ -41,9 +41,9 @@
           "g": 0.4,
           "b": 0.2
         },
-        "density": 700.0,
-        "conductivity": 1.0,
-        "specific_heat": 900.0
+        "density": 700,
+        "conductivity": 1,
+        "specific_heat": 900
       },
       "m-clay": {
         "name": "Clay Tile",
@@ -53,18 +53,18 @@
           "g": 0.3,
           "b": 0.2
         },
-        "density": 1900.0,
-        "conductivity": 1.0,
-        "specific_heat": 900.0
+        "density": 1900,
+        "conductivity": 1,
+        "specific_heat": 900
       }
     },
     "sites": {
       "site-1": {
         "name": "Plot",
-        "latitude": 47.0,
-        "longitude": 8.0,
-        "elevation": 100.0,
-        "true_north": 0.0,
+        "latitude": 47,
+        "longitude": 8,
+        "elevation": 100,
+        "true_north": 0,
         "boundary": []
       }
     },
@@ -73,10 +73,10 @@
         "site": "site-1",
         "name": "Frame",
         "origin": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0,
+          "y": 0
         },
-        "rotation": 0.0,
+        "rotation": 0,
         "elevation": 2.5
       }
     },
@@ -85,7 +85,7 @@
         "building": "bldg-1",
         "name": "Ground",
         "level": 0,
-        "height": 3.0
+        "height": 3
       },
       "st-first": {
         "building": "bldg-1",
@@ -133,45 +133,45 @@
             "outline": [
               {
                 "point": {
-                  "x": 0.0,
-                  "y": 0.0
+                  "x": 0,
+                  "y": 0
                 },
-                "bulge": 0.0
+                "bulge": 0
               },
               {
                 "point": {
                   "x": 0.4,
-                  "y": 0.0
+                  "y": 0
                 },
-                "bulge": 0.0
+                "bulge": 0
               },
               {
                 "point": {
                   "x": 0.4,
                   "y": 0.1
                 },
-                "bulge": 0.0
+                "bulge": 0
               },
               {
                 "point": {
                   "x": 0.1,
                   "y": 0.1
                 },
-                "bulge": 0.0
+                "bulge": 0
               },
               {
                 "point": {
                   "x": 0.1,
                   "y": 0.4
                 },
-                "bulge": 0.0
+                "bulge": 0
               },
               {
                 "point": {
-                  "x": 0.0,
+                  "x": 0,
                   "y": 0.4
                 },
-                "bulge": 0.0
+                "bulge": 0
               }
             ]
           }
@@ -182,7 +182,7 @@
         "name": "Zero",
         "profile": {
           "Rectangle": {
-            "width": 0.0,
+            "width": 0,
             "depth": 0.3
           }
         },
@@ -194,14 +194,14 @@
         "storey": "st-ground",
         "column_type": "ct-rect",
         "position": {
-          "x": 1.0,
-          "y": 2.0
+          "x": 1,
+          "y": 2
         },
         "rotation": 0.5,
-        "base_offset": 0.0,
+        "base_offset": 0,
         "top": {
           "StoreyTop": {
-            "offset": 0.0
+            "offset": 0
           }
         },
         "phase": "New",
@@ -211,10 +211,10 @@
         "storey": "st-ground",
         "column_type": "ct-circle",
         "position": {
-          "x": 4.0,
-          "y": 2.0
+          "x": 4,
+          "y": 2
         },
-        "rotation": 0.0,
+        "rotation": 0,
         "base_offset": 0.1,
         "top": {
           "Storey": {
@@ -229,14 +229,14 @@
         "storey": "st-first",
         "column_type": "ct-i",
         "position": {
-          "x": 2.0,
-          "y": 5.0
+          "x": 2,
+          "y": 5
         },
-        "rotation": 1.0,
+        "rotation": 1,
         "base_offset": 0.2,
         "top": {
           "Unconnected": {
-            "height": 2.0
+            "height": 2
           }
         },
         "phase": "New",
@@ -246,11 +246,11 @@
         "storey": "st-ground",
         "column_type": "ct-custom",
         "position": {
-          "x": 6.0,
-          "y": 1.0
+          "x": 6,
+          "y": 1
         },
         "rotation": -0.3,
-        "base_offset": 0.0,
+        "base_offset": 0,
         "top": {
           "StoreyTop": {
             "offset": 0.5
@@ -263,14 +263,14 @@
         "storey": "st-ground",
         "column_type": "ct-bad",
         "position": {
-          "x": 0.0,
-          "y": 0.0
+          "x": 0,
+          "y": 0
         },
-        "rotation": 0.0,
-        "base_offset": 0.0,
+        "rotation": 0,
+        "base_offset": 0,
         "top": {
           "StoreyTop": {
-            "offset": 0.0
+            "offset": 0
           }
         },
         "phase": "New",
@@ -280,14 +280,14 @@
         "storey": "st-ground",
         "column_type": "ct-rect",
         "position": {
-          "x": 0.0,
-          "y": 4.0
+          "x": 0,
+          "y": 4
         },
-        "rotation": 0.0,
-        "base_offset": 0.0,
+        "rotation": 0,
+        "base_offset": 0,
         "top": {
           "Unconnected": {
-            "height": 0.0
+            "height": 0
           }
         },
         "phase": "New",
@@ -297,18 +297,60 @@
         "storey": "st-ground",
         "column_type": "ct-none",
         "position": {
-          "x": 0.0,
-          "y": 6.0
+          "x": 0,
+          "y": 6
         },
-        "rotation": 0.0,
-        "base_offset": 0.0,
+        "rotation": 0,
+        "base_offset": 0,
         "top": {
           "StoreyTop": {
-            "offset": 0.0
+            "offset": 0
           }
         },
         "phase": "New",
         "name": "Unknown type"
+      },
+      "c-lean": {
+        "storey": "st-ground",
+        "column_type": "ct-rect",
+        "position": {
+          "x": 9,
+          "y": 2
+        },
+        "rotation": 0.3,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Leaning rectangle",
+        "tilt": {
+          "direction": 0.7,
+          "angle": 0.25
+        }
+      },
+      "c-lean-i": {
+        "storey": "st-first",
+        "column_type": "ct-i",
+        "position": {
+          "x": 9,
+          "y": 5
+        },
+        "rotation": 0,
+        "base_offset": 0.2,
+        "top": {
+          "Unconnected": {
+            "height": 2
+          }
+        },
+        "phase": "New",
+        "name": "Leaning I",
+        "tilt": {
+          "direction": -2,
+          "angle": 0.5
+        }
       }
     }
   },
@@ -395,7 +437,47 @@
     },
     "c-bad-type": null,
     "c-flat": null,
-    "c-unknown-type": null
+    "c-unknown-type": null,
+    "c-lean": {
+      "family": "Column",
+      "volume": 0.371550608634,
+      "volume_tolerance": 1e-09,
+      "min": [
+        8.761517555261,
+        1.792580490675,
+        0.0
+      ],
+      "max": [
+        9.824371265336,
+        2.700906855157,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "c-lean-i": {
+      "family": "Column",
+      "volume": 0.019827194335,
+      "volume_tolerance": 1e-09,
+      "min": [
+        8.434982462107,
+        3.833918142589,
+        3.2
+      ],
+      "max": [
+        9.110333432,
+        5.172578960844,
+        5.2
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 2.0,
+      "base_z": 3.2,
+      "top_z": 5.2
+    }
   },
   "meshes": {}
 }

@@ -1,0 +1,16 @@
+{
+  "mutation": "createComponent",
+  "id": "cmp-new",
+  "component": {
+    "storey": "st-ground",
+    "family": "fam-ghost",
+    "position": {
+      "x": 5,
+      "y": 2
+    },
+    "elevation": 0,
+    "rotation": 0,
+    "mirrored": false,
+    "name": "Lost"
+  }
+}

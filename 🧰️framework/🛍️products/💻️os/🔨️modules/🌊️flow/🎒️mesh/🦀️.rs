@@ -213,10 +213,10 @@ pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, Strin
         let value=semio_framework_pack_json::parse(core::str::from_utf8(metadata).map_err(|error|error.to_string())?,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
         if value.as_object().is_none_or(|object|object.iter().any(|(name,_)|!["attributes","materials","textures","componentReferences"].contains(&name))) {return Err("unknown mesh metadata field".into());}
         let decode=|name|semio_framework_pack_json::to_dsl_value(&value[name]);
-        (if value["attributes"].is_null() {Default::default()}else {std::collections::BTreeMap::from_value(decode("attributes")).map_err(|error|error.into_message())?},
-         if value["materials"].is_null() {Default::default()}else {std::collections::BTreeMap::from_value(decode("materials")).map_err(|error|error.into_message())?},
-         if value["textures"].is_null() {Default::default()}else {std::collections::BTreeMap::from_value(decode("textures")).map_err(|error|error.into_message())?},
-         if value["componentReferences"].is_null() {Default::default()}else {std::collections::BTreeMap::from_value(decode("componentReferences")).map_err(|error|error.into_message())?})
+        (if value["attributes"].is_null() {Default::default()}else {FromValue::from_value(decode("attributes")).map_err(|error|error.into_message())?},
+         if value["materials"].is_null() {Default::default()}else {FromValue::from_value(decode("materials")).map_err(|error|error.into_message())?},
+         if value["textures"].is_null() {Default::default()}else {FromValue::from_value(decode("textures")).map_err(|error|error.into_message())?},
+         if value["componentReferences"].is_null() {Default::default()}else {FromValue::from_value(decode("componentReferences")).map_err(|error|error.into_message())?})
     };
     let mesh=semio_framework::MeshData {
         attributes,materials,textures,component_references,

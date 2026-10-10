@@ -63,7 +63,7 @@ const RELATED_OBJECTS_INDEX: usize = 4;
 const RELATING_GROUP_INDEX: usize = 6;
 
 /// 🏗️ One `IfcStructuralAnalysisModel`.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SavAnalysisModel {
     pub global_id: String,
@@ -73,7 +73,7 @@ pub struct SavAnalysisModel {
 }
 
 /// ⚖️ One `IfcStructuralLoadGroup`.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SavLoadGroup {
     pub global_id: String,
@@ -85,7 +85,7 @@ pub struct SavLoadGroup {
 }
 
 /// 🔗️ One `IfcRelAssignsToGroup` relating structural members to their group.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SavGroupAssignment {
     pub global_id: String,
@@ -108,7 +108,7 @@ pub mod set_view_definition;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3SavMutation")]
 pub enum Ifc2x3SavMutation {
     SetViewDefinition(set_view_definition::SetViewDefinition),

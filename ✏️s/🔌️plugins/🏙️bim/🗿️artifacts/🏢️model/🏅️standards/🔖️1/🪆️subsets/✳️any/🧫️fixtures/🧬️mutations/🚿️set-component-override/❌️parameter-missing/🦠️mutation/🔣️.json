@@ -1,0 +1,6 @@
+{
+  "mutation": "setComponentOverride",
+  "component": "cmp-table",
+  "name": "height",
+  "value": "2 m"
+}

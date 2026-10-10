@@ -1,22 +1,20 @@
-//! 🔗️ Typed immutable source authority retains every original owner through full granted closure.
+//! 🔗️ Immutable clone sources capture actual original authority and expose sealed projection leases.
 use super::{RetainedCloneBinding,RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneProjection,RetainedCloneRef,RetainedCloneStep,RetainedOwnedProjection,RETAINED_CLONE_SOURCE_IDS};
-use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,shared::SharedControlledRetirement}};
-use std::{mem::ManuallyDrop,sync::{Arc,atomic::Ordering}};
+use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}}};
+use std::{mem::ManuallyDrop,sync::atomic::Ordering};
 
-pub(super) struct RetainedCloneLeaseOwner {pub(super) id:u64,payload:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
-/// 🧷️ Shared metadata exposes only immutable identity; its payload is accessed after unique Arc transfer.
-unsafe impl Sync for RetainedCloneLeaseOwner {}
-
-struct SourcePayload<T:RetireOwned+Sync,A:RetireOwned> {source:SharedControlledRetirement<T>,authority:ControlledRetirement<A>}
-impl<T:RetireOwned+Sync,A:RetireOwned> ErasedSnapshotRetirement for SourcePayload<T,A> {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {if !self.source.terminal_is_empty(){self.source.step(grant)}else{self.authority.step(grant)}}
-    fn terminal_is_empty(&self)->bool {self.source.terminal_is_empty()&&self.authority.terminal_is_empty()}
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {if !self.source.terminal_is_empty(){self.source.next_copy_byte_demand()}else{self.authority.next_copy_byte_demand()}}
-    fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError> {if !self.source.terminal_is_empty(){self.source.next_capacity_byte_demand(body)}else{self.authority.next_capacity_byte_demand(body)}}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError> {if !self.source.terminal_is_empty(){self.source.next_release_byte_demand()}else{self.authority.next_release_byte_demand()}}
-    fn next_depth_demand(&self)->Result<usize,ValueError> {if !self.source.terminal_is_empty(){self.source.next_depth_demand()}else{self.authority.next_depth_demand()}}
+pub(super) struct RetainedCloneLeaseOwner{pub(super) id:u64,payload:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
+/// 🧷️ Immutable projection leases expose their payload only after unique original transfer.
+unsafe impl Sync for RetainedCloneLeaseOwner{}
+struct SourcePayload<A:RetireOwned+Sync,B:RetireOwned>{source:ControlledRetirement<SealedShared<A>>,authority:ControlledRetirement<B>}
+impl<A:RetireOwned+Sync,B:RetireOwned> ErasedSnapshotRetirement for SourcePayload<A,B>{
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.source.terminal_is_empty(){self.source.step(grant)}else{self.authority.step(grant)}}
+ fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()&&self.authority.terminal_is_empty()}
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_copy_byte_demand()}else{self.authority.next_copy_byte_demand()}}
+ fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_capacity_byte_demand(body)}else{self.authority.next_capacity_byte_demand(body)}}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_release_byte_demand()}else{self.authority.next_release_byte_demand()}}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_depth_demand()}else{self.authority.next_depth_demand()}}
 }
-
 struct LeaseRetirement(RetainedCloneLeaseOwner);
 impl RetirementCursor for LeaseRetirement {
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
@@ -29,12 +27,8 @@ impl RetirementCursor for LeaseRetirement {
     fn next_depth_demand(&self)->Result<usize,ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.depth))}
     fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
 }
-impl RetireOwned for RetainedCloneLeaseOwner {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(LeaseRetirement(self))}
-    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<LeaseRetirement>())}
-    fn controlled_retirement_supported()->bool {true}
-}
-impl Drop for RetainedCloneLeaseOwner {fn drop(&mut self){assert!(std::thread::panicking()||self.payload.is_none(),"retained source metadata abandoned original typed authority");if self.payload.is_none(){unsafe{ManuallyDrop::drop(&mut self.payload);}}}}
+impl RetireOwned for RetainedCloneLeaseOwner{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(LeaseRetirement(self))}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<LeaseRetirement>())}fn controlled_retirement_supported()->bool{true}}
+impl Drop for RetainedCloneLeaseOwner{fn drop(&mut self){assert!(std::thread::panicking()||self.payload.is_none(),"original source projection payload remains retained");if self.payload.is_none(){unsafe{ManuallyDrop::drop(&mut self.payload);}}}}
 
 
 pub struct RetainedCloneSource<T:RetireOwned+Sync> {owner:ManuallyDrop<Option<Arc<T>>>,lease:Option<RetainedCloneBinding>,owner_close:ManuallyDrop<Option<SharedControlledRetirement<T>>>}
@@ -85,15 +79,14 @@ impl<T:RetireOwned+Sync> RetainedCloneSource<T> {
     }
     pub fn terminal_is_empty(&self)->bool {self.owner.is_none()&&self.owner_close.is_none()&&self.lease.is_none()}
 }
-impl<T:RetireOwned+Sync> Drop for RetainedCloneSource<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"source must finish full granted ownership closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);ManuallyDrop::drop(&mut self.owner_close);}}}}
 
 #[cfg(test)]
 pub(crate) struct FixtureSource<T:RetireOwned+Sync>(RetainedCloneSource<T>);
 #[cfg(test)]
 impl<T:RetireOwned+Sync> std::ops::Deref for FixtureSource<T>{type Target=RetainedCloneSource<T>;fn deref(&self)->&Self::Target{&self.0}}
 #[cfg(test)]
-impl<T:RetireOwned+Sync> FixtureSource<T>{pub(crate) fn into_owner(mut self)->Arc<T>{let owner=self.0.take_owner().unwrap();self.drain();owner}fn drain(&mut self){for _ in 0..100000{if self.0.terminal_is_empty(){return;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:self.0.next_close_capacity_byte_demand(4096).unwrap(),maximum_release_bytes:self.0.next_close_release_byte_demand().unwrap(),maximum_depth:self.0.next_close_depth_demand().unwrap()};let(step,heap)=crate::value::observe_retirement_allocations(||self.0.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}panic!("fixture source custody did not close");}}
+impl<T:RetireOwned+Sync> FixtureSource<T>{fn drain(&mut self){for _ in 0..100000{if self.0.terminal_is_empty(){return;}let copy=self.0.next_close_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.0.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:self.0.next_close_release_byte_demand().unwrap(),maximum_depth:self.0.next_close_depth_demand().unwrap()};let(step,heap)=crate::value::observe_retirement_allocations(||self.0.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}panic!("original source fixture did not physically close");}}
 #[cfg(test)]
 impl<T:RetireOwned+Sync> Drop for FixtureSource<T>{fn drop(&mut self){if !std::thread::panicking(){self.drain();}}}
 #[cfg(test)]
-impl<T:RetireOwned+Sync> RetainedCloneSource<T>{pub(crate) fn from_owner(owner:T)->FixtureSource<T>{Self::fixture_from_authority(Arc::new(owner),())}pub(crate) fn fixture_from_authority<A:RetireOwned>(owner:Arc<T>,authority:A)->FixtureSource<T>{let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:Self::constructor_capacity_bytes::<A>(),maximum_depth:1,..Default::default()};FixtureSource(Self::admit(owner,authority,grant).unwrap_or_else(|(error,_,_)|panic!("typed source fixture admission: {error}")).0)}}
+impl<T:RetireOwned+Sync> RetainedCloneSource<T>{pub(crate) fn from_owner(owner:T)->FixtureSource<T>{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:Self::constructor_copy_bytes(),maximum_capacity_bytes:Self::owned_constructor_capacity_bytes::<()>(),maximum_depth:1,..Default::default()};FixtureSource(Self::admit_owned(owner,(),grant).unwrap_or_else(|_|panic!("original fixture source admission")).0)}}

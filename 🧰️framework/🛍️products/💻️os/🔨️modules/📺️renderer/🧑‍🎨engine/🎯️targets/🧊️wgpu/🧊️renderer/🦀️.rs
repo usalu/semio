@@ -3827,7 +3827,7 @@ impl RendererAssetDecodeSession {
             operation: allocate_operation_id(),
             generation: Generation(1),
             cancel: root_cancel_token(),
-            config: BatchDriveConfig { site: "renderer_asset_decode", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
+            config: BatchDriveConfig { retained: semio_framework_job::RetainedCloneGrant::default(), site: "renderer_asset_decode", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
             now_us: semio_framework_job::default_now_us,
         };
         let (session, rejected, boundary) = match WorkerJobSession::try_new(job, params) {
@@ -4365,7 +4365,7 @@ fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> 
         operation: allocate_operation_id(),
         generation: Generation(generation),
         cancel: cancel.clone(),
-        config: BatchDriveConfig { site: "os_renderer_native_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US },
+        config: BatchDriveConfig { retained: semio_framework_job::RetainedCloneGrant::default(), site: "os_renderer_native_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US },
         now_us: semio_framework_job::default_now_us,
     };
     let (session, rejected, result) = match semio_framework_job::WorkerJobSession::try_new(job, params) {
@@ -13312,7 +13312,7 @@ impl RuntimeMailbox {
             &mut sequence,
         );
 
-        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,&mut context);
         if !terrain.ownership.fits(terrain_grant) {self.record_frame_fault("world3d terrain retirement receipt exceeded caller grant");return false;}
         match terrain.step {
@@ -13326,9 +13326,9 @@ impl RuntimeMailbox {
         false
     }
 
-    pub(crate) fn close_component_world_step(&self, target: &crate::interpreter::ScenePointerTarget, grant: semio_framework_value::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
-        let Ok(mut runtime)=self.try_lock() else {return Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress::default()));};
-        let Some(interaction)=runtime.interaction.as_mut() else {return Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress::default()));};
+    pub(crate) fn close_component_world_step(&self, target: &crate::interpreter::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
+        let Ok(mut runtime)=self.try_lock() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
+        let Some(interaction)=runtime.interaction.as_mut() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
         interaction.shell.close_component_world_step(target,grant,context)
     }
 
@@ -15998,7 +15998,7 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Fault;
                 };
                 world3d_ingest_trace(&surface_id, state, "phase-entry");
-                let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+                let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
                 let terrain=infinite_world::world::step_world3d_terrain(state,terrain_grant,context);
                 if !terrain.ownership.fits(terrain_grant) {
                     runtime.record_frame_fault("world3d terrain ownership receipt exceeded caller grants");

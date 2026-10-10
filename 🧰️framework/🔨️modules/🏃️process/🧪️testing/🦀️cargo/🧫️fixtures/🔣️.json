@@ -94,6 +94,18 @@
       "leaseDirectory": "/owner/resource-leases"
     }
   ],
+  "libtestCompilation": {
+    "manifest": "[package]\nname=\"draw_cargo_profile_oracle\"\nversion=\"0.0.0\"\nedition=\"2021\"\n[workspace]\n[profile.dev]\nopt-level=0\ncodegen-units=1\n[profile.test]\nopt-level=1\ncodegen-units=2\n",
+    "library": "#[test] fn selected_original_profile() { std::fs::write(std::env::var(\"DRAW_CARGO_ASSERTION_FILE\").unwrap(), b\"library\").unwrap(); }\n",
+    "integration": "#[test] fn selected_original_profile() { std::fs::write(std::env::var(\"DRAW_CARGO_ASSERTION_FILE\").unwrap(), b\"integration\").unwrap(); }\n",
+    "unselected": "compile_error!(\"unselected integration target was compiled\");\n",
+    "cases": [
+      {"id":"default-library","arguments":["--lib","selected_original_profile"],"expected":"library"},
+      {"id":"exact-integration","arguments":["--test","selected","selected_original_profile"],"expected":"integration"},
+      {"id":"explicit-dev-library","arguments":["--lib","--profile","dev","selected_original_profile"],"expected":"library"}
+    ],
+    "buildPrefix": ["test","--no-run"]
+  },
   "arguments": [
     "--features",
     "feature-a",

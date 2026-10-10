@@ -1,0 +1,28 @@
+{
+  "mep_elements": {
+    "mep-new": {
+      "entry": "Created",
+      "name": "Return duct",
+      "path": [
+        {
+          "x": 0.0,
+          "y": 4.0,
+          "z": 2.6
+        },
+        {
+          "x": 6.0,
+          "y": 4.0,
+          "z": 2.6
+        }
+      ],
+      "shape": {
+        "Duct": {
+          "height": 0.2,
+          "width": 0.4
+        }
+      },
+      "storey": "st-ground",
+      "system": "Return"
+    }
+  }
+}

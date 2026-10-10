@@ -34,7 +34,8 @@
       "x": 10,
       "y": 20,
       "content": "Text",
-      "size": 24
+      "size": 24,
+      "fontFamily": "anta"
     }
   ],
   "artboard": {

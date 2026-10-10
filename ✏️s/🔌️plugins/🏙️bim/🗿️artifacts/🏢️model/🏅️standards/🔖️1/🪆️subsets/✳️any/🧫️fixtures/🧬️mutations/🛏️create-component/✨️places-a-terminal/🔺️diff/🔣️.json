@@ -1,0 +1,18 @@
+{
+  "components": {
+    "cmp-new": {
+      "elevation": 2.4,
+      "entry": "Created",
+      "family": "fam-lamp",
+      "mirrored": true,
+      "name": "Lamp 2",
+      "position": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "rotation": 1.57,
+      "storey": "st-ground",
+      "system": "Supply"
+    }
+  }
+}

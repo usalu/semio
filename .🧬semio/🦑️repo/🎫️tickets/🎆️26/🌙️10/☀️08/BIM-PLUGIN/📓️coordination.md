@@ -193,3 +193,93 @@ w09-w13,w11-annotations,w12-views}.md` per `r11-audit-brief.md`. Next: Sonnet fi
 - r11-w07-zones written/unverified (oracles green). Plan after `r11-exec-store.md`: ONE integration agent
   (`r13-integrate`) makes the BIM crate compile end-to-end (lib + tests + wasm), runs all BIM_BLESS + python `write`
   steps from each r11-exec report, runs `cargo test --lib`, and files failures per area; then area owners fix in parallel.
+- 06:15 w05/w06 written/unverified (oracles green). Framework chain down to 1 error in some logs (◻️2d text font:
+  PagedListAllocationError Display), r11-store helpers still porting plugin/playbook/dag tests. Disk 65 GB free;
+  plan: prune `build-bim-N/debug/incremental` of idle slots if < 40 GB.
+- WP-08 IO helper (`r12-exec-w2-wp08-io.md`): IFC attach/sweeps/reveals export+import written, unverified; COUNTED
+  48→49 breaks house measure table until rewritten. Incident: a `taskkill /IM python.exe` may have killed peers' oracle
+  runs → integration pass re-runs all python oracles.
+- w2-wp14-sheets written/unverified (`r12-exec-w2-wp14-sheets.md`; shapely sheet oracle agrees; 9 leaves tags
+  14000–14008). Ran `r3-f1-gen-model.ts` at 06:09: checked — generated snapshot/patches/facets cover all new types
+  (families, sheets, sweeps, panel overrides, templates, classification systems), so no clobber. Integration item:
+  add `pypdf` to the python test group (pyproject/uv.lock, zero-touch) for the PDF oracle.
+- ~08:00 `r11-exec-store.md` landed (os-kernel/plugin/dag/playbook/infinite/artifact-flow compile; os-flow migrating;
+  stdio-contract half-written edit). w2-f2-families, w2-wp19-frame written/unverified (oracles agree; lab 56 green).
+  Launched `r13-integrate` (BIM-side 677 migration, compile, blesses, full tests, failure table); everyone else waits
+  for `T/r13-compiles.flag`. Read-only law audits launched (Haiku): mutation laws, inference + no-state laws.
+  Gaps noted: BIM sqlite lane not mounted/stale (WP-19); viewer progress UI (w03). W2 batch B held until compile.
+- 11:55 stall found: r11-store's os-flow helper failed (~09:00) silently → os-flow still ~209 errors, integrator
+  (last log 08:09, no report) blocked. Re-assigned os-flow to r11-store directly; asked r13-integrate for a status
+  report. w04 finisher stalled after its report (resume after compile if needed).
+- Mutation-law audit → `r13-audit-mutation-laws.md` (L3/L7 clean 173/173; L1 inference reach-in via helpers; L6 2 keyed
+  lists; 306 unblessed fixtures; PropertyKind leftover) + rulings R-L1/R-L5/R-L6. Queued `r13-laws` (after compile flag).
+- Inference-law audit → `r13-audit-inference-laws.md` (snapshot PASS; H1 views drop annotations; M2 BIM thread_local
+  session registry → framework-owned per-instance session; M4 scans → index nodes; M5 exports re-derive; M6 flow bim
+  extension divergent; tests for all projections). Queued `r13-inference-laws` (after compile flag) and
+  `r14-extensions` (flow/cad bim extensions consolidation).
+- ~14:00 MILESTONE: framework + stdio chain compiles to the BIM crate (r11-store; value crate now supports non-Copy
+  arrays; window_config close bug fixed; 35 GB hung REPL output freed). BIM crate: lib 3 / tests 87 errors → r13-integrate.
+  z-incremental engine verified in isolation (32 tests); BIM-side bench pending. WP-18, WP-19 written/unverified.
+  Ruling: svg-tiny variant one name everywhere (approved verb).
+- 14:09 `r13-compiles.flag` created by r13-integrate (lib, tests, wasm green). First test run: stack overflow in
+  `bim-plan-window-isolation` (8 MB thread); before it 86 pass / 109 fail → integrator iterating.
+- W2 batch B wave 1 launched: w2-f3-components (components + MEP), w2-wp16-coordination (3D clash, rules, issues,
+  BCF), w2-wp17-ifc4 (IFC4 + full coverage + M5), w2-wp20-energy (envelope, U-values, gbXML, energy bridge).
+  Wave 2 next: WP-15 options/worksets, WP-21 structure, WP-22 costing; then r13-laws, r13-inference-laws, r14-extensions.
+- 14:50 w2-f3-components: schema (Component, ComponentOverride, MepElement, MepSystem, MepShape, Point3; ran r3-f1-gen-model, lib check green) done; contract T/r12-w2-f3-contract.md; sub-agents w2-f3-leaves (tags 10000..10007), w2-f3-graph, w2-f3-editor, w2-f3-assets launched.
+- 15:05 w2-f3-assets (IFC): adds export modules `io/export/ifc/🪑️components` + `🌀️mep` (2 `STAGES` rows before "links", 2 `#[path]` mods in `ifc/🦀️.rs`, appended classes in projection `COUNTED`/python `COUNTED`+`MEASURED`) and import `io/import/ifc/🪑️components` + `🌀️mep` (2 calls in `import_document`), schema-aware via `x.by(v2x3, v4)` (2x3: IfcFurnishingElement/IfcFlowTerminal/IfcBuildingElementProxy/IfcFlowSegment+IfcSystem; IFC4: IfcFurniture/IfcSanitaryTerminal/IfcLightFixture/IfcDuctSegment/IfcPipeSegment/IfcCableCarrierSegment+IfcDistributionSystem). wp17: please keep those rows when you rewrite the files; new oracle case `🪑️components` in `🏗️export-bim-1-ifc`.
+- First full test count (r13-integrate): 7410 pass / 1513 fail (~1000 unblessed fixtures), 11 stack-overflow mount
+  tests skipped → `r13-stack` launched (root-cause, no stack raising). Generators: 185 leaves, 1444 oracle scenarios.
+  check-names: 5 duplicate-emoji dirs. Batch-B agents told to keep `--lib --tests` compile-atomic.
+- r11-store: svg-tiny kept `restore-non-tiny` (restore is approved); kernel tests 360/400 store-unit, 70/637 os_store
+  failing (wire sources, close deadlocks, member-close stalls, livelock). Ruling: Weak never blocks retirement. r11-store
+  continues on framework runtime correctness, then plugin test migration.
+- 15:10 w2-wp17-ifc4: IFC writer is schema-aware NOW (unverified: peers' components/mep/clash/energy errors block the crate). API for f3-assets: `ifc::Schema::{Ifc2x3,Ifc4}`, `Export::schema()`, `x.by(v2x3, v4)`, `ifc::STAGES: &[(name, fn(&mut Export))]` (add rows before "links"), `inferred_to_part21(schema, model, inferred)`, `model_to_part21(schema, model)`, testkit `document_in(schema, &model)`; mesh bodies via `brep::{mesh_item, body_kind, brep_definition}` (IFC4 = IfcTriangulatedFaceSet, 2x3 = faceted brep); IFC4 writes NO owner history (`ifc.owner == 0` -> `$`); roofs/stairs/railings/sloped slabs/space boundaries carry `Semio_Authoring` JSON records restored by the importer; import side: `Import.schema`, `import_document(schema, &doc)`, `Import::claim_parts`, deserializers `Ifc2x3IntoModel` / `Ifc4IntoModel`; export formats `ifc2x3` | `ifc4` (staged job). Elements read z from `x.solid(id).bounds` (M5), never from storey arithmetic.
+- 15:55 w2-f3-editor: wired entities component/component-override/mep-element, place + route tools, family browser panel, override rows, 16 commands (labels via r12-w2-f3-editor-labels.ts, 80 rows); keybindings shift+c/shift+m arm, alt+r/alt+shift+r/mod+alt+r/alt+m/tab/shift+tab/alt+pageup/alt+pagedown/alt+t. Assets agent: 🔭️create-view extents does NOT yet include component/mep points (T/r10-w12-views-examples.ts must change together). Verification pending (gate queue).
+- 16:14 w2-f3-graph: API published (r12-w2-f3-api.md); inference modules components/mep + graph nodes component/mep/mep-clash + SolidFamily::{Component,Mep} + PlanKind/QuantityKind/DiagnosticCode additions landed; lib+tests check green. NodeKind is 34 (masks u64). Oracle fixture S/🧫️fixtures/💡️inferences/🪑️components/🏠️room (python oracle agrees). Pausing crate edits until r13-blessed.flag; then: facets script, table sort fix, graph tests, three.js case.
+- 15:40 w2-wp17-ifc4: lib + tests of my files type-check green; paused edits inside the BIM crate until r13-blessed.flag. NOTE for r13-integrate blessing: the IFC 2x3 output CHANGES with my package (roofs typed + authoring records for roofs/stairs/railings/sloped slabs/inferred spaces, column/beam/slab/ceiling z from the inferred solids): committed 2x3 IFC fixtures (house.ifc, notated, ceilings, ramps, psets, wall-depth, frame, components) and their python measure tables need one more BIM_BLESS + 'python write' pass AFTER my IFC edits land; I will bless my own new IFC4 fixtures (fixtures/ifc4, case export-bim-1-ifc4) and tell you when the 2x3 ones can be re-blessed. Outside the crate I added IFC4 document codec fns to stdio ifc v4 io (decode_ifc4_document/encode_ifc4_document, tested) and fixed the edit-rules tests there (IfcValue::Reference/Integer).
+- 16:40 bless run stalled on cargo locks: orphan cargo (PID 55268, 16:04) from the integrator's killed first run likely
+  holds a slot dir lock (killing the shell frees the gate slot but not cargo). Asked integrator to kill it. Gate
+  improvement (later, when no gate runs are active — bash reads scripts incrementally): trap kills the cargo tree.
+- wp20-energy is building during the freeze (allowed: freeze is on edits, not builds).
+- ~16:55 serde split fixed: BIM workspace lock had serde/serde_core/serde_derive 1.0.229 (since owner HEAD) while all
+  ~40 other workspaces + root + framework use 1.0.228; interleaved builds in shared gate dirs failed with "multiple
+  versions of serde_core" since ~15:00. Coordinator ran `cargo update --offline -p serde@1.0.229 --precise 1.0.228` on
+  the BIM lock (root/framework kept at 1.0.228). w01: everything implemented; 262/281 of its module tests at 14:26,
+  4 own fixes uncompiled; peer failures (wall attach under gable ends, curtain, beams, ramps, finishes, views).
+- w2-wp20-energy: lib-compiling (conditions, U/g on window/door types, 3 leaves tags 20000–20002, energy-envelope +
+  ISO 6946, examples); tests/editor/IO/bridge wait for `r13-blessed.flag`. Ruling: no external XSD download without
+  the user's approval → gbXML oracle = structural audit (OPEN ITEM FOR USER: approve fetching gbXML 7.03 XSD).
+- Bless loop: 12th aborting test (`examples::house::…entrance_ramp`) → skip list grows; r13-stack must cover it.
+- 19:10 integrator switched to one parallel BIM_BLESS pass (8 threads); hanging house tests (entrance ramp, attic
+  mirror) → WP-08 owner. Disk 46 GB → pruned incremental dirs untouched > 3 h in all slots → 101 GB free.
+- 19:30 parallel bless pass cut at 40 min: 9497 ok / 908 fail / 19 unfinished (+14 skipped). Told integrator to create
+  `r13-blessed.flag` now (fixtures written) and publish a partial failure table. Launched `r13-laws` (R-L1 shared
+  authored-helpers module, R-L6 keyed lists, PropertyKind, import-scan law test) and `r13-inference-laws` (H1, M2
+  framework-owned per-instance session, M3, M4 index nodes, finishes/bodies nodes, generic all-projection tests,
+  z-incremental bench). WP-15/21/22 + r14-extensions queued behind batch B.
+- 19:34 `r13-blessed.flag` created. Fixture review: 5 applied cases bless to empty diffs (arc beam, leaning column,
+  arc trim-extend, arc split-beam, curtain override cascade) → w2-wp19. Hangs: 4 house tests → w2-wp08; IFC4 committed
+  exports hang + subject/oracle mismatch → w2-wp17; components graph test fail → w2-f3. Value crate briefly red (helper
+  in-flight) → green 20:16; all store/value helpers bound to compile-atomic edits. Second full test pass running.
+- ~20:35 local: account session limit (HTTP 429, resets 21:50 Europe/Berlin = 20:50 local) stopped the fleet:
+  r13-integrate (ae9b5da), r11-store (a280fa2) + helpers, r13-laws (ac079b8), r13-inference-laws (af217c7), r13-stack
+  (ad20486), wp19 (a22e00c), wp17 (a69f738), wp16 (a8b85ff), wp20 (a494b1b) + io/editor helpers, f3 (a5e9c3f) + helpers.
+  wp08 (aa9357f) still polling. Resume all after reset via SendMessage. Open: stdio zip compile break (owner unknown).
+- 22:25 limit had already reset; resumed r13-integrate, r11-store (+ helpers via it), r13-laws, r13-inference-laws,
+  r13-stack, wp19, wp17, wp16 (zip question), f3 (+ helpers). Deferred: wp20 (staged outside crate) to spread usage.
+- Oracles (before write): 21/33 agree; failing: svg, ifc, ifc4, sheets-pdf, sheets-svg, zoning, energy, ifc-energy
+  (missing measure tables), schedules (12 house values), annotations (expectation stale), wall-solids (components-mep),
+  opening-frames (`KeyError: 'mullion'`). Test build red on in-flight peers: editor entities `partial` (25), coordination
+  panel (wp16), energy/gbXML tests + set-curtain-wall-type fields (wp20 half-landed at limit) → wp20 resumed to restore.
+- 22:56 w2-wp17-ifc4: IFC4 validation of the shipped office found IfcFlowTerminalType is ABSTRACT in IFC4: components exporter now writes IFCAIRTERMINALTYPE (NOTDEFINED) for terminals in IFC4 (🪑️components, one line); w2-f3-assets please keep it and make the importer accept IFCAIRTERMINALTYPE. Also: family-profile columns/beams (Profile::Family) were skipped by the IFC exporter; now exported as meshes with the Column/Beam record.
+- 2026-10-10 00:25 r11-store appointed guardian of BIM's upstream chain (fix untouched red crates after 15 min).
+  Current upstream break: framework pixels png/jpeg decode (external owner, actively edited). WP-20 fully landed
+  (curtain-wall thermal, holder/construction, editor, gbXML/IFC IO, energy bridge) — unverified until build green.
+  WP-16 told to fix coordination entity (`partial` import) + panel type errors; r13-laws told to finish the authored
+  move atomically. serde 1.0.229 locks remain only in plugin bridges/test tools (not in BIM chain).
+- ~00:55 WP-17 (`r12-exec-w2-wp17-ifc4.md`): schema-aware IFC2x3+IFC4 writer, IFC4 import, roofs/stairs/railings/
+  curtain walls/sloped slabs import, staged export job, M5 elevations from solids; verified before crate went red:
+  17/18 schema4 tests, byte-stable round trips, ifcopenshell agrees (house, psets). "IFC4 hang" = one test exporting 8
+  models in debug → split per case. IFC2x3 committed fixtures need one re-bless. Upstream blocker now: pixels PNG
+  decode (5 errors, external), os-infinite.

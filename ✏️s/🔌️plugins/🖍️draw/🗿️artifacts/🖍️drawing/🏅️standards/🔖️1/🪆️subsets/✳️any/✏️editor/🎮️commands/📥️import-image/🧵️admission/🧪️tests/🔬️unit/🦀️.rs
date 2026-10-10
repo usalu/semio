@@ -7,7 +7,7 @@ fn close(work:&mut Work) {
     assert!(matches!(zero,InteractiveJobCloseStep::Pending {progress}|InteractiveJobCloseStep::Complete {progress} if progress==Default::default()));
     for _ in 0..20000 {
         let copy=work.next_close_copy_byte_demand().unwrap();
-        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:work.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:work.next_close_release_byte_demand().unwrap(),maximum_depth:work.next_close_depth_demand().unwrap()};
+        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:work.next_close_capacity_byte_demand(if copy>0{copy}else{work.next_close_release_byte_demand().unwrap()}).unwrap(),maximum_release_bytes:work.next_close_release_byte_demand().unwrap(),maximum_depth:work.next_close_depth_demand().unwrap()};
         match work.close_step(grant) {InteractiveJobCloseStep::Pending {progress}=>assert!(progress.fits(grant)),InteractiveJobCloseStep::Complete {progress}=>{assert!(progress.fits(grant));assert!(work.terminal_is_empty());return;},other=>panic!("Unexpected image close: {other:?}")}
     }
     panic!("Image close did not finish");
@@ -24,8 +24,8 @@ fn retained_image_import_shared_cases() {
   for stop in [0,1,25,100,usize::MAX] {
    let mut work=Work::new();let mut completed=false;
    for at in 0..100000 {if at==stop {break;}
-    let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
-    match work.step(&input,&mut cx).unwrap() {ArtifactCommandWorkStep::Progress {..}=>{},ArtifactCommandWorkStep::Complete(emit)=>{assert_eq!(emit.mutations.len(),2);let mut after=snapshot.clone();for mutation in emit.mutations {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}let asset=after.assets.values().next().unwrap();assert_eq!(serde_json::to_value(asset).unwrap(),row["expected"]);completed=true;break;},_=>panic!("Unexpected image import result")}
+    let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX).with_retained_work(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128}),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
+    match work.step(&input,&mut cx).unwrap() {ArtifactCommandWorkStep::Progress {..}=>{},ArtifactCommandWorkStep::Complete(emit)=>{assert_eq!(emit.artifact_mutations.len(),2);let mut after=snapshot.clone();for mutation in emit.artifact_mutations {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}let asset=after.assets.values().next().unwrap();assert_eq!(serde_json::to_value(asset).unwrap(),row["expected"]);completed=true;break;},_=>panic!("Unexpected image import result")}
     assert_eq!(snapshot,saved);
    }
    if stop==usize::MAX {assert!(completed);}assert_eq!(snapshot,saved);close(&mut work);

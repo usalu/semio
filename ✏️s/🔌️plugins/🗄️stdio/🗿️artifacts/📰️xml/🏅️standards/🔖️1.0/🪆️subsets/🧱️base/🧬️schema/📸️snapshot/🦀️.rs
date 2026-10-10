@@ -7,7 +7,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️XmlModel
 /// 🏷️ XML attribute pair.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct XmlAttr {
     pub name: String,
@@ -19,7 +19,7 @@ pub struct XmlAttr {
 /// so decode->encode preserves the ORIGINAL form -- a `<![CDATA[...]]>` section (common inside
 /// real SVG `<style>`/`<script>` elements) re-emits as CDATA, not as entity-escaped text, and a
 /// `<!--comment-->` between siblings survives instead of being silently dropped.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum XmlNode {
     Element {
@@ -44,7 +44,7 @@ pub enum XmlNode {
 }
 
 /// 📰 Well-formed XML document root.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDocument {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -68,7 +68,7 @@ pub struct XmlDocument {
 }
 
 /// 📜️ Logical XML document type declaration.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDoctype {
     /// 🧭 Number of logical prolog nodes preceding this declaration.
@@ -88,7 +88,7 @@ fn is_zero(value: &u64) -> bool {
 
 
 /// 🔗️ Standard SYSTEM or PUBLIC external identifier.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum XmlExternalId {
     System { system_id: String },
@@ -96,7 +96,7 @@ pub enum XmlExternalId {
 }
 
 /// 🏷️ Parsed internal general or parameter entity declaration.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum XmlDtdDeclaration {
     Entity { parameter: bool, name: String, value: String },
@@ -150,7 +150,7 @@ impl XmlQuote {
 /// `version` is mandatory per the XML 1.0 spec whenever a declaration is present at all;
 /// `encoding`/`standalone` are each independently optional. `quote` is the delimiter all three
 /// pseudo-attributes are written with (see [`XmlQuote`]).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDeclaration {
     pub version: String,
@@ -177,7 +177,7 @@ impl XmlDeclaration {
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.xml` snapshot.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xml")]
 pub struct XmlSnapshot {

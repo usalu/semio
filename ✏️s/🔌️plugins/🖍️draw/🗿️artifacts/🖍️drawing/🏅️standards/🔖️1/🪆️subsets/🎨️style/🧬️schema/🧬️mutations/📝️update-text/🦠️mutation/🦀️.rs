@@ -10,9 +10,10 @@ pub struct UpdateText {
     pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub size: f64,
+    pub font_family:crate::DrawingFontFamily,
 }
-pub fn update_text(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, size: f64) -> DrawingMutation {
-    DrawingMutation::UpdateText(UpdateText { layer_id, content, size })
+pub fn update_text(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, size: f64,font_family:crate::DrawingFontFamily) -> DrawingMutation {
+    DrawingMutation::UpdateText(UpdateText { layer_id, content, size,font_family })
 }
 impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdateText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "text", kind: "update-text", record: "UpdatedText" };

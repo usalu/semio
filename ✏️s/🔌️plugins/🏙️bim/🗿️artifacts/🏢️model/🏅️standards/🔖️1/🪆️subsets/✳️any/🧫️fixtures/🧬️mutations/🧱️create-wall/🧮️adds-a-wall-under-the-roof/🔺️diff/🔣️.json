@@ -1,1 +1,31 @@
-{}
+{
+  "walls": {
+    "w-attic": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "Attic gable",
+      "phase": "New",
+      "storey": "st-first",
+      "top": {
+        "Roof": {
+          "offset": 0.0,
+          "roof": "r-main"
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

@@ -43,5 +43,104 @@
       },
       "accepted": false
     }
+  ],
+  "selectionCases": [
+    {
+      "accepted": true,
+      "factoryId": "stdio.native.pdf.v1",
+      "rows": [
+        {
+          "protocol_path": "pdf14.protocol",
+          "factory_id": "stdio.native.pdf.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        },
+        {
+          "protocol_path": "pdf17.protocol",
+          "factory_id": "stdio.native.pdf17.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        }
+      ],
+      "artifact": "pdf",
+      "id": "independent-pdf14"
+    },
+    {
+      "accepted": true,
+      "factoryId": "stdio.native.pdf17.v1",
+      "rows": [
+        {
+          "protocol_path": "pdf14.protocol",
+          "factory_id": "stdio.native.pdf.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        },
+        {
+          "protocol_path": "pdf17.protocol",
+          "factory_id": "stdio.native.pdf17.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        }
+      ],
+      "artifact": "pdf",
+      "id": "independent-pdf17"
+    },
+    {
+      "accepted": false,
+      "factoryId": "stdio.native.peer.v1",
+      "rows": [
+        {
+          "protocol_path": "pdf14.protocol",
+          "factory_id": "stdio.native.pdf.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        },
+        {
+          "protocol_path": "pdf17.protocol",
+          "factory_id": "stdio.native.pdf17.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        }
+      ],
+      "id": "absent-factory"
+    },
+    {
+      "accepted": false,
+      "factoryId": "stdio.native.pdf17.v1",
+      "rows": [
+        {
+          "protocol_path": "pdf17.protocol",
+          "factory_id": "stdio.native.pdf17.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        },
+        {
+          "protocol_path": "pdf17.protocol",
+          "factory_id": "stdio.native.pdf17.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        }
+      ],
+      "id": "duplicate-factory"
+    },
+    {
+      "accepted": false,
+      "factoryId": "../pdf",
+      "rows": [
+        {
+          "protocol_path": "pdf14.protocol",
+          "factory_id": "stdio.native.pdf.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        },
+        {
+          "protocol_path": "pdf17.protocol",
+          "factory_id": "stdio.native.pdf17.v1",
+          "artifact": "pdf",
+          "definition_path": "definition.json"
+        }
+      ],
+      "id": "invalid-selector"
+    }
   ]
 }

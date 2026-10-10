@@ -15,14 +15,6 @@
       0
     ]
   ],
-  "grant": [
-    1,
-    4
-  ],
-  "handlerGrant": [
-    1,
-    1024
-  ],
   "replacementSlots": 1,
   "faults": {
     "sealed": "extension.closing",

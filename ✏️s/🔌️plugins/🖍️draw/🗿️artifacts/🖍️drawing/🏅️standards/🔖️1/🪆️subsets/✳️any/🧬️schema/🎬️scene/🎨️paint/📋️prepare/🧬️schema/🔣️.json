@@ -59,7 +59,7 @@
           "enum": [
             "nodes",
             "bounds",
-            "text",
+            
             "path",
             "pathCleanup",
             "complete"
@@ -311,8 +311,7 @@
                     "properties": {
                       "kind": {
                         "enum": [
-                          "image",
-                          "textFallback"
+                          "image"
                         ]
                       },
                       "corners": {

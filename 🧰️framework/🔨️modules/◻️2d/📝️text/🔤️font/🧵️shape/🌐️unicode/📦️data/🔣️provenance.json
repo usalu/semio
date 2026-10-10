@@ -1,0 +1,175 @@
+{
+  "version": "16.0.0",
+  "byteOrder": "big-endian",
+  "headerBytes": 64,
+  "rangeBytes": 24,
+  "decompositionBytes": 16,
+  "compositionBytes": 12,
+  "sources": [
+    {
+      "file": "ReadMe.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/ReadMe.txt",
+      "sha256": "14cafa23788d3a20dd21d6b0cdcb8d6dab520781fcd9ad9392f3b88ea607e633",
+      "bytes": 693
+    },
+    {
+      "file": "UnicodeData.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/UnicodeData.txt",
+      "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f",
+      "bytes": 2175362
+    },
+    {
+      "file": "PropertyValueAliases.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/PropertyValueAliases.txt",
+      "sha256": "440fd3e5460b9bfe31da67b6f923992e1989d31fe2ed91e091c4b8f8e2620bf9",
+      "bytes": 80773
+    },
+    {
+      "file": "DerivedNormalizationProps.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/DerivedNormalizationProps.txt",
+      "sha256": "4d4c03892dea9146d674b686e495df2d55a28d071ac474041d73518f887abddc",
+      "bytes": 1372269
+    },
+    {
+      "file": "DerivedCoreProperties.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/DerivedCoreProperties.txt",
+      "sha256": "39d35161f2954497f69e08bdb9e701493f476a3d30222de20028feda36c1dabd",
+      "bytes": 1115959
+    },
+    {
+      "file": "PropList.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/PropList.txt",
+      "sha256": "53d614508e2a0b2305a8aa21cd60d993de9326cdf65993660dfcce4503548583",
+      "bytes": 144253
+    },
+    {
+      "file": "Scripts.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/Scripts.txt",
+      "sha256": "9e88f0a677df47311106340be8ede2ecdacd9c1c931831218d2be6d5508e0039",
+      "bytes": 189588
+    },
+    {
+      "file": "BidiBrackets.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/BidiBrackets.txt",
+      "sha256": "b8f32554c6f658821fb0ee742d21c5b1f2086b9bf13071fed04894b022f93d67",
+      "bytes": 8891
+    },
+    {
+      "file": "BidiMirroring.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/BidiMirroring.txt",
+      "sha256": "d7afdadd1bbd66f5a663ac0e8f7958f18fd9491fc0bc59ec5877cb82db71db7d",
+      "bytes": 26827
+    },
+    {
+      "file": "extracted-DerivedBidiClass.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/extracted/DerivedBidiClass.txt",
+      "sha256": "71ed943a49c58568d8d92e80ecc2ba2f06e62aee9c8ebb0e6e8bd2c3ed8b180e",
+      "bytes": 171034
+    },
+    {
+      "file": "extracted-DerivedJoiningType.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/extracted/DerivedJoiningType.txt",
+      "sha256": "6bd08b97da66b70ccfdab105a352de2984e02625239ec5695422c99b33d854f0",
+      "bytes": 40009
+    },
+    {
+      "file": "auxiliary-GraphemeBreakProperty.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/auxiliary/GraphemeBreakProperty.txt",
+      "sha256": "c29360bd6f7132811d701d29069541e827eb44bfc4c8fbde8c370d6982689dc1",
+      "bytes": 98751
+    },
+    {
+      "file": "emoji-emoji-data.txt",
+      "url": "https://www.unicode.org/Public/16.0.0/ucd/emoji/emoji-data.txt",
+      "sha256": "f1365a5173eee18e1f98b240cdc492e84a25f1ce7e0c9d1094eb29c41a22696a",
+      "bytes": 113024
+    },
+    {
+      "file": "License.txt",
+      "url": "https://www.unicode.org/license.txt",
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96",
+      "bytes": 1995
+    }
+  ],
+  "categories": [
+    "Cn",
+    "Lu",
+    "Ll",
+    "Lt",
+    "Lm",
+    "Lo",
+    "Mn",
+    "Mc",
+    "Me",
+    "Nd",
+    "Nl",
+    "No",
+    "Pc",
+    "Pd",
+    "Ps",
+    "Pe",
+    "Pi",
+    "Pf",
+    "Po",
+    "Sm",
+    "Sc",
+    "Sk",
+    "So",
+    "Zs",
+    "Zl",
+    "Zp",
+    "Cc",
+    "Cf",
+    "Cs",
+    "Co"
+  ],
+  "bidiClasses": [
+    "L",
+    "R",
+    "AL",
+    "EN",
+    "ES",
+    "ET",
+    "AN",
+    "CS",
+    "NSM",
+    "BN",
+    "B",
+    "S",
+    "WS",
+    "ON",
+    "LRE",
+    "LRO",
+    "RLE",
+    "RLO",
+    "PDF",
+    "LRI",
+    "RLI",
+    "FSI",
+    "PDI"
+  ],
+  "joiningTypes": [
+    "U",
+    "R",
+    "D",
+    "C",
+    "L",
+    "T"
+  ],
+  "graphemeClasses": [
+    "Other",
+    "CR",
+    "LF",
+    "Control",
+    "Extend",
+    "ZWJ",
+    "Regional_Indicator",
+    "Prepend",
+    "SpacingMark",
+    "L",
+    "V",
+    "T",
+    "LV",
+    "LVT"
+  ]
+}

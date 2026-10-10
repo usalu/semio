@@ -61,8 +61,8 @@
     "c-a1": {
       "base_offset": 0.0,
       "column_type": "ct-500",
-      "phase": "New",
       "name": "A1 heavy",
+      "phase": "New",
       "position": {
         "x": 1.5,
         "y": 0.5

@@ -1,0 +1,20 @@
+{
+ "schema":"https://semio.tech/framework/job/retained-work-funding-fixture",
+ "cases":[
+  {"name":"all currencies funded","grant":{"maximumItems":1,"maximumCopyBytes":8,"maximumCapacityBytes":16,"maximumReleaseBytes":4,"maximumDepth":2},"demand":{"copyBytes":8,"capacityBytes":16,"releaseBytes":4,"depth":2},"accepted":true},
+  {"name":"CPU work does not authorize retained items","grant":{"maximumItems":0,"maximumCopyBytes":8,"maximumCapacityBytes":16,"maximumReleaseBytes":4,"maximumDepth":2},"demand":{"copyBytes":8,"capacityBytes":16,"releaseBytes":4,"depth":2},"accepted":false},
+  {"name":"copy axis denied","grant":{"maximumItems":1,"maximumCopyBytes":7,"maximumCapacityBytes":16,"maximumReleaseBytes":4,"maximumDepth":2},"demand":{"copyBytes":8,"capacityBytes":16,"releaseBytes":4,"depth":2},"accepted":false},
+  {"name":"capacity axis denied","grant":{"maximumItems":1,"maximumCopyBytes":8,"maximumCapacityBytes":15,"maximumReleaseBytes":4,"maximumDepth":2},"demand":{"copyBytes":8,"capacityBytes":16,"releaseBytes":4,"depth":2},"accepted":false},
+  {"name":"release axis denied","grant":{"maximumItems":1,"maximumCopyBytes":8,"maximumCapacityBytes":16,"maximumReleaseBytes":3,"maximumDepth":2},"demand":{"copyBytes":8,"capacityBytes":16,"releaseBytes":4,"depth":2},"accepted":false},
+  {"name":"depth axis denied","grant":{"maximumItems":1,"maximumCopyBytes":8,"maximumCapacityBytes":16,"maximumReleaseBytes":4,"maximumDepth":1},"demand":{"copyBytes":8,"capacityBytes":16,"releaseBytes":4,"depth":2},"accepted":false},
+  {"name":"capacity does not authorize copy","grant":{"maximumItems":1,"maximumCopyBytes":0,"maximumCapacityBytes":4096,"maximumReleaseBytes":4096,"maximumDepth":8},"demand":{"copyBytes":1,"capacityBytes":0,"releaseBytes":0,"depth":1},"accepted":false},
+  {"name":"copy does not authorize release","grant":{"maximumItems":1,"maximumCopyBytes":4096,"maximumCapacityBytes":4096,"maximumReleaseBytes":0,"maximumDepth":8},"demand":{"copyBytes":0,"capacityBytes":0,"releaseBytes":1,"depth":1},"accepted":false},
+  {"name":"metadata only turn","grant":{"maximumItems":1,"maximumCopyBytes":0,"maximumCapacityBytes":0,"maximumReleaseBytes":0,"maximumDepth":1},"demand":{"copyBytes":0,"capacityBytes":0,"releaseBytes":0,"depth":1},"accepted":true}
+ ],
+ "sequence":{"grant":{"maximumItems":2,"maximumCopyBytes":16,"maximumCapacityBytes":32,"maximumReleaseBytes":8,"maximumDepth":2},"demand":{"copyBytes":8,"capacityBytes":16,"releaseBytes":4,"depth":2},"receipt":{"copiedItems":1,"copiedBytes":8,"retainedCapacityBytes":16,"releasedBytes":4},"accepted":[true,true,false]},
+ "contexts":[
+  {"name":"large CPU fuel grants no physical capacity","fuel":9007199254740991,"grant":{"maximumItems":0,"maximumCopyBytes":0,"maximumCapacityBytes":0,"maximumReleaseBytes":0,"maximumDepth":0},"accepted":false},
+  {"name":"one CPU unit preserves independent original grant","fuel":1,"grant":{"maximumItems":2,"maximumCopyBytes":24,"maximumCapacityBytes":17,"maximumReleaseBytes":17,"maximumDepth":1},"accepted":true},
+  {"name":"exhausted CPU preserves physical grant","fuel":0,"grant":{"maximumItems":2,"maximumCopyBytes":24,"maximumCapacityBytes":17,"maximumReleaseBytes":17,"maximumDepth":1},"accepted":true}
+ ]
+}

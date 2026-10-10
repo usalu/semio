@@ -3,7 +3,7 @@
 use crate::{Layer, ModelDiff, ModelMutation, ModelSnapshot, SlabTypePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSlabType {
     pub id: String,

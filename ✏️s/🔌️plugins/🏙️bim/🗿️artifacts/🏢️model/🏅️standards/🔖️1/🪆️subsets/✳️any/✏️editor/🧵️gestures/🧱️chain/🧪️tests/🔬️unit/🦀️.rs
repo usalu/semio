@@ -110,13 +110,13 @@ async fn a_beam_is_written_by_two_clicks_and_a_curtain_wall_by_each_segment() {
     rig.down(0.0, 0.0);
     let step = rig.down(5.0, 0.0);
     let [ModelMutation::CreateBeam(create)] = step.mutations.as_slice() else { panic!("one create-beam") };
-    assert_eq!((create.beam.beam_type.as_str(), create.beam.top_offset, create.beam.end), ("bm-20", 0.0, Point2 { x: 5.0, y: 0.0 }));
+    assert_eq!((create.beam.beam_type.as_str(), create.beam.top_offset, create.beam.axis.clone()), ("bm-20", 0.0, Axis::Line { start: Point2 { x: 0.0, y: 0.0 }, end: Point2 { x: 5.0, y: 0.0 } }));
     assert!(rig.down(1.0, 1.0).mutations.is_empty(), "one beam per two clicks: the third click starts the next beam");
     let mut rig = Rig::plan("curtain-wall", model());
     rig.down(0.0, 0.0);
     let step = rig.down(6.0, 0.0);
     let [ModelMutation::CreateCurtainWall(create)] = step.mutations.as_slice() else { panic!("one create-curtain-wall") };
-    assert_eq!((create.curtain_wall.panel_material.as_str(), create.curtain_wall.mullion_material.as_str()), ("m-glass", "m-steel"));
+    assert_eq!((create.curtain_wall.curtain_wall_type.as_str(), create.curtain_wall.u_grid.is_none(), create.curtain_wall.v_grid.is_none()), ("cw-fa", true, true));
 }
 
 #[semio_framework_async_macros::async_test]

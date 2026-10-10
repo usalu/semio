@@ -4,7 +4,7 @@ use crate::schema::mutation_support::XmlNodePath;
 use crate::schema::snapshot::XmlNode;
 use crate::XmlSnapshot;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RemoveElementMutation {

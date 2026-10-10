@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-load/schema.json",
+  "title": "CreateLoad",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "load"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createLoad"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "load": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralLoad"
+    }
+  }
+}

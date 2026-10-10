@@ -1,0 +1,7 @@
+{
+  "mutation": "setComponent",
+  "id": "cmp-table",
+  "host": {
+    "value": "st-ground"
+  }
+}

@@ -44,9 +44,23 @@ pub mod sheets;
 
 pub use sheets::*;
 
+#[path = "🔥️conditions/🦀️.rs"]
+pub mod conditions;
+
+pub use conditions::*;
+
+#[path = "🤝️coordination/🦀️.rs"]
+pub mod coordination;
+
+pub use coordination::*;
+
+#[path = "🦴️structure/🦀️.rs"]
+pub mod structure;
+pub use structure::*;
+
 //#region 🔖️Snapshot
 /// 📸️ Complete model document: every collection is keyed by a stable element id, in canonical (sorted) order.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[artifact_schema(id = "s.bim.model")]
 #[dsl(extension = "bim")]
 #[dsl(layout = "lines")]
@@ -54,8 +68,32 @@ pub struct ModelSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub supports: BTreeMap<String, StructuralSupport>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub load_cases: BTreeMap<String, LoadCase>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub loads: BTreeMap<String, StructuralLoad>,
+    #[state(artifact)]
     #[dsl(block)]
     pub project: Project,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub option_groups: BTreeMap<String, OptionGroup>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub design_options: BTreeMap<String, DesignOption>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub worksets: BTreeMap<String, Workset>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub element_options: BTreeMap<String, ElementMembership>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub element_worksets: BTreeMap<String, ElementMembership>,
     #[state(artifact)]
     #[value(default)]
     pub materials: BTreeMap<String, Material>,
@@ -145,6 +183,9 @@ pub struct ModelSnapshot {
     pub area_schemes: BTreeMap<String, AreaScheme>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub space_conditions: BTreeMap<String, SpaceConditions>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub views: BTreeMap<String, View>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
@@ -155,6 +196,18 @@ pub struct ModelSnapshot {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub sheet_revisions: BTreeMap<String, SheetRevision>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub clash_sets: BTreeMap<String, ClashSet>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub rules: BTreeMap<String, Rule>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub issues: BTreeMap<String, Issue>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub issue_comments: BTreeMap<String, IssueComment>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub dimensions: BTreeMap<String, Dimension>,
@@ -187,6 +240,15 @@ pub struct ModelSnapshot {
     pub family_solids: BTreeMap<String, FamilySolid>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub components: BTreeMap<String, Component>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub component_overrides: BTreeMap<String, ComponentOverride>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub mep_elements: BTreeMap<String, MepElement>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub property_templates: BTreeMap<String, PropertyTemplate>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
@@ -203,7 +265,15 @@ impl Default for ModelSnapshot {
     fn default() -> Self {
         Self {
             schema: crate::BIM_MODEL_DOCUMENT_SCHEMA.into(),
+            supports: BTreeMap::new(),
+            load_cases: BTreeMap::new(),
+            loads: BTreeMap::new(),
             project: Project { name: String::new(), description: String::new(), author: String::new(), organization: String::new(), phase_names: Vec::new() },
+            option_groups: BTreeMap::new(),
+            design_options: BTreeMap::new(),
+            worksets: BTreeMap::new(),
+            element_options: BTreeMap::new(),
+            element_worksets: BTreeMap::new(),
             materials: BTreeMap::new(),
             wall_types: BTreeMap::new(),
             slab_types: BTreeMap::new(),
@@ -233,10 +303,15 @@ impl Default for ModelSnapshot {
             spaces: BTreeMap::new(),
             zones: BTreeMap::new(),
             area_schemes: BTreeMap::new(),
+            space_conditions: BTreeMap::new(),
             views: BTreeMap::new(),
             sheets: BTreeMap::new(),
             viewports: BTreeMap::new(),
             sheet_revisions: BTreeMap::new(),
+            clash_sets: BTreeMap::new(),
+            rules: BTreeMap::new(),
+            issues: BTreeMap::new(),
+            issue_comments: BTreeMap::new(),
             dimensions: BTreeMap::new(),
             tags: BTreeMap::new(),
             text_notes: BTreeMap::new(),
@@ -247,6 +322,9 @@ impl Default for ModelSnapshot {
             families: BTreeMap::new(),
             family_parameters: BTreeMap::new(),
             family_solids: BTreeMap::new(),
+            components: BTreeMap::new(),
+            component_overrides: BTreeMap::new(),
+            mep_elements: BTreeMap::new(),
             property_templates: BTreeMap::new(),
             classification_systems: BTreeMap::new(),
             properties: BTreeMap::new(),

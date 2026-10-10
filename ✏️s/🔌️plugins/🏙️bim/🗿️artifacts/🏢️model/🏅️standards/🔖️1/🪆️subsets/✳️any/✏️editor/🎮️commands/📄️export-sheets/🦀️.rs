@@ -22,9 +22,9 @@ use value_derive::{FromValue, ToValue};
 /// 🧾️ The formats of a sheet export: one sheet as SVG, the set as PDF.
 pub const FORMATS: &[&str] = &["svg", "pdf"];
 /// 🗣️ The progress text of the writing stage, English and German.
-pub const PAGE_PREVIEW: &[u8] = br#"{"en":"Writing the sheets","de":"Blätter werden geschrieben"}"#;
+pub const PAGE_PREVIEW: &[u8] = r#"{"en":"Writing the sheets","de":"Blätter werden geschrieben"}"#.as_bytes();
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-sheets")]
 pub struct ExportSheets {
     /// The file format: `svg` (one sheet) or `pdf` (the set, or one sheet when `sheet` names it).
@@ -73,7 +73,7 @@ pub enum Advance {
 pub struct SheetsJob {
     format: String,
     only: Option<String>,
-    instance: Option<u32>,
+    instance: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
     labels: TitleLabels,
     analysis: Analysis,
     writer: Option<SheetsPdf>,
@@ -82,13 +82,13 @@ pub struct SheetsJob {
 
 impl SheetsJob {
     /// 🏗️ A job writing `format` of the sheet `only` (else the first for an SVG, all for a PDF) of the document that instance `instance` shows, headed in `locale`.
-    pub fn new(format: &str, only: Option<&str>, locale: Option<&str>, instance: Option<u32>) -> Self {
+    pub fn new(format: &str, only: Option<&str>, locale: Option<&str>, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Instance<'_>) -> Self {
         Self::with_steps(format, only, locale, instance, NODES_PER_STEP)
     }
 
     /// 🏗️ A job that finishes at most `nodes` graph nodes per analysis step (at least one).
-    pub fn with_steps(format: &str, only: Option<&str>, locale: Option<&str>, instance: Option<u32>, nodes: usize) -> Self {
-        Self { format: format.to_string(), only: only.map(str::to_string), instance, labels: title_labels(labels_of(locale)), analysis: Analysis::new(instance, nodes), writer: None, written: 0 }
+    pub fn with_steps(format: &str, only: Option<&str>, locale: Option<&str>, instance: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>, nodes: usize) -> Self {
+        Self { format: format.to_string(), only: only.map(str::to_string), instance: instance.cloned(), labels: title_labels(labels_of(locale)), analysis: Analysis::new(instance, nodes), writer: None, written: 0 }
     }
 
     /// 📈️ How far the job is, as a fraction: the analysis counts for the first half, the sheets written for the second.
@@ -135,7 +135,7 @@ impl SheetsJob {
         if self.format == "svg" {
             let id = &targets[0];
             let labels = &self.labels;
-            let document = inference::try_with_inference(self.instance, snapshot, |inferred| sheets::sheet_svg(snapshot, inferred, id, labels)).map_err(ended)?.ok_or_else(|| fault("bim.export.sheet-missing", format!("the sheet '{id}' has no layout")))?.map_err(|message| failed("svg", message))?;
+            let document = inference::try_with_inference(self.instance.as_ref(), snapshot, |inferred| sheets::sheet_svg(snapshot, inferred, id, labels)).map_err(ended)?.ok_or_else(|| fault("bim.export.sheet-missing", format!("the sheet '{id}' has no layout")))?.map_err(|message| failed("svg", message))?;
             let number = snapshot.sheets.get(id).map_or("sheet", |row| row.number.as_str());
             return Ok(Advance::Done(Output { filename: format!("{name}-{}.svg", sheets::file_stem(number)), mime_type: "image/svg+xml", data: document, encoding: None }));
         }
@@ -146,7 +146,7 @@ impl SheetsJob {
         if self.written < targets.len() {
             let id = &targets[self.written];
             let (labels, writer) = (&self.labels, self.writer.as_mut().expect("the writer was started"));
-            inference::try_with_inference(self.instance, snapshot, |inferred| match inferred.sheet_layouts.get(id) {
+            inference::try_with_inference(self.instance.as_ref(), snapshot, |inferred| match inferred.sheet_layouts.get(id) {
                 Some(layout) => writer.page(layout, &sheets::drawings(inferred), labels),
                 None => Err(format!("the sheet '{id}' has no layout")),
             })
@@ -170,13 +170,14 @@ impl SheetsJob {
 /// 🧵️ The retained-command shell of a [`SheetsJob`]: one step per call, the framework yields between steps and tells the work when the user cancelled.
 pub struct SheetsExportWork {
     tool_id: &'static str,
+    owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     job: Option<SheetsJob>,
 }
 
 impl SheetsExportWork {
     /// 🏗️ The work of tool `tool_id`.
-    pub fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, job: None }
+    pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, owner, job: None }
     }
 }
 
@@ -195,7 +196,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for SheetsExportWork {
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, Fault> {
         let BimCommand::ExportSheets(payload) = input.command else { return Err(Fault::from("bim-export-sheets-work-mismatch")) };
-        let job = self.job.get_or_insert_with(|| SheetsJob::new(&payload.format, payload.sheet.as_deref(), payload.locale.as_deref(), Some(input.operation.app_instance_id)));
+        let job = self.job.get_or_insert_with(|| SheetsJob::new(&payload.format, payload.sheet.as_deref(), payload.locale.as_deref(), Some(&self.owner)));
         if cx.is_cancelled() {
             job.cancel(input.snapshot);
             return Err(fault("bim.export.cancelled", "the export was cancelled"));
@@ -214,7 +215,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for SheetsExportWork {
 
 /// 📄️ The synchronous path: the file of the instance's inference session as one download.
 pub fn handle(payload: &ExportSheets, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
-    let instance = doc.operation_optional().map(|operation| operation.app_instance_id);
+    let instance = ctx.gestures.as_ref();
     let locale = payload.locale.clone().or_else(|| ctx.labels().map(|labels| labels.locale().as_str().to_string()));
     let mut job = SheetsJob::new(&payload.format, payload.sheet.as_deref(), locale.as_deref(), instance);
     loop {

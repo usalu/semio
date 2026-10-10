@@ -1,0 +1,13 @@
+{
+  "mutation": "setTypeThermalData",
+  "id": "cwt",
+  "u_value": {
+    "value": 1.4
+  },
+  "g_value": {
+    "value": 0.4
+  },
+  "frame_fraction": {
+    "value": 0.15
+  }
+}

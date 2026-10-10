@@ -92,3 +92,16 @@ async fn every_kind_of_view_can_be_added_from_the_outliner_in_both_languages() {
     let (empty, none) = (ModelSnapshot::default(), ModelInference::default());
     assert!(!text(&empty, &none, Locale::En).contains("Add Section"), "a model without a building has nothing to look at");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn a_wall_sweep_hangs_under_its_wall_and_makes_no_storey_group() {
+    let (snapshot, _) = demo();
+    let create = kind_of("wall-sweep").and_then(|row| row.create).expect("wall sweep create");
+    let snapshot = crate::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    for locale in [Locale::En, Locale::De] {
+        let rendered = text(&snapshot, &inference, locale);
+        assert!(!rendered.contains("Wall sweeps") && !rendered.contains("Wandprofile"), "{rendered}");
+    }
+    assert!(!kind_of("wall-sweep").is_some_and(movable), "a sweep follows its wall and has no storey of its own");
+}

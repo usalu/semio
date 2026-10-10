@@ -1,9 +1,13 @@
-//! 🏗️ `s.stdio.ifc@2x3/*` → `s.bim.model@1/*`: the spatial structure, storeys (elevations become levels and heights), walls from their axis and layer set, openings with their windows and doors,
-//! slabs, columns, beams, spaces and grids, plus materials, types, property sets and classifications. Every entity class that is not understood is reported as one diagnostic with its count.
-//! 🔖 `IoFidelity::Semantic`: geometry that is not a swept profile (roofs, stairs, railings, curtain walls) is reported, not imported.
-//! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/
+//! 🏗️ `s.stdio.ifc@2x3/*` and `s.stdio.ifc@4/*` → `s.bim.model@1/*`: the spatial structure, storeys (elevations become levels and heights), walls from their axis and layer set, openings with their windows and doors,
+//! slabs, columns, beams, spaces and grids, plus materials, types, property sets (of elements and of type objects) and classification systems: each `IfcClassification` becomes a system (`cs-<slug of its name>`) whose table
+//! is its `IfcClassificationReference` rows (parents from the `Semio_ClassificationParents` set of the project; a foreign file has none and imports flat tables) and each `IfcRelAssociatesClassification` the code its
+//! elements and types carry in that system. Every entity class that is not understood is reported as one diagnostic with its count.
+//! 🔖 `IoFidelity::Semantic`: roofs, stairs, railings and curtain walls are restored from the authored record the export writes (a foreign file gets the best-effort reading of each module), geometry that is only a mesh is reported, not imported.
+//! IFC4 files also give their property set templates (the project library), their classification chains, window and door operations and material categories.
+//! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
-use crate::standards::v1::subsets::any::io::export::ifc::{codec, IFC_DIALECT};
+use crate::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT;
+use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema, IFC_DIALECT};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, registry};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 use crate::ModelSnapshot;
@@ -27,16 +31,35 @@ pub mod walls;
 pub mod elements;
 #[path = "🏘️zoning/🦀️.rs"]
 pub mod zoning;
+#[path = "🧭️options/🦀️.rs"]
+pub mod options;
+#[path = "🔥️energy/🦀️.rs"]
+pub mod energy;
 #[path = "🛝️ramps/🦀️.rs"]
 pub mod ramps;
+#[path = "🪑️components/🦀️.rs"]
+pub mod components;
+#[path = "🌀️mep/🦀️.rs"]
+pub mod mep;
 #[path = "🔲️ceilings/🦀️.rs"]
 pub mod ceilings;
+#[path = "🧷️wall-sweeps/🦀️.rs"]
+pub mod wall_sweeps;
+#[path = "🪟️curtain/🦀️.rs"]
+pub mod curtain;
+#[path = "⬜️horizontal/🦀️.rs"]
+pub mod horizontal;
+#[path = "🪜️circulation/🦀️.rs"]
+pub mod circulation;
+#[path = "🧗️attach/🦀️.rs"]
+pub mod attach;
 
 use frames::Rigid;
 use reader::Doc;
 
 /// 🏗️ The import under construction: the indexed document, the model being filled and what is known about each imported entity.
 pub struct Import<'a> {
+    pub schema: Schema,
     pub doc: Doc<'a>,
     pub model: ModelSnapshot,
     pub notes: Vec<String>,
@@ -50,8 +73,8 @@ pub struct Import<'a> {
 }
 
 impl<'a> Import<'a> {
-    fn new(doc: Doc<'a>) -> Self {
-        Self { doc, model: ModelSnapshot::default(), notes: Vec::new(), ids: BTreeMap::new(), site_world: BTreeMap::new(), building_world: BTreeMap::new(), storey_ids: BTreeMap::new(), levels: BTreeMap::new(), material_ids: BTreeMap::new(), type_ids: BTreeMap::new() }
+    fn new(schema: Schema, doc: Doc<'a>) -> Self {
+        Self { schema, doc, model: ModelSnapshot::default(), notes: Vec::new(), ids: BTreeMap::new(), site_world: BTreeMap::new(), building_world: BTreeMap::new(), storey_ids: BTreeMap::new(), levels: BTreeMap::new(), material_ids: BTreeMap::new(), type_ids: BTreeMap::new() }
     }
 
     /// 📝️ Records that an entity could not be imported.
@@ -69,6 +92,17 @@ impl<'a> Import<'a> {
         let building = self.model.storeys.get(storey).and_then(|row| self.building_world.get(&row.building));
         let world = self.doc.world(placement);
         building.map_or(world, |building| world.relative_to(building))
+    }
+
+    /// 🧩️ Marks every part below `whole` (nested aggregation included) as imported with it, so the unsupported-class note leaves them out.
+    pub fn claim_parts(&mut self, whole: u64, id: &str) {
+        let mut pending = vec![whole];
+        while let Some(at) = pending.pop() {
+            for part in self.doc.index.parts.get(&at).cloned().unwrap_or_default() {
+                self.ids.insert(part, format!("{id}:part"));
+                pending.push(part);
+            }
+        }
     }
 
     /// 🔑️ A model id that is not used yet: `base` or `base-2`, `base-3`, …
@@ -89,10 +123,9 @@ impl<'a> Import<'a> {
 }
 
 //#region 🔖️Entry
-/// 📥️ Imports IFC 2x3 file bytes into a model plus one note per entity class or item that was not imported.
-pub fn import_ifc2x3(bytes: &[u8]) -> Result<(ModelSnapshot, Vec<String>), String> {
-    let document = codec::decode_document(bytes)?;
-    let mut import = Import::new(Doc::new(&document));
+/// 📥️ Imports the Part-21 document of a file in `schema` into a model plus one note per entity class or item that was not imported.
+pub fn import_document(schema: Schema, document: &semio_s_artifact_stdio_ifc::part21::Part21Document) -> Result<(ModelSnapshot, Vec<String>), String> {
+    let mut import = Import::new(schema, Doc::new(document));
     spatial::read(&mut import);
     import.levels = registry::probe::<{ kinds::LEVELS }, _>(None, &import.model, |inferred| inferred.storey_levels.clone()).map_err(|error| error.to_string())?;
     data::read_materials(&mut import);
@@ -101,27 +134,69 @@ pub fn import_ifc2x3(bytes: &[u8]) -> Result<(ModelSnapshot, Vec<String>), Strin
     elements::read(&mut import);
     ceilings::read(&mut import);
     zoning::read(&mut import);
+    options::read(&mut import);
     ramps::read(&mut import);
+    curtain::read(&mut import);
+    horizontal::read(&mut import);
+    circulation::read(&mut import);
+    wall_sweeps::read(&mut import);
+    attach::read(&mut import);
+    components::read(&mut import);
+    mep::read(&mut import);
+    energy::read_conditions(&mut import);
+    data::read_templates(&mut import);
     data::read_attached(&mut import);
     spatial::report_unsupported(&mut import);
     Ok((import.model, import.notes))
 }
+
+/// 📥️ Imports IFC 2x3 file bytes into a model plus one note per entity class or item that was not imported.
+pub fn import_ifc2x3(bytes: &[u8]) -> Result<(ModelSnapshot, Vec<String>), String> {
+    import_document(Schema::Ifc2x3, &codec::decode_document(bytes)?)
+}
+
+/// 📥️ Imports IFC4 file bytes into a model plus one note per entity class or item that was not imported.
+pub fn import_ifc4(bytes: &[u8]) -> Result<(ModelSnapshot, Vec<String>), String> {
+    import_document(Schema::Ifc4, &codec::decode_ifc4(bytes)?)
+}
 //#endregion 🔖️Entry
 
 //#region 🔖️Deserializer
-/// 🏗️ The IFC 2x3 deserializer of the BIM model.
-pub struct IfcIntoModel;
+fn head_of(payload: &IoPayload) -> String {
+    let head = match payload {
+        IoPayload::Text(text) => text.as_bytes().get(..600).map_or(text.as_bytes(), |head| head).to_vec(),
+        IoPayload::Binary(bytes) => bytes.get(..600).map_or(bytes.as_slice(), |head| head).to_vec(),
+    };
+    String::from_utf8_lossy(&head).to_string()
+}
 
-impl Deserializer<ModelSnapshot> for IfcIntoModel {
+fn bytes_of(payload: &IoPayload) -> &[u8] {
+    match payload {
+        IoPayload::Text(text) => text.as_bytes(),
+        IoPayload::Binary(bytes) => bytes.as_slice(),
+    }
+}
+
+fn diagnostics_of(notes: Vec<String>) -> Vec<semio_framework_diagnostic::Diagnostic> {
+    notes
+        .into_iter()
+        .map(|note| semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new("bim.ifc.import.skipped"), severity: semio_framework_diagnostic::Severity::Warning, span: Default::default(), message: note, expected: None, scope: Default::default() })
+        .collect()
+}
+
+fn refused(name: &str, message: String) -> IoError {
+    IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("{name}: {message}")))
+}
+
+/// 🏗️ The IFC 2x3 deserializer of the BIM model.
+pub struct Ifc2x3IntoModel;
+
+impl Deserializer<ModelSnapshot> for Ifc2x3IntoModel {
     const FROM: Dialect = IFC_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Semantic;
 
     async fn sniff(payload: &IoPayload) -> Confidence {
-        let head = match payload {
-            IoPayload::Text(text) => text.as_bytes().get(..400).map_or(text.as_bytes(), |head| head).to_vec(),
-            IoPayload::Binary(bytes) => bytes.get(..400).map_or(bytes.as_slice(), |head| head).to_vec(),
-        };
-        let head = String::from_utf8_lossy(&head).to_string();
+        let head = head_of(payload);
         if head.starts_with("ISO-10303-21") && head.contains("IFC2X3") {
             Confidence::High
         } else {
@@ -130,16 +205,32 @@ impl Deserializer<ModelSnapshot> for IfcIntoModel {
     }
 
     async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<ModelSnapshot> {
-        let bytes = match payload {
-            IoPayload::Text(text) => text.as_bytes(),
-            IoPayload::Binary(bytes) => bytes.as_slice(),
-        };
-        let (model, notes) = import_ifc2x3(bytes).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("IfcIntoModel: {message}"))))?;
-        let diagnostics = notes
-            .into_iter()
-            .map(|note| semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new("bim.ifc.import.skipped"), severity: semio_framework_diagnostic::Severity::Warning, span: Default::default(), message: note, expected: None, scope: Default::default() })
-            .collect();
-        Ok(IoOutcome { value: model, diagnostics })
+        let _ = control;
+        let (model, notes) = import_ifc2x3(bytes_of(payload)).map_err(|message| refused("Ifc2x3IntoModel", message))?;
+        Ok(IoOutcome { value: model, diagnostics: diagnostics_of(notes) })
+    }
+}
+
+/// 🏗️ The IFC4 deserializer of the BIM model.
+pub struct Ifc4IntoModel;
+
+impl Deserializer<ModelSnapshot> for Ifc4IntoModel {
+    const FROM: Dialect = IFC4_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Semantic;
+
+    async fn sniff(payload: &IoPayload) -> Confidence {
+        let head = head_of(payload);
+        if head.starts_with("ISO-10303-21") && head.contains("'IFC4'") {
+            Confidence::High
+        } else {
+            Confidence::None
+        }
+    }
+
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<ModelSnapshot> {
+        let _ = control;
+        let (model, notes) = import_ifc4(bytes_of(payload)).map_err(|message| refused("Ifc4IntoModel", message))?;
+        Ok(IoOutcome { value: model, diagnostics: diagnostics_of(notes) })
     }
 }
 //#endregion 🔖️Deserializer

@@ -1,1 +1,12 @@
-{}
+{
+  "ramps": {
+    "rp-1": {
+      "entry": "Patched",
+      "top": {
+        "Unconnected": {
+          "height": 1.2
+        }
+      }
+    }
+  }
+}

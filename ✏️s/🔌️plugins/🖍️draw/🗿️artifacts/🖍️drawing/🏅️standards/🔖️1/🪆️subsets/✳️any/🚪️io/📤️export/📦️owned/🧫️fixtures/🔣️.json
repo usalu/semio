@@ -1,0 +1,51 @@
+{
+  "source": "rectangle",
+  "viewBox": [
+    0,
+    0,
+    2,
+    1
+  ],
+  "expected": [
+    255,
+    0,
+    0,
+    255,
+    255,
+    0,
+    0,
+    255
+  ],
+  "formats": [
+    "png",
+    "svg",
+    "pdf"
+  ],
+  "workGrants": [
+    1,
+    7,
+    4096
+  ],
+  "cancelTurns": [
+    0,
+    1,
+    2,
+    7,
+    40
+  ],
+  "deniedBirth": [
+    "items",
+    "capacity",
+    "depth"
+  ],
+  "deniedHandoff": [
+    "items",
+    "depth"
+  ],
+  "fault": {
+    "format": "png",
+    "reason": "pixel-limit",
+    "height": 16384,
+    "width": 16384
+  }
+}

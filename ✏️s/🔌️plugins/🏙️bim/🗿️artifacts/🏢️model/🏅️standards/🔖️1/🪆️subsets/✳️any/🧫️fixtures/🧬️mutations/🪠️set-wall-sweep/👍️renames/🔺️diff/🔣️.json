@@ -1,1 +1,8 @@
-{}
+{
+  "wall_sweeps": {
+    "ws-base": {
+      "entry": "Patched",
+      "name": "Skirting"
+    }
+  }
+}

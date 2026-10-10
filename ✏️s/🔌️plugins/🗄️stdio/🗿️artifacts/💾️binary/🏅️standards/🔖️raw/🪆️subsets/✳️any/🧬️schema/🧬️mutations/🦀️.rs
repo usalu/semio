@@ -25,7 +25,7 @@ pub mod truncate_at;
 /// SAME `record_codegen` output the fields produced when they lived inline in the enum, so the
 /// committed `crate::standards::v_raw::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO`/`crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO`
 /// facets and this `OpText`/`OpBinary` pair are unaffected by the leaf split.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = BinarySnapshot, diff = BinaryDiff, schema = "BinaryMutation")]
 pub enum BinaryMutation {

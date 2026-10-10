@@ -3,6 +3,10 @@ import { afterEach, expect, it, vi } from "vitest";
 import { Vector2 } from "three";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { drawSceneNode } from "../../🎨️paint/🟦️.ts";
+import Ajv2020 from "ajv/dist/2020.js";
+import {JSDOM} from "jsdom";
+import catalogFixture from "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📝️text/🧫️fixtures/🎨️catalog/🔣️.json";
+import catalogSchema from "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📝️text/🧬️schema/🎨️catalog/🔣️.json";
 import fixture from "../../🧫️fixtures/🎨️paint/🔣️.json";
 import { paintDrawingScene, type PathSegment, type StrokeStyle } from "../../../../../../../../../🔨️modules/◻️2d/🟦️.ts";
 
@@ -12,6 +16,19 @@ function context() {
 }
 
 afterEach(() => vi.unstubAllGlobals());
+
+it("selects each explicit first-party catalog family with valid CSS font syntax",()=>{
+  expect(new Ajv2020({strict:true}).compile(catalogSchema)(catalogFixture)).toBe(true);
+  const dom=new JSDOM("<span></span>");const style=dom.window.document.querySelector("span")!.style;
+  for(const row of catalogFixture.families){
+    const ctx={...context(),font:"",fillText:vi.fn()};
+    const fontFamily=row.name as NonNullable<Parameters<typeof drawSceneNode>[1]["text"]>["fontFamily"];
+    drawSceneNode(ctx as unknown as CanvasRenderingContext2D,{text:{content:row.character,size:catalogFixture.size,fontFamily},fill:{kind:"solid",color:[0,0,0,1]}},new Map());
+    style.font=ctx.font;expect(style.fontSize).toBe(`${catalogFixture.size}px`);expect(style.fontFamily.replaceAll('"',"")).toBe(row.name);expect(ctx.fillText).toHaveBeenCalledTimes(1);
+    console.log(`[DEBUG] Browser canvas explicit family=${row.name} font=${ctx.font} CSSOM accepted`);
+  }
+  dom.window.close();
+});
 
 for (const example of fixture.zoomCases) it(`scales the authored stroke at zoom ${example.zoom}`, () => {
   const ctx = context();
@@ -46,13 +63,13 @@ import textFixture from "../../🧫️fixtures/📝️text/🔣️.json";
 
 it("paints authored line breaks at separate baselines", () => {
   const ctx = {...context(), fillText: vi.fn()};
-  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, {x: textFixture.x, y: textFixture.y, text: textFixture, fill: {kind: "solid", color: [0, 0, 0, 1]}}, new Map());
+  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, {x: textFixture.x, y: textFixture.y, text: {...textFixture,fontFamily:"Anta"}, fill: {kind: "solid", color: [0, 0, 0, 1]}}, new Map());
   expect(ctx.fillText.mock.calls).toEqual(textFixture.lines.flatMap((line, index) => line ? [[line, textFixture.x, textFixture.baselines[index]]] : []));
 });
 
 it("respects disabled fill and authored text stroke", () => {
   const ctx = {...context(), fillText: vi.fn(), strokeText: vi.fn()};
-  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, {text: {content: "Outline", size: 10}, stroke: {color: [1, 0, 0, 1], width: 2}}, new Map());
+  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, {text: {content: "Outline", size: 10,fontFamily:"Anta"}, stroke: {color: [1, 0, 0, 1], width: 2}}, new Map());
   expect(ctx.fillText).not.toHaveBeenCalled();
   expect(ctx.strokeText).toHaveBeenCalledWith("Outline", 0, 10);
   expect(ctx.lineWidth).toBe(2);
@@ -61,7 +78,7 @@ it("respects disabled fill and authored text stroke", () => {
 it("paints text with its authored gradient", () => {
   const gradient = {addColorStop: vi.fn()};
   const ctx = {...context(), fillText: vi.fn(), createLinearGradient: vi.fn(() => gradient), fillStyle: undefined as unknown};
-  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, {text: {content: "Gradient", size: 10}, fill: {kind: "linearGradient", x1: 0, y1: 0, x2: 20, y2: 0, stops: [{offset: 0, color: [1, 0, 0, 1]}, {offset: 1, color: [0, 0, 1, 1]}]}}, new Map());
+  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, {text: {content: "Gradient", size: 10,fontFamily:"Anta"}, fill: {kind: "linearGradient", x1: 0, y1: 0, x2: 20, y2: 0, stops: [{offset: 0, color: [1, 0, 0, 1]}, {offset: 1, color: [0, 0, 1, 1]}]}}, new Map());
   expect(ctx.fillStyle).toBe(gradient);
   expect(gradient.addColorStop).toHaveBeenCalledTimes(2);
 });

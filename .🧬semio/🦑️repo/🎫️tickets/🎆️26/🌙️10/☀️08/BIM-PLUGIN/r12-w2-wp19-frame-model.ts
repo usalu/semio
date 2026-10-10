@@ -28,7 +28,7 @@ export const frameStructs = [
     name: "CurtainWallType",
     doc: "🏬️ A curtain wall type: the grid rules of both directions, the mullion sections of the interior grid lines and of the border, the default panel of every cell, the glass material and the mullion material.",
     entity: { collection: "curtain_wall_types", plural: "CurtainWallTypes" },
-    fields: f("name:string, u_grid:CurtainGrid, v_grid:CurtainGrid, interior_mullion:Profile, border_mullion:Profile, panel:CurtainPanel, panel_material:string, mullion_material:string"),
+    fields: f("name:string, u_grid:CurtainGrid, v_grid:CurtainGrid, interior_mullion:Profile, border_mullion:Profile, panel:CurtainPanel, panel_material:string, mullion_material:string, u_value:opt:f64, g_value:opt:f64, frame_fraction:opt:f64"),
   },
   {
     name: "CurtainPanelOverride",

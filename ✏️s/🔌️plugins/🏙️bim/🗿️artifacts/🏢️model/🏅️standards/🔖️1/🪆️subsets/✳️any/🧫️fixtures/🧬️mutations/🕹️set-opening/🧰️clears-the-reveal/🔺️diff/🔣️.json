@@ -1,1 +1,13 @@
-{}
+{
+  "openings": {
+    "o-1": {
+      "entry": "Patched",
+      "reveal_depth": {
+        "value": null
+      },
+      "reveal_material": {
+        "value": null
+      }
+    }
+  }
+}

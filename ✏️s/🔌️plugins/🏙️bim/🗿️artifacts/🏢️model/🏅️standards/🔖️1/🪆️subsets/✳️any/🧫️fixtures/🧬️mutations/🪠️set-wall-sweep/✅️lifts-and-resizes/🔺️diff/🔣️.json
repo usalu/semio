@@ -1,1 +1,14 @@
-{}
+{
+  "wall_sweeps": {
+    "ws-base": {
+      "entry": "Patched",
+      "height": 0.05,
+      "profile": {
+        "Rectangle": {
+          "depth": 0.12,
+          "width": 0.03
+        }
+      }
+    }
+  }
+}

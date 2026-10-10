@@ -153,6 +153,11 @@ impl ArtifactCanonicalJson for IndexedDepth {
 //#region 🧹️OwnedRetirement
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(super) struct MapRetirementFactory;
+impl MapRetirementFactory {
+    fn birth_bytes() -> usize {
+        std::mem::size_of::<MapRetirement>() + ARTIFACT_CANONICAL_JSON_DEPTH * 2 * std::mem::size_of::<MapValue>()
+    }
+}
 impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {
     fn retirement_birth_bytes(&self, _value: &MapMutation) -> usize {
         semio_framework_value::retirement::owned_retirement_birth_bytes::<MapMutation>()

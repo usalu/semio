@@ -4,7 +4,11 @@ project {
   name="Office Building" description="Four-storey office building on a six metre structural grid with two escape stair cores and a curtain wall façade." author=semio organization=semio phase-names=[ Design Permit Construction ]
 }
 materials={
-  m-concrete={ name="Reinforced Concrete" category=concrete density=2400 conductivity=2.3 specific-heat=1000
+  m-ceramic={ name="Ceramic Tile" category=finish density=2000 conductivity=1 specific-heat=840
+  color {
+    r=0.88 g=0.88 b=0.85
+  }
+  } m-concrete={ name="Reinforced Concrete" category=concrete density=2400 conductivity=2.3 specific-heat=1000
   color {
     r=0.62 g=0.62 b=0.6
   }
@@ -23,6 +27,14 @@ materials={
   } m-membrane={ name="Bitumen Membrane" category=membrane density=1100 conductivity=0.17 specific-heat=1000
   color {
     r=0.15 g=0.15 b=0.15
+  }
+  } m-oak={ name="Oak Parquet" category=finish density=700 conductivity=0.17 specific-heat=1600
+  color {
+    r=0.62 g=0.45 b=0.28
+  }
+  } m-paint={ name="Interior Paint" category=finish density=1300 conductivity=0.8 specific-heat=1000
+  color {
+    r=0.96 g=0.95 b=0.92
   }
   } m-plaster={ name="Lime Gypsum Plaster" category=finish density=1400 conductivity=0.7 specific-heat=1000
   color {
@@ -93,7 +105,11 @@ column-types={
   }
 }
 beam-types={
-  bt-rc-primary={ name="RC Beam 400x600" material=m-concrete
+  bt-hea-300={ name="HEA 300 (profile family)" material=m-steel
+  profile {
+    family family=fam-hea-300
+  }
+  } bt-rc-primary={ name="RC Beam 400x600" material=m-concrete
   profile {
     rectangle width=0.4 depth=0.6
   }
@@ -104,10 +120,29 @@ beam-types={
   }
 }
 window-types={
-  wn-ribbon={ name="Ribbon Window" width=3 height=1.6 sill=0.85 frame-width=0.07 frame-depth=0.08 panes=3 material=m-steel }
+  wn-ribbon={ name="Ribbon Window" width=3 height=1.6 sill=0.85 frame-width=0.07 frame-depth=0.08 panes=3 material=m-steel u-value=1.3 g-value=0.45 frame-fraction=0.2 }
 }
 door-types={
-  dr-core={ name="Fire Door" width=0.9 height=2.1 frame-width=0.07 frame-depth=0.08 leaves=single swing=left material=m-steel } dr-glass={ name="Glass Entrance Door" width=1.8 height=2.4 frame-width=0.07 frame-depth=0.08 leaves=double swing=left material=m-steel }
+  dr-core={ name="Fire Door" width=0.9 height=2.1 frame-width=0.07 frame-depth=0.08 leaves=single swing=left material=m-steel u-value=1.8 } dr-glass={ name="Glass Entrance Door" width=1.8 height=2.4 frame-width=0.07 frame-depth=0.08 leaves=double swing=left material=m-steel u-value=1.4 }
+}
+curtain-wall-types={
+  cwt-facade={ name="Curtain wall 1.5 x 1.3" panel-material=m-glass mullion-material=m-steel
+  u-grid {
+    spacing spacing=1.5
+  }
+  v-grid {
+    spacing spacing=1.3
+  }
+  interior-mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  border-mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  panel {
+    glass
+  }
+  }
 }
 sites={
   site-1={ name="Plot Zurich" latitude=47.391 longitude=8.488 elevation=408 true-north=0.12
@@ -986,7 +1021,7 @@ walls={
   }
 }
 curtain-walls={
-  cu-0-north={ storey=st-0 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="North Curtain Wall 0"
+  cu-0-north={ storey=st-0 curtain-wall-type=cwt-facade base-offset=0 phase=demolished name="North Curtain Wall 0"
   axis {
     line
     start {
@@ -999,10 +1034,11 @@ curtain-walls={
   top {
     storey-top offset=0
   }
-  mullion {
-    rectangle width=0.05 depth=0.15
+  u-grid {
   }
-  } cu-0-south={ storey=st-0 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="South Curtain Wall 0"
+  v-grid {
+  }
+  } cu-0-south={ storey=st-0 curtain-wall-type=cwt-facade base-offset=0 phase=new name="South Curtain Wall 0"
   axis {
     line
     start {
@@ -1015,10 +1051,12 @@ curtain-walls={
   top {
     storey-top offset=0
   }
-  mullion {
-    rectangle width=0.05 depth=0.15
+  u-grid {
   }
-  } cu-1-north={ storey=st-1 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="North Curtain Wall 1"
+  v-grid {
+    lines positions=[ 2.4 ]
+  }
+  } cu-1-north={ storey=st-1 curtain-wall-type=cwt-facade base-offset=0 phase=new name="North Curtain Wall 1"
   axis {
     line
     start {
@@ -1031,10 +1069,11 @@ curtain-walls={
   top {
     storey-top offset=0
   }
-  mullion {
-    rectangle width=0.05 depth=0.15
+  u-grid {
   }
-  } cu-1-south={ storey=st-1 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="South Curtain Wall 1"
+  v-grid {
+  }
+  } cu-1-south={ storey=st-1 curtain-wall-type=cwt-facade base-offset=0 phase=new name="South Curtain Wall 1"
   axis {
     line
     start {
@@ -1047,10 +1086,11 @@ curtain-walls={
   top {
     storey-top offset=0
   }
-  mullion {
-    rectangle width=0.05 depth=0.15
+  u-grid {
   }
-  } cu-2-north={ storey=st-2 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="North Curtain Wall 2"
+  v-grid {
+  }
+  } cu-2-north={ storey=st-2 curtain-wall-type=cwt-facade base-offset=0 phase=new name="North Curtain Wall 2"
   axis {
     line
     start {
@@ -1063,10 +1103,12 @@ curtain-walls={
   top {
     storey-top offset=0
   }
-  mullion {
-    rectangle width=0.05 depth=0.15
+  u-grid {
+    lines positions=[ 5 10 15 20 25 ]
   }
-  } cu-2-south={ storey=st-2 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="South Curtain Wall 2"
+  v-grid {
+  }
+  } cu-2-south={ storey=st-2 curtain-wall-type=cwt-facade base-offset=0 phase=new name="South Curtain Wall 2"
   axis {
     line
     start {
@@ -1079,10 +1121,11 @@ curtain-walls={
   top {
     storey-top offset=0
   }
-  mullion {
-    rectangle width=0.05 depth=0.15
+  u-grid {
   }
-  } cu-3-north={ storey=st-3 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="North Curtain Wall 3"
+  v-grid {
+  }
+  } cu-3-north={ storey=st-3 curtain-wall-type=cwt-facade base-offset=0 phase=new name="North Curtain Wall 3"
   axis {
     line
     start {
@@ -1095,10 +1138,11 @@ curtain-walls={
   top {
     storey-top offset=0
   }
-  mullion {
-    rectangle width=0.05 depth=0.15
+  u-grid {
   }
-  } cu-3-south={ storey=st-3 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="South Curtain Wall 3"
+  v-grid {
+  }
+  } cu-3-south={ storey=st-3 curtain-wall-type=cwt-facade base-offset=0 phase=new name="South Curtain Wall 3"
   axis {
     line
     start {
@@ -1111,678 +1155,708 @@ curtain-walls={
   top {
     storey-top offset=0
   }
-  mullion {
-    rectangle width=0.05 depth=0.15
+  u-grid {
+  }
+  v-grid {
+  }
+  }
+}
+curtain-panel-overrides={
+  cpo-0-south-door={ curtain=cu-0-south u=15 v=0
+  panel {
+    door door-type=dr-core
+  }
+  } cpo-0-south-spandrel={ curtain=cu-0-south u=6 v=1
+  panel {
+    solid material=m-concrete
+  }
+  } cpo-0-south-vent={ curtain=cu-0-south u=3 v=1
+  panel {
+    empty
+  }
+  } cpo-1-south-window={ curtain=cu-1-south u=4 v=0
+  panel {
+    window window-type=wn-ribbon
   }
   }
 }
 columns={
-  c-0-A1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A1"
+  c-0-A1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column A1"
   position {
     x=0 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-0-A2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A2"
+  } c-0-A2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column A2"
   position {
     x=0 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-0-A3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A3"
+  } c-0-A3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column A3"
   position {
     x=0 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-0-A4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A4"
+  } c-0-A4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column A4"
   position {
     x=0 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-0-B1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B1"
+  } c-0-B1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column B1"
   position {
     x=6 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-0-B2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B2"
+  } c-0-B2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column B2"
   position {
     x=6 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-0-B3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B3"
+  } c-0-B3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column B3"
   position {
     x=6 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-0-B4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B4"
+  } c-0-B4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column B4"
   position {
     x=6 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-0-C1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C1"
+  } c-0-C1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column C1"
   position {
     x=12 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-0-C2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C2"
+  } c-0-C2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column C2"
   position {
     x=12 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-0-C3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C3"
+  } c-0-C3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column C3"
   position {
     x=12 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-0-C4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C4"
+  } c-0-C4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column C4"
   position {
     x=12 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-0-D1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D1"
+  } c-0-D1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column D1"
   position {
     x=18 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-0-D2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D2"
+  } c-0-D2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column D2"
   position {
     x=18 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-0-D3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D3"
+  } c-0-D3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column D3"
   position {
     x=18 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-0-D4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D4"
+  } c-0-D4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column D4"
   position {
     x=18 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-0-E1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E1"
+  } c-0-E1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column E1"
   position {
     x=24 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-0-E2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E2"
+  } c-0-E2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column E2"
   position {
     x=24 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-0-E3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E3"
+  } c-0-E3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column E3"
   position {
     x=24 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-0-E4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E4"
+  } c-0-E4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column E4"
   position {
     x=24 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-0-F1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F1"
+  } c-0-F1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column F1"
   position {
     x=30 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-0-F2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F2"
+  } c-0-F2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column F2"
   position {
     x=30 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-0-F3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F3"
+  } c-0-F3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column F3"
   position {
     x=30 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-0-F4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F4"
+  } c-0-F4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 phase=existing name="Column F4"
   position {
     x=30 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-1-A1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A1"
+  } c-1-A1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column A1"
   position {
     x=0 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-1-A2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A2"
+  } c-1-A2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column A2"
   position {
     x=0 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-1-A3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A3"
+  } c-1-A3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column A3"
   position {
     x=0 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-1-A4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A4"
+  } c-1-A4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column A4"
   position {
     x=0 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-1-B1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B1"
+  } c-1-B1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column B1"
   position {
     x=6 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-1-B2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B2"
+  } c-1-B2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column B2"
   position {
     x=6 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-1-B3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B3"
+  } c-1-B3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column B3"
   position {
     x=6 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-1-B4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B4"
+  } c-1-B4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column B4"
   position {
     x=6 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-1-C1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C1"
+  } c-1-C1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column C1"
   position {
     x=12 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-1-C2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C2"
+  } c-1-C2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column C2"
   position {
     x=12 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-1-C3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C3"
+  } c-1-C3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column C3"
   position {
     x=12 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-1-C4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C4"
+  } c-1-C4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column C4"
   position {
     x=12 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-1-D1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D1"
+  } c-1-D1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column D1"
   position {
     x=18 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-1-D2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D2"
+  } c-1-D2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column D2"
   position {
     x=18 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-1-D3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D3"
+  } c-1-D3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column D3"
   position {
     x=18 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-1-D4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D4"
+  } c-1-D4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column D4"
   position {
     x=18 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-1-E1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E1"
+  } c-1-E1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column E1"
   position {
     x=24 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-1-E2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E2"
+  } c-1-E2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column E2"
   position {
     x=24 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-1-E3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E3"
+  } c-1-E3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column E3"
   position {
     x=24 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-1-E4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E4"
+  } c-1-E4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column E4"
   position {
     x=24 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-1-F1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F1"
+  } c-1-F1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column F1"
   position {
     x=30 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-1-F2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F2"
+  } c-1-F2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column F2"
   position {
     x=30 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-1-F3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F3"
+  } c-1-F3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column F3"
   position {
     x=30 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-1-F4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F4"
+  } c-1-F4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 phase=new name="Column F4"
   position {
     x=30 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-2-A1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A1"
+  } c-1-lean={ storey=st-1 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Leaning Column"
+  position {
+    x=15 y=3
+  }
+  tilt {
+    direction=0 angle=0.1
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-A1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column A1"
   position {
     x=0 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-2-A2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A2"
+  } c-2-A2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column A2"
   position {
     x=0 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-2-A3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A3"
+  } c-2-A3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column A3"
   position {
     x=0 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-2-A4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A4"
+  } c-2-A4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column A4"
   position {
     x=0 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-2-B1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B1"
+  } c-2-B1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column B1"
   position {
     x=6 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-2-B2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B2"
+  } c-2-B2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column B2"
   position {
     x=6 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-2-B3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B3"
+  } c-2-B3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column B3"
   position {
     x=6 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-2-B4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B4"
+  } c-2-B4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column B4"
   position {
     x=6 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-2-C1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C1"
+  } c-2-C1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column C1"
   position {
     x=12 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-2-C2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C2"
+  } c-2-C2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column C2"
   position {
     x=12 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-2-C3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C3"
+  } c-2-C3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column C3"
   position {
     x=12 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-2-C4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C4"
+  } c-2-C4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column C4"
   position {
     x=12 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-2-D1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D1"
+  } c-2-D1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column D1"
   position {
     x=18 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-2-D2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D2"
+  } c-2-D2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column D2"
   position {
     x=18 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-2-D3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D3"
+  } c-2-D3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column D3"
   position {
     x=18 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-2-D4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D4"
+  } c-2-D4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column D4"
   position {
     x=18 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-2-E1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E1"
+  } c-2-E1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column E1"
   position {
     x=24 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-2-E2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E2"
+  } c-2-E2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column E2"
   position {
     x=24 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-2-E3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E3"
+  } c-2-E3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column E3"
   position {
     x=24 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-2-E4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E4"
+  } c-2-E4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column E4"
   position {
     x=24 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-2-F1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F1"
+  } c-2-F1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column F1"
   position {
     x=30 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-2-F2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F2"
+  } c-2-F2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column F2"
   position {
     x=30 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-2-F3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F3"
+  } c-2-F3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column F3"
   position {
     x=30 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-2-F4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F4"
+  } c-2-F4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column F4"
   position {
     x=30 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-3-A1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A1"
+  } c-3-A1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column A1"
   position {
     x=0 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-3-A2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A2"
+  } c-3-A2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column A2"
   position {
     x=0 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-3-A3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A3"
+  } c-3-A3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column A3"
   position {
     x=0 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-3-A4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A4"
+  } c-3-A4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column A4"
   position {
     x=0 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-3-B1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B1"
+  } c-3-B1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column B1"
   position {
     x=6 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-3-B2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B2"
+  } c-3-B2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column B2"
   position {
     x=6 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-3-B3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B3"
+  } c-3-B3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column B3"
   position {
     x=6 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-3-B4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B4"
+  } c-3-B4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column B4"
   position {
     x=6 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-3-C1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C1"
+  } c-3-C1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column C1"
   position {
     x=12 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-3-C2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C2"
+  } c-3-C2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column C2"
   position {
     x=12 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-3-C3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C3"
+  } c-3-C3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column C3"
   position {
     x=12 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-3-C4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C4"
+  } c-3-C4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column C4"
   position {
     x=12 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-3-D1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D1"
+  } c-3-D1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column D1"
   position {
     x=18 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-3-D2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D2"
+  } c-3-D2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column D2"
   position {
     x=18 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-3-D3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D3"
+  } c-3-D3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column D3"
   position {
     x=18 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-3-D4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D4"
+  } c-3-D4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column D4"
   position {
     x=18 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-3-E1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E1"
+  } c-3-E1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column E1"
   position {
     x=24 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-3-E2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E2"
+  } c-3-E2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column E2"
   position {
     x=24 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-3-E3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E3"
+  } c-3-E3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column E3"
   position {
     x=24 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-3-E4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E4"
+  } c-3-E4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column E4"
   position {
     x=24 y=18
   }
   top {
     storey-top offset=0
   }
-  } c-3-F1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F1"
+  } c-3-F1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column F1"
   position {
     x=30 y=0
   }
   top {
     storey-top offset=0
   }
-  } c-3-F2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F2"
+  } c-3-F2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column F2"
   position {
     x=30 y=6
   }
   top {
     storey-top offset=0
   }
-  } c-3-F3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F3"
+  } c-3-F3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column F3"
   position {
     x=30 y=12
   }
   top {
     storey-top offset=0
   }
-  } c-3-F4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F4"
+  } c-3-F4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 phase=new name="Column F4"
   position {
     x=30 y=18
   }
@@ -1792,1074 +1866,1570 @@ columns={
   }
 }
 beams={
-  bm-0-x-A1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A1-B1"
-  start {
-    x=0 y=0
-  }
-  end {
-    x=6 y=0
-  }
-  } bm-0-x-A2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A2-B2"
-  start {
-    x=0 y=6
-  }
-  end {
-    x=6 y=6
-  }
-  } bm-0-x-A3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A3-B3"
-  start {
-    x=0 y=12
-  }
-  end {
-    x=6 y=12
-  }
-  } bm-0-x-A4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A4-B4"
-  start {
-    x=0 y=18
-  }
-  end {
-    x=6 y=18
-  }
-  } bm-0-x-B1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B1-C1"
-  start {
-    x=6 y=0
-  }
-  end {
-    x=12 y=0
-  }
-  } bm-0-x-B2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B2-C2"
-  start {
-    x=6 y=6
-  }
-  end {
-    x=12 y=6
-  }
-  } bm-0-x-B3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B3-C3"
-  start {
-    x=6 y=12
-  }
-  end {
-    x=12 y=12
-  }
-  } bm-0-x-B4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B4-C4"
-  start {
-    x=6 y=18
-  }
-  end {
-    x=12 y=18
-  }
-  } bm-0-x-C1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C1-D1"
-  start {
-    x=12 y=0
-  }
-  end {
-    x=18 y=0
-  }
-  } bm-0-x-C2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C2-D2"
-  start {
-    x=12 y=6
-  }
-  end {
-    x=18 y=6
-  }
-  } bm-0-x-C3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C3-D3"
-  start {
-    x=12 y=12
-  }
-  end {
-    x=18 y=12
-  }
-  } bm-0-x-C4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C4-D4"
-  start {
-    x=12 y=18
-  }
-  end {
-    x=18 y=18
-  }
-  } bm-0-x-D1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D1-E1"
-  start {
-    x=18 y=0
-  }
-  end {
-    x=24 y=0
-  }
-  } bm-0-x-D2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D2-E2"
-  start {
-    x=18 y=6
-  }
-  end {
-    x=24 y=6
-  }
-  } bm-0-x-D3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D3-E3"
-  start {
-    x=18 y=12
-  }
-  end {
-    x=24 y=12
-  }
-  } bm-0-x-D4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D4-E4"
-  start {
-    x=18 y=18
-  }
-  end {
-    x=24 y=18
-  }
-  } bm-0-x-E1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E1-F1"
-  start {
-    x=24 y=0
-  }
-  end {
-    x=30 y=0
-  }
-  } bm-0-x-E2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E2-F2"
-  start {
-    x=24 y=6
-  }
-  end {
-    x=30 y=6
-  }
-  } bm-0-x-E3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E3-F3"
-  start {
-    x=24 y=12
-  }
-  end {
-    x=30 y=12
-  }
-  } bm-0-x-E4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E4-F4"
-  start {
-    x=24 y=18
-  }
-  end {
-    x=30 y=18
-  }
-  } bm-0-y-A1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A1-A2"
-  start {
-    x=0 y=0
-  }
-  end {
-    x=0 y=6
-  }
-  } bm-0-y-A2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A2-A3"
-  start {
-    x=0 y=6
-  }
-  end {
-    x=0 y=12
-  }
-  } bm-0-y-A3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A3-A4"
-  start {
-    x=0 y=12
-  }
-  end {
-    x=0 y=18
-  }
-  } bm-0-y-B1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B1-B2"
-  start {
-    x=6 y=0
-  }
-  end {
-    x=6 y=6
-  }
-  } bm-0-y-B2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B2-B3"
-  start {
-    x=6 y=6
-  }
-  end {
-    x=6 y=12
-  }
-  } bm-0-y-B3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B3-B4"
-  start {
-    x=6 y=12
-  }
-  end {
-    x=6 y=18
-  }
-  } bm-0-y-C1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C1-C2"
-  start {
-    x=12 y=0
-  }
-  end {
-    x=12 y=6
-  }
-  } bm-0-y-C2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C2-C3"
-  start {
-    x=12 y=6
-  }
-  end {
-    x=12 y=12
-  }
-  } bm-0-y-C3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C3-C4"
-  start {
-    x=12 y=12
-  }
-  end {
-    x=12 y=18
-  }
-  } bm-0-y-D1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D1-D2"
-  start {
-    x=18 y=0
-  }
-  end {
-    x=18 y=6
-  }
-  } bm-0-y-D2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D2-D3"
-  start {
-    x=18 y=6
-  }
-  end {
-    x=18 y=12
-  }
-  } bm-0-y-D3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D3-D4"
-  start {
-    x=18 y=12
-  }
-  end {
-    x=18 y=18
-  }
-  } bm-0-y-E1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E1-E2"
-  start {
-    x=24 y=0
-  }
-  end {
-    x=24 y=6
-  }
-  } bm-0-y-E2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E2-E3"
-  start {
-    x=24 y=6
-  }
-  end {
-    x=24 y=12
-  }
-  } bm-0-y-E3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E3-E4"
-  start {
-    x=24 y=12
-  }
-  end {
-    x=24 y=18
-  }
-  } bm-0-y-F1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F1-F2"
-  start {
-    x=30 y=0
-  }
-  end {
-    x=30 y=6
-  }
-  } bm-0-y-F2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F2-F3"
-  start {
-    x=30 y=6
-  }
-  end {
-    x=30 y=12
-  }
-  } bm-0-y-F3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F3-F4"
-  start {
-    x=30 y=12
-  }
-  end {
-    x=30 y=18
-  }
-  } bm-1-x-A1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A1-B1"
-  start {
-    x=0 y=0
-  }
-  end {
-    x=6 y=0
-  }
-  } bm-1-x-A2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A2-B2"
-  start {
-    x=0 y=6
-  }
-  end {
-    x=6 y=6
-  }
-  } bm-1-x-A3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A3-B3"
-  start {
-    x=0 y=12
-  }
-  end {
-    x=6 y=12
-  }
-  } bm-1-x-A4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A4-B4"
-  start {
-    x=0 y=18
-  }
-  end {
-    x=6 y=18
-  }
-  } bm-1-x-B1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B1-C1"
-  start {
-    x=6 y=0
-  }
-  end {
-    x=12 y=0
-  }
-  } bm-1-x-B2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B2-C2"
-  start {
-    x=6 y=6
-  }
-  end {
-    x=12 y=6
-  }
-  } bm-1-x-B3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B3-C3"
-  start {
-    x=6 y=12
-  }
-  end {
-    x=12 y=12
-  }
-  } bm-1-x-B4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B4-C4"
-  start {
-    x=6 y=18
-  }
-  end {
-    x=12 y=18
-  }
-  } bm-1-x-C1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C1-D1"
-  start {
-    x=12 y=0
-  }
-  end {
-    x=18 y=0
-  }
-  } bm-1-x-C2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C2-D2"
-  start {
-    x=12 y=6
-  }
-  end {
-    x=18 y=6
-  }
-  } bm-1-x-C3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C3-D3"
-  start {
-    x=12 y=12
-  }
-  end {
-    x=18 y=12
-  }
-  } bm-1-x-C4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C4-D4"
-  start {
-    x=12 y=18
-  }
-  end {
-    x=18 y=18
-  }
-  } bm-1-x-D1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D1-E1"
-  start {
-    x=18 y=0
-  }
-  end {
-    x=24 y=0
-  }
-  } bm-1-x-D2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D2-E2"
-  start {
-    x=18 y=6
-  }
-  end {
-    x=24 y=6
-  }
-  } bm-1-x-D3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D3-E3"
-  start {
-    x=18 y=12
-  }
-  end {
-    x=24 y=12
-  }
-  } bm-1-x-D4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D4-E4"
-  start {
-    x=18 y=18
-  }
-  end {
-    x=24 y=18
-  }
-  } bm-1-x-E1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E1-F1"
-  start {
-    x=24 y=0
-  }
-  end {
-    x=30 y=0
-  }
-  } bm-1-x-E2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E2-F2"
-  start {
-    x=24 y=6
-  }
-  end {
-    x=30 y=6
-  }
-  } bm-1-x-E3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E3-F3"
-  start {
-    x=24 y=12
-  }
-  end {
-    x=30 y=12
-  }
-  } bm-1-x-E4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E4-F4"
-  start {
-    x=24 y=18
-  }
-  end {
-    x=30 y=18
-  }
-  } bm-1-y-A1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A1-A2"
-  start {
-    x=0 y=0
-  }
-  end {
-    x=0 y=6
-  }
-  } bm-1-y-A2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A2-A3"
-  start {
-    x=0 y=6
-  }
-  end {
-    x=0 y=12
-  }
-  } bm-1-y-A3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A3-A4"
-  start {
-    x=0 y=12
-  }
-  end {
-    x=0 y=18
-  }
-  } bm-1-y-B1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B1-B2"
-  start {
-    x=6 y=0
-  }
-  end {
-    x=6 y=6
-  }
-  } bm-1-y-B2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B2-B3"
-  start {
-    x=6 y=6
-  }
-  end {
-    x=6 y=12
-  }
-  } bm-1-y-B3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B3-B4"
-  start {
-    x=6 y=12
-  }
-  end {
-    x=6 y=18
-  }
-  } bm-1-y-C1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C1-C2"
-  start {
-    x=12 y=0
-  }
-  end {
-    x=12 y=6
-  }
-  } bm-1-y-C2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C2-C3"
-  start {
-    x=12 y=6
-  }
-  end {
-    x=12 y=12
-  }
-  } bm-1-y-C3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C3-C4"
-  start {
-    x=12 y=12
-  }
-  end {
-    x=12 y=18
-  }
-  } bm-1-y-D1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D1-D2"
-  start {
-    x=18 y=0
-  }
-  end {
-    x=18 y=6
-  }
-  } bm-1-y-D2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D2-D3"
-  start {
-    x=18 y=6
-  }
-  end {
-    x=18 y=12
-  }
-  } bm-1-y-D3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D3-D4"
-  start {
-    x=18 y=12
-  }
-  end {
-    x=18 y=18
-  }
-  } bm-1-y-E1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E1-E2"
-  start {
-    x=24 y=0
-  }
-  end {
-    x=24 y=6
-  }
-  } bm-1-y-E2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E2-E3"
-  start {
-    x=24 y=6
-  }
-  end {
-    x=24 y=12
-  }
-  } bm-1-y-E3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E3-E4"
-  start {
-    x=24 y=12
-  }
-  end {
-    x=24 y=18
-  }
-  } bm-1-y-F1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F1-F2"
-  start {
-    x=30 y=0
-  }
-  end {
-    x=30 y=6
-  }
-  } bm-1-y-F2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F2-F3"
-  start {
-    x=30 y=6
-  }
-  end {
-    x=30 y=12
-  }
-  } bm-1-y-F3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F3-F4"
-  start {
-    x=30 y=12
-  }
-  end {
-    x=30 y=18
-  }
-  } bm-2-x-A1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A1-B1"
-  start {
-    x=0 y=0
-  }
-  end {
-    x=6 y=0
-  }
-  } bm-2-x-A2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A2-B2"
-  start {
-    x=0 y=6
-  }
-  end {
-    x=6 y=6
-  }
-  } bm-2-x-A3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A3-B3"
-  start {
-    x=0 y=12
-  }
-  end {
-    x=6 y=12
-  }
-  } bm-2-x-A4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A4-B4"
-  start {
-    x=0 y=18
-  }
-  end {
-    x=6 y=18
-  }
-  } bm-2-x-B1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B1-C1"
-  start {
-    x=6 y=0
-  }
-  end {
-    x=12 y=0
-  }
-  } bm-2-x-B2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B2-C2"
-  start {
-    x=6 y=6
-  }
-  end {
-    x=12 y=6
-  }
-  } bm-2-x-B3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B3-C3"
-  start {
-    x=6 y=12
-  }
-  end {
-    x=12 y=12
-  }
-  } bm-2-x-B4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B4-C4"
-  start {
-    x=6 y=18
-  }
-  end {
-    x=12 y=18
-  }
-  } bm-2-x-C1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C1-D1"
-  start {
-    x=12 y=0
-  }
-  end {
-    x=18 y=0
-  }
-  } bm-2-x-C2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C2-D2"
-  start {
-    x=12 y=6
-  }
-  end {
-    x=18 y=6
-  }
-  } bm-2-x-C3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C3-D3"
-  start {
-    x=12 y=12
-  }
-  end {
-    x=18 y=12
-  }
-  } bm-2-x-C4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C4-D4"
-  start {
-    x=12 y=18
-  }
-  end {
-    x=18 y=18
-  }
-  } bm-2-x-D1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D1-E1"
-  start {
-    x=18 y=0
-  }
-  end {
-    x=24 y=0
-  }
-  } bm-2-x-D2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D2-E2"
-  start {
-    x=18 y=6
-  }
-  end {
-    x=24 y=6
-  }
-  } bm-2-x-D3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D3-E3"
-  start {
-    x=18 y=12
-  }
-  end {
-    x=24 y=12
-  }
-  } bm-2-x-D4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D4-E4"
-  start {
-    x=18 y=18
-  }
-  end {
-    x=24 y=18
-  }
-  } bm-2-x-E1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E1-F1"
-  start {
-    x=24 y=0
-  }
-  end {
-    x=30 y=0
-  }
-  } bm-2-x-E2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E2-F2"
-  start {
-    x=24 y=6
-  }
-  end {
-    x=30 y=6
-  }
-  } bm-2-x-E3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E3-F3"
-  start {
-    x=24 y=12
-  }
-  end {
-    x=30 y=12
-  }
-  } bm-2-x-E4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E4-F4"
-  start {
-    x=24 y=18
-  }
-  end {
-    x=30 y=18
-  }
-  } bm-2-y-A1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A1-A2"
-  start {
-    x=0 y=0
-  }
-  end {
-    x=0 y=6
-  }
-  } bm-2-y-A2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A2-A3"
-  start {
-    x=0 y=6
-  }
-  end {
-    x=0 y=12
-  }
-  } bm-2-y-A3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A3-A4"
-  start {
-    x=0 y=12
-  }
-  end {
-    x=0 y=18
-  }
-  } bm-2-y-B1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B1-B2"
-  start {
-    x=6 y=0
-  }
-  end {
-    x=6 y=6
-  }
-  } bm-2-y-B2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B2-B3"
-  start {
-    x=6 y=6
-  }
-  end {
-    x=6 y=12
-  }
-  } bm-2-y-B3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B3-B4"
-  start {
-    x=6 y=12
-  }
-  end {
-    x=6 y=18
-  }
-  } bm-2-y-C1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C1-C2"
-  start {
-    x=12 y=0
-  }
-  end {
-    x=12 y=6
-  }
-  } bm-2-y-C2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C2-C3"
-  start {
-    x=12 y=6
-  }
-  end {
-    x=12 y=12
-  }
-  } bm-2-y-C3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C3-C4"
-  start {
-    x=12 y=12
-  }
-  end {
-    x=12 y=18
-  }
-  } bm-2-y-D1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D1-D2"
-  start {
-    x=18 y=0
-  }
-  end {
-    x=18 y=6
-  }
-  } bm-2-y-D2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D2-D3"
-  start {
-    x=18 y=6
-  }
-  end {
-    x=18 y=12
-  }
-  } bm-2-y-D3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D3-D4"
-  start {
-    x=18 y=12
-  }
-  end {
-    x=18 y=18
-  }
-  } bm-2-y-E1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E1-E2"
-  start {
-    x=24 y=0
-  }
-  end {
-    x=24 y=6
-  }
-  } bm-2-y-E2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E2-E3"
-  start {
-    x=24 y=6
-  }
-  end {
-    x=24 y=12
-  }
-  } bm-2-y-E3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E3-E4"
-  start {
-    x=24 y=12
-  }
-  end {
-    x=24 y=18
-  }
-  } bm-2-y-F1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F1-F2"
-  start {
-    x=30 y=0
-  }
-  end {
-    x=30 y=6
-  }
-  } bm-2-y-F2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F2-F3"
-  start {
-    x=30 y=6
-  }
-  end {
-    x=30 y=12
-  }
-  } bm-2-y-F3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F3-F4"
-  start {
-    x=30 y=12
-  }
-  end {
-    x=30 y=18
-  }
-  } bm-3-x-A1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A1-B1"
-  start {
-    x=0 y=0
-  }
-  end {
-    x=6 y=0
-  }
-  } bm-3-x-A2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A2-B2"
-  start {
-    x=0 y=6
-  }
-  end {
-    x=6 y=6
-  }
-  } bm-3-x-A3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A3-B3"
-  start {
-    x=0 y=12
-  }
-  end {
-    x=6 y=12
-  }
-  } bm-3-x-A4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A4-B4"
-  start {
-    x=0 y=18
-  }
-  end {
-    x=6 y=18
-  }
-  } bm-3-x-B1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B1-C1"
-  start {
-    x=6 y=0
-  }
-  end {
-    x=12 y=0
-  }
-  } bm-3-x-B2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B2-C2"
-  start {
-    x=6 y=6
-  }
-  end {
-    x=12 y=6
-  }
-  } bm-3-x-B3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B3-C3"
-  start {
-    x=6 y=12
-  }
-  end {
-    x=12 y=12
-  }
-  } bm-3-x-B4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B4-C4"
-  start {
-    x=6 y=18
-  }
-  end {
-    x=12 y=18
-  }
-  } bm-3-x-C1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C1-D1"
-  start {
-    x=12 y=0
-  }
-  end {
-    x=18 y=0
-  }
-  } bm-3-x-C2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C2-D2"
-  start {
-    x=12 y=6
-  }
-  end {
-    x=18 y=6
-  }
-  } bm-3-x-C3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C3-D3"
-  start {
-    x=12 y=12
-  }
-  end {
-    x=18 y=12
-  }
-  } bm-3-x-C4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C4-D4"
-  start {
-    x=12 y=18
-  }
-  end {
-    x=18 y=18
-  }
-  } bm-3-x-D1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D1-E1"
-  start {
-    x=18 y=0
-  }
-  end {
-    x=24 y=0
-  }
-  } bm-3-x-D2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D2-E2"
-  start {
-    x=18 y=6
-  }
-  end {
-    x=24 y=6
-  }
-  } bm-3-x-D3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D3-E3"
-  start {
-    x=18 y=12
-  }
-  end {
-    x=24 y=12
-  }
-  } bm-3-x-D4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D4-E4"
-  start {
-    x=18 y=18
-  }
-  end {
-    x=24 y=18
-  }
-  } bm-3-x-E1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E1-F1"
-  start {
-    x=24 y=0
-  }
-  end {
-    x=30 y=0
-  }
-  } bm-3-x-E2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E2-F2"
-  start {
-    x=24 y=6
-  }
-  end {
-    x=30 y=6
-  }
-  } bm-3-x-E3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E3-F3"
-  start {
-    x=24 y=12
-  }
-  end {
-    x=30 y=12
-  }
-  } bm-3-x-E4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E4-F4"
-  start {
-    x=24 y=18
-  }
-  end {
-    x=30 y=18
-  }
-  } bm-3-y-A1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A1-A2"
-  start {
-    x=0 y=0
-  }
-  end {
-    x=0 y=6
-  }
-  } bm-3-y-A2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A2-A3"
-  start {
-    x=0 y=6
-  }
-  end {
-    x=0 y=12
-  }
-  } bm-3-y-A3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A3-A4"
-  start {
-    x=0 y=12
-  }
-  end {
-    x=0 y=18
-  }
-  } bm-3-y-B1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B1-B2"
-  start {
-    x=6 y=0
-  }
-  end {
-    x=6 y=6
-  }
-  } bm-3-y-B2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B2-B3"
-  start {
-    x=6 y=6
-  }
-  end {
-    x=6 y=12
-  }
-  } bm-3-y-B3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B3-B4"
-  start {
-    x=6 y=12
-  }
-  end {
-    x=6 y=18
-  }
-  } bm-3-y-C1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C1-C2"
-  start {
-    x=12 y=0
-  }
-  end {
-    x=12 y=6
-  }
-  } bm-3-y-C2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C2-C3"
-  start {
-    x=12 y=6
-  }
-  end {
-    x=12 y=12
-  }
-  } bm-3-y-C3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C3-C4"
-  start {
-    x=12 y=12
-  }
-  end {
-    x=12 y=18
-  }
-  } bm-3-y-D1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D1-D2"
-  start {
-    x=18 y=0
-  }
-  end {
-    x=18 y=6
-  }
-  } bm-3-y-D2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D2-D3"
-  start {
-    x=18 y=6
-  }
-  end {
-    x=18 y=12
-  }
-  } bm-3-y-D3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D3-D4"
-  start {
-    x=18 y=12
-  }
-  end {
-    x=18 y=18
-  }
-  } bm-3-y-E1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E1-E2"
-  start {
-    x=24 y=0
-  }
-  end {
-    x=24 y=6
-  }
-  } bm-3-y-E2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E2-E3"
-  start {
-    x=24 y=6
-  }
-  end {
-    x=24 y=12
-  }
-  } bm-3-y-E3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E3-E4"
-  start {
-    x=24 y=12
-  }
-  end {
-    x=24 y=18
-  }
-  } bm-3-y-F1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F1-F2"
-  start {
-    x=30 y=0
-  }
-  end {
-    x=30 y=6
-  }
-  } bm-3-y-F2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F2-F3"
-  start {
-    x=30 y=6
-  }
-  end {
-    x=30 y=12
-  }
-  } bm-3-y-F3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F3-F4"
-  start {
-    x=30 y=12
-  }
-  end {
-    x=30 y=18
+  bm-0-x-A1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A1-B1"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=6 y=0
+    }
+  }
+  } bm-0-x-A2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A2-B2"
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=6 y=6
+    }
+  }
+  } bm-0-x-A3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A3-B3"
+  axis {
+    line
+    start {
+      x=0 y=12
+    }
+    end {
+      x=6 y=12
+    }
+  }
+  } bm-0-x-A4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A4-B4"
+  axis {
+    line
+    start {
+      x=0 y=18
+    }
+    end {
+      x=6 y=18
+    }
+  }
+  } bm-0-x-B1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B1-C1"
+  axis {
+    line
+    start {
+      x=6 y=0
+    }
+    end {
+      x=12 y=0
+    }
+  }
+  } bm-0-x-B2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B2-C2"
+  axis {
+    line
+    start {
+      x=6 y=6
+    }
+    end {
+      x=12 y=6
+    }
+  }
+  } bm-0-x-B3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B3-C3"
+  axis {
+    line
+    start {
+      x=6 y=12
+    }
+    end {
+      x=12 y=12
+    }
+  }
+  } bm-0-x-B4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B4-C4"
+  axis {
+    line
+    start {
+      x=6 y=18
+    }
+    end {
+      x=12 y=18
+    }
+  }
+  } bm-0-x-C1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C1-D1"
+  axis {
+    line
+    start {
+      x=12 y=0
+    }
+    end {
+      x=18 y=0
+    }
+  }
+  } bm-0-x-C2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C2-D2"
+  axis {
+    line
+    start {
+      x=12 y=6
+    }
+    end {
+      x=18 y=6
+    }
+  }
+  } bm-0-x-C3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C3-D3"
+  axis {
+    line
+    start {
+      x=12 y=12
+    }
+    end {
+      x=18 y=12
+    }
+  }
+  } bm-0-x-C4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C4-D4"
+  axis {
+    line
+    start {
+      x=12 y=18
+    }
+    end {
+      x=18 y=18
+    }
+  }
+  } bm-0-x-D1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D1-E1"
+  axis {
+    line
+    start {
+      x=18 y=0
+    }
+    end {
+      x=24 y=0
+    }
+  }
+  } bm-0-x-D2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D2-E2"
+  axis {
+    line
+    start {
+      x=18 y=6
+    }
+    end {
+      x=24 y=6
+    }
+  }
+  } bm-0-x-D3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D3-E3"
+  axis {
+    line
+    start {
+      x=18 y=12
+    }
+    end {
+      x=24 y=12
+    }
+  }
+  } bm-0-x-D4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D4-E4"
+  axis {
+    line
+    start {
+      x=18 y=18
+    }
+    end {
+      x=24 y=18
+    }
+  }
+  } bm-0-x-E1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E1-F1"
+  axis {
+    line
+    start {
+      x=24 y=0
+    }
+    end {
+      x=30 y=0
+    }
+  }
+  } bm-0-x-E2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E2-F2"
+  axis {
+    line
+    start {
+      x=24 y=6
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-0-x-E3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E3-F3"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=30 y=12
+    }
+  }
+  } bm-0-x-E4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E4-F4"
+  axis {
+    line
+    start {
+      x=24 y=18
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-0-y-A1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A1-A2"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=0 y=6
+    }
+  }
+  } bm-0-y-A2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A2-A3"
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=0 y=12
+    }
+  }
+  } bm-0-y-A3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A3-A4"
+  axis {
+    line
+    start {
+      x=0 y=12
+    }
+    end {
+      x=0 y=18
+    }
+  }
+  } bm-0-y-B1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B1-B2"
+  axis {
+    line
+    start {
+      x=6 y=0
+    }
+    end {
+      x=6 y=6
+    }
+  }
+  } bm-0-y-B2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B2-B3"
+  axis {
+    line
+    start {
+      x=6 y=6
+    }
+    end {
+      x=6 y=12
+    }
+  }
+  } bm-0-y-B3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B3-B4"
+  axis {
+    line
+    start {
+      x=6 y=12
+    }
+    end {
+      x=6 y=18
+    }
+  }
+  } bm-0-y-C1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C1-C2"
+  axis {
+    line
+    start {
+      x=12 y=0
+    }
+    end {
+      x=12 y=6
+    }
+  }
+  } bm-0-y-C2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C2-C3"
+  axis {
+    line
+    start {
+      x=12 y=6
+    }
+    end {
+      x=12 y=12
+    }
+  }
+  } bm-0-y-C3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C3-C4"
+  axis {
+    line
+    start {
+      x=12 y=12
+    }
+    end {
+      x=12 y=18
+    }
+  }
+  } bm-0-y-D1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D1-D2"
+  axis {
+    line
+    start {
+      x=18 y=0
+    }
+    end {
+      x=18 y=6
+    }
+  }
+  } bm-0-y-D2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D2-D3"
+  axis {
+    line
+    start {
+      x=18 y=6
+    }
+    end {
+      x=18 y=12
+    }
+  }
+  } bm-0-y-D3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D3-D4"
+  axis {
+    line
+    start {
+      x=18 y=12
+    }
+    end {
+      x=18 y=18
+    }
+  }
+  } bm-0-y-E1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E1-E2"
+  axis {
+    line
+    start {
+      x=24 y=0
+    }
+    end {
+      x=24 y=6
+    }
+  }
+  } bm-0-y-E2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E2-E3"
+  axis {
+    line
+    start {
+      x=24 y=6
+    }
+    end {
+      x=24 y=12
+    }
+  }
+  } bm-0-y-E3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E3-E4"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=24 y=18
+    }
+  }
+  } bm-0-y-F1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F1-F2"
+  axis {
+    line
+    start {
+      x=30 y=0
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-0-y-F2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F2-F3"
+  axis {
+    line
+    start {
+      x=30 y=6
+    }
+    end {
+      x=30 y=12
+    }
+  }
+  } bm-0-y-F3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F3-F4"
+  axis {
+    line
+    start {
+      x=30 y=12
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-1-arc-E1-F2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Arc Beam E1-F2"
+  axis {
+    arc bulge=-0.25
+    start {
+      x=24 y=0
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-1-x-A1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A1-B1"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=6 y=0
+    }
+  }
+  } bm-1-x-A2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A2-B2"
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=6 y=6
+    }
+  }
+  } bm-1-x-A3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A3-B3"
+  axis {
+    line
+    start {
+      x=0 y=12
+    }
+    end {
+      x=6 y=12
+    }
+  }
+  } bm-1-x-A4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A4-B4"
+  axis {
+    line
+    start {
+      x=0 y=18
+    }
+    end {
+      x=6 y=18
+    }
+  }
+  } bm-1-x-B1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B1-C1"
+  axis {
+    line
+    start {
+      x=6 y=0
+    }
+    end {
+      x=12 y=0
+    }
+  }
+  } bm-1-x-B2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B2-C2"
+  axis {
+    line
+    start {
+      x=6 y=6
+    }
+    end {
+      x=12 y=6
+    }
+  }
+  } bm-1-x-B3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B3-C3"
+  axis {
+    line
+    start {
+      x=6 y=12
+    }
+    end {
+      x=12 y=12
+    }
+  }
+  } bm-1-x-B4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B4-C4"
+  axis {
+    line
+    start {
+      x=6 y=18
+    }
+    end {
+      x=12 y=18
+    }
+  }
+  } bm-1-x-C1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C1-D1"
+  axis {
+    line
+    start {
+      x=12 y=0
+    }
+    end {
+      x=18 y=0
+    }
+  }
+  } bm-1-x-C2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C2-D2"
+  axis {
+    line
+    start {
+      x=12 y=6
+    }
+    end {
+      x=18 y=6
+    }
+  }
+  } bm-1-x-C3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C3-D3"
+  axis {
+    line
+    start {
+      x=12 y=12
+    }
+    end {
+      x=18 y=12
+    }
+  }
+  } bm-1-x-C4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C4-D4"
+  axis {
+    line
+    start {
+      x=12 y=18
+    }
+    end {
+      x=18 y=18
+    }
+  }
+  } bm-1-x-D1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D1-E1"
+  axis {
+    line
+    start {
+      x=18 y=0
+    }
+    end {
+      x=24 y=0
+    }
+  }
+  } bm-1-x-D2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D2-E2"
+  axis {
+    line
+    start {
+      x=18 y=6
+    }
+    end {
+      x=24 y=6
+    }
+  }
+  } bm-1-x-D3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D3-E3"
+  axis {
+    line
+    start {
+      x=18 y=12
+    }
+    end {
+      x=24 y=12
+    }
+  }
+  } bm-1-x-D4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D4-E4"
+  axis {
+    line
+    start {
+      x=18 y=18
+    }
+    end {
+      x=24 y=18
+    }
+  }
+  } bm-1-x-E1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E1-F1"
+  axis {
+    line
+    start {
+      x=24 y=0
+    }
+    end {
+      x=30 y=0
+    }
+  }
+  } bm-1-x-E2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E2-F2"
+  axis {
+    line
+    start {
+      x=24 y=6
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-1-x-E3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E3-F3"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=30 y=12
+    }
+  }
+  } bm-1-x-E4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E4-F4"
+  axis {
+    line
+    start {
+      x=24 y=18
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-1-y-A1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A1-A2"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=0 y=6
+    }
+  }
+  } bm-1-y-A2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A2-A3"
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=0 y=12
+    }
+  }
+  } bm-1-y-A3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A3-A4"
+  axis {
+    line
+    start {
+      x=0 y=12
+    }
+    end {
+      x=0 y=18
+    }
+  }
+  } bm-1-y-B1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B1-B2"
+  axis {
+    line
+    start {
+      x=6 y=0
+    }
+    end {
+      x=6 y=6
+    }
+  }
+  } bm-1-y-B2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B2-B3"
+  axis {
+    line
+    start {
+      x=6 y=6
+    }
+    end {
+      x=6 y=12
+    }
+  }
+  } bm-1-y-B3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B3-B4"
+  axis {
+    line
+    start {
+      x=6 y=12
+    }
+    end {
+      x=6 y=18
+    }
+  }
+  } bm-1-y-C1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C1-C2"
+  axis {
+    line
+    start {
+      x=12 y=0
+    }
+    end {
+      x=12 y=6
+    }
+  }
+  } bm-1-y-C2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C2-C3"
+  axis {
+    line
+    start {
+      x=12 y=6
+    }
+    end {
+      x=12 y=12
+    }
+  }
+  } bm-1-y-C3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C3-C4"
+  axis {
+    line
+    start {
+      x=12 y=12
+    }
+    end {
+      x=12 y=18
+    }
+  }
+  } bm-1-y-D1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D1-D2"
+  axis {
+    line
+    start {
+      x=18 y=0
+    }
+    end {
+      x=18 y=6
+    }
+  }
+  } bm-1-y-D2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D2-D3"
+  axis {
+    line
+    start {
+      x=18 y=6
+    }
+    end {
+      x=18 y=12
+    }
+  }
+  } bm-1-y-D3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D3-D4"
+  axis {
+    line
+    start {
+      x=18 y=12
+    }
+    end {
+      x=18 y=18
+    }
+  }
+  } bm-1-y-E1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E1-E2"
+  axis {
+    line
+    start {
+      x=24 y=0
+    }
+    end {
+      x=24 y=6
+    }
+  }
+  } bm-1-y-E2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E2-E3"
+  axis {
+    line
+    start {
+      x=24 y=6
+    }
+    end {
+      x=24 y=12
+    }
+  }
+  } bm-1-y-E3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E3-E4"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=24 y=18
+    }
+  }
+  } bm-1-y-F1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F1-F2"
+  axis {
+    line
+    start {
+      x=30 y=0
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-1-y-F2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F2-F3"
+  axis {
+    line
+    start {
+      x=30 y=6
+    }
+    end {
+      x=30 y=12
+    }
+  }
+  } bm-1-y-F3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F3-F4"
+  axis {
+    line
+    start {
+      x=30 y=12
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-2-x-A1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A1-B1"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=6 y=0
+    }
+  }
+  } bm-2-x-A2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A2-B2"
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=6 y=6
+    }
+  }
+  } bm-2-x-A3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A3-B3"
+  axis {
+    line
+    start {
+      x=0 y=12
+    }
+    end {
+      x=6 y=12
+    }
+  }
+  } bm-2-x-A4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A4-B4"
+  axis {
+    line
+    start {
+      x=0 y=18
+    }
+    end {
+      x=6 y=18
+    }
+  }
+  } bm-2-x-B1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B1-C1"
+  axis {
+    line
+    start {
+      x=6 y=0
+    }
+    end {
+      x=12 y=0
+    }
+  }
+  } bm-2-x-B2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B2-C2"
+  axis {
+    line
+    start {
+      x=6 y=6
+    }
+    end {
+      x=12 y=6
+    }
+  }
+  } bm-2-x-B3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B3-C3"
+  axis {
+    line
+    start {
+      x=6 y=12
+    }
+    end {
+      x=12 y=12
+    }
+  }
+  } bm-2-x-B4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B4-C4"
+  axis {
+    line
+    start {
+      x=6 y=18
+    }
+    end {
+      x=12 y=18
+    }
+  }
+  } bm-2-x-C1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C1-D1"
+  axis {
+    line
+    start {
+      x=12 y=0
+    }
+    end {
+      x=18 y=0
+    }
+  }
+  } bm-2-x-C2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C2-D2"
+  axis {
+    line
+    start {
+      x=12 y=6
+    }
+    end {
+      x=18 y=6
+    }
+  }
+  } bm-2-x-C3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C3-D3"
+  axis {
+    line
+    start {
+      x=12 y=12
+    }
+    end {
+      x=18 y=12
+    }
+  }
+  } bm-2-x-C4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C4-D4"
+  axis {
+    line
+    start {
+      x=12 y=18
+    }
+    end {
+      x=18 y=18
+    }
+  }
+  } bm-2-x-D1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D1-E1"
+  axis {
+    line
+    start {
+      x=18 y=0
+    }
+    end {
+      x=24 y=0
+    }
+  }
+  } bm-2-x-D2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D2-E2"
+  axis {
+    line
+    start {
+      x=18 y=6
+    }
+    end {
+      x=24 y=6
+    }
+  }
+  } bm-2-x-D3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D3-E3"
+  axis {
+    line
+    start {
+      x=18 y=12
+    }
+    end {
+      x=24 y=12
+    }
+  }
+  } bm-2-x-D4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D4-E4"
+  axis {
+    line
+    start {
+      x=18 y=18
+    }
+    end {
+      x=24 y=18
+    }
+  }
+  } bm-2-x-E1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E1-F1"
+  axis {
+    line
+    start {
+      x=24 y=0
+    }
+    end {
+      x=30 y=0
+    }
+  }
+  } bm-2-x-E2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E2-F2"
+  axis {
+    line
+    start {
+      x=24 y=6
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-2-x-E3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E3-F3"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=30 y=12
+    }
+  }
+  } bm-2-x-E4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E4-F4"
+  axis {
+    line
+    start {
+      x=24 y=18
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-2-y-A1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A1-A2"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=0 y=6
+    }
+  }
+  } bm-2-y-A2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A2-A3"
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=0 y=12
+    }
+  }
+  } bm-2-y-A3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A3-A4"
+  axis {
+    line
+    start {
+      x=0 y=12
+    }
+    end {
+      x=0 y=18
+    }
+  }
+  } bm-2-y-B1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B1-B2"
+  axis {
+    line
+    start {
+      x=6 y=0
+    }
+    end {
+      x=6 y=6
+    }
+  }
+  } bm-2-y-B2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B2-B3"
+  axis {
+    line
+    start {
+      x=6 y=6
+    }
+    end {
+      x=6 y=12
+    }
+  }
+  } bm-2-y-B3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B3-B4"
+  axis {
+    line
+    start {
+      x=6 y=12
+    }
+    end {
+      x=6 y=18
+    }
+  }
+  } bm-2-y-C1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C1-C2"
+  axis {
+    line
+    start {
+      x=12 y=0
+    }
+    end {
+      x=12 y=6
+    }
+  }
+  } bm-2-y-C2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C2-C3"
+  axis {
+    line
+    start {
+      x=12 y=6
+    }
+    end {
+      x=12 y=12
+    }
+  }
+  } bm-2-y-C3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C3-C4"
+  axis {
+    line
+    start {
+      x=12 y=12
+    }
+    end {
+      x=12 y=18
+    }
+  }
+  } bm-2-y-D1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D1-D2"
+  axis {
+    line
+    start {
+      x=18 y=0
+    }
+    end {
+      x=18 y=6
+    }
+  }
+  } bm-2-y-D2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D2-D3"
+  axis {
+    line
+    start {
+      x=18 y=6
+    }
+    end {
+      x=18 y=12
+    }
+  }
+  } bm-2-y-D3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D3-D4"
+  axis {
+    line
+    start {
+      x=18 y=12
+    }
+    end {
+      x=18 y=18
+    }
+  }
+  } bm-2-y-E1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E1-E2"
+  axis {
+    line
+    start {
+      x=24 y=0
+    }
+    end {
+      x=24 y=6
+    }
+  }
+  } bm-2-y-E2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E2-E3"
+  axis {
+    line
+    start {
+      x=24 y=6
+    }
+    end {
+      x=24 y=12
+    }
+  }
+  } bm-2-y-E3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E3-E4"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=24 y=18
+    }
+  }
+  } bm-2-y-F1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F1-F2"
+  axis {
+    line
+    start {
+      x=30 y=0
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-2-y-F2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F2-F3"
+  axis {
+    line
+    start {
+      x=30 y=6
+    }
+    end {
+      x=30 y=12
+    }
+  }
+  } bm-2-y-F3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F3-F4"
+  axis {
+    line
+    start {
+      x=30 y=12
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-3-incline-E3-F4={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 end-top-offset=-1 phase=new name="Inclined Beam E3-F4"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-3-x-A1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A1-B1"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=6 y=0
+    }
+  }
+  } bm-3-x-A2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A2-B2"
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=6 y=6
+    }
+  }
+  } bm-3-x-A3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A3-B3"
+  axis {
+    line
+    start {
+      x=0 y=12
+    }
+    end {
+      x=6 y=12
+    }
+  }
+  } bm-3-x-A4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam A4-B4"
+  axis {
+    line
+    start {
+      x=0 y=18
+    }
+    end {
+      x=6 y=18
+    }
+  }
+  } bm-3-x-B1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B1-C1"
+  axis {
+    line
+    start {
+      x=6 y=0
+    }
+    end {
+      x=12 y=0
+    }
+  }
+  } bm-3-x-B2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B2-C2"
+  axis {
+    line
+    start {
+      x=6 y=6
+    }
+    end {
+      x=12 y=6
+    }
+  }
+  } bm-3-x-B3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B3-C3"
+  axis {
+    line
+    start {
+      x=6 y=12
+    }
+    end {
+      x=12 y=12
+    }
+  }
+  } bm-3-x-B4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam B4-C4"
+  axis {
+    line
+    start {
+      x=6 y=18
+    }
+    end {
+      x=12 y=18
+    }
+  }
+  } bm-3-x-C1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C1-D1"
+  axis {
+    line
+    start {
+      x=12 y=0
+    }
+    end {
+      x=18 y=0
+    }
+  }
+  } bm-3-x-C2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C2-D2"
+  axis {
+    line
+    start {
+      x=12 y=6
+    }
+    end {
+      x=18 y=6
+    }
+  }
+  } bm-3-x-C3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C3-D3"
+  axis {
+    line
+    start {
+      x=12 y=12
+    }
+    end {
+      x=18 y=12
+    }
+  }
+  } bm-3-x-C4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam C4-D4"
+  axis {
+    line
+    start {
+      x=12 y=18
+    }
+    end {
+      x=18 y=18
+    }
+  }
+  } bm-3-x-D1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D1-E1"
+  axis {
+    line
+    start {
+      x=18 y=0
+    }
+    end {
+      x=24 y=0
+    }
+  }
+  } bm-3-x-D2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D2-E2"
+  axis {
+    line
+    start {
+      x=18 y=6
+    }
+    end {
+      x=24 y=6
+    }
+  }
+  } bm-3-x-D3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D3-E3"
+  axis {
+    line
+    start {
+      x=18 y=12
+    }
+    end {
+      x=24 y=12
+    }
+  }
+  } bm-3-x-D4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam D4-E4"
+  axis {
+    line
+    start {
+      x=18 y=18
+    }
+    end {
+      x=24 y=18
+    }
+  }
+  } bm-3-x-E1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E1-F1"
+  axis {
+    line
+    start {
+      x=24 y=0
+    }
+    end {
+      x=30 y=0
+    }
+  }
+  } bm-3-x-E2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E2-F2"
+  axis {
+    line
+    start {
+      x=24 y=6
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-3-x-E3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E3-F3"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=30 y=12
+    }
+  }
+  } bm-3-x-E4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 phase=new name="Beam E4-F4"
+  axis {
+    line
+    start {
+      x=24 y=18
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-3-y-A1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A1-A2"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=0 y=6
+    }
+  }
+  } bm-3-y-A2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A2-A3"
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=0 y=12
+    }
+  }
+  } bm-3-y-A3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam A3-A4"
+  axis {
+    line
+    start {
+      x=0 y=12
+    }
+    end {
+      x=0 y=18
+    }
+  }
+  } bm-3-y-B1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B1-B2"
+  axis {
+    line
+    start {
+      x=6 y=0
+    }
+    end {
+      x=6 y=6
+    }
+  }
+  } bm-3-y-B2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B2-B3"
+  axis {
+    line
+    start {
+      x=6 y=6
+    }
+    end {
+      x=6 y=12
+    }
+  }
+  } bm-3-y-B3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam B3-B4"
+  axis {
+    line
+    start {
+      x=6 y=12
+    }
+    end {
+      x=6 y=18
+    }
+  }
+  } bm-3-y-C1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C1-C2"
+  axis {
+    line
+    start {
+      x=12 y=0
+    }
+    end {
+      x=12 y=6
+    }
+  }
+  } bm-3-y-C2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C2-C3"
+  axis {
+    line
+    start {
+      x=12 y=6
+    }
+    end {
+      x=12 y=12
+    }
+  }
+  } bm-3-y-C3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam C3-C4"
+  axis {
+    line
+    start {
+      x=12 y=12
+    }
+    end {
+      x=12 y=18
+    }
+  }
+  } bm-3-y-D1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D1-D2"
+  axis {
+    line
+    start {
+      x=18 y=0
+    }
+    end {
+      x=18 y=6
+    }
+  }
+  } bm-3-y-D2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D2-D3"
+  axis {
+    line
+    start {
+      x=18 y=6
+    }
+    end {
+      x=18 y=12
+    }
+  }
+  } bm-3-y-D3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam D3-D4"
+  axis {
+    line
+    start {
+      x=18 y=12
+    }
+    end {
+      x=18 y=18
+    }
+  }
+  } bm-3-y-E1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E1-E2"
+  axis {
+    line
+    start {
+      x=24 y=0
+    }
+    end {
+      x=24 y=6
+    }
+  }
+  } bm-3-y-E2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E2-E3"
+  axis {
+    line
+    start {
+      x=24 y=6
+    }
+    end {
+      x=24 y=12
+    }
+  }
+  } bm-3-y-E3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam E3-E4"
+  axis {
+    line
+    start {
+      x=24 y=12
+    }
+    end {
+      x=24 y=18
+    }
+  }
+  } bm-3-y-F1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F1-F2"
+  axis {
+    line
+    start {
+      x=30 y=0
+    }
+    end {
+      x=30 y=6
+    }
+  }
+  } bm-3-y-F2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F2-F3"
+  axis {
+    line
+    start {
+      x=30 y=6
+    }
+    end {
+      x=30 y=12
+    }
+  }
+  } bm-3-y-F3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 phase=new name="Beam F3-F4"
+  axis {
+    line
+    start {
+      x=30 y=12
+    }
+    end {
+      x=30 y=18
+    }
+  }
+  } bm-canopy-1={ storey=st-0 beam-type=bt-hea-300 top-offset=-0.36 phase=new name="Canopy Beam 1"
+  axis {
+    line
+    start {
+      x=12 y=-2.4
+    }
+    end {
+      x=18 y=-2.4
+    }
+  }
+  } bm-canopy-2={ storey=st-0 beam-type=bt-hea-300 top-offset=-0.36 phase=new name="Canopy Beam 2"
+  axis {
+    line
+    start {
+      x=12 y=-1.2
+    }
+    end {
+      x=18 y=-1.2
+    }
   }
   }
 }
 slabs={
-  sl-0={ storey=st-0 slab-type=sl-ground offset=0 name="Ground Slab" holes=[ ]
+  sl-0={ storey=st-0 slab-type=sl-ground offset=0 phase=existing name="Ground Slab" holes=[ ]
   boundary [point:BLOCK bulge:NUM] {
  {
       x=-0.3 y=-0.3
@@ -2878,7 +3448,7 @@ slabs={
     }
     0
   }
-  } sl-1={ storey=st-1 slab-type=sl-floor offset=0 name="Floor Slab 1" holes=[ [ { bulge=0
+  } sl-1={ storey=st-1 slab-type=sl-floor offset=0 phase=new name="Floor Slab 1" holes=[ [ { bulge=0
   point {
     x=7.15 y=6.55
   }
@@ -2929,7 +3499,7 @@ slabs={
     }
     0
   }
-  } sl-2={ storey=st-2 slab-type=sl-floor offset=0 name="Floor Slab 2" holes=[ [ { bulge=0
+  } sl-2={ storey=st-2 slab-type=sl-floor offset=0 phase=new name="Floor Slab 2" holes=[ [ { bulge=0
   point {
     x=7.15 y=6.55
   }
@@ -2980,7 +3550,7 @@ slabs={
     }
     0
   }
-  } sl-3={ storey=st-3 slab-type=sl-floor offset=0 name="Floor Slab 3" holes=[ [ { bulge=0
+  } sl-3={ storey=st-3 slab-type=sl-floor offset=0 phase=new name="Floor Slab 3" holes=[ [ { bulge=0
   point {
     x=7.15 y=6.55
   }
@@ -3034,7 +3604,7 @@ slabs={
   }
 }
 roofs={
-  rf-main={ storey=st-r roof-type=rt-flat overhang=0 base-offset=0 name="Flat Roof"
+  rf-main={ storey=st-r roof-type=rt-flat overhang=0 base-offset=0 phase=new name="Flat Roof"
   shape {
     flat
   }
@@ -3226,7 +3796,7 @@ openings={
   }
 }
 stairs={
-  sr-0-e={ storey=st-0 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair E 0"
+  sr-0-e={ storey=st-0 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 phase=new name="Escape Stair E 0"
   start {
     x=21.5 y=6.65
   }
@@ -3239,7 +3809,7 @@ stairs={
   stringer {
     kind=mono width=0.2 depth=0.3
   }
-  } sr-0-w={ storey=st-0 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair W 0"
+  } sr-0-w={ storey=st-0 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 phase=new name="Escape Stair W 0"
   start {
     x=8.5 y=6.65
   }
@@ -3252,7 +3822,7 @@ stairs={
   stringer {
     kind=mono width=0.2 depth=0.3
   }
-  } sr-1-e={ storey=st-1 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair E 1"
+  } sr-1-e={ storey=st-1 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 phase=new name="Escape Stair E 1"
   start {
     x=21.5 y=6.65
   }
@@ -3265,7 +3835,7 @@ stairs={
   stringer {
     kind=mono width=0.2 depth=0.3
   }
-  } sr-1-w={ storey=st-1 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair W 1"
+  } sr-1-w={ storey=st-1 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 phase=new name="Escape Stair W 1"
   start {
     x=8.5 y=6.65
   }
@@ -3278,7 +3848,7 @@ stairs={
   stringer {
     kind=mono width=0.2 depth=0.3
   }
-  } sr-2-e={ storey=st-2 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair E 2"
+  } sr-2-e={ storey=st-2 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 phase=new name="Escape Stair E 2"
   start {
     x=21.5 y=6.65
   }
@@ -3291,7 +3861,7 @@ stairs={
   stringer {
     kind=mono width=0.2 depth=0.3
   }
-  } sr-2-w={ storey=st-2 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair W 2"
+  } sr-2-w={ storey=st-2 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 phase=new name="Escape Stair W 2"
   start {
     x=8.5 y=6.65
   }
@@ -3308,8 +3878,249 @@ stairs={
 }
 railings={
 }
+ramps={
+}
+ceiling-types={
+  cet-tile-grid={ name="Suspended Tile Ceiling 5"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-plaster 0.02 finish
+    m-insulation 0.03 insulation
+  }
+  }
+}
+ceilings={
+  ce-0-centre={ storey=st-0 ceiling-type=cet-tile-grid offset=1 name="Centre Suspended Ceiling 0" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=10.3 y=6.3
+    }
+    0
+ {
+      x=19.7 y=6.3
+    }
+    0
+ {
+      x=19.7 y=11.7
+    }
+    0
+ {
+      x=10.3 y=11.7
+    }
+    0
+  }
+  } ce-0-north={ storey=st-0 ceiling-type=cet-tile-grid offset=1 name="North Suspended Ceiling 0" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0.3 y=12.3
+    }
+    0
+ {
+      x=29.7 y=12.3
+    }
+    0
+ {
+      x=29.7 y=17.7
+    }
+    0
+ {
+      x=0.3 y=17.7
+    }
+    0
+  }
+  } ce-0-south={ storey=st-0 ceiling-type=cet-tile-grid offset=1 name="South Suspended Ceiling 0" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0.3 y=0.3
+    }
+    0
+ {
+      x=29.7 y=0.3
+    }
+    0
+ {
+      x=29.7 y=5.7
+    }
+    0
+ {
+      x=0.3 y=5.7
+    }
+    0
+  }
+  } ce-1-centre={ storey=st-1 ceiling-type=cet-tile-grid offset=1 name="Centre Suspended Ceiling 1" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=10.3 y=6.3
+    }
+    0
+ {
+      x=19.7 y=6.3
+    }
+    0
+ {
+      x=19.7 y=11.7
+    }
+    0
+ {
+      x=10.3 y=11.7
+    }
+    0
+  }
+  } ce-1-north={ storey=st-1 ceiling-type=cet-tile-grid offset=1 name="North Suspended Ceiling 1" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0.3 y=12.3
+    }
+    0
+ {
+      x=29.7 y=12.3
+    }
+    0
+ {
+      x=29.7 y=17.7
+    }
+    0
+ {
+      x=0.3 y=17.7
+    }
+    0
+  }
+  } ce-1-south={ storey=st-1 ceiling-type=cet-tile-grid offset=1 name="South Suspended Ceiling 1" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0.3 y=0.3
+    }
+    0
+ {
+      x=29.7 y=0.3
+    }
+    0
+ {
+      x=29.7 y=5.7
+    }
+    0
+ {
+      x=0.3 y=5.7
+    }
+    0
+  }
+  } ce-2-centre={ storey=st-2 ceiling-type=cet-tile-grid offset=1 name="Centre Suspended Ceiling 2" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=10.3 y=6.3
+    }
+    0
+ {
+      x=19.7 y=6.3
+    }
+    0
+ {
+      x=19.7 y=11.7
+    }
+    0
+ {
+      x=10.3 y=11.7
+    }
+    0
+  }
+  } ce-2-north={ storey=st-2 ceiling-type=cet-tile-grid offset=1 name="North Suspended Ceiling 2" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0.3 y=12.3
+    }
+    0
+ {
+      x=29.7 y=12.3
+    }
+    0
+ {
+      x=29.7 y=17.7
+    }
+    0
+ {
+      x=0.3 y=17.7
+    }
+    0
+  }
+  } ce-2-south={ storey=st-2 ceiling-type=cet-tile-grid offset=1 name="South Suspended Ceiling 2" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0.3 y=0.3
+    }
+    0
+ {
+      x=29.7 y=0.3
+    }
+    0
+ {
+      x=29.7 y=5.7
+    }
+    0
+ {
+      x=0.3 y=5.7
+    }
+    0
+  }
+  } ce-3-centre={ storey=st-3 ceiling-type=cet-tile-grid offset=1 name="Centre Suspended Ceiling 3" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=10.3 y=6.3
+    }
+    0
+ {
+      x=19.7 y=6.3
+    }
+    0
+ {
+      x=19.7 y=11.7
+    }
+    0
+ {
+      x=10.3 y=11.7
+    }
+    0
+  }
+  } ce-3-north={ storey=st-3 ceiling-type=cet-tile-grid offset=1 name="North Suspended Ceiling 3" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0.3 y=12.3
+    }
+    0
+ {
+      x=29.7 y=12.3
+    }
+    0
+ {
+      x=29.7 y=17.7
+    }
+    0
+ {
+      x=0.3 y=17.7
+    }
+    0
+  }
+  } ce-3-south={ storey=st-3 ceiling-type=cet-tile-grid offset=1 name="South Suspended Ceiling 3" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0.3 y=0.3
+    }
+    0
+ {
+      x=29.7 y=0.3
+    }
+    0
+ {
+      x=29.7 y=5.7
+    }
+    0
+ {
+      x=0.3 y=5.7
+    }
+    0
+  }
+  }
+}
 spaces={
-  sp-0-1={ storey=st-0 number="0.01" name=Lobby usage=Lobby
+  sp-0-1={ storey=st-0 number="0.01" name=Lobby usage=Lobby phase=new zone=z-office floor-finish=m-oak wall-finish=m-paint ceiling-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3331,7 +4142,7 @@ spaces={
       0
     }
   }
-  } sp-0-2={ storey=st-0 number="0.02" name="Open Office North" usage=Office
+  } sp-0-2={ storey=st-0 number="0.02" name="Open Office North" usage=Office phase=new zone=z-office floor-finish=m-oak wall-finish=m-paint ceiling-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3353,7 +4164,7 @@ spaces={
       0
     }
   }
-  } sp-0-3={ storey=st-0 number="0.03" name="Circulation West" usage=Circulation
+  } sp-0-3={ storey=st-0 number="0.03" name="Circulation West" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3375,7 +4186,7 @@ spaces={
       0
     }
   }
-  } sp-0-4={ storey=st-0 number="0.04" name="Circulation Centre" usage=Circulation
+  } sp-0-4={ storey=st-0 number="0.04" name="Circulation Centre" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3397,7 +4208,7 @@ spaces={
       0
     }
   }
-  } sp-0-5={ storey=st-0 number="0.05" name="Circulation East" usage=Circulation
+  } sp-0-5={ storey=st-0 number="0.05" name="Circulation East" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3419,21 +4230,21 @@ spaces={
       0
     }
   }
-  } sp-0-6={ storey=st-0 number="0.06" name="Stair Core West" usage="Escape Stair"
+  } sp-0-6={ storey=st-0 number="0.06" name="Stair Core West" usage="Escape Stair" phase=new zone=z-circulation
   boundary {
     bounded
     seed {
       x=8.5 y=9
     }
   }
-  } sp-0-7={ storey=st-0 number="0.07" name="Stair Core East" usage="Escape Stair"
+  } sp-0-7={ storey=st-0 number="0.07" name="Stair Core East" usage="Escape Stair" phase=new zone=z-circulation
   boundary {
     bounded
     seed {
       x=21.5 y=9
     }
   }
-  } sp-1-1={ storey=st-1 number="1.01" name="Open Office South" usage=Office
+  } sp-1-1={ storey=st-1 number="1.01" name="Open Office South" usage=Office phase=new zone=z-office floor-finish=m-oak wall-finish=m-paint ceiling-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3455,7 +4266,7 @@ spaces={
       0
     }
   }
-  } sp-1-2={ storey=st-1 number="1.02" name="Open Office North" usage=Office
+  } sp-1-2={ storey=st-1 number="1.02" name="Open Office North" usage=Office phase=new zone=z-office floor-finish=m-oak wall-finish=m-paint ceiling-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3477,7 +4288,7 @@ spaces={
       0
     }
   }
-  } sp-1-3={ storey=st-1 number="1.03" name="Circulation West" usage=Circulation
+  } sp-1-3={ storey=st-1 number="1.03" name="Circulation West" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3499,7 +4310,7 @@ spaces={
       0
     }
   }
-  } sp-1-4={ storey=st-1 number="1.04" name="Circulation Centre" usage=Circulation
+  } sp-1-4={ storey=st-1 number="1.04" name="Circulation Centre" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3521,7 +4332,7 @@ spaces={
       0
     }
   }
-  } sp-1-5={ storey=st-1 number="1.05" name="Circulation East" usage=Circulation
+  } sp-1-5={ storey=st-1 number="1.05" name="Circulation East" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3543,21 +4354,21 @@ spaces={
       0
     }
   }
-  } sp-1-6={ storey=st-1 number="1.06" name="Stair Core West" usage="Escape Stair"
+  } sp-1-6={ storey=st-1 number="1.06" name="Stair Core West" usage="Escape Stair" phase=new zone=z-circulation
   boundary {
     bounded
     seed {
       x=8.5 y=9
     }
   }
-  } sp-1-7={ storey=st-1 number="1.07" name="Stair Core East" usage="Escape Stair"
+  } sp-1-7={ storey=st-1 number="1.07" name="Stair Core East" usage="Escape Stair" phase=new zone=z-circulation
   boundary {
     bounded
     seed {
       x=21.5 y=9
     }
   }
-  } sp-2-1={ storey=st-2 number="2.01" name="Open Office South" usage=Office
+  } sp-2-1={ storey=st-2 number="2.01" name="Open Office South" usage=Office phase=new zone=z-office floor-finish=m-oak wall-finish=m-paint ceiling-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3579,7 +4390,7 @@ spaces={
       0
     }
   }
-  } sp-2-2={ storey=st-2 number="2.02" name="Open Office North" usage=Office
+  } sp-2-2={ storey=st-2 number="2.02" name="Open Office North" usage=Office phase=new zone=z-office floor-finish=m-oak wall-finish=m-paint ceiling-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3601,7 +4412,7 @@ spaces={
       0
     }
   }
-  } sp-2-3={ storey=st-2 number="2.03" name="Circulation West" usage=Circulation
+  } sp-2-3={ storey=st-2 number="2.03" name="Circulation West" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3623,7 +4434,7 @@ spaces={
       0
     }
   }
-  } sp-2-4={ storey=st-2 number="2.04" name="Circulation Centre" usage=Circulation
+  } sp-2-4={ storey=st-2 number="2.04" name="Circulation Centre" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3645,7 +4456,7 @@ spaces={
       0
     }
   }
-  } sp-2-5={ storey=st-2 number="2.05" name="Circulation East" usage=Circulation
+  } sp-2-5={ storey=st-2 number="2.05" name="Circulation East" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3667,21 +4478,21 @@ spaces={
       0
     }
   }
-  } sp-2-6={ storey=st-2 number="2.06" name="Stair Core West" usage="Escape Stair"
+  } sp-2-6={ storey=st-2 number="2.06" name="Stair Core West" usage="Escape Stair" phase=new zone=z-circulation
   boundary {
     bounded
     seed {
       x=8.5 y=9
     }
   }
-  } sp-2-7={ storey=st-2 number="2.07" name="Stair Core East" usage="Escape Stair"
+  } sp-2-7={ storey=st-2 number="2.07" name="Stair Core East" usage="Escape Stair" phase=new zone=z-circulation
   boundary {
     bounded
     seed {
       x=21.5 y=9
     }
   }
-  } sp-3-1={ storey=st-3 number="3.01" name="Open Office South" usage=Office
+  } sp-3-1={ storey=st-3 number="3.01" name="Open Office South" usage=Office phase=new zone=z-office floor-finish=m-oak wall-finish=m-paint ceiling-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3703,7 +4514,7 @@ spaces={
       0
     }
   }
-  } sp-3-2={ storey=st-3 number="3.02" name="Open Office North" usage=Office
+  } sp-3-2={ storey=st-3 number="3.02" name="Open Office North" usage=Office phase=new zone=z-office floor-finish=m-oak wall-finish=m-paint ceiling-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3725,7 +4536,7 @@ spaces={
       0
     }
   }
-  } sp-3-3={ storey=st-3 number="3.03" name="Circulation West" usage=Circulation
+  } sp-3-3={ storey=st-3 number="3.03" name="Circulation West" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3747,7 +4558,7 @@ spaces={
       0
     }
   }
-  } sp-3-4={ storey=st-3 number="3.04" name="Circulation Centre" usage=Circulation
+  } sp-3-4={ storey=st-3 number="3.04" name="Circulation Centre" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3769,7 +4580,7 @@ spaces={
       0
     }
   }
-  } sp-3-5={ storey=st-3 number="3.05" name="Circulation East" usage=Circulation
+  } sp-3-5={ storey=st-3 number="3.05" name="Circulation East" usage=Circulation phase=new zone=z-circulation floor-finish=m-ceramic wall-finish=m-paint
   boundary {
     explicit
     outline [point:BLOCK bulge:NUM] {
@@ -3791,14 +4602,14 @@ spaces={
       0
     }
   }
-  } sp-3-6={ storey=st-3 number="3.06" name="Stair Core West" usage="Escape Stair"
+  } sp-3-6={ storey=st-3 number="3.06" name="Stair Core West" usage="Escape Stair" phase=new zone=z-circulation
   boundary {
     bounded
     seed {
       x=8.5 y=9
     }
   }
-  } sp-3-7={ storey=st-3 number="3.07" name="Stair Core East" usage="Escape Stair"
+  } sp-3-7={ storey=st-3 number="3.07" name="Stair Core East" usage="Escape Stair" phase=new zone=z-circulation
   boundary {
     bounded
     seed {
@@ -3807,8 +4618,1087 @@ spaces={
   }
   }
 }
+zones={
+  z-circulation={ name="Circulation zone" category="Fire compartment" occupancy-density=0.02 } z-office={ name="Office zone" category=Tenant occupancy-density=0.1 }
+}
+area-schemes={
+  as-gfa={ name="Gross floor area" measure=gross usages=[ ] zones=[ ] } as-nfa={ name="Net floor area" measure=net usages=[ ] zones=[ ] } as-office={ name="Office area" measure=net usages=[ Office ] zones=[ z-office ] }
+}
+space-conditions={
+  sp-0-1={ occupancy=Office occupancy-density=0.1 heating-setpoint=21 cooling-setpoint=25 ventilation-rate=1.5 lighting-power-density=8 equipment-power-density=12 schedule="Office 08-18" } sp-0-2={ occupancy=Office occupancy-density=0.1 heating-setpoint=21 cooling-setpoint=25 ventilation-rate=1.5 lighting-power-density=8 equipment-power-density=12 schedule="Office 08-18" } sp-0-3={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-0-4={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-0-5={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-0-6={ occupancy="Escape stair" occupancy-density=0.01 lighting-power-density=2 schedule="Office 08-18" } sp-0-7={ occupancy="Escape stair" occupancy-density=0.01 lighting-power-density=2 schedule="Office 08-18" } sp-1-1={ occupancy=Office occupancy-density=0.1 heating-setpoint=21 cooling-setpoint=25 ventilation-rate=1.5 lighting-power-density=8 equipment-power-density=12 schedule="Office 08-18" } sp-1-2={ occupancy=Office occupancy-density=0.1 heating-setpoint=21 cooling-setpoint=25 ventilation-rate=1.5 lighting-power-density=8 equipment-power-density=12 schedule="Office 08-18" } sp-1-3={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-1-4={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-1-5={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-1-6={ occupancy="Escape stair" occupancy-density=0.01 lighting-power-density=2 schedule="Office 08-18" } sp-1-7={ occupancy="Escape stair" occupancy-density=0.01 lighting-power-density=2 schedule="Office 08-18" } sp-2-1={ occupancy=Office occupancy-density=0.1 heating-setpoint=21 cooling-setpoint=25 ventilation-rate=1.5 lighting-power-density=8 equipment-power-density=12 schedule="Office 08-18" } sp-2-2={ occupancy=Office occupancy-density=0.1 heating-setpoint=21 cooling-setpoint=25 ventilation-rate=1.5 lighting-power-density=8 equipment-power-density=12 schedule="Office 08-18" } sp-2-3={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-2-4={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-2-5={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-2-6={ occupancy="Escape stair" occupancy-density=0.01 lighting-power-density=2 schedule="Office 08-18" } sp-2-7={ occupancy="Escape stair" occupancy-density=0.01 lighting-power-density=2 schedule="Office 08-18" } sp-3-1={ occupancy=Office occupancy-density=0.1 heating-setpoint=21 cooling-setpoint=25 ventilation-rate=1.5 lighting-power-density=8 equipment-power-density=12 schedule="Office 08-18" } sp-3-2={ occupancy=Office occupancy-density=0.1 heating-setpoint=21 cooling-setpoint=25 ventilation-rate=1.5 lighting-power-density=8 equipment-power-density=12 schedule="Office 08-18" } sp-3-3={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-3-4={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-3-5={ occupancy=Circulation occupancy-density=0.02 heating-setpoint=18 ventilation-rate=0.3 lighting-power-density=4 equipment-power-density=1 schedule="Office 08-18" } sp-3-6={ occupancy="Escape stair" occupancy-density=0.01 lighting-power-density=2 schedule="Office 08-18" } sp-3-7={ occupancy="Escape stair" occupancy-density=0.01 lighting-power-density=2 schedule="Office 08-18" }
+}
+views={
+  v-3d={ building=bldg-1 name="3D view" kind=perspective depth=100 scale=100 detail=medium
+  camera {
+    target-height=8.299999999999999 azimuth=0.7853981633974483 pitch=0.5 distance=66.88
+    target {
+      x=15.000000000000002 y=8.025
+    }
+  }
+  hidden=[ ] } v-ceiling-st-0={ building=bldg-1 name="Ceiling plan Ground Floor" kind=ceiling-plan storey=st-0 depth=100 scale=100 detail=medium hidden=[ ] } v-ceiling-st-1={ building=bldg-1 name="Ceiling plan First Floor" kind=ceiling-plan storey=st-1 depth=100 scale=100 detail=medium hidden=[ ] } v-ceiling-st-2={ building=bldg-1 name="Ceiling plan Second Floor" kind=ceiling-plan storey=st-2 depth=100 scale=100 detail=medium hidden=[ ] } v-ceiling-st-3={ building=bldg-1 name="Ceiling plan Third Floor" kind=ceiling-plan storey=st-3 depth=100 scale=100 detail=medium hidden=[ ] } v-elevation-east={ building=bldg-1 name=East kind=elevation depth=33.94 scale=100 detail=medium
+  plane {
+    start {
+      x=32.47 y=-4.57
+    }
+    end {
+      x=32.47 y=20.62
+    }
+  }
+  hidden=[ ] } v-elevation-north={ building=bldg-1 name=North kind=elevation depth=24.19 scale=100 detail=medium
+  plane {
+    start {
+      x=32.47 y=20.62
+    }
+    end {
+      x=-2.4699999999999998 y=20.62
+    }
+  }
+  hidden=[ ] } v-elevation-south={ building=bldg-1 name=South kind=elevation depth=24.19 scale=100 detail=medium
+  plane {
+    start {
+      x=-2.4699999999999998 y=-4.57
+    }
+    end {
+      x=32.47 y=-4.57
+    }
+  }
+  hidden=[ ] } v-elevation-west={ building=bldg-1 name=West kind=elevation depth=33.94 scale=100 detail=medium
+  plane {
+    start {
+      x=-2.4699999999999998 y=20.62
+    }
+    end {
+      x=-2.4699999999999998 y=-4.57
+    }
+  }
+  hidden=[ ] } v-plan-st-0={ building=bldg-1 name="Plan Ground Floor" kind=plan storey=st-0 depth=100 scale=100 detail=medium hidden=[ ] } v-plan-st-1={ building=bldg-1 name="Plan First Floor" kind=plan storey=st-1 depth=100 scale=100 detail=medium hidden=[ ] } v-plan-st-2={ building=bldg-1 name="Plan Second Floor" kind=plan storey=st-2 depth=100 scale=100 detail=medium hidden=[ ] } v-plan-st-3={ building=bldg-1 name="Plan Third Floor" kind=plan storey=st-3 depth=100 scale=100 detail=medium hidden=[ ] } v-plan-st-r={ building=bldg-1 name="Plan Roof" kind=plan storey=st-r depth=100 scale=100 detail=medium hidden=[ ] } v-section-a={ building=bldg-1 name="Section A" kind=section depth=12.595 scale=100 detail=medium
+  plane {
+    start {
+      x=-2.4699999999999998 y=8.025
+    }
+    end {
+      x=32.47 y=8.025
+    }
+  }
+  hidden=[ ] } v-section-b={ building=bldg-1 name="Section B" kind=section depth=17.47 scale=100 detail=medium
+  plane {
+    start {
+      x=15.000000000000002 y=-4.57
+    }
+    end {
+      x=15.000000000000002 y=20.62
+    }
+  }
+  hidden=[ ] }
+}
+sheets={
+  sh-elevations={ number=A-301 name=Elevations orientation=landscape project="Office Building" drawn-by=semio checked-by="" date="2026-10-09" revision="" scale-label=""
+  paper {
+    iso size=a1
+  }
+  } sh-plans={ number=A-101 name="Floor plans" orientation=landscape project="Office Building" drawn-by=semio checked-by="" date="2026-10-09" revision="" scale-label=""
+  paper {
+    iso size=a0
+  }
+  } sh-sections={ number=A-201 name=Sections orientation=landscape project="Office Building" drawn-by=semio checked-by="" date="2026-10-09" revision="" scale-label=""
+  paper {
+    iso size=a1
+  }
+  }
+}
+viewports={
+  vp-elevations-elevation-east={ sheet=sh-elevations view=v-elevation-east scale=100
+  position {
+    x=389.4 y=20
+  }
+  crop {
+    min {
+      x=0 y=-0.5
+    }
+    max {
+      x=25.19 y=20.599999999999998
+    }
+  }
+  } vp-elevations-elevation-north={ sheet=sh-elevations view=v-elevation-north scale=100
+  position {
+    x=30 y=240.99999999999997
+  }
+  crop {
+    min {
+      x=0 y=-0.5
+    }
+    max {
+      x=34.94 y=20.599999999999998
+    }
+  }
+  } vp-elevations-elevation-south={ sheet=sh-elevations view=v-elevation-south scale=100
+  position {
+    x=30 y=20
+  }
+  crop {
+    min {
+      x=0 y=-0.5
+    }
+    max {
+      x=34.94 y=20.599999999999998
+    }
+  }
+  } vp-elevations-elevation-west={ sheet=sh-elevations view=v-elevation-west scale=100
+  position {
+    x=389.4 y=240.99999999999997
+  }
+  crop {
+    min {
+      x=0 y=-0.5
+    }
+    max {
+      x=25.19 y=20.599999999999998
+    }
+  }
+  } vp-plans-plan-st-0={ sheet=sh-plans view=v-plan-st-0 scale=100
+  position {
+    x=30 y=20
+  }
+  crop {
+    min {
+      x=-0.47 y=-2.57
+    }
+    max {
+      x=30.470000000000002 y=18.62
+    }
+  }
+  } vp-plans-plan-st-1={ sheet=sh-plans view=v-plan-st-1 scale=100
+  position {
+    x=349.4 y=20
+  }
+  crop {
+    min {
+      x=-0.47 y=-2.57
+    }
+    max {
+      x=30.470000000000002 y=18.62
+    }
+  }
+  } vp-plans-plan-st-2={ sheet=sh-plans view=v-plan-st-2 scale=100
+  position {
+    x=668.8 y=20
+  }
+  crop {
+    min {
+      x=-0.47 y=-2.57
+    }
+    max {
+      x=30.470000000000002 y=18.62
+    }
+  }
+  } vp-plans-plan-st-3={ sheet=sh-plans view=v-plan-st-3 scale=100
+  position {
+    x=30 y=241.9
+  }
+  crop {
+    min {
+      x=-0.47 y=-2.57
+    }
+    max {
+      x=30.470000000000002 y=18.62
+    }
+  }
+  } vp-plans-plan-st-r={ sheet=sh-plans view=v-plan-st-r scale=100
+  position {
+    x=349.4 y=241.9
+  }
+  crop {
+    min {
+      x=-0.47 y=-2.57
+    }
+    max {
+      x=30.470000000000002 y=18.62
+    }
+  }
+  } vp-sections-section-a={ sheet=sh-sections view=v-section-a scale=100
+  position {
+    x=30 y=20
+  }
+  crop {
+    min {
+      x=0 y=-0.5
+    }
+    max {
+      x=34.94 y=20.599999999999998
+    }
+  }
+  } vp-sections-section-b={ sheet=sh-sections view=v-section-b scale=100
+  position {
+    x=389.4 y=20
+  }
+  crop {
+    min {
+      x=0 y=-0.5
+    }
+    max {
+      x=25.19 y=20.599999999999998
+    }
+  }
+  }
+}
+sheet-revisions={
+  rev-plans-a={ sheet=sh-plans number=A date="2026-10-01" description="Issued for review" author=semio } rev-plans-b={ sheet=sh-plans number=B date="2026-10-05" description="Sheets added" author=semio }
+}
+clash-sets={
+}
+rules={
+}
+issues={
+}
+issue-comments={
+}
+dimensions={
+  dim-0-axes-x={ storey=st-0 angle=0 offset=-13 style=as-plan name="Column axes along A to F"
+  anchors {
+    grid grid=g-A
+    grid grid=g-B
+    grid grid=g-C
+    grid grid=g-D
+    grid grid=g-E
+    grid grid=g-F
+  }
+  } dim-0-axes-y={ storey=st-0 angle=1.5707963267948966 offset=19 style=as-plan name="Column axes along 1 to 4"
+  anchors {
+    grid grid=g-1
+    grid grid=g-2
+    grid grid=g-3
+    grid grid=g-4
+  }
+  } dim-0-core-clear={ storey=st-0 angle=1.5707963267948966 offset=2 style=as-detail name="West core clear depth"
+  anchors {
+    wall-face wall=w-0-core-w-south side=left
+    wall-face wall=w-0-core-w-north side=left
+  }
+  } dim-0-core-west={ storey=st-0 angle=0 offset=-1.2 style=as-plan name="West core length"
+  anchors {
+    wall-end wall=w-0-core-w-south end=start
+    wall-end wall=w-0-core-w-south end=end
+  }
+  } dim-1-axes-x={ storey=st-1 angle=0 offset=-13 style=as-plan name="First floor axes A to C"
+  anchors {
+    grid grid=g-A
+    grid grid=g-B
+    grid grid=g-C
+  }
+  }
+}
+tags={
+  tag-0-column={ storey=st-0 element=c-0-A1 category=size style=as-plan
+  offset {
+    x=0.7 y=0.7
+  }
+  } tag-0-core={ storey=st-0 element=w-0-core-w-south category=type style=as-plan
+  offset {
+    x=0 y=-0.6
+  }
+  } tag-0-lobby={ storey=st-0 element=sp-0-1 category=number style=as-plan
+  offset {
+    x=0 y=0
+  }
+  }
+}
+text-notes={
+  note-0-entry={ storey=st-0 text="Main entrance, barrier-free" rotation=0 style=as-plan
+  position {
+    x=15 y=-6
+  }
+  }
+}
+leaders={
+  lead-0-south={ storey=st-0 text="Curtain wall, see detail" style=as-plan
+  anchor {
+    point
+    point {
+      x=15 y=0
+    }
+  }
+  offset {
+    x=3 y=-2.2
+  }
+  }
+}
+annotation-styles={
+  as-detail={ name="Detail 1:20" text-height=0.2 terminator=arrow unit=millimetre precision=0 mark-size=0.15 gap=0.1 overshoot=0.2 } as-plan={ name="Plan 1:50" text-height=0.25 terminator=tick unit=metre precision=2 mark-size=0.15 gap=0.1 overshoot=0.2 }
+}
+wall-sweeps={
+}
+schedules={
+  sch-columns={ name="Column schedule" category=column itemize=true storeys=[ ] phases=[ ]
+  columns [key:BLOCK heading:TEXT total:BOOL] {
+ {
+      field field=type
+    }
+    _ false
+ {
+      field field=storey
+    }
+    _ false
+ {
+      field field=name
+    }
+    _ false
+ {
+      field field=height
+    }
+    _ false
+ {
+      field field=net-volume
+    }
+    _ true
+ {
+      property set=Pset_ColumnCommon name=FireRating
+    }
+    "Fire rating" false
+ {
+      field field=count
+    }
+    _ true
+  }
+  sort [key:BLOCK descending:BOOL] {
+ {
+      field field=storey
+    }
+    false
+ {
+      field field=name
+    }
+    false
+  }
+  filter [key:BLOCK op:ENUM value:TEXT] {
+  }
+  group [key:BLOCK] {
+ {
+      field field=type
+    }
+  }
+  } sch-doors={ name="Door schedule" category=door itemize=true storeys=[ ] phases=[ ]
+  columns [key:BLOCK heading:TEXT total:BOOL] {
+ {
+      field field=name
+    }
+    _ false
+ {
+      field field=type
+    }
+    _ false
+ {
+      field field=storey
+    }
+    _ false
+ {
+      field field=width
+    }
+    _ false
+ {
+      field field=height
+    }
+    _ false
+ {
+      field field=leaves
+    }
+    _ false
+ {
+      field field=swing
+    }
+    _ false
+ {
+      field field=count
+    }
+    _ true
+  }
+  sort [key:BLOCK descending:BOOL] {
+ {
+      field field=storey
+    }
+    false
+ {
+      field field=name
+    }
+    false
+  }
+  filter [key:BLOCK op:ENUM value:TEXT] {
+  }
+  group [key:BLOCK] {
+  }
+  } sch-finishes={ name="Room finish schedule" category=finish itemize=true storeys=[ ] phases=[ ]
+  columns [key:BLOCK heading:TEXT total:BOOL] {
+ {
+      field field=number
+    }
+    _ false
+ {
+      field field=name
+    }
+    _ false
+ {
+      field field=surface
+    }
+    _ false
+ {
+      field field=material
+    }
+    _ false
+ {
+      field field=finish-area
+    }
+    _ true
+  }
+  sort [key:BLOCK descending:BOOL] {
+ {
+      field field=number
+    }
+    false
+ {
+      field field=surface
+    }
+    false
+  }
+  filter [key:BLOCK op:ENUM value:TEXT] {
+  }
+  group [key:BLOCK] {
+ {
+      field field=storey
+    }
+  }
+  } sch-rooms={ name="Room schedule" category=space itemize=true storeys=[ ] phases=[ ]
+  columns [key:BLOCK heading:TEXT total:BOOL] {
+ {
+      field field=number
+    }
+    _ false
+ {
+      field field=name
+    }
+    _ false
+ {
+      field field=storey
+    }
+    _ false
+ {
+      field field=usage
+    }
+    _ false
+ {
+      field field=net-area
+    }
+    _ true
+  }
+  sort [key:BLOCK descending:BOOL] {
+ {
+      field field=number
+    }
+    false
+  }
+  filter [key:BLOCK op:ENUM value:TEXT] {
+ {
+      field field=usage
+    }
+    not-equals "Escape Stair"
+  }
+  group [key:BLOCK] {
+ {
+      field field=storey
+    }
+  }
+  } sch-windows={ name="Window schedule" category=window itemize=true storeys=[ ] phases=[ ]
+  columns [key:BLOCK heading:TEXT total:BOOL] {
+ {
+      field field=name
+    }
+    _ false
+ {
+      field field=type
+    }
+    _ false
+ {
+      field field=storey
+    }
+    _ false
+ {
+      field field=width
+    }
+    _ false
+ {
+      field field=height
+    }
+    _ false
+ {
+      field field=panes
+    }
+    _ false
+ {
+      field field=count
+    }
+    _ true
+  }
+  sort [key:BLOCK descending:BOOL] {
+ {
+      field field=storey
+    }
+    false
+ {
+      field field=name
+    }
+    false
+  }
+  filter [key:BLOCK op:ENUM value:TEXT] {
+  }
+  group [key:BLOCK] {
+  }
+  }
+}
+families={
+  fam-basin={ name=Basin category=plumbing } fam-chair={ name=Chair category=furniture } fam-diffuser={ name="Air terminal" category=mechanical } fam-hea-300={ name="HEA 300" category=profile } fam-lamp={ name="Pendant lamp" category=lighting } fam-table={ name=Table category=furniture } fam-tap={ name=Tap category=plumbing }
+}
+family-parameters={
+  fam-basin.bowl_height={ family=fam-basin name=bowl_height kind=length value="0.18 m" } fam-basin.depth={ family=fam-basin name=depth kind=length value="0.45 m" } fam-basin.width={ family=fam-basin name=width kind=length value="0.55 m" } fam-chair.back_height={ family=fam-chair name=back_height kind=length value="0.45 m" } fam-chair.leg={ family=fam-chair name=leg kind=length value="40 mm" } fam-chair.leg_height={ family=fam-chair name=leg_height kind=length value="seat_height - plank" } fam-chair.leg_x={ family=fam-chair name=leg_x kind=length value="seat_width - leg" } fam-chair.leg_y={ family=fam-chair name=leg_y kind=length value="seat_depth - leg" } fam-chair.plank={ family=fam-chair name=plank kind=length value="40 mm" } fam-chair.seat_depth={ family=fam-chair name=seat_depth kind=length value="0.45 m" } fam-chair.seat_height={ family=fam-chair name=seat_height kind=length value="0.45 m" } fam-chair.seat_width={ family=fam-chair name=seat_width kind=length value="0.45 m" } fam-diffuser.size={ family=fam-diffuser name=size kind=length value="0.6 m" } fam-diffuser.thickness={ family=fam-diffuser name=thickness kind=length value="80 mm" } fam-hea-300.b={ family=fam-hea-300 name=b kind=length value="300 mm" } fam-hea-300.h={ family=fam-hea-300 name=h kind=length value="290 mm" } fam-hea-300.tf={ family=fam-hea-300 name=tf kind=length value="14 mm" } fam-hea-300.tw={ family=fam-hea-300 name=tw kind=length value="8.5 mm" } fam-lamp.cord={ family=fam-lamp name=cord kind=length value="12 mm" } fam-lamp.drop={ family=fam-lamp name=drop kind=length value="0.5 m" } fam-lamp.shade={ family=fam-lamp name=shade kind=length value="0.4 m" } fam-lamp.shade_height={ family=fam-lamp name=shade_height kind=length value="0.18 m" } fam-table.depth={ family=fam-table name=depth kind=length value="0.8 m" } fam-table.height={ family=fam-table name=height kind=length value="0.74 m" } fam-table.leg_height={ family=fam-table name=leg_height kind=length value="height - top_thickness" } fam-table.leg_inset={ family=fam-table name=leg_inset kind=length value="50 mm" } fam-table.leg_section={ family=fam-table name=leg_section kind=length value="60 mm" } fam-table.leg_x={ family=fam-table name=leg_x kind=length value="width - leg_inset - leg_section" } fam-table.leg_y={ family=fam-table name=leg_y kind=length value="depth - leg_inset - leg_section" } fam-table.seats={ family=fam-table name=seats kind=integer value="if width > 1.4 m then 6 else 4" } fam-table.top_thickness={ family=fam-table name=top_thickness kind=length value="30 mm" } fam-table.width={ family=fam-table name=width kind=length value="1.6 m" } fam-tap.body={ family=fam-tap name=body kind=length value="30 mm" } fam-tap.reach={ family=fam-tap name=reach kind=length value="0.18 m" } fam-tap.tap_height={ family=fam-tap name=tap_height kind=length value="0.12 m" }
+}
+family-solids={
+  fs-basin-bowl={ family=fam-basin name=Bowl material="\"m-ceramic\"" visible="true"
+  shape {
+    cuboid x="0 m - width / 2" y="0 m" z="0 m" width=width depth=depth height=bowl_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-chair-back={ family=fam-chair name=Back material="\"m-oak\"" visible="true"
+  shape {
+    cuboid x="0 m" y="0 m" z=seat_height width=seat_width depth=plank height=back_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-chair-leg-1={ family=fam-chair name="Leg 1" material="\"m-steel\"" visible="true"
+  shape {
+    cuboid x="0 m" y="0 m" z="0 m" width=leg depth=leg height=leg_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-chair-leg-2={ family=fam-chair name="Leg 2" material="\"m-steel\"" visible="true"
+  shape {
+    cuboid x=leg_x y="0 m" z="0 m" width=leg depth=leg height=leg_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-chair-leg-3={ family=fam-chair name="Leg 3" material="\"m-steel\"" visible="true"
+  shape {
+    cuboid x=leg_x y=leg_y z="0 m" width=leg depth=leg height=leg_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-chair-leg-4={ family=fam-chair name="Leg 4" material="\"m-steel\"" visible="true"
+  shape {
+    cuboid x="0 m" y=leg_y z="0 m" width=leg depth=leg height=leg_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-chair-seat={ family=fam-chair name=Seat material="\"m-oak\"" visible="true"
+  shape {
+    cuboid x="0 m" y="0 m" z=leg_height width=seat_width depth=seat_depth height=plank
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-diffuser-plate={ family=fam-diffuser name=Plate material="\"m-steel\"" visible="true"
+  shape {
+    cuboid x="0 m - size / 2" y="0 m - size / 2" z="0 m - thickness" width=size depth=size height=thickness
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-hea-300-section={ family=fam-hea-300 name="HEA 300 section" material="\"m-steel\"" visible="true"
+  shape {
+    extrusion base="0 m" height="1 m"
+    profile {
+      i-shape width=b depth=h web=tw flange=tf
+    }
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-lamp-cord={ family=fam-lamp name=Cord material="\"m-steel\"" visible="true"
+  shape {
+    cuboid x="0 m - cord / 2" y="0 m - cord / 2" z="0 m - drop" width=cord depth=cord height=drop
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-lamp-shade={ family=fam-lamp name=Shade material="\"m-paint\"" visible="true"
+  shape {
+    cuboid x="0 m - shade / 2" y="0 m - shade / 2" z="0 m - drop - shade_height" width=shade depth=shade height=shade_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-table-leg-1={ family=fam-table name="Leg 1" material="\"m-oak\"" visible="true"
+  shape {
+    cuboid x=leg_inset y=leg_inset z="0 m" width=leg_section depth=leg_section height=leg_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-table-leg-2={ family=fam-table name="Leg 2" material="\"m-oak\"" visible="true"
+  shape {
+    cuboid x=leg_x y=leg_inset z="0 m" width=leg_section depth=leg_section height=leg_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-table-leg-3={ family=fam-table name="Leg 3" material="\"m-oak\"" visible="true"
+  shape {
+    cuboid x=leg_x y=leg_y z="0 m" width=leg_section depth=leg_section height=leg_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-table-leg-4={ family=fam-table name="Leg 4" material="\"m-oak\"" visible="true"
+  shape {
+    cuboid x=leg_inset y=leg_y z="0 m" width=leg_section depth=leg_section height=leg_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-table-top={ family=fam-table name=Top material="\"m-oak\"" visible="true"
+  shape {
+    cuboid x="0 m" y="0 m" z=leg_height width=width depth=depth height=top_thickness
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  } fs-tap-body={ family=fam-tap name=Body material="\"m-steel\"" visible="true"
+  shape {
+    cuboid x="0 m - body / 2" y="0 m" z="0 m" width=body depth=reach height=tap_height
+  }
+  offset {
+    x="0 m" y="0 m" z="0 m"
+  }
+  }
+}
+components={
+  cmp-basin={ storey=st-1 family=fam-basin elevation=0.8 rotation=0 mirrored=false host=w-1-core-w-west system=waste name="Pantry Basin"
+  position {
+    x=6.7 y=9
+  }
+  } cmp-chair-1={ storey=st-1 family=fam-chair elevation=0 rotation=3.141592653589793 mirrored=false name="Office Chair 1"
+  position {
+    x=3.025 y=2.15
+  }
+  } cmp-chair-2={ storey=st-1 family=fam-chair elevation=0 rotation=3.141592653589793 mirrored=false name="Office Chair 2"
+  position {
+    x=7.325 y=2.15
+  }
+  } cmp-chair-3={ storey=st-1 family=fam-chair elevation=0 rotation=3.141592653589793 mirrored=false name="Office Chair 3"
+  position {
+    x=11.325 y=2.15
+  }
+  } cmp-chair-4={ storey=st-1 family=fam-chair elevation=0 rotation=3.141592653589793 mirrored=false name="Office Chair 4"
+  position {
+    x=15.725 y=2.15
+  }
+  } cmp-chair-5={ storey=st-1 family=fam-chair elevation=0 rotation=3.141592653589793 mirrored=false name="Office Chair 5"
+  position {
+    x=19.825000000000003 y=2.15
+  }
+  } cmp-chair-6={ storey=st-1 family=fam-chair elevation=0 rotation=3.141592653589793 mirrored=false name="Office Chair 6"
+  position {
+    x=23.925 y=2.15
+  }
+  } cmp-desk-1={ storey=st-1 family=fam-table elevation=0 rotation=0 mirrored=false name="Desk 1"
+  position {
+    x=2 y=1
+  }
+  } cmp-desk-2={ storey=st-1 family=fam-table elevation=0 rotation=0 mirrored=false name="Desk 2"
+  position {
+    x=6.2 y=1
+  }
+  } cmp-desk-3={ storey=st-1 family=fam-table elevation=0 rotation=0 mirrored=false name="Desk 3"
+  position {
+    x=10.4 y=1
+  }
+  } cmp-desk-4={ storey=st-1 family=fam-table elevation=0 rotation=0 mirrored=false name="Desk 4"
+  position {
+    x=14.6 y=1
+  }
+  } cmp-desk-5={ storey=st-1 family=fam-table elevation=0 rotation=0 mirrored=false name="Desk 5"
+  position {
+    x=18.8 y=1
+  }
+  } cmp-desk-6={ storey=st-1 family=fam-table elevation=0 rotation=0 mirrored=false name="Desk 6"
+  position {
+    x=23 y=1
+  }
+  } cmp-lamp-1={ storey=st-1 family=fam-lamp elevation=3.1 rotation=0 mirrored=false system=lighting name="Pendant Lamp 1"
+  position {
+    x=3 y=1
+  }
+  } cmp-lamp-2={ storey=st-1 family=fam-lamp elevation=3.1 rotation=0 mirrored=false system=lighting name="Pendant Lamp 2"
+  position {
+    x=9 y=1
+  }
+  } cmp-lamp-3={ storey=st-1 family=fam-lamp elevation=3.1 rotation=0 mirrored=false system=lighting name="Pendant Lamp 3"
+  position {
+    x=15 y=1
+  }
+  } cmp-lamp-4={ storey=st-1 family=fam-lamp elevation=3.1 rotation=0 mirrored=false system=lighting name="Pendant Lamp 4"
+  position {
+    x=21 y=1
+  }
+  } cmp-return-1={ storey=st-1 family=fam-diffuser elevation=2.8 rotation=0 mirrored=false system=return name="Return Grille 1"
+  position {
+    x=8 y=15
+  }
+  } cmp-return-2={ storey=st-1 family=fam-diffuser elevation=2.8 rotation=0 mirrored=false system=return name="Return Grille 2"
+  position {
+    x=15 y=15
+  }
+  } cmp-return-3={ storey=st-1 family=fam-diffuser elevation=2.8 rotation=0 mirrored=false system=return name="Return Grille 3"
+  position {
+    x=22 y=15
+  }
+  } cmp-supply-1={ storey=st-1 family=fam-diffuser elevation=2.8 rotation=0 mirrored=false system=supply name="Supply Diffuser 1"
+  position {
+    x=5 y=3
+  }
+  } cmp-supply-2={ storey=st-1 family=fam-diffuser elevation=2.8 rotation=0 mirrored=false system=supply name="Supply Diffuser 2"
+  position {
+    x=12 y=3
+  }
+  } cmp-supply-3={ storey=st-1 family=fam-diffuser elevation=2.8 rotation=0 mirrored=false system=supply name="Supply Diffuser 3"
+  position {
+    x=19 y=3
+  }
+  } cmp-supply-4={ storey=st-1 family=fam-diffuser elevation=2.8 rotation=0 mirrored=false system=supply name="Supply Diffuser 4"
+  position {
+    x=26 y=3
+  }
+  } cmp-tap={ storey=st-1 family=fam-tap elevation=0.95 rotation=0 mirrored=false host=w-1-core-w-west system=domestic-water name="Pantry Tap"
+  position {
+    x=6.7 y=9
+  }
+  }
+}
+component-overrides={
+  cmp-basin.width={ component=cmp-basin name=width value="0.6 m" } cmp-chair-3.seat_height={ component=cmp-chair-3 name=seat_height value="0.5 m" } cmp-chair-6.seat_height={ component=cmp-chair-6 name=seat_height value="0.5 m" } cmp-desk-1.depth={ component=cmp-desk-1 name=depth value="0.7 m" } cmp-desk-1.width={ component=cmp-desk-1 name=width value="1.6 m" } cmp-desk-2.depth={ component=cmp-desk-2 name=depth value="0.7 m" } cmp-desk-2.height={ component=cmp-desk-2 name=height value="0.72 m" } cmp-desk-2.width={ component=cmp-desk-2 name=width value="1.8 m" } cmp-desk-3.depth={ component=cmp-desk-3 name=depth value="0.7 m" } cmp-desk-3.width={ component=cmp-desk-3 name=width value="1.4 m" } cmp-desk-4.depth={ component=cmp-desk-4 name=depth value="0.7 m" } cmp-desk-4.height={ component=cmp-desk-4 name=height value="0.72 m" } cmp-desk-4.width={ component=cmp-desk-4 name=width value="1.8 m" } cmp-desk-5.depth={ component=cmp-desk-5 name=depth value="0.7 m" } cmp-desk-5.width={ component=cmp-desk-5 name=width value="1.6 m" } cmp-desk-6.depth={ component=cmp-desk-6 name=depth value="0.7 m" } cmp-desk-6.height={ component=cmp-desk-6 name=height value="0.72 m" } cmp-desk-6.width={ component=cmp-desk-6 name=width value="1.4 m" } cmp-lamp-3.drop={ component=cmp-lamp-3 name=drop value="0.8 m" } cmp-supply-4.size={ component=cmp-supply-4 name=size value="0.45 m" }
+}
+mep-elements={
+  mep-lighting-main={ storey=st-1 system=lighting name="Lighting Tray"
+  shape {
+    tray width=0.3 height=0.06
+  }
+  path [x:NUM y:NUM z:NUM] {
+    1 1 3.35
+    23 1 3.35
+  }
+  } mep-lighting-stub-1={ storey=st-1 system=lighting name="Lighting Stub 1"
+  shape {
+    tray width=0.1 height=0.05
+  }
+  path [x:NUM y:NUM z:NUM] {
+    3 1 3.35
+    3 1 3.1
+  }
+  } mep-lighting-stub-2={ storey=st-1 system=lighting name="Lighting Stub 2"
+  shape {
+    tray width=0.1 height=0.05
+  }
+  path [x:NUM y:NUM z:NUM] {
+    9 1 3.35
+    9 1 3.1
+  }
+  } mep-lighting-stub-3={ storey=st-1 system=lighting name="Lighting Stub 3"
+  shape {
+    tray width=0.1 height=0.05
+  }
+  path [x:NUM y:NUM z:NUM] {
+    15 1 3.35
+    15 1 3.1
+  }
+  } mep-lighting-stub-4={ storey=st-1 system=lighting name="Lighting Stub 4"
+  shape {
+    tray width=0.1 height=0.05
+  }
+  path [x:NUM y:NUM z:NUM] {
+    21 1 3.35
+    21 1 3.1
+  }
+  } mep-power-main={ storey=st-1 system=power name="Power Tray"
+  shape {
+    tray width=0.3 height=0.06
+  }
+  path [x:NUM y:NUM z:NUM] {
+    1 16.5 3.1
+    29 16.5 3.1
+  }
+  } mep-return-drop-1={ storey=st-1 system=return name="Return Drop 1"
+  shape {
+    duct width=0.3 height=0.3
+  }
+  path [x:NUM y:NUM z:NUM] {
+    8 15 3
+    8 15 2.8
+  }
+  } mep-return-drop-2={ storey=st-1 system=return name="Return Drop 2"
+  shape {
+    duct width=0.3 height=0.3
+  }
+  path [x:NUM y:NUM z:NUM] {
+    15 15 3
+    15 15 2.8
+  }
+  } mep-return-drop-3={ storey=st-1 system=return name="Return Drop 3"
+  shape {
+    duct width=0.3 height=0.3
+  }
+  path [x:NUM y:NUM z:NUM] {
+    22 15 3
+    22 15 2.8
+  }
+  } mep-return-main={ storey=st-1 system=return name="Return Main"
+  shape {
+    duct width=0.4 height=0.25
+  }
+  path [x:NUM y:NUM z:NUM] {
+    1 15 3
+    24 15 3
+  }
+  } mep-supply-drop-1={ storey=st-1 system=supply name="Supply Drop 1"
+  shape {
+    duct width=0.3 height=0.3
+  }
+  path [x:NUM y:NUM z:NUM] {
+    5 3 3
+    5 3 2.8
+  }
+  } mep-supply-drop-2={ storey=st-1 system=supply name="Supply Drop 2"
+  shape {
+    duct width=0.3 height=0.3
+  }
+  path [x:NUM y:NUM z:NUM] {
+    12 3 3
+    12 3 2.8
+  }
+  } mep-supply-drop-3={ storey=st-1 system=supply name="Supply Drop 3"
+  shape {
+    duct width=0.3 height=0.3
+  }
+  path [x:NUM y:NUM z:NUM] {
+    19 3 3
+    19 3 2.8
+  }
+  } mep-supply-drop-4={ storey=st-1 system=supply name="Supply Drop 4"
+  shape {
+    duct width=0.3 height=0.3
+  }
+  path [x:NUM y:NUM z:NUM] {
+    26 3 3
+    26 3 2.8
+  }
+  } mep-supply-main={ storey=st-1 system=supply name="Supply Main"
+  shape {
+    duct width=0.4 height=0.25
+  }
+  path [x:NUM y:NUM z:NUM] {
+    1 3 3
+    27 3 3
+  }
+  } mep-waste={ storey=st-1 system=waste name="Pantry Waste"
+  shape {
+    pipe diameter=0.05
+  }
+  path [x:NUM y:NUM z:NUM] {
+    6.875 9 0.8
+    6.875 9 0.2
+    6.875 10.5 0.2
+  }
+  } mep-water={ storey=st-1 system=domestic-water name="Pantry Cold Water"
+  shape {
+    pipe diameter=0.02
+  }
+  path [x:NUM y:NUM z:NUM] {
+    6.875 10.5 0.95
+    6.875 9 0.95
+  }
+  }
+}
+property-templates={
+  pt-column={ name=Pset_ColumnCommon applies-to=[ column column-type ] properties=[ { name=LoadBearing kind=boolean required=false default-value={
+    Boolean={
+      value=false
+    }
+  }
+  allowed=[ ] } { name=FireRating kind=text required=false allowed=[ {
+    Text={
+      value="R 30"
+    }
+  }
+ {
+    Text={
+      value="R 60"
+    }
+  }
+ {
+    Text={
+      value="R 90"
+    }
+  }
+ {
+    Text={
+      value="R 120"
+    }
+  }
+  ] } ] } pt-curtain={ name=Pset_CurtainWallCommon applies-to=[ curtain-wall ] properties=[ { name=IsExternal kind=boolean required=false default-value={
+    Boolean={
+      value=false
+    }
+  }
+  allowed=[ ] } { name=ThermalTransmittance kind=real unit="W/(m2.K)" required=false minimum=0 maximum=5 allowed=[ ] } ] } pt-door={ name=Pset_DoorCommon applies-to=[ door door-type ] properties=[ { name=IsExternal kind=boolean required=false default-value={
+    Boolean={
+      value=false
+    }
+  }
+  allowed=[ ] } { name=SecurityRating kind=text required=false allowed=[ {
+    Text={
+      value="RC1"
+    }
+  }
+ {
+    Text={
+      value="RC2"
+    }
+  }
+ {
+    Text={
+      value="RC3"
+    }
+  }
+  ] } ] } pt-energy={ name=Semio_Energy applies-to=[ space ] properties=[ { name=HeatedZone kind=boolean required=false default-value={
+    Boolean={
+      value=false
+    }
+  }
+  allowed=[ ] } { name=TargetTemperature kind=real unit="°C" required=false minimum=5 maximum=30 allowed=[ ] } ] } pt-roof={ name=Pset_RoofCommon applies-to=[ roof roof-type ] properties=[ { name=ThermalTransmittance kind=real unit="W/(m2.K)" required=false minimum=0 maximum=5 allowed=[ ] } { name=FireRating kind=text required=false allowed=[ {
+    Text={
+      value="RF1"
+    }
+  }
+ {
+    Text={
+      value="RF2"
+    }
+  }
+ {
+    Text={
+      value="RF3"
+    }
+  }
+  ] } ] } pt-space={ name=Pset_SpaceCommon applies-to=[ space ] properties=[ { name=OccupancyType kind=text required=false allowed=[ ] } { name=Reference kind=text required=false allowed=[ ] } ] } pt-wall={ name=Pset_WallCommon applies-to=[ wall wall-type ] properties=[ { name=IsExternal kind=boolean required=false default-value={
+    Boolean={
+      value=false
+    }
+  }
+  allowed=[ ] } { name=LoadBearing kind=boolean required=false default-value={
+    Boolean={
+      value=false
+    }
+  }
+  allowed=[ ] } { name=FireRating kind=text required=false allowed=[ {
+    Text={
+      value="REI 30"
+    }
+  }
+ {
+    Text={
+      value="REI 60"
+    }
+  }
+ {
+    Text={
+      value="REI 90"
+    }
+  }
+ {
+    Text={
+      value="REI 120"
+    }
+  }
+  ] } { name=ThermalTransmittance kind=real unit="W/(m2.K)" required=false minimum=0 maximum=5 allowed=[ ] } ] } pt-window={ name=Pset_WindowCommon applies-to=[ window window-type ] properties=[ { name=ThermalTransmittance kind=real unit="W/(m2.K)" required=false minimum=0 maximum=5 allowed=[ ] } { name=GlazingAreaFraction kind=real required=false minimum=0 maximum=1 allowed=[ ] } ] }
+}
+classification-systems={
+  cs-din-276={ name="DIN 276" edition="2018-12" source="https://www.din.de"
+  entries [code:TEXT title:TEXT parent:TEXT] {
+    "300" "Bauwerk - Baukonstruktionen" _
+    "330" "Außenwände/Vertikale Baukonstruktionen, außen" "300"
+    "331" "Tragende Außenwände" "330"
+    "332" "Nichttragende Außenwände" "330"
+    "333" Außenstützen "330"
+    "334" "Außentüren und -fenster" "330"
+    "337" "Elementierte Außenwände" "330"
+    "340" "Innenwände/Vertikale Baukonstruktionen, innen" "300"
+    "341" "Tragende Innenwände" "340"
+    "342" "Nichttragende Innenwände" "340"
+    "343" Innenstützen "340"
+    "344" "Innentüren und -fenster" "340"
+    "350" "Decken/Horizontale Baukonstruktionen" "300"
+    "351" Deckenkonstruktionen "350"
+    "360" Dächer "300"
+    "361" Dachkonstruktionen "360"
+    "362" "Dachfenster, Dachöffnungen" "360"
+    "363" Dachbeläge "360"
+  }
+  } cs-omniclass-23={ name="OmniClass Table 23 Products" edition="2012" source="https://www.csiresources.org/standards/omniclass"
+  entries [code:TEXT title:TEXT parent:TEXT] {
+    "23-13 00 00" "Structural and Exterior Enclosure Products" _
+    "23-13 35 00" "Framing Products" "23-13 00 00"
+    "23-13 35 11" "Structural Frames" "23-13 35 00"
+    "23-13 35 11 13" "Column Slab Frames" "23-13 35 11"
+    "23-17 00 00" "Openings, Passages, and Protection Products" _
+    "23-17 23 00" "Circulation and Escape Products" "23-17 00 00"
+    "23-17 23 17" Stairs "23-17 23 00"
+  }
+  } cs-uniclass={ name="Uniclass 2015" edition="EF v1.16, Pr v1.34" source="https://uniclass.thenbs.com"
+  entries [code:TEXT title:TEXT parent:TEXT] {
+    EF_25 "Wall and barrier elements" _
+    EF_25_10 Walls EF_25
+    EF_25_10_25 "External walls" EF_25_10
+    EF_25_10_30 "Free-standing walls" EF_25_10
+    EF_25_10_40 "Internal walls" EF_25_10
+    EF_25_10_60 "Parapet walls" EF_25_10
+    EF_25_30 Openings EF_25
+    Pr Products _
+    Pr_20 "Structure and general products" Pr
+    Pr_20_93 "Unit structure and general products" Pr_20
+    Pr_20_93_52 "Masonry walling units" Pr_20_93
+    Pr_25 "Skin products" Pr
+    Pr_25_71 "Rigid board, panel, sheet and sectional products" Pr_25
+    Pr_25_93 "Unit skin products" Pr_25
+  }
+  }
+}
 properties={
   c-0-A1={
+    Pset_ColumnCommon={
+      FireRating={
+        Text={
+          value="R 90"
+        }
+      }
+      LoadBearing={
+        Boolean={
+          value=true
+        }
+      }
+    }
+  }
+  ct-rc-500={
     Pset_ColumnCommon={
       FireRating={
         Text={
@@ -3871,5 +5761,22 @@ properties={
   }
 }
 classifications={
-  c-0-A1={ system="DIN 276" code="333" title=Außenstützen } c-1-B2={ system="DIN 276" code="343" title=Innenstützen } cu-0-south={ system="DIN 276" code="337" title="Elementierte Außenwände" } rf-main={ system="DIN 276" code="360" title=Dächer } w-0-core-w-south={ system="DIN 276" code="341" title="Tragende Innenwände" }
+  c-0-A1={
+    cs-din-276="333"
+  }
+  c-1-B2={
+    cs-din-276="343"
+  }
+  ct-rc-500={
+    cs-omniclass-23="23-13 35 11 13"
+  }
+  cu-0-south={
+    cs-din-276="337" cs-uniclass=EF_25_10_25
+  }
+  rf-main={
+    cs-din-276="360"
+  }
+  w-0-core-w-south={
+    cs-din-276="341"
+  }
 }

@@ -1,0 +1,55 @@
+{
+  "schema": "https://semio.tech/s/draw/import-image-publication",
+  "identity": {
+    "revisionHex": "0000000000000000000000000000000000000000000000000000000000000000",
+    "appInstanceHex": "00000001",
+    "operationHex": "0000000000000001",
+    "generationHex": "0000000000000001",
+    "authoringSeed": "images",
+    "algorithm": "sha256",
+    "prefix": "semio.draw.image-publication/v1",
+    "expectedDigest": "f219372119b2878b3f97dd534ee5b188d451a7ab4f2696e6f4920d33a226bd5a"
+  },
+  "phases": [
+    "identity",
+    "text",
+    "validate",
+    "layer",
+    "layerBox",
+    "mutationCapacity",
+    "assetMutation",
+    "layerMutation",
+    "selectionStrings",
+    "targetCapacity",
+    "target",
+    "selectionCapacity",
+    "selection",
+    "handoff"
+  ],
+  "maximumNodes": 4096,
+  "maximumDepth": 128,
+  "name": "Artwork.png",
+  "selection": {
+    "domain": "strokes",
+    "granularity": "stroke",
+    "merge": "replace"
+  },
+  "mutations": [
+    "importImageAsset",
+    "createLayer"
+  ],
+  "deniedAxes": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "depth"
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    3,
+    7,
+    17,
+    31
+  ]
+}

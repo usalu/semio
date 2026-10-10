@@ -1,0 +1,1 @@
+{"contract":"store.link-pin-retirement/v1","pins":[{"kind":"head"},{"kind":"checkpoint","id":"checkpoint-雪\u0000é"},{"kind":"snapshot","blob":{"hash":"sha256:0123456789abcdef","size":41,"mediaType":"application/雪"}}],"deniedAxes":["items","copy","capacity","release","depth"]}

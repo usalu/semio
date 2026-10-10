@@ -61,11 +61,14 @@ fn home_of(snapshot: &ModelSnapshot, id: &str) -> Option<&'static str> {
         ("beams", snapshot.beams.contains_key(id)),
         ("slabs", snapshot.slabs.contains_key(id)),
         ("ceilings", snapshot.ceilings.contains_key(id)),
+        ("wall_sweeps", snapshot.wall_sweeps.contains_key(id)),
         ("roofs", snapshot.roofs.contains_key(id)),
         ("stairs", snapshot.stairs.contains_key(id)),
         ("ramps", snapshot.ramps.contains_key(id)),
         ("railings", snapshot.railings.contains_key(id)),
         ("spaces", snapshot.spaces.contains_key(id)),
+        ("components", snapshot.components.contains_key(id)),
+        ("mep_elements", snapshot.mep_elements.contains_key(id)),
     ]
     .into_iter()
     .find_map(|(collection, present)| present.then_some(collection))
@@ -124,10 +127,16 @@ pub fn touched(snapshot: &ModelSnapshot, key: &ModelNode, touched: &TouchedPaths
         ModelNode::StairRun(id) => regions.row("stairs", id),
         ModelNode::Properties(id) => properties(&regions, id),
         ModelNode::RampRun(id) => regions.row("ramps", id),
+        ModelNode::Surface(id) => element(&regions, snapshot, id),
         ModelNode::Solid(solid_key) => solid(&regions, snapshot, solid_key),
         ModelNode::Quantity(id) => quantity(&regions, snapshot, id),
+        ModelNode::Component(id) => regions.row("components", id) || regions.collection("component_overrides") || regions.collection("families") || regions.collection("family_parameters") || regions.collection("family_solids") || regions.collection("materials") || regions.collection("walls"),
+        ModelNode::Mep(id) => regions.row("mep_elements", id),
+        ModelNode::StructuralAnalysis => super::super::super::analytical_members::READS.iter().any(|field| regions.collection(field)),
+        ModelNode::MepClash(_) => false,
         ModelNode::Family(id) => regions.row("families", id) || regions.collection("family_parameters") || regions.collection("family_solids") || regions.collection("materials"),
         ModelNode::Totals(_) | ModelNode::DiagnosticIndex => false,
+        ModelNode::Probe(solid_key) => solid(&regions, snapshot, solid_key),
         ModelNode::Sheet(id) => regions.row("sheets", id) || regions.collection("viewports") || regions.collection("sheet_revisions") || regions.collection("views"),
         _ => true,
     }

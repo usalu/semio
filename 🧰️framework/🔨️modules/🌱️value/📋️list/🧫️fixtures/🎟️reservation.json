@@ -1,0 +1,50 @@
+{
+  "layouts": [
+    {
+      "headerBytes": 12,
+      "pointerBits": 32,
+      "pageBytes": 196
+    },
+    {
+      "headerBytes": 24,
+      "pointerBits": 64,
+      "pageBytes": 392
+    }
+  ],
+  "phases": [
+    {
+      "kind": "metadata",
+      "scalarMoves": 1,
+      "pageMoves": 1,
+      "headerMoves": 1
+    },
+    {
+      "kind": "rootPromotion",
+      "scalarMoves": 1,
+      "pageMoves": 1,
+      "headerMoves": 3
+    },
+    {
+      "kind": "payload",
+      "scalarMoves": 3,
+      "pageMoves": 0,
+      "headerMoves": 1
+    }
+  ],
+  "oracle": "VecDeque",
+  "count": 257,
+  "schema": "https://semio.tech/framework/value/list/reservation-fixture",
+  "deniedAxes": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "depth"
+  ],
+  "payloadBytes": 8,
+  "fanout": 16,
+  "promotionPages": [
+    1,
+    16,
+    256
+  ]
+}

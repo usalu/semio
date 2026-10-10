@@ -1,0 +1,25 @@
+{
+  "mutation": "createClashSet",
+  "id": "cs-1",
+  "clash_set": {
+    "name": "New against existing",
+    "a": {
+      "classes": [],
+      "storeys": [],
+      "phases": [
+        "New"
+      ],
+      "ids": []
+    },
+    "b": {
+      "classes": [],
+      "storeys": [],
+      "phases": [
+        "Existing"
+      ],
+      "ids": []
+    },
+    "tolerance": 0.001,
+    "clearance": 0
+  }
+}

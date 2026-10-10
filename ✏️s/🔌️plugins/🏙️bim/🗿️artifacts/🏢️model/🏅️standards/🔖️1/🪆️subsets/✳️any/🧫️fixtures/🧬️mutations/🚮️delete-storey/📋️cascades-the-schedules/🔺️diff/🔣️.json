@@ -1,1 +1,23 @@
-{}
+{
+  "schedules": {
+    "sch-both": {
+      "entry": "Deleted"
+    },
+    "sch-ground": {
+      "entry": "Deleted"
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "entry": "Deleted"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "entry": "Deleted"
+    },
+    "w-south": {
+      "entry": "Deleted"
+    }
+  }
+}

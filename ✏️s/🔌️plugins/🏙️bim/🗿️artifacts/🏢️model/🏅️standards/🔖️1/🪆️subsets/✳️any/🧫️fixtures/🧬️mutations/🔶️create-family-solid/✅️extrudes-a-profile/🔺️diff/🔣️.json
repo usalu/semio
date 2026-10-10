@@ -1,1 +1,28 @@
-{}
+{
+  "family_solids": {
+    "s-plate": {
+      "entry": "Created",
+      "family": "fam-table",
+      "material": "\"m-brick\"",
+      "name": "Plate",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      },
+      "shape": {
+        "Extrusion": {
+          "base": "0 m",
+          "height": "20 mm",
+          "profile": {
+            "Rectangle": {
+              "depth": "depth",
+              "width": "width"
+            }
+          }
+        }
+      },
+      "visible": "true"
+    }
+  }
+}

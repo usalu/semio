@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-issue/schema.json",
+  "title": "SetIssue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setIssue"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Issue",
+          "de": "Hinweis"
+        },
+        "ref": {
+          "kind": "issue"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "title": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Title",
+          "de": "Titel"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "description": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Description",
+          "de": "Beschreibung"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "status": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/IssueStatus",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Status",
+          "de": "Status"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "priority": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/IssuePriority",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Priority",
+          "de": "Priorität"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "assignee": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Assignee",
+          "de": "Zuständig"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "author": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Author",
+          "de": "Verfasser"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "created": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Raised (date and time)",
+          "de": "Erfasst (Datum und Zeit)"
+        },
+        "group": "value",
+        "order": 80
+      }
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Labels",
+          "de": "Stichwörter"
+        },
+        "group": "value",
+        "order": 90
+      }
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Elements",
+          "de": "Elemente"
+        },
+        "group": "value",
+        "order": 100
+      }
+    },
+    "clash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ClashRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Clash (empty = none)",
+          "de": "Kollision (leer = keine)"
+        },
+        "group": "value",
+        "order": 110
+      }
+    },
+    "viewpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/IssueViewpoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Viewpoint (empty = none)",
+          "de": "Ansicht (leer = keine)"
+        },
+        "group": "value",
+        "order": 120
+      }
+    }
+  }
+}

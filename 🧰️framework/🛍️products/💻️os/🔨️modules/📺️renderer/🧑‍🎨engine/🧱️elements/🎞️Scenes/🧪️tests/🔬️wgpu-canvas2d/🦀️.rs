@@ -627,7 +627,7 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
     let layers = json!([
         { "id": "layout.page-bg", "segments": rect_segments(0.0, 0.0, 200.0, 150.0), "fill": { "color": paper } },
         { "id": "frame-rect", "segments": rect_segments(20.0, 20.0, 100.0, 60.0), "fill": { "color": fill }, "stroke": { "color": stroke, "width": 2.5 } },
-        { "id": "frame-text.text", "kind": "text", "x": 30.0, "y": 90.0, "width": 30.0, "height": 12.0, "text": { "content": "Hello", "size": 12.0 }, "fill": { "color": [0.0, 0.0, 0.0, 1.0] } }
+        { "id": "frame-text.text", "kind": "text", "x": 30.0, "y": 90.0, "width": 30.0, "height": 12.0, "text": { "content": "Hello", "size": 12.0, "fontFamily": "Anta" }, "fill": { "color": [0.0, 0.0, 0.0, 1.0] } }
     ]);
     let node = canvas_scene("canvas2d-scene-path", layers.to_string());
     mutate_scene_state("canvas2d-scene-path", |state| state.viewport = Viewport { x: 100.0, y: 75.0, zoom: 2.0 });

@@ -1,0 +1,10 @@
+import fs from "node:fs";
+const p = "entities-energy.rs";
+let s = fs.readFileSync(p, "utf8");
+const a = s.indexOf("/// 💡️ The envelope facts of a space and the totals");
+const b = s.indexOf("/// 💡️ The thermal totals of a zone.");
+s = s.slice(0, a) + s.slice(b);
+s = s.replace("fn fixed(value: f64)", "/// 📊️ A measure with two decimals.\npub fn fixed(value: f64)");
+s = s.replace("fn space_fact(inference", "/// 📊️ One fact of the envelope of a space, `None` while the space states no conditions.\npub fn envelope(inference");
+s = s.replace("/// 🏘️ The totals of the zone a space belongs to, read by `pick`.\nfn zone_of_space", "/// 🏘️ The totals of the zone a space belongs to, read by `pick`.\npub fn zone_of_space");
+fs.writeFileSync(p, s);

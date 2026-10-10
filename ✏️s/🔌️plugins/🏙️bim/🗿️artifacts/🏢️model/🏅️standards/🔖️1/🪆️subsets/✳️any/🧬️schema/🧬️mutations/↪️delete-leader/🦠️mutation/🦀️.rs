@@ -3,7 +3,7 @@
 use crate::{ModelDiff, ModelMutation, ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DeleteLeader {
     pub id: String,

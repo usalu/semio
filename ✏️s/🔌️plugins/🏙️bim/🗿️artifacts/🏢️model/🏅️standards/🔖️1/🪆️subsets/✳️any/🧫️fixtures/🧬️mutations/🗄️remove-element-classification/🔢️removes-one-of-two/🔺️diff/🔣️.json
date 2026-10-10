@@ -1,10 +1,10 @@
 {
   "classifications": {
     "w-east": {
-      "entry": "Patched",
       "assigned": {
         "cs-din": null
-      }
+      },
+      "entry": "Patched"
     }
   }
 }

@@ -6,17 +6,15 @@
 //! element, its type and the already inferred values it is built from (layouts, frames, runs, levels) to an [`ElementSolid`], and the `dependency` it reads besides them.
 //! The pure geometry comes from `semio_framework_geometry`. See `r4-api-element-solids.md` and `r7-design-model-graph.md` in the BIM-PLUGIN ticket.
 
+pub use crate::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+
 use super::super::storey_levels::StoreyLevel;
-use crate::{ModelSnapshot, Profile};
-use semio_framework_geometry::loops;
+use crate::ModelSnapshot;
 use semio_framework_geometry::mesh::TriMesh;
-use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 
 //#region 🔖️Values
-/// 📏️ Sagitta of every tessellated arc, in metres: 0.1 mm keeps the volume error of an arc wall near `2e-5` relative.
-pub const CHORD_TOLERANCE: f64 = 1e-4;
 
 /// 🏷️ Well-known `part` names of a [`SolidGroup`].
 pub mod parts {
@@ -40,7 +38,7 @@ pub mod parts {
 }
 
 /// 🧩️ What a solid represents.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
 pub enum SolidFamily {
     #[default]
     Wall,
@@ -56,10 +54,12 @@ pub enum SolidFamily {
     Railing,
     Ceiling,
     WallSweep,
+    Component,
+    Mep,
 }
 
 /// 🔑️ A `Solid` node of the model graph: the family and the element id (a filler is `Window` or `Door` by the kind of its opening; voids have no solid).
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
 pub struct SolidKey {
     pub family: SolidFamily,
     pub id: String,
@@ -73,7 +73,7 @@ impl SolidKey {
 }
 
 /// 📍️ A point in metres.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SolidPoint {
     pub x: f64,
     pub y: f64,
@@ -81,14 +81,14 @@ pub struct SolidPoint {
 }
 
 /// 📦️ Axis-aligned bounds of a solid.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SolidBounds {
     pub min: SolidPoint,
     pub max: SolidPoint,
 }
 
 /// 🧭️ Instance transform of a building-local solid into the world: rotate about `+Z` by `rotation`, then translate by `(x, y, z)`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SolidPlacement {
     pub x: f64,
     pub y: f64,
@@ -97,7 +97,7 @@ pub struct SolidPlacement {
 }
 
 /// 🎨️ A run of faces that share a part, a material and a layer.
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SolidGroup {
     pub part: String,
     pub material: String,
@@ -105,7 +105,7 @@ pub struct SolidGroup {
 }
 
 /// 🧊️ The owned tessellation of one element: counter-clockwise outward triangles, one vertex triple per triangle.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct ElementSolid {
     pub family: SolidFamily,
     pub storey: String,
@@ -262,7 +262,7 @@ macro_rules! anonymous {
 }
 
 anonymous!(phased crate::Wall, crate::CurtainWall, crate::Column, crate::Beam, crate::Slab, crate::Roof, crate::Stair, crate::Railing);
-anonymous!(crate::Ramp, crate::Opening, crate::Ceiling, crate::WallSweep);
+anonymous!(crate::Ramp, crate::Opening, crate::Ceiling, crate::WallSweep, crate::Component, crate::MepElement);
 
 /// 🔑️ A dependency value of keyed records, names left out.
 pub fn dep_records<'a, T: Anonymous + semio_framework_value::ToValue + 'a>(rows: impl IntoIterator<Item = (&'a String, &'a T)>) -> DslValue {
@@ -275,35 +275,6 @@ pub fn dep_types<'a, T: Clone + semio_framework_value::ToValue>(ids: impl IntoIt
     DslValue::object(ids.into_iter().map(|id| (id.clone(), dep_value(&library.get(id).cloned()))))
 }
 
-/// ▭️ The outline of a profile in `(a, b)` = (across, depth) coordinates centred on the origin, counter-clockwise; circles and custom arcs are flattened within [`CHORD_TOLERANCE`].
-pub fn profile_polygon(profile: &Profile) -> Vec<Point> {
-    match profile {
-        Profile::Rectangle { width, depth } => vec![Point::new(-width / 2.0, -depth / 2.0), Point::new(width / 2.0, -depth / 2.0), Point::new(width / 2.0, depth / 2.0), Point::new(-width / 2.0, depth / 2.0)],
-        Profile::Circle { diameter } => {
-            let radius = diameter / 2.0;
-            let step = if radius > CHORD_TOLERANCE { 2.0 * (1.0 - CHORD_TOLERANCE / radius).acos() } else { std::f64::consts::FRAC_PI_2 };
-            let count = ((std::f64::consts::TAU / step).ceil() as usize).clamp(16, 512);
-            (0..count).map(|k| k as f64 * std::f64::consts::TAU / count as f64).map(|angle| Point::new(radius * angle.cos(), radius * angle.sin())).collect()
-        }
-        Profile::IShape { width, depth, web, flange } => {
-            let (w, d, t, f) = (width / 2.0, depth / 2.0, web / 2.0, *flange);
-            [(-w, -d), (w, -d), (w, -d + f), (t, -d + f), (t, d - f), (w, d - f), (w, d), (-w, d), (-w, d - f), (-t, d - f), (-t, -d + f), (-w, -d + f)].into_iter().map(|(a, b)| Point::new(a, b)).collect()
-        }
-        Profile::Custom { outline } => loops::flatten(&outline.iter().map(|vertex| loops::Vertex { point: Point::new(vertex.point.x, vertex.point.y), bulge: vertex.bulge }).collect::<Vec<_>>(), CHORD_TOLERANCE),
-        Profile::Family { .. } => Vec::new(),
-    }
-}
-
-/// ▭️ Extents `(across, depth)` of a profile outline.
-pub fn profile_extents(outline: &[Point]) -> (f64, f64) {
-    let span = |value: fn(&Point) -> f64| outline.iter().map(value).fold(f64::NEG_INFINITY, f64::max) - outline.iter().map(value).fold(f64::INFINITY, f64::min);
-    if outline.is_empty() {
-        (0.0, 0.0)
-    } else {
-        (span(|p| p.x), span(|p| p.y))
-    }
-}
-
 /// 🧭️ The instance transform of the elements of `storey`: the placement of its building and the datum of its level.
 pub fn placement_of(snapshot: &ModelSnapshot, storey: &str, own: Option<&StoreyLevel>) -> SolidPlacement {
     let building = snapshot.storeys.get(storey).and_then(|row| snapshot.buildings.get(&row.building));
@@ -314,7 +285,7 @@ pub fn placement_of(snapshot: &ModelSnapshot, storey: &str, own: Option<&StoreyL
 
 //#region 🔖️Families
 /// 🗺️ The snapshot collections the field reads (material colours are deliberately absent: a solid names its materials by id).
-pub const READS: &[&str] = &["walls", "wall_sweeps", "wall_types", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "roof_types", "stairs", "ramps", "railings", "storeys", "buildings", "sites"];
+pub const READS: &[&str] = &["walls", "wall_sweeps", "wall_types", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "openings", "window_types", "door_types", "columns", "column_types", "beams", "beam_types", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "roof_types", "stairs", "ramps", "railings", "components", "component_overrides", "mep_elements", "storeys", "buildings", "sites"];
 //#endregion 🔖️Families
 
 //#region 🔖️Projection
@@ -337,9 +308,12 @@ pub(crate) mod fixtures {
     const ROOM_JOINS: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🧩️room-joins/🔣️.json");
     const CURTAIN_GRID: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🏬️curtain-grid/🔣️.json");
     const CEILINGS_MESHES: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪵️ceilings-meshes/🔣️.json");
+    const FRAME_TILT_JOINS: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/📐️frame-tilt-joins/🔣️.json");
+    const CURTAIN_OVERRIDES: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪟️curtain-overrides/🔣️.json");
+    const COMPONENTS_MEP: &str = include_str!("../../../🧫️fixtures/💡️inferences/🧊️element-solids/🪑️components-mep/🔣️.json");
 
     /// 🧫️ Every case name with its committed text.
-    pub const CASES: [(&str, &str); 5] = [("straight-openings", STRAIGHT_OPENINGS), ("arc-window", ARC_WINDOW), ("room-joins", ROOM_JOINS), ("curtain-grid", CURTAIN_GRID), ("ceilings-meshes", CEILINGS_MESHES)];
+    pub const CASES: [(&str, &str); 8] = [("straight-openings", STRAIGHT_OPENINGS), ("arc-window", ARC_WINDOW), ("room-joins", ROOM_JOINS), ("curtain-grid", CURTAIN_GRID), ("ceilings-meshes", CEILINGS_MESHES), ("frame-tilt-joins", FRAME_TILT_JOINS), ("curtain-overrides", CURTAIN_OVERRIDES), ("components-mep", COMPONENTS_MEP)];
 
     /// 🧫️ The decoded snapshot and the whole committed document of a case.
     pub fn case(name: &str) -> (ModelSnapshot, serde_json::Value) {

@@ -6,7 +6,7 @@ use crate::{Schedule, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleF
 //#region 🔖️Fields
 impl ScheduleField {
     /// 🔢️ Every built-in field, in vocabulary order.
-    pub const ALL: [ScheduleField; 35] = [
+    pub const ALL: [ScheduleField; 37] = [
         Self::Id,
         Self::Name,
         Self::Kind,
@@ -42,6 +42,8 @@ impl ScheduleField {
         Self::LayerVolume,
         Self::LayerMass,
         Self::FinishArea,
+        Self::UValue,
+        Self::GValue,
     ];
 
     /// 🏷️ The stable token of the field (snake case).
@@ -82,6 +84,8 @@ impl ScheduleField {
             Self::LayerVolume => "layer_volume",
             Self::LayerMass => "layer_mass",
             Self::FinishArea => "finish_area",
+            Self::UValue => "u_value",
+            Self::GValue => "g_value",
         }
     }
 
@@ -102,6 +106,7 @@ impl ScheduleField {
             Self::GrossSideArea | Self::OpeningArea | Self::NetSideArea | Self::GrossArea | Self::NetArea | Self::SurfaceArea | Self::LayerArea | Self::FinishArea => "m²",
             Self::GrossVolume | Self::NetVolume | Self::LayerVolume => "m³",
             Self::Mass | Self::LayerMass => "kg",
+            Self::UValue => "W/(m²·K)",
             _ => "",
         }
     }
@@ -113,6 +118,8 @@ impl ScheduleField {
             Self::Host => matches!(category, Window | Door | Void),
             Self::Number | Self::Usage => matches!(category, Space | Finish),
             Self::Surface | Self::FinishArea => category == Finish,
+            Self::UValue => matches!(category, Window | Door),
+            Self::GValue => category == Window,
             Self::Swing | Self::Leaves => category == Door,
             Self::Panes => category == Window,
             Self::Risers => category == Stair,
@@ -311,9 +318,9 @@ fn group(field: ScheduleField) -> ScheduleGroup {
 }
 
 /// 📋️ The schedules the library creates, by preset key.
-pub const PRESETS: [&str; 6] = ["door", "window", "room", "finish", "wall", "material"];
+pub const PRESETS: [&str; 7] = ["door", "window", "room", "finish", "envelope", "wall", "material"];
 
-/// 📋️ The preset schedule `key` under `name` (`None` for an unknown key): `door` lists every door with its type, size and swing, `window` every window, `room` the spaces grouped by storey with area and volume totals, `finish` the floor, wall and ceiling finish of every room grouped by storey with the finish areas summed,
+/// 📋️ The preset schedule `key` under `name` (`None` for an unknown key): `door` lists every door with its type, size and swing, `window` every window, `room` the spaces grouped by storey with area and volume totals, `envelope` every window with its type, size, area, U-value and g-value, `finish` the floor, wall and ceiling finish of every room grouped by storey with the finish areas summed,
 /// `wall` the walls grouped by type with length, area and volume totals, `material` the material take-off collapsed per material.
 pub fn preset(key: &str, name: &str) -> Option<Schedule> {
     use ScheduleField::*;
@@ -323,6 +330,7 @@ pub fn preset(key: &str, name: &str) -> Option<Schedule> {
         "window" => schedule(ScheduleCategory::Window, vec![column(Name, false), column(Type, false), column(Storey, false), column(Width, false), column(Height, false), column(Panes, false), column(Material, false), column(Count, true)], vec![ascending(Storey), ascending(Name)], Vec::new(), Vec::new(), true),
         "room" => schedule(ScheduleCategory::Space, vec![column(Number, false), column(Name, false), column(Storey, false), column(Usage, false), column(GrossArea, true), column(NetArea, true), column(Height, false), column(NetVolume, true)], vec![ascending(Number)], Vec::new(), vec![group(Storey)], true),
         "finish" => schedule(ScheduleCategory::Finish, vec![column(Number, false), column(Name, false), column(Surface, false), column(Material, false), column(FinishArea, true)], vec![ascending(Number), ascending(Surface)], Vec::new(), vec![group(Storey)], true),
+        "envelope" => schedule(ScheduleCategory::Window, vec![column(Name, false), column(Type, false), column(Storey, false), column(Width, false), column(Height, false), column(GrossArea, true), column(UValue, false), column(GValue, false), column(Count, true)], vec![ascending(Storey), ascending(Name)], Vec::new(), Vec::new(), true),
         "wall" => schedule(ScheduleCategory::Wall, vec![column(Name, false), column(Type, false), column(Storey, false), column(Length, true), column(Height, false), column(NetSideArea, true), column(NetVolume, true)], vec![ascending(Name)], Vec::new(), vec![group(Type)], true),
         "material" => schedule(ScheduleCategory::Material, vec![column(Material, false), column(LayerArea, true), column(LayerVolume, true), column(LayerMass, true), column(Count, true)], Vec::new(), Vec::new(), vec![group(Material)], false),
         _ => return None,

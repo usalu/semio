@@ -1,0 +1,10 @@
+{
+  "mutation": "createIssueComment",
+  "id": "w-south",
+  "issue_comment": {
+    "issue": "i-1",
+    "author": "AB",
+    "date": "2026-10-09T09:00:00Z",
+    "text": "I will check the structure."
+  }
+}

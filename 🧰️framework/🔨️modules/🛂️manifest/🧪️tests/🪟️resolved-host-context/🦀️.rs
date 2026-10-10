@@ -128,3 +128,27 @@ async fn the_panel_capacity_row_is_the_only_long_field() {
     let view: ViewModel = semio_framework_pack_json::from_json_str(&row_json(&fixture.valid, row), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the guest decodes what the host admission refuses");
     assert_eq!(view.panel_json.map(|json| json.chars().count()), Some(repeat.count));
 }
+
+#[test]
+fn view_model_original_retirement_preserves_every_field_and_physical_backing(){
+ use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🪟️view-context/🧫️fixtures/♻️original/🔣️.json")).unwrap();
+ for context in fixture["contexts"].as_array().unwrap(){
+  let input=context.to_string();let oracle:ViewModel=serde_json::from_value(context.clone()).unwrap();
+  let(original,heap)=observe(||semio_framework_pack_json::from_json_str::<ViewModel>(&input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+  assert_eq!(original,oracle);assert!(!heap.overflowed);let original_bytes=heap.requested_bytes-heap.released_bytes;
+  let pointer=original.active_mode_id.as_ref().unwrap().as_ptr();
+  let(mut owner,heap)=observe(||ControlledRetirement::new(original).unwrap_or_else(|_|panic!("original view context refused")));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+  let(step,heap)=observe(||owner.step(RetainedCloneGrant::default()).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.original().unwrap().active_mode_id.as_ref().unwrap().as_ptr(),pointer);
+  let mut allocated=0;let mut released=0;let mut turns=0;
+  for _ in 0..100000{
+   if owner.terminal_is_empty(){break;}
+   let copy=owner.next_copy_byte_demand().unwrap().min(fixture["copyGrant"].as_u64().unwrap()as usize);let release=owner.next_release_byte_demand().unwrap();
+   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:owner.next_depth_demand().unwrap()};
+   let(step,heap)=observe(||owner.step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert!(!heap.overflowed);assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);allocated+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;
+  }
+  assert!(owner.terminal_is_empty());assert_eq!(original_bytes+allocated,released);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+  println!("[DEBUG] Original view context locale={} original={original_bytes} allocated={allocated} released={released} turns={turns}",oracle.locale.as_str());
+ }
+}

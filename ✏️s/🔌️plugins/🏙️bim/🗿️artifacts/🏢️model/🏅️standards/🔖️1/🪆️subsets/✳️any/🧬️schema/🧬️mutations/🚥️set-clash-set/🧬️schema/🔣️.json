@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-clash-set/schema.json",
+  "title": "SetClashSet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setClashSet"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Clash set",
+          "de": "Kollisionssatz"
+        },
+        "ref": {
+          "kind": "clash-set"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "a": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ElementSelector",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Side A",
+          "de": "Seite A"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "b": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ElementSelector",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Side B",
+          "de": "Seite B"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "tolerance": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Tolerance (m)",
+          "de": "Toleranz (m)"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "clearance": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Clearance (m)",
+          "de": "Abstand (m)"
+        },
+        "group": "value",
+        "order": 60
+      }
+    }
+  }
+}

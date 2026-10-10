@@ -1,0 +1,10 @@
+{
+  "components": {
+    "cmp-basin": {
+      "entry": "Patched",
+      "host": {
+        "value": null
+      }
+    }
+  }
+}

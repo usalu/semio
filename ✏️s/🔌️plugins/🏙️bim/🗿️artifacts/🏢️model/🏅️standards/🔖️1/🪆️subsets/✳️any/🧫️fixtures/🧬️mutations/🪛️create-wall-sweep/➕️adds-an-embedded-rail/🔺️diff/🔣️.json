@@ -1,1 +1,18 @@
-{}
+{
+  "wall_sweeps": {
+    "ws-rail": {
+      "entry": "Created",
+      "height": 0.9,
+      "host": "w-east",
+      "inset": 0.01,
+      "material": "m-paint",
+      "name": "Hand rail",
+      "profile": {
+        "Circle": {
+          "diameter": 0.04
+        }
+      },
+      "side": "Right"
+    }
+  }
+}

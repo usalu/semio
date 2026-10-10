@@ -387,7 +387,7 @@ fn flow_eval_session_seeds_its_retained_neural_cache() {
     let expected = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
     session.seed_node_cache(17, expected.clone());
     let seeded = session.neural_cache().get(17);
-    assert_eq!(seeded, Some(expected.clone()));
+    assert_eq!(seeded.as_ref(), Some(&expected));
     seeded.retire_cold();
     expected.retire_cold();
     session.retire_cold();
@@ -810,10 +810,10 @@ fn neural_cache_persists_across_evaluations() {
 
 #[test]
 fn collect_live_geometry_handles_includes_input_channels() {
-    let mut outputs = BTreeMap::new();
+    let mut outputs = HistoryFoldIndex::new();
     outputs.insert("box".into(), Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-box".into()))).insert("kind", NeuralValue::Atom(Atom::String("solid".into()))));
     outputs.insert("volume".into(), Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(12.0))));
-    let mut inputs = BTreeMap::new();
+    let mut inputs = HistoryFoldIndex::new();
     inputs.insert("volume".into(), Dictionary::new().insert("geometry", NeuralValue::Dictionary(Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-box".into()))))));
     let channels = EvalChannels { outputs, inputs };
     let handles = collect_live_geometry_handles_from_channels(&channels);
@@ -832,7 +832,7 @@ fn apply_eval_outputs_json_preserves_state_on_global_error() {
     host.retire_cold();
 }
 
-fn collect_live_geometry_handles(outputs: &BTreeMap<String, Dictionary>) -> Vec<String> {
+fn collect_live_geometry_handles(outputs: &HistoryFoldIndex<String, Dictionary>) -> Vec<String> {
     let mut handles = Vec::new();
     for dict in outputs.values() {
         collect_geometry_handles_from_dictionary(dict, &mut handles);
@@ -844,7 +844,7 @@ fn collect_live_geometry_handles(outputs: &BTreeMap<String, Dictionary>) -> Vec<
 
 #[test]
 fn collect_live_geometry_handles_traverses_nested_dictionaries() {
-    let mut outputs = BTreeMap::new();
+    let mut outputs = HistoryFoldIndex::new();
     outputs.insert("box".into(), Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-1".into()))).insert("kind", NeuralValue::Atom(Atom::String("solid".into()))));
     outputs.insert("nested".into(), Dictionary::new().insert("child", NeuralValue::Dictionary(Dictionary::with_schema("face").insert("handle", NeuralValue::Atom(Atom::String("face-2".into()))))));
     let handles = collect_live_geometry_handles(&outputs);
@@ -854,12 +854,12 @@ fn collect_live_geometry_handles_traverses_nested_dictionaries() {
 
 #[test]
 fn collect_live_drawing_handles_traverses_list_values() {
-    let mut outputs = BTreeMap::new();
+    let mut outputs = HistoryFoldIndex::new();
     outputs.insert(
         "get".into(),
         Dictionary::new().insert("value", NeuralValue::Dictionary(Dictionary::with_schema("list").insert("0", NeuralValue::Dictionary(Dictionary::with_schema("draw.drawing").insert("handle", NeuralValue::Atom(Atom::String("drawing-2".into()))))))),
     );
-    let channels = EvalChannels { outputs, inputs: BTreeMap::new() };
+    let channels = EvalChannels { outputs, inputs: HistoryFoldIndex::new() };
     assert_eq!(collect_live_drawing_handles_from_channels(&channels), vec![String::from("drawing-2")]);
     channels.retire_cold();
 }
@@ -1579,19 +1579,19 @@ async fn undo_redo_add_widget() {
     // saw was `ordered-map root must be explicitly retired before drop` from inside `apply_command`,
     // never the validation that caused it. The flow host installs the same catalog on its own history
     // store (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
-    store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }).await.expect("apply add-widget operations");
+    crate::os_store::install_funded_member_store_owners(&mut store).expect("flow history owners");
+    history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, &mut identity).await).expect("apply add-widget operations");
     let applied = store.snapshot().expect("projection");
     assert_eq!(applied.widgets.len(), count_before + 1);
     applied.retire_cold();
 
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+    history_identity!(|identity| store.dispatch(ArtifactCommand::Undo, &mut identity).await).expect("undo");
     let after_undo = store.snapshot().expect("projection");
     assert_eq!(after_undo.widgets.len(), count_before);
     assert!(!after_undo.widgets.iter().any(|w| widget_id_for(w) == id));
     after_undo.retire_cold();
 
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+    history_identity!(|identity| store.dispatch(ArtifactCommand::Redo, &mut identity).await).expect("redo");
     let after_redo = store.snapshot().expect("projection");
     assert!(after_redo.widgets.iter().any(|w| widget_id_for(w) == id));
     after_redo.retire_cold();

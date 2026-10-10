@@ -26,4 +26,6 @@ type BimWorldWindowConfig {
   sectionAxis: String!
   sectionOffset: Float!
   framed: Boolean!
+  energyOverlay: Boolean!
+  energyMode: String!
 }

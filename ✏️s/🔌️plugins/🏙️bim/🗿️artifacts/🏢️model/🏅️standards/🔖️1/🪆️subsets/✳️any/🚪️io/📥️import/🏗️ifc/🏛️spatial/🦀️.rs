@@ -14,17 +14,22 @@ pub fn degrees(parts: &[f64]) -> f64 {
     sign * (at(0) + at(1) / 60.0 + at(2) / 3600.0 + at(3) / 3_600_000_000.0)
 }
 
-/// 🏷️ The `Semio_Authoring` rows of an instance: the authored parameters IFC has no slot for.
-pub fn authoring_of(doc: &Doc<'_>, ifc: u64) -> BTreeMap<String, Part21Value> {
+/// 🏷️ The rows of the property set `name` of an instance (empty when it carries none).
+pub fn set_of(doc: &Doc<'_>, ifc: u64, name: &str) -> BTreeMap<String, Part21Value> {
     let mut found = BTreeMap::new();
     for definition in doc.index.definitions.get(&ifc).into_iter().flatten() {
         if let Some(args) = doc.args(*definition, "IFCPROPERTYSET") {
-            if text(args, 2) == "Semio_Authoring" {
+            if text(args, 2) == name {
                 found.extend(single_values(doc, args));
             }
         }
     }
     found
+}
+
+/// 🏷️ The `Semio_Authoring` rows of an instance: the authored parameters IFC has no slot for.
+pub fn authoring_of(doc: &Doc<'_>, ifc: u64) -> BTreeMap<String, Part21Value> {
+    set_of(doc, ifc, "Semio_Authoring")
 }
 
 /// 🕰️ The phase a `Semio_Authoring.Phase` row names; anything else, or no row, is new work.
@@ -63,7 +68,7 @@ pub fn string_of(value: &Part21Value) -> Option<String> {
     value.as_typed().and_then(|(_, items)| items.first()).and_then(Part21Value::as_str).or_else(|| value.as_str()).map(str::to_string)
 }
 
-fn quantity(doc: &Doc<'_>, ifc: u64, name: &str) -> Option<f64> {
+pub fn quantity(doc: &Doc<'_>, ifc: u64, name: &str) -> Option<f64> {
     doc.index.definitions.get(&ifc)?.iter().filter_map(|definition| doc.args(*definition, "IFCELEMENTQUANTITY")).flat_map(|set| set[5].as_list().unwrap_or_default().iter()).filter_map(|item| doc.follow_args(item, "IFCQUANTITYLENGTH")).find(|args| text(args, 0) == name).and_then(|args| real(args, 3))
 }
 
@@ -80,6 +85,10 @@ fn project(i: &mut Import<'_>) -> f64 {
             i.model.project.author = i.doc.follow_args(&account[0], "IFCPERSON").map(|person| text(person, 1)).unwrap_or_default();
             i.model.project.organization = i.doc.follow_args(&account[1], "IFCORGANIZATION").map(|organization| text(organization, 1)).unwrap_or_default();
         }
+    }
+    if i.schema == super::Schema::Ifc4 {
+        let first = |at: usize| i.doc.document.header.file_name.get(at).and_then(Part21Value::as_list).and_then(|items| items.first()).and_then(Part21Value::as_str).unwrap_or_default().to_string();
+        (i.model.project.author, i.model.project.organization) = (first(2), first(3));
     }
     let context = args[7].as_list().and_then(|items| items.first()).and_then(|item| i.doc.follow_args(item, "IFCGEOMETRICREPRESENTATIONCONTEXT"));
     context.and_then(|context| context.get(5)).and_then(|north| i.doc.direction(north)).map_or(0.0, |north| super::frames::snap((-north[0]).atan2(north[1])))

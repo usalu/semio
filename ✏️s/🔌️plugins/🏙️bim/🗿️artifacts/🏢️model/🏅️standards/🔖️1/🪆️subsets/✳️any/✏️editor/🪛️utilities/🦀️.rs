@@ -25,6 +25,7 @@ pub struct UtilityRow {
 pub const DEFAULT_UTILITY: &str = "select";
 
 const PLAN_WORLD: &[&str] = &[plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID];
+const PLAN_WORLD_SECTION: &[&str] = &[plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID, section::WINDOW_KIND_ID];
 const PLAN_ONLY: &[&str] = &[plan::WINDOW_KIND_ID];
 const EVERYWHERE: &[&str] = &[plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID, section::WINDOW_KIND_ID, sheet::WINDOW_KIND_ID];
 const SHEET_ONLY: &[&str] = &[sheet::WINDOW_KIND_ID];
@@ -37,6 +38,10 @@ macro_rules! utilities {
 }
 
 utilities! {
+    "support", utility_support, "triangle", "analysis", PLAN_WORLD, Some("alt+s"), Some("armSupport");
+    "load-point", utility_load_point, "arrow-down", "analysis", PLAN_WORLD, Some("alt+p"), Some("armLoadPoint");
+    "load-line", utility_load_line, "arrow-down-to-line", "analysis", PLAN_WORLD, Some("alt+l"), Some("armLoadLine");
+    "load-area", utility_load_area, "square", "analysis", PLAN_WORLD, Some("alt+a"), Some("armLoadArea");
     "select", utility_select, "mouse-pointer", "select", EVERYWHERE, Some("v"), Some("armSelect");
     "move", utility_move, "move", "select", PLAN_WORLD, Some("e"), Some("armMove");
     "rotate", utility_rotate, "rotate-ccw", "select", PLAN_WORLD, Some("q"), Some("armRotate");
@@ -45,6 +50,10 @@ utilities! {
     "curtain-wall", utility_curtain_wall, "panels-top-left", "structure", PLAN_WORLD, Some("u"), Some("armCurtainWall");
     "column", utility_column, "columns", "structure", PLAN_WORLD, Some("c"), Some("armColumn");
     "beam", utility_beam, "minus", "structure", PLAN_WORLD, Some("b"), Some("armBeam");
+    "beam-arc", utility_beam_arc, "spline", "structure", PLAN_WORLD, Some("alt+b"), Some("armBeamArc");
+    "column-tilt", utility_column_tilt, "move-diagonal-2", "structure", PLAN_WORLD, Some("alt+c"), Some("armColumnTilt");
+    "curtain-grid", utility_curtain_grid, "grid-2x2", "structure", PLAN_WORLD_SECTION, Some("shift+u"), Some("armCurtainGrid");
+    "curtain-cell", utility_curtain_cell, "square-dashed-mouse-pointer", "structure", PLAN_WORLD_SECTION, Some("alt+u"), Some("armCurtainCell");
     "slab", utility_slab, "layout-panel-top", "structure", PLAN_WORLD, Some("s"), Some("armSlab");
     "slab-walls", utility_slab_walls, "scan-line", "structure", PLAN_WORLD, Some("shift+s"), Some("armSlabWalls");
     "ceiling", utility_ceiling, "panel-top", "structure", PLAN_WORLD, Some("i"), Some("armCeiling");
@@ -56,10 +65,13 @@ utilities! {
     "stair", utility_stair, "footprints", "circulation", PLAN_WORLD, Some("t"), Some("armStair");
     "railing", utility_railing, "fence", "circulation", PLAN_WORLD, Some("l"), Some("armRailing");
     "ramp", utility_ramp, "trending-up", "circulation", PLAN_WORLD, Some("shift+t"), Some("armRamp");
+    "component", utility_component, "armchair", "components", PLAN_WORLD, Some("shift+c"), Some("armComponent");
+    "route", utility_route, "waypoints", "components", PLAN_WORLD, Some("shift+m"), Some("armRoute");
     "space", utility_space, "square-dashed", "spaces", PLAN_WORLD, Some("p"), Some("armSpace");
     "grid", utility_grid, "grid", "spaces", PLAN_WORLD, Some("g"), Some("armGrid");
     "measure", utility_measure, "ruler", "spaces", PLAN_WORLD, Some("m"), Some("armMeasure");
     "split-wall", utility_split_wall, "scissors", "structure", PLAN_WORLD, Some("shift+w"), Some("armSplitWall");
+    "sweep", utility_sweep, "baseline", "structure", PLAN_WORLD, Some("shift+b"), Some("armSweep");
     "copy", utility_copy, "copy", "modify", PLAN_WORLD, Some("k"), Some("armCopy");
     "mirror", utility_mirror, "flip-horizontal-2", "modify", PLAN_WORLD, Some("shift+k"), Some("armMirror");
     "array", utility_array, "grid-3x3", "modify", PLAN_WORLD, Some("y"), Some("armArray");
@@ -82,7 +94,7 @@ utilities! {
 pub fn definitions() -> Vec<UtilityDefinition> {
     UTILITIES
         .iter()
-        .map(|row| UtilityDefinition { group: row.group.map(Into::into), keys: row.keys.map(Into::into), ..UtilityDefinition::new(row.id, LocalizedLabel::native((row.label)(&BimLabels::NATIVE_EN).as_str(), (row.label)(&BimLabels::NATIVE_DE).as_str()), row.icon) })
+        .map(|row| UtilityDefinition { group: row.group.map(Into::into), keys: row.keys.map(Into::into), ..UtilityDefinition::new(row.id, BimLabels::localized(row.label), row.icon) })
         .collect()
 }
 

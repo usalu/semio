@@ -1,0 +1,361 @@
+{
+  "counts": {
+    "error": 6,
+    "warning": 7,
+    "info": 0,
+    "total": 13
+  },
+  "findings": [
+    {
+      "severity": "error",
+      "code": "clash.column-column",
+      "category": "clash",
+      "storey": "st-ground",
+      "elements": [
+        "c-1",
+        "c-2"
+      ],
+      "missing": [],
+      "values": {
+        "overlap_area": 0.05999999999999872,
+        "overlap_height": 3,
+        "overlap_volume": 0.17999999999999616
+      },
+      "message": {
+        "en": "Columns c-1, c-2 overlap by 0.180 m3.",
+        "de": "Stützen c-1, c-2 überschneiden sich um 0.180 m3."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "reference.wall-type",
+      "category": "reference",
+      "storey": "st-ground",
+      "elements": [
+        "w-missing-type"
+      ],
+      "missing": [
+        "wt-missing"
+      ],
+      "values": {},
+      "message": {
+        "en": "Wall w-missing-type uses the missing wall type wt-missing.",
+        "de": "Wand w-missing-type verwendet den fehlenden Wandtyp wt-missing."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "reference.opening-host",
+      "category": "reference",
+      "storey": null,
+      "elements": [
+        "o-orphan"
+      ],
+      "missing": [
+        "w-nowhere"
+      ],
+      "values": {},
+      "message": {
+        "en": "Opening o-orphan is hosted by the missing wall w-nowhere.",
+        "de": "Öffnung o-orphan sitzt in der fehlenden Wand w-nowhere."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "opening.outside-host",
+      "category": "opening",
+      "storey": "st-ground",
+      "elements": [
+        "o-outside"
+      ],
+      "missing": [],
+      "values": {},
+      "message": {
+        "en": "Opening o-outside reaches beyond the ends of its wall.",
+        "de": "Öffnung o-outside ragt über die Enden ihrer Wand hinaus."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "degenerate.axis-length",
+      "category": "degenerate",
+      "storey": "st-ground",
+      "elements": [
+        "w-zero"
+      ],
+      "missing": [],
+      "values": {
+        "length": 0
+      },
+      "message": {
+        "en": "w-zero has an axis of length 0 m.",
+        "de": "w-zero hat eine Achse der Länge 0 m."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "storey.level-duplicate",
+      "category": "storey",
+      "storey": null,
+      "elements": [
+        "st-dup",
+        "st-first"
+      ],
+      "missing": [],
+      "values": {
+        "level": 1
+      },
+      "message": {
+        "en": "Storeys st-dup, st-first share the level 1 and overlap.",
+        "de": "Geschosse st-dup, st-first teilen sich die Ebene 1 und überlappen sich."
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "clash.wall-column",
+      "category": "clash",
+      "storey": "st-ground",
+      "elements": [
+        "c-1",
+        "w-into-column"
+      ],
+      "missing": [],
+      "values": {
+        "overlap_area": 0.03000000000000469,
+        "overlap_height": 3,
+        "overlap_volume": 0.09000000000001407
+      },
+      "message": {
+        "en": "Wall and column c-1, w-into-column overlap by 0.090 m3.",
+        "de": "Wand und Stütze c-1, w-into-column überschneiden sich um 0.090 m3."
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "clash.wall-column",
+      "category": "clash",
+      "storey": "st-ground",
+      "elements": [
+        "c-2",
+        "w-into-column"
+      ],
+      "missing": [],
+      "values": {
+        "overlap_area": 0.007500000000000284,
+        "overlap_height": 3,
+        "overlap_volume": 0.022500000000000853
+      },
+      "message": {
+        "en": "Wall and column c-2, w-into-column overlap by 0.023 m3.",
+        "de": "Wand und Stütze c-2, w-into-column überschneiden sich um 0.023 m3."
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "clash.stair-wall",
+      "category": "clash",
+      "storey": "st-ground",
+      "elements": [
+        "s-comfort",
+        "w-into-column"
+      ],
+      "missing": [],
+      "values": {
+        "overlap_area": 0.15000000000000124,
+        "overlap_height": 3,
+        "overlap_volume": 0.45000000000000373
+      },
+      "message": {
+        "en": "Stair and wall s-comfort, w-into-column overlap by 0.450 m3.",
+        "de": "Treppe und Wand s-comfort, w-into-column überschneiden sich um 0.450 m3."
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "clash.stair-wall",
+      "category": "clash",
+      "storey": "st-ground",
+      "elements": [
+        "s-comfort",
+        "w-part"
+      ],
+      "missing": [],
+      "values": {
+        "overlap_area": 0.15000000000000058,
+        "overlap_height": 3,
+        "overlap_volume": 0.45000000000000173
+      },
+      "message": {
+        "en": "Stair and wall s-comfort, w-part overlap by 0.450 m3.",
+        "de": "Treppe und Wand s-comfort, w-part überschneiden sich um 0.450 m3."
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "storey.level-gap",
+      "category": "storey",
+      "storey": null,
+      "elements": [
+        "st-dup",
+        "st-far"
+      ],
+      "missing": [],
+      "values": {
+        "from": 1,
+        "to": 4
+      },
+      "message": {
+        "en": "Storeys st-dup, st-far are not contiguous: level 1 is followed by level 4.",
+        "de": "Geschosse st-dup, st-far sind nicht lückenlos: auf Ebene 1 folgt Ebene 4."
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "stair.comfort-rule",
+      "category": "stair",
+      "storey": "st-ground",
+      "elements": [
+        "s-comfort"
+      ],
+      "missing": [],
+      "values": {
+        "maximum": 0.65,
+        "minimum": 0.59,
+        "stride": 0.7529411764705882
+      },
+      "message": {
+        "en": "Stair s-comfort breaks the comfort rule 2R + T = 0.753 m (allowed 0.590 to 0.650 m).",
+        "de": "Treppe s-comfort verletzt die Schrittmaßregel 2h + a = 0.753 m (zulässig 0.590 bis 0.650 m)."
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "space.duplicate-number",
+      "category": "space",
+      "storey": null,
+      "elements": [
+        "sp-living",
+        "sp-twin"
+      ],
+      "missing": [],
+      "values": {},
+      "message": {
+        "en": "Spaces sp-living, sp-twin share the same number.",
+        "de": "Räume sp-living, sp-twin haben dieselbe Nummer."
+      }
+    }
+  ],
+  "elements": {
+    "c-1": {
+      "severity": "error",
+      "count": 2,
+      "codes": [
+        "clash.wall-column",
+        "clash.column-column"
+      ]
+    },
+    "c-2": {
+      "severity": "error",
+      "count": 2,
+      "codes": [
+        "clash.wall-column",
+        "clash.column-column"
+      ]
+    },
+    "o-orphan": {
+      "severity": "error",
+      "count": 1,
+      "codes": [
+        "reference.opening-host"
+      ]
+    },
+    "o-outside": {
+      "severity": "error",
+      "count": 1,
+      "codes": [
+        "opening.outside-host"
+      ]
+    },
+    "s-comfort": {
+      "severity": "warning",
+      "count": 3,
+      "codes": [
+        "clash.stair-wall",
+        "stair.comfort-rule"
+      ]
+    },
+    "sp-living": {
+      "severity": "warning",
+      "count": 1,
+      "codes": [
+        "space.duplicate-number"
+      ]
+    },
+    "sp-twin": {
+      "severity": "warning",
+      "count": 1,
+      "codes": [
+        "space.duplicate-number"
+      ]
+    },
+    "st-dup": {
+      "severity": "error",
+      "count": 2,
+      "codes": [
+        "storey.level-gap",
+        "storey.level-duplicate"
+      ]
+    },
+    "st-far": {
+      "severity": "warning",
+      "count": 1,
+      "codes": [
+        "storey.level-gap"
+      ]
+    },
+    "st-first": {
+      "severity": "error",
+      "count": 1,
+      "codes": [
+        "storey.level-duplicate"
+      ]
+    },
+    "w-into-column": {
+      "severity": "warning",
+      "count": 3,
+      "codes": [
+        "clash.wall-column",
+        "clash.stair-wall"
+      ]
+    },
+    "w-missing-type": {
+      "severity": "error",
+      "count": 1,
+      "codes": [
+        "reference.wall-type"
+      ]
+    },
+    "w-part": {
+      "severity": "warning",
+      "count": 1,
+      "codes": [
+        "clash.stair-wall"
+      ]
+    },
+    "w-zero": {
+      "severity": "error",
+      "count": 1,
+      "codes": [
+        "degenerate.axis-length"
+      ]
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "error": 4,
+      "warning": 5,
+      "info": 0,
+      "total": 9
+    }
+  }
+}

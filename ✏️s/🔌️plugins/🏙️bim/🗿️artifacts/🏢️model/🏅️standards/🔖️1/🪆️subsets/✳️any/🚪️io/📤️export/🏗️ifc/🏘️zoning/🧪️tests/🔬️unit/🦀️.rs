@@ -21,7 +21,7 @@ pub fn zoned() -> ModelSnapshot {
     model
 }
 
-fn instance_of<'a>(document: &'a Part21Document, entity: &str, name: &str) -> &'a Part21Instance {
+fn instance_of<'a>(document: &'a Part21Document, entity: &'a str, name: &str) -> &'a Part21Instance {
     rows(document, entity).into_iter().find(|(_, args)| string(args, 2).as_deref() == Some(name)).map(|(instance, _)| instance).unwrap_or_else(|| panic!("no {entity} named {name}"))
 }
 

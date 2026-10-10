@@ -1,0 +1,14 @@
+{
+  "schema": "semio.flow.original-close/v1",
+  "policy": {"maximumItems":1,"maximumCopyBytes":1048576,"maximumCapacityBytes":1048576,"maximumReleaseBytes":1048576,"maximumDepth":64},
+  "stops":[0,1,14,52,77,120],
+  "workGrants":[1,7,4096],
+  "denials":[
+    {"id":"no-item","axis":"items","refusal":"progress"},
+    {"id":"copy-one-below","axis":"copy","refusal":"progress"},
+    {"id":"capacity-one-below","axis":"capacity","refusal":"progress"},
+    {"id":"release-one-below","axis":"release","refusal":"progress"},
+    {"id":"depth-one-below","axis":"depth","refusal":"error"}
+  ],
+  "terminal":{"dropRequestedBytes":0,"dropReleasedBytes":0}
+}

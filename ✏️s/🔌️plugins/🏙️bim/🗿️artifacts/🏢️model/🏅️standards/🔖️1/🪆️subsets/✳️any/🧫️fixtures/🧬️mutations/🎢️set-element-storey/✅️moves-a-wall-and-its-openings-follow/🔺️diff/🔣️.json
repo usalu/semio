@@ -1,1 +1,8 @@
-{}
+{
+  "walls": {
+    "w-south": {
+      "entry": "Patched",
+      "storey": "st-first"
+    }
+  }
+}

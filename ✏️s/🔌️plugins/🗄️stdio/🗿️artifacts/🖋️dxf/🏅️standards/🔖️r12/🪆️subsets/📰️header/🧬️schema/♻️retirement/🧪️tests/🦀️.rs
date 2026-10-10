@@ -1,0 +1,14 @@
+use semio_framework_value::{RetireOwned,retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+use crate::{DxfSnapshot,DxfMutation};
+
+fn close<T:RetireOwned>(value:T,original:usize){
+ let(mut owner,allocated,released)=crate::test_allocation::observe_backing(||ControlledRetirement::new(value).unwrap_or_else(|_|panic!("concrete DXF owner facet refused")));assert_eq!((allocated,released),(0,0));let(step,allocated,released)=crate::test_allocation::observe_backing(||owner.step(Default::default()).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((allocated,released),(0,0));assert!(owner.original().is_some());let mut born=0;let mut freed=0;
+ for _ in 0..100000 {if owner.terminal_is_empty(){break}let copy=owner.next_copy_byte_demand().unwrap().min(7);let release=owner.next_release_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:owner.next_depth_demand().unwrap()};let(step,allocated,released)=crate::test_allocation::observe_backing(||owner.step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!((allocated,released),(progress.retained_capacity_bytes,progress.released_bytes));born+=allocated;freed+=released}
+ assert!(owner.terminal_is_empty());assert_eq!(original+born,freed);let(_,allocated,released)=crate::test_allocation::observe_backing(||drop(owner));assert_eq!((allocated,released),(0,0));println!("[DEBUG] DXF original typed owner original={original} allocated={born} released={freed}");
+}
+#[test]
+fn original_dxf_schema_owners_close_every_concrete_field_under_real_grants(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["copyGrant"],7);
+ let text=fixture["snapshot"].to_string();let(snapshot,allocated,released)=crate::test_allocation::observe_backing(||semio_framework_pack_json::from_json_str::<DxfSnapshot>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());let oracle:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap();assert_eq!(oracle["schema"],fixture["snapshot"]["schema"]);assert_eq!(snapshot.tables.styles[0].font_name,"Ä Font");assert_eq!(snapshot.entities.len(),1);close(snapshot,allocated-released);
+ let text=fixture["mutation"].to_string();let(mutation,allocated,released)=crate::test_allocation::observe_backing(||semio_framework_pack_json::from_json_str::<DxfMutation>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());assert!(matches!(&mutation,DxfMutation::SetHeaderVar(value) if value.name=="$CUSTOM"));close(mutation,allocated-released);
+}

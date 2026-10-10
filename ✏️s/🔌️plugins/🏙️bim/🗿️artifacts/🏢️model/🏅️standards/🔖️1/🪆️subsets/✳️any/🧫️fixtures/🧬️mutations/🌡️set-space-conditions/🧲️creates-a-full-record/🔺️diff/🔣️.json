@@ -1,0 +1,15 @@
+{
+  "space_conditions": {
+    "sp-1": {
+      "cooling_setpoint": 26.0,
+      "entry": "Created",
+      "equipment_power_density": 3.0,
+      "heating_setpoint": 20.0,
+      "lighting_power_density": 5.0,
+      "occupancy": "Residential",
+      "occupancy_density": 0.04,
+      "schedule": "Residential day",
+      "ventilation_rate": 0.3
+    }
+  }
+}

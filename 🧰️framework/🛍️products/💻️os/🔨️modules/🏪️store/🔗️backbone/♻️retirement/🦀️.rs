@@ -69,7 +69,7 @@ impl ArtifactStoreBackboneRetirement {
     }
     fn detach_queue(owner: &mut Option<Arc<Queue>>) -> Option<VecDeque<BackboneMessage>> {
         let queue = owner.as_ref()?;
-        if Arc::strong_count(queue) != 1 || Arc::weak_count(queue) != 0 { return None; }
+        if Arc::strong_count(queue) != 1 { return None; }
         match Arc::try_unwrap(owner.take().unwrap()) {
             Ok(queue) => Some(queue.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner)),
             Err(queue) => { *owner = Some(queue); None }
@@ -105,7 +105,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
             if let Some(message) = queue.pop_front() { *self.message = Some(message); }
             else { drop(self.queue.take()); }
         } else if let Some(wake) = self.wake.as_ref() {
-            if Arc::strong_count(wake) != 1 || Arc::weak_count(wake) != 0 { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
+            if Arc::strong_count(wake) != 1 { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
             match Arc::try_unwrap(self.wake.take().unwrap()) {
                 Ok(wake) => drop(wake),
                 Err(wake) => { *self.wake = Some(wake); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }

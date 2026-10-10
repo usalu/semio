@@ -1,0 +1,27 @@
+//! 💧️ `create-mep-element` payload. Routes a duct, pipe or cable tray: a storey, a system, a cross-section in metres and a path of at least two distinct points whose height is measured above the storey.
+
+use crate::{MepElement, ModelDiff, ModelMutation, ModelSnapshot};
+use protocol::{MutationKind, SemanticDescriptor};
+
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+pub struct CreateMepElement {
+    pub id: String,
+    pub mep: MepElement,
+}
+
+impl MutationKind<ModelSnapshot, ModelMutation> for CreateMepElement {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "mep-element", kind: "create-mep-element", record: "CreateMepElement" };
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
+        Ok(super::inverse::inverse(self, base))
+    }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Route MEP element \"{}\"", self.mep.name), &format!("TGA-Element \"{}\" verlegen", self.mep.name))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}

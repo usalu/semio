@@ -9,7 +9,8 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, placed, point, rectangle};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, profile_polygon, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
 use crate::{Column, ModelSnapshot, Profile, Slope};
 use semio_framework_geometry::loops::{self, Vertex};
@@ -19,8 +20,6 @@ use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
 
 //#region 🔖️Geometry
-/// 📐️ The largest lean of a column from the vertical in radians (60 degrees).
-pub const MAX_TILT: f64 = std::f64::consts::FRAC_PI_3;
 
 /// 🔷️ The centred cross-section of a profile as a bulged loop in `(x, y)`; an invalid profile yields an empty loop.
 pub fn profile_loop(profile: &Profile) -> Vec<Vertex> {

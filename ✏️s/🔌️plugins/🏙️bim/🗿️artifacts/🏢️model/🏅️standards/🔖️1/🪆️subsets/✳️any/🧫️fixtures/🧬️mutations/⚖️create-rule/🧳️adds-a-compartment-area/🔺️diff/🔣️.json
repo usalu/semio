@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "r-1": {
+      "entry": "Created",
+      "kind": "MaxCompartmentArea",
+      "limit": 400.0,
+      "name": "Fire compartment",
+      "scope": {
+        "filter": "Fire compartment",
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "severity": "Error"
+    }
+  }
+}

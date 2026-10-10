@@ -1,0 +1,19 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://semio.tech/framework/job/retained-work-grant",
+ "title":"Retained Work Funding",
+ "type":"object","additionalProperties":false,
+ "required":["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],
+ "properties":{
+  "maximumItems":{"type":"integer","minimum":0,"maximum":9007199254740991},
+  "maximumCopyBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},
+  "maximumCapacityBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},
+  "maximumReleaseBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},
+  "maximumDepth":{"type":"integer","minimum":0,"maximum":9007199254740991}
+ },
+ "$defs":{
+  "demand":{"type":"object","additionalProperties":false,"required":["copyBytes","capacityBytes","releaseBytes","depth"],"properties":{"copyBytes":{"type":"integer","minimum":0},"capacityBytes":{"type":"integer","minimum":0},"releaseBytes":{"type":"integer","minimum":0},"depth":{"type":"integer","minimum":0}}},
+  "receipt":{"type":"object","additionalProperties":false,"required":["copiedItems","copiedBytes","retainedCapacityBytes","releasedBytes"],"properties":{"copiedItems":{"type":"integer","minimum":0},"copiedBytes":{"type":"integer","minimum":0},"retainedCapacityBytes":{"type":"integer","minimum":0},"releasedBytes":{"type":"integer","minimum":0}}},
+  "context":{"type":"object","additionalProperties":false,"required":["fuel","grant"],"properties":{"fuel":{"type":"integer","minimum":0,"maximum":9007199254740991},"grant":{"$ref":"#"}}}
+ }
+}

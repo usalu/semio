@@ -1,1 +1,28 @@
-{}
+{
+  "beams": {
+    "b-1": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 5.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 5.0
+          }
+        }
+      },
+      "entry": "Patched"
+    }
+  },
+  "columns": {
+    "c-1": {
+      "entry": "Patched",
+      "position": {
+        "x": 4.0,
+        "y": 5.0
+      }
+    }
+  }
+}

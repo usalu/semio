@@ -1,1 +1,34 @@
-{}
+{
+  "railings": {
+    "rl-9": {
+      "base_offset": 0.0,
+      "entry": "Created",
+      "height": 1.0,
+      "host": {
+        "edge": 0,
+        "element": "rp-host",
+        "inset": 0.05,
+        "side": "Right"
+      },
+      "infill": "None",
+      "material": "m-steel",
+      "name": "Hosted guard",
+      "path": [],
+      "phase": "New",
+      "post_profile": {
+        "Rectangle": {
+          "depth": 0.05,
+          "width": 0.05
+        }
+      },
+      "post_spacing": 1.2,
+      "profile": {
+        "Rectangle": {
+          "depth": 0.04,
+          "width": 0.06
+        }
+      },
+      "storey": "st-ground"
+    }
+  }
+}

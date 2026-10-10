@@ -1,4 +1,6 @@
 //! 🔍️ Selection-aware, localized layer inspection through undoable semantic commands.
+#[path="🎬️actions/🦀️.rs"]
+mod selection_actions;
 use crate::editor::drawing::terminology::DrawingPlayLabels;
 use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text, ui_value_number};
 use crate::schema::{selected_drawing_layers, layer_base};
@@ -95,6 +97,7 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> UiAssemblyRes
     if let DrawingLayerNode::Text(text) = layer {
         rows.push(Field { key: "textContent", label: labels.text_content, value: text.content.to_string_owner(), kind: InputKind::LongText, toggle: false, min: None, max: None });
         rows.push(Field { key: "textSize", label: labels.text_size, value: text.size.to_string(), kind: InputKind::Number, toggle: false, min: Some(0.1), max: None });
+        rows.push(Field{key:"fontFamily",label:labels.font_family,value:text.font_family.as_str().into(),kind:InputKind::Text,toggle:false,min:None,max:None});
     }
     if let DrawingLayerNode::Trace(trace) = layer {
         rows.push(Field { key: "traceThreshold", label: labels.trace_threshold, value: trace.params.threshold.to_string(), kind: InputKind::Number, toggle: false, min: Some(0.0), max: Some(1.0) });
@@ -118,11 +121,13 @@ fn field_row(document: &DrawingSnapshot, field: &Field, selected: &[&DrawingLaye
     let control = if field.toggle && !mixed {
         ui::toggle(field.value == "true").try_id(&id).map_err(|_| error())?.try_label(field.label.as_str()).map_err(|_| error())?.disabled(disabled)
             .try_on_with(Trigger::Change, action, args).map_err(|_| error())?.try_build().map_err(|_| error())?
-    } else if field.toggle || matches!(field.key, "blendMode" | "booleanOperation" | "strokeCap" | "strokeJoin" | "fillRule") {
+    } else if field.toggle || matches!(field.key, "blendMode" | "booleanOperation" | "strokeCap" | "strokeJoin" | "fillRule" | "fontFamily") {
         let choices: &[(&str, LabelText)] = if field.toggle {
             &[("false",labels.toggle_off),("true",labels.toggle_on)]
         } else if field.key == "blendMode" {
             &[("normal", labels.blend_normal), ("multiply", labels.blend_multiply), ("screen", labels.blend_screen), ("overlay", labels.blend_overlay), ("darken", labels.blend_darken), ("lighten", labels.blend_lighten), ("colorDodge", labels.blend_color_dodge), ("colorBurn", labels.blend_color_burn), ("hardLight", labels.blend_hard_light), ("softLight", labels.blend_soft_light), ("difference", labels.blend_difference), ("exclusion", labels.blend_exclusion), ("hue", labels.blend_hue), ("saturation", labels.blend_saturation), ("color", labels.blend_color), ("luminosity", labels.blend_luminosity)]
+        } else if field.key=="fontFamily" {
+            &[("anta",labels.font_anta),("kellySlab",labels.font_kelly_slab),("shareTechMono",labels.font_share_tech_mono),("notoEmoji",labels.font_noto_emoji)]
         } else if field.key == "fillRule" {
             &[("evenodd",labels.fill_evenodd),("nonzero",labels.fill_nonzero)]
         } else if field.key == "strokeCap" {
@@ -298,9 +303,11 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
     let Some(first) = selected.first() else { return semio_framework_plugin::built_text_node(Label::data(labels.select_hint.as_str())).map_err(|_| error()) };
     let all_fields = selected.iter().map(|layer|fields(layer,labels)).collect::<UiAssemblyResult<Vec<_>>>()?;
     let rows = fields(first, labels)?.into_iter().filter(|field| all_fields.iter().all(|fields| fields.iter().any(|other| other.key == field.key))).collect::<Vec<_>>();
+    let eligibility=selection_actions::SelectionActionEligibility::from_selection(document,&selected,ids);
     let mut actions = vec![("group", labels.group), ("duplicate", labels.duplicate), ("delete", labels.delete), ("bringForward", labels.bring_forward), ("sendBackward", labels.send_backward), ("bringToFront", labels.bring_front), ("sendToBack", labels.send_back), ("alignLeft", labels.align_left), ("alignCenter", labels.align_center), ("alignRight", labels.align_right), ("alignTop", labels.align_top), ("alignMiddle", labels.align_middle), ("alignBottom", labels.align_bottom), ("distributeHorizontal", labels.distribute_horizontal), ("distributeVertical", labels.distribute_vertical)];
-    if selected.iter().all(|layer|matches!(layer,DrawingLayerNode::Group(_)) && !crate::schema::drawing_layer_is_locked(document,&layer_base(layer).id)) {actions.insert(1,("ungroup",labels.ungroup));}
-    if selected.iter().any(|layer| matches!(layer,DrawingLayerNode::Shape(_))) && selected.iter().all(|layer| matches!(layer,DrawingLayerNode::Shape(_) | DrawingLayerNode::Path(_)) && !crate::schema::drawing_layer_is_locked(document,&layer_base(layer).id)) { actions.insert(0,("toPath",labels.convert_to_path)); }
+    if eligibility.allows("ungroup") {actions.insert(1,("ungroup",labels.ungroup));}
+    if eligibility.allows("toPath") {actions.insert(0,("toPath",labels.convert_to_path));}
+    actions.retain(|(operation,_)|eligibility.allows(operation));
     let mut tree = PanelTreeBuilder::new(ROOT)?.window_section(windows, ROOT, Some(ui::Label(text(&format!("{} · {}", labels.layer.as_str(), selected.len()))?)), true, &rows, |field| {
         let mixed = all_fields.iter().any(|fields| fields.iter().any(|other| other.key == field.key && other.value != field.value));
         field_row(document, field, &selected, mixed, labels)
@@ -353,3 +360,4 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
 #[cfg(test)]
 #[path = "🧪️tests/🎛️selection/🦀️.rs"]
 mod tests;
+                                                                                                           

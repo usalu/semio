@@ -1,6 +1,8 @@
 mod extension_retirement_tests {
     use super::*;
     use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+    use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+    use crate::app::PluginLifecycleStep;
 
     struct Resource {
         value: Option<String>,
@@ -9,25 +11,43 @@ mod extension_retirement_tests {
         terminal: Arc<AtomicBool>,
         expected_bytes: usize,
         released_bytes: usize,
+        born_bytes: usize,
     }
 
     impl ExtensionResourceOwner for Resource {
         fn invoke(&self, _capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> { Ok(request.to_vec()) }
         fn begin_close(&mut self) { self.sealed.store(true, Ordering::SeqCst); }
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
-            if let Some(step) = self.close.begin_option(&mut self.value, items).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))? { return Ok(extension_retirement::snapshot_close_step(step)); }
-            let step = self.close.step(items, bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))?;
-            if let store::os_store::SnapshotRetirementStep::Pending { released_bytes, .. } = step { self.released_bytes += released_bytes; }
-            if step == store::os_store::SnapshotRetirementStep::Complete { assert_eq!(self.released_bytes, self.expected_bytes); self.terminal.store(true, Ordering::SeqCst); }
-            Ok(extension_retirement::snapshot_close_step(step))
+        fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+            let refusal = |error: ValueError| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message());
+            if let Some(step) = self.close.begin_granted(&mut self.value, grant).map_err(refusal)? { self.born_bytes += step.progress().retained_capacity_bytes; return Ok(PluginLifecycleStep::Progress(step.progress())); }
+            let step = self.close.step_granted(grant).map_err(refusal)?;
+            self.released_bytes += step.progress().released_bytes;
+            self.born_bytes += step.progress().retained_capacity_bytes;
+            if matches!(step, RetainedCloneStep::Complete(_)) { assert_eq!(self.released_bytes, self.expected_bytes + self.born_bytes); self.terminal.store(true, Ordering::SeqCst); }
+            Ok(PluginLifecycleStep::retained(step, self.close.is_empty()))
         }
         fn terminal_is_empty(&self) -> bool { self.terminal.load(Ordering::SeqCst) }
+        fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+            Ok(RetirementDemand { copy_bytes: self.close.next_copy_byte_demand()?, capacity_bytes: self.close.next_owner_capacity_byte_demand::<String>(self.value.is_some(), maximum_body_bytes)?, release_bytes: self.close.next_release_byte_demand()?, depth: self.close.next_depth_demand()?.max(usize::from(self.value.is_some())) })
+        }
+    }
+
+    fn grant_of(items: usize, bytes: usize) -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 4096 }
+    }
+
+    fn quoted_grant(demand: RetirementDemand) -> RetainedCloneGrant {
+        crate::app::plugin_demand_grant(demand)
+    }
+
+    fn yielded(step: PluginLifecycleStep) -> bool {
+        step == PluginLifecycleStep::Progress(RetainedCloneProgress::default())
     }
 
     fn fixture_bundle(id: &str, fixture: &serde_json::Value) -> (ExtensionBundle, Arc<AtomicBool>, Arc<AtomicBool>) {
         let sealed = Arc::new(AtomicBool::new(false));
         let terminal = Arc::new(AtomicBool::new(false));
-        let resource = Resource { value: Some(fixture["resource"].as_str().unwrap().into()), close: Default::default(), sealed: sealed.clone(), terminal: terminal.clone(), expected_bytes: fixture["resourceBytes"].as_u64().unwrap() as usize, released_bytes: 0 };
+        let resource = Resource { value: Some(fixture["resource"].as_str().unwrap().into()), close: Default::default(), sealed: sealed.clone(), terminal: terminal.clone(), expected_bytes: fixture["resourceBytes"].as_u64().unwrap() as usize, released_bytes: 0, born_bytes: 0 };
         let bundle = ExtensionBundle::new(id, id, "1").resource_owner(resource).owned_handler(fixture["capability"].as_str().unwrap()).contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
         (bundle, sealed, terminal)
     }
@@ -40,14 +60,19 @@ mod extension_retirement_tests {
         oracle
     }
 
-    fn drain_bundle(bundle: &mut ExtensionBundle, fixture: &serde_json::Value) {
+    const QUOTED_BODY_BYTES: usize = 4096;
+
+    fn bundle_grant(bundle: &ExtensionBundle) -> RetainedCloneGrant {
+        let demand = bundle.retirement_demands(QUOTED_BODY_BYTES).unwrap();
+        RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(QUOTED_BODY_BYTES), ..quoted_grant(demand) }
+    }
+
+    fn drain_bundle(bundle: &mut ExtensionBundle) {
         for _ in 0..10000 {
-            let grant = &fixture["handlerGrant"];
-            let items = grant[0].as_u64().unwrap() as usize;
-            let bytes = grant[1].as_u64().unwrap() as usize;
-            match bundle.close_step(items,bytes).unwrap() {
-                PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= items); assert!(released_bytes <= bytes); }
-                PluginCloseStep::Complete => { assert!(bundle.terminal_is_empty()); return; }
+            let grant = bundle_grant(bundle);
+            match bundle.close_step(grant).unwrap() {
+                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
+                PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(bundle.terminal_is_empty()); return; }
                 step => panic!("unexpected close status {step:?}"),
             }
         }
@@ -60,21 +85,21 @@ mod extension_retirement_tests {
         let (mut bundle,sealed,terminal) = fixture_bundle("old", &fixture);
         assert_eq!(bundle.invoke("echo",b"owned request").unwrap(),b"owned request");
         for grant in fixture["zeroGrants"].as_array().unwrap() {
-            assert_eq!(bundle.close_step(grant[0].as_u64().unwrap() as usize,grant[1].as_u64().unwrap() as usize).unwrap(),PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert!(yielded(bundle.close_step(grant_of(grant[0].as_u64().unwrap() as usize,grant[1].as_u64().unwrap() as usize)).unwrap()));
             assert!(!sealed.load(Ordering::SeqCst));
         }
         bundle.begin_close();
         assert!(sealed.load(Ordering::SeqCst));
         assert_eq!(bundle.invoke("echo",b"request").unwrap_err().code.0.as_str(),fixture["faults"]["sealed"].as_str().unwrap());
         bundle.cancel_close();
-        assert!(matches!(bundle.close_step(1,4).unwrap(),PluginCloseStep::Blocked { .. }));
+        assert!(matches!(bundle.close_step(bundle_grant(&bundle)).unwrap(),PluginLifecycleStep::Blocked { .. }));
         assert!(!terminal.load(Ordering::SeqCst));
         bundle.resume_close();
-        let grant = &fixture["grant"];
-        assert!(matches!(bundle.close_step(grant[0].as_u64().unwrap() as usize,grant[1].as_u64().unwrap() as usize).unwrap(),PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
-        drain_bundle(&mut bundle,&fixture);
+        let grant = bundle_grant(&bundle);
+        assert!(matches!(bundle.close_step(grant).unwrap(),PluginLifecycleStep::Progress(progress) if progress.copied_items == 1 && progress.released_bytes == 0 && progress.fits(grant)));
+        drain_bundle(&mut bundle);
         assert!(terminal.load(Ordering::SeqCst));
-        assert_eq!(bundle.close_step(0,0).unwrap(),PluginCloseStep::Complete);
+        assert_eq!(bundle.close_step(grant_of(0,0)).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
     }
 
     #[test]
@@ -97,40 +122,47 @@ mod extension_retirement_tests {
         assert!(!third_terminal.load(Ordering::SeqCst));
         registry.activate().unwrap();
         for _ in 0..10000 {
-            registry.close_step(1,1024).unwrap();
+            registry.close_step(registry_grant(&registry)).unwrap();
             if registry.current().is_some_and(|bundle| bundle.manifest.extension_id == "new") { break; }
         }
         assert!(old_terminal.load(Ordering::SeqCst));
         assert!(!new_terminal.load(Ordering::SeqCst));
         assert_eq!(registry.invoke("echo",b"new").unwrap(),b"new");
         registry.begin_close();
-        for _ in 0..10000 { registry.close_step(1,1024).unwrap(); if registry.terminal_is_empty() { break; } }
+        for _ in 0..10000 { registry.close_step(registry_grant(&registry)).unwrap(); if registry.terminal_is_empty() { break; } }
         assert!(registry.terminal_is_empty());
         assert!(new_terminal.load(Ordering::SeqCst));
         let mut third = refused.take().unwrap();
         third.begin_close();
-        drain_bundle(&mut third,&fixture);
+        drain_bundle(&mut third);
+    }
+
+    fn registry_grant(registry: &ExtensionBundleRegistry) -> RetainedCloneGrant {
+        let demand = registry.retirement_demands(QUOTED_BODY_BYTES).unwrap();
+        RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(QUOTED_BODY_BYTES), ..quoted_grant(demand) }
     }
 
     struct HostileResource { complete: bool, recover: Arc<AtomicBool> }
     impl ExtensionResourceOwner for HostileResource {
         fn invoke(&self, _capability: &str, _request: &[u8]) -> Result<Vec<u8>, Fault> { Ok(Vec::new()) }
         fn begin_close(&mut self) {}
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
-            Ok(if self.complete || self.recover.load(Ordering::SeqCst) { PluginCloseStep::Complete } else { PluginCloseStep::Pending { released_items: items + 1, released_bytes: bytes + 1 } })
+        fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+            Ok(if self.complete || self.recover.load(Ordering::SeqCst) { PluginLifecycleStep::Complete(RetainedCloneProgress::default()) } else { PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items + 1, ..Default::default() }) })
         }
         fn terminal_is_empty(&self) -> bool { self.recover.load(Ordering::SeqCst) }
+        fn retirement_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand::default()) }
     }
 
     struct TerminalOnStep { terminal: bool, dropped: Arc<AtomicBool>, exact_grant: bool }
     impl ExtensionResourceOwner for TerminalOnStep {
         fn invoke(&self, _capability: &str, _request: &[u8]) -> Result<Vec<u8>, Fault> { Ok(Vec::new()) }
         fn begin_close(&mut self) {}
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
+        fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
             self.terminal = true;
-            Ok(if self.exact_grant { PluginCloseStep::Pending { released_items: items, released_bytes: bytes } } else { PluginCloseStep::Complete })
+            Ok(if self.exact_grant { PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items, copied_bytes: grant.maximum_copy_bytes, retained_capacity_bytes: grant.maximum_capacity_bytes, released_bytes: grant.maximum_release_bytes }) } else { PluginLifecycleStep::Complete(RetainedCloneProgress::default()) })
         }
         fn terminal_is_empty(&self) -> bool { self.terminal }
+        fn retirement_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand::default()) }
     }
     impl Drop for TerminalOnStep {
         fn drop(&mut self) { assert!(self.terminal); self.dropped.store(true,Ordering::SeqCst); }
@@ -142,25 +174,26 @@ mod extension_retirement_tests {
         for (complete, key) in [(false, "exceeded"), (true, "falseComplete")] {
             let recover = Arc::new(AtomicBool::new(false));
             let mut bundle = ExtensionBundle::new("hostile", "Hostile", "1").resource_owner(HostileResource { complete, recover: recover.clone() });
-            assert_eq!(bundle.close_step(1,4).unwrap_err().code.0.as_str(),fixture["faults"][key].as_str().unwrap());
+            assert_eq!(bundle.close_step(grant_of(1,4)).unwrap_err().code.0.as_str(),fixture["faults"][key].as_str().unwrap());
             assert!(bundle.resource_owner.is_some());
             assert!(!bundle.terminal_is_empty());
             recover.store(true,Ordering::SeqCst);
-            drain_bundle(&mut bundle,&fixture);
+            drain_bundle(&mut bundle);
         }
         for exact_grant in [false,true] {
             let dropped = Arc::new(AtomicBool::new(false));
             let mut bundle = ExtensionBundle::new("exact-grant", "Exact Grant", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant });
-            let step = bundle.close_step(1,4).unwrap();
-            assert_eq!(step,if exact_grant { PluginCloseStep::Pending { released_items: 1, released_bytes: 4 } } else { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } });
+            let step = bundle.close_step(grant_of(1,4)).unwrap();
+            assert_eq!(step,PluginLifecycleStep::Progress(if exact_grant { RetainedCloneProgress { copied_items: 1, copied_bytes: 4, retained_capacity_bytes: 4, released_bytes: 4 } } else { RetainedCloneProgress::default() }));
             assert!(bundle.resource_owner.is_some());
             assert!(!dropped.load(Ordering::SeqCst));
-            assert!(matches!(bundle.close_step(1,4).unwrap(),PluginCloseStep::AwaitingInput { .. }));
+            assert!(yielded(bundle.close_step(grant_of(1,4)).unwrap()));
             assert!(!dropped.load(Ordering::SeqCst));
             let shell_bytes = std::alloc::Layout::new::<TerminalOnStep>().size();
-            assert_eq!(bundle.close_step(1,shell_bytes).unwrap(),PluginCloseStep::Pending { released_items: 1, released_bytes: shell_bytes });
+            assert_eq!(bundle.retirement_demands(0).unwrap(),RetirementDemand { release_bytes: shell_bytes, depth: 1, ..Default::default() });
+            assert_eq!(bundle.close_step(RetainedCloneGrant { maximum_release_bytes: shell_bytes, ..grant_of(1,4) }).unwrap(),PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() }));
             assert!(dropped.load(Ordering::SeqCst));
-            drain_bundle(&mut bundle,&fixture);
+            drain_bundle(&mut bundle);
         }
     }
 
@@ -177,7 +210,7 @@ mod extension_retirement_tests {
         assert!(!bundle.manifest.topic_contributions.is_empty());
         assert_eq!(bundle.invoke("echo", b"retained").unwrap(), Vec::<u8>::new());
         bundle.begin_close();
-        drain_bundle(&mut bundle,&fixture);
+        drain_bundle(&mut bundle);
         assert_eq!(usize::from(dropped.load(Ordering::SeqCst)), fixture["dropBoundary"]["terminalOwnerDrops"].as_u64().unwrap() as usize);
         drop(bundle);
         let mut cold = ExtensionBundle::new("cold", "Cold", "1").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
@@ -194,8 +227,9 @@ mod extension_retirement_tests {
         impl ExtensionResourceOwner for LargeOwner {
             fn invoke(&self, _: &str, _: &[u8]) -> Result<Vec<u8>, Fault> { Ok(Vec::new()) }
             fn begin_close(&mut self) {}
-            fn close_step(&mut self, _: usize, _: usize) -> Result<PluginCloseStep, Fault> { Ok(PluginCloseStep::Complete) }
+            fn close_step(&mut self, _: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> { Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default())) }
             fn terminal_is_empty(&self) -> bool { true }
+            fn retirement_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand::default()) }
         }
         impl Drop for LargeOwner { fn drop(&mut self) { self.dropped.store(true,Ordering::SeqCst); } }
         let fixture = extension_fixture();
@@ -207,11 +241,12 @@ mod extension_retirement_tests {
         let shell_bytes = std::alloc::Layout::for_value(&owner).size();
         let mut bundle = ExtensionBundle::new("allocation", "Allocation", "1").resource_owner(owner);
         bundle.begin_close();
-        assert!(matches!(bundle.close_step(1,tiny).unwrap(),PluginCloseStep::AwaitingInput { .. }));
+        assert_eq!(bundle.retirement_demands(0).unwrap(),RetirementDemand { release_bytes: shell_bytes, depth: 1, ..Default::default() });
+        assert!(yielded(bundle.close_step(grant_of(1,tiny)).unwrap()));
         assert!(!dropped.load(Ordering::SeqCst));
-        assert_eq!(bundle.close_step(1,shell_bytes).unwrap(),PluginCloseStep::Pending { released_items: 1, released_bytes: shell_bytes });
+        assert_eq!(bundle.close_step(RetainedCloneGrant { maximum_release_bytes: shell_bytes, ..grant_of(1,tiny) }).unwrap(),PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() }));
         assert!(dropped.load(Ordering::SeqCst));
-        drain_bundle(&mut bundle,&fixture);
+        drain_bundle(&mut bundle);
         use super::extension_retirement::{MetadataOwner, MetadataRetirement, PendingMetadata};
         struct Pod(u64);
         impl MetadataOwner for Pod { fn expand(self: Box<Self>, _: &mut MetadataRetirement) -> Result<(), String> { let _ = self.0; Ok(()) } }
@@ -221,17 +256,15 @@ mod extension_retirement_tests {
         let expected = std::alloc::Layout::array::<Pod>(values.capacity()).unwrap().size() + std::alloc::Layout::new::<Vec<Pod>>().size() + std::alloc::Layout::new::<PendingMetadata>().size();
         let mut metadata = MetadataRetirement::default();
         metadata.push(values);
-        assert_eq!(metadata.next_close_byte_demand(),expected);
+        assert_eq!(metadata.retirement_demands(),RetirementDemand { release_bytes: expected, depth: 1, ..Default::default() });
         for (items,bytes) in [(0,expected),(1,0),(1,tiny),(1,expected-1)] {
-            let step = metadata.step(items,bytes).unwrap();
-            if items == 0 || bytes == 0 { assert_eq!(step,PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
-            else { assert!(matches!(step,PluginCloseStep::AwaitingInput { .. })); }
+            assert!(yielded(metadata.step(grant_of(items,bytes)).unwrap()));
             assert!(!metadata.is_empty());
-            assert_eq!(metadata.next_close_byte_demand(),expected);
+            assert_eq!(metadata.retirement_demands(),RetirementDemand { release_bytes: expected, depth: 1, ..Default::default() });
         }
-        assert_eq!(metadata.step(1,expected).unwrap(),PluginCloseStep::Pending { released_items: 1, released_bytes: expected });
+        assert_eq!(metadata.step(quoted_grant(metadata.retirement_demands())).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: expected, ..Default::default() }));
         assert!(metadata.is_empty());
-        assert_eq!(metadata.step(0,0).unwrap(),PluginCloseStep::Complete);
+        assert_eq!(metadata.step(grant_of(0,0)).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
         let mut text = String::with_capacity(allocation["stringCapacity"].as_u64().unwrap() as usize);
         text.push_str(fixture["resource"].as_str().unwrap());
         let text_bytes = text.capacity() + std::alloc::Layout::new::<String>().size() + std::alloc::Layout::new::<PendingMetadata>().size();
@@ -240,13 +273,15 @@ mod extension_retirement_tests {
         let vector_bytes = std::alloc::Layout::array::<String>(values.capacity()).unwrap().size() + std::alloc::Layout::new::<Vec<String>>().size() + std::alloc::Layout::new::<PendingMetadata>().size();
         metadata.push(values);
         let expansion_bytes = std::alloc::Layout::new::<Vec<String>>().size() + std::alloc::Layout::new::<PendingMetadata>().size();
-        assert_eq!(metadata.step(1,expansion_bytes).unwrap(),PluginCloseStep::Pending { released_items: 1, released_bytes: expansion_bytes });
-        assert_eq!(metadata.next_close_byte_demand(),text_bytes);
-        assert!(matches!(metadata.step(1,tiny).unwrap(),PluginCloseStep::AwaitingInput { .. }));
-        assert_eq!(metadata.step(1,text_bytes).unwrap(),PluginCloseStep::Pending { released_items: 1, released_bytes: text_bytes });
-        assert_eq!(metadata.next_close_byte_demand(),vector_bytes);
-        assert!(matches!(metadata.step(1,vector_bytes-1).unwrap(),PluginCloseStep::AwaitingInput { .. }));
-        assert_eq!(metadata.step(1,vector_bytes).unwrap(),PluginCloseStep::Pending { released_items: 1, released_bytes: vector_bytes });
+        let birth_bytes = expansion_bytes + std::alloc::Layout::new::<String>().size() + std::alloc::Layout::new::<PendingMetadata>().size();
+        assert_eq!(metadata.retirement_demands(),RetirementDemand { capacity_bytes: birth_bytes, release_bytes: expansion_bytes, depth: 1, ..Default::default() });
+        assert_eq!(metadata.step(quoted_grant(metadata.retirement_demands())).unwrap(),PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth_bytes, released_bytes: expansion_bytes, ..Default::default() }));
+        assert_eq!(metadata.retirement_demands(),RetirementDemand { release_bytes: text_bytes, depth: 1, ..Default::default() });
+        assert!(yielded(metadata.step(grant_of(1,tiny)).unwrap()));
+        assert_eq!(metadata.step(quoted_grant(metadata.retirement_demands())).unwrap(),PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: text_bytes, ..Default::default() }));
+        assert_eq!(metadata.retirement_demands(),RetirementDemand { release_bytes: vector_bytes, depth: 1, ..Default::default() });
+        assert!(yielded(metadata.step(grant_of(1,vector_bytes-1)).unwrap()));
+        assert_eq!(metadata.step(quoted_grant(metadata.retirement_demands())).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: vector_bytes, ..Default::default() }));
         assert!(metadata.is_empty());
         let mut cold = ExtensionBundle::new("inline", "Inline", "1").handler("echo", |bytes| Ok(bytes.to_vec()));
         assert_eq!(cold.invoke("echo",b"unchanged").unwrap(),b"unchanged");
@@ -257,7 +292,7 @@ mod extension_retirement_tests {
         let mut registry = ExtensionBundleRegistry::new();
         assert!(registry.install(&mut Some(cold)).unwrap());
         assert!(registry.current().unwrap().terminal_is_empty());
-        assert_eq!(registry.close_step(1,tiny).unwrap(),PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        assert_eq!(registry.close_step(grant_of(1,tiny)).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(registry.terminal_is_empty());
     }
 
@@ -310,30 +345,31 @@ mod extension_retirement_tests {
             crate::reactor::poll_kernel(&runtime,vec![semio_framework::kernel::Event::SuspendRequest],None,None,small).await.unwrap();
             for _ in 0..1000 {
                 crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,small).await.unwrap();
-                if extension_next_close_byte_demand().unwrap() > small_bytes as usize { break; }
+                if extension_retirement_demands(small_bytes as usize).unwrap().release_bytes > small_bytes as usize { break; }
             }
-            let demand = extension_next_close_byte_demand().unwrap();
-            assert!(demand > small_bytes as usize && demand <= adequate_bytes as usize);
-            assert!(matches!(extension_close_step(1,small_bytes as usize).unwrap(),PluginCloseStep::AwaitingInput { .. }));
-            assert_eq!(extension_next_close_byte_demand().unwrap(),demand);
+            let demand = extension_retirement_demands(small_bytes as usize).unwrap();
+            let lifecycle = crate::plugin_runtime::runtime_lifecycle_grant();
+            assert!(demand.release_bytes > small_bytes as usize && demand.release_bytes <= adequate_bytes as usize && demand.release_bytes <= lifecycle.maximum_release_bytes);
+            assert!(yielded(extension_close_step(RetainedCloneGrant { maximum_release_bytes: small_bytes as usize, ..lifecycle }).unwrap()));
+            assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);
             assert!(!extension_terminal_is_empty());
             let zero = semio_framework::kernel::Budget { fuel: 0, max_patch_bytes: adequate_bytes, ..budget };
             crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,zero).await.unwrap();
-            assert_eq!(extension_next_close_byte_demand().unwrap(),demand);
+            assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);
             let adequate = semio_framework::kernel::Budget { fuel: 1, max_patch_bytes: adequate_bytes, ..budget };
             extension_cancel_close();
             crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,adequate).await.unwrap();
-            assert_eq!(extension_next_close_byte_demand().unwrap(),demand);
+            assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);
             assert!(!extension_terminal_is_empty());
             extension_resume_close();
             crate::reactor::poll_kernel(&runtime,vec![semio_framework::kernel::Event::QuotaChanged { quotas: semio_framework::kernel::QuotaSchema::default() }],None,None,adequate).await.unwrap();
-            assert!(extension_next_close_byte_demand().unwrap() < demand);
+            assert!(extension_retirement_demands(small_bytes as usize).unwrap().release_bytes < demand.release_bytes);
             assert!(extension_invoke("echo",b"sealed").await.is_err());
             for _ in 0..1000 {
-                crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,adequate).await.unwrap();
+                crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,small).await.unwrap();
                 if extension_terminal_is_empty() { return; }
             }
-            panic!("actual maintenance-sized actor grant did not retire the retained allocation");
+            panic!("the lifecycle release ceiling does not retire the retained allocation under the small actor patch budget");
         });
     }
 }

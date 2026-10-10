@@ -1,0 +1,12 @@
+{
+  "component_overrides": {
+    "cmp-table.width": {
+      "entry": "Deleted"
+    }
+  },
+  "components": {
+    "cmp-table": {
+      "entry": "Deleted"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version":1,
+  "parallelShares":2,
+  "maximumSteps":16,
+  "occupiedSlotValue":47,
+  "cases":[
+    {"id":"sole-original","otherAliases":0,"closeOthersFirst":false},
+    {"id":"live-other-original","otherAliases":1,"closeOthersFirst":false},
+    {"id":"other-original-closed-first","otherAliases":1,"closeOthersFirst":true},
+    {"id":"multiple-live-originals","otherAliases":2,"closeOthersFirst":false}
+  ]
+}

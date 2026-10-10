@@ -1,0 +1,339 @@
+{
+  "c-east": {
+    "values": [
+      {
+        "set": "Pset_ColumnCommon",
+        "name": "Height",
+        "kind": "Length",
+        "number": 3.0,
+        "source": "Own"
+      },
+      {
+        "set": "Pset_ColumnCommon",
+        "name": "SectionArea",
+        "kind": "Area",
+        "number": 0.16,
+        "source": "Type"
+      }
+    ],
+    "findings": []
+  },
+  "ct-400": {
+    "values": [
+      {
+        "set": "Pset_ColumnCommon",
+        "name": "SectionArea",
+        "kind": "Area",
+        "number": 0.16,
+        "source": "Own"
+      }
+    ],
+    "findings": []
+  },
+  "sp-east": {
+    "values": [
+      {
+        "set": "Semio_Energy",
+        "name": "TargetTemperature",
+        "kind": "Real",
+        "number": 20.0,
+        "source": "Default"
+      }
+    ],
+    "findings": []
+  },
+  "sp-out": {
+    "values": [
+      {
+        "set": "Semio_Energy",
+        "name": "TargetTemperature",
+        "kind": "Real",
+        "number": 20.0,
+        "source": "Default"
+      }
+    ],
+    "findings": []
+  },
+  "sp-up": {
+    "values": [
+      {
+        "set": "Semio_Energy",
+        "name": "TargetTemperature",
+        "kind": "Real",
+        "number": 35.0,
+        "source": "Own"
+      }
+    ],
+    "findings": [
+      {
+        "set": "Semio_Energy",
+        "property": "TargetTemperature",
+        "issue": "AboveMaximum"
+      }
+    ]
+  },
+  "sp-west": {
+    "values": [
+      {
+        "set": "Semio_Energy",
+        "name": "TargetTemperature",
+        "kind": "Real",
+        "number": 21.5,
+        "source": "Own"
+      }
+    ],
+    "findings": []
+  },
+  "w-east": {
+    "values": [
+      {
+        "set": "Project_Notes",
+        "name": "Reviewer",
+        "kind": "Text",
+        "text": "UL",
+        "source": "Own"
+      },
+      {
+        "set": "Pset_WallAcoustics",
+        "name": "AcousticRating",
+        "kind": "Real",
+        "number": 50.0,
+        "source": "Own"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "FireRating",
+        "kind": "Text",
+        "text": "REI 20",
+        "source": "Own"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "IsExternal",
+        "kind": "Boolean",
+        "flag": false,
+        "source": "Default"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "ThermalTransmittance",
+        "kind": "Real",
+        "number": 0.28,
+        "source": "Type"
+      }
+    ],
+    "findings": [
+      {
+        "set": "Pset_WallAcoustics",
+        "property": "AcousticRating",
+        "issue": "KindMismatch"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "property": "FireRating",
+        "issue": "NotAllowed"
+      }
+    ]
+  },
+  "w-island": {
+    "values": [
+      {
+        "set": "Pset_WallCommon",
+        "name": "FireRating",
+        "kind": "Text",
+        "text": "REI 60",
+        "source": "Type"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "IsExternal",
+        "kind": "Boolean",
+        "flag": false,
+        "source": "Default"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "ThermalTransmittance",
+        "kind": "Real",
+        "number": 0.28,
+        "source": "Type"
+      }
+    ],
+    "findings": [
+      {
+        "set": "Pset_WallAcoustics",
+        "property": "AcousticRating",
+        "issue": "Missing"
+      }
+    ]
+  },
+  "w-north": {
+    "values": [
+      {
+        "set": "Pset_WallAcoustics",
+        "name": "AcousticRating",
+        "kind": "Integer",
+        "number": 10.0,
+        "source": "Own"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "FireRating",
+        "kind": "Text",
+        "text": "REI 60",
+        "source": "Type"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "IsExternal",
+        "kind": "Boolean",
+        "flag": false,
+        "source": "Default"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "ThermalTransmittance",
+        "kind": "Real",
+        "number": 0.28,
+        "source": "Type"
+      }
+    ],
+    "findings": [
+      {
+        "set": "Pset_WallAcoustics",
+        "property": "AcousticRating",
+        "issue": "BelowMinimum"
+      }
+    ]
+  },
+  "w-part": {
+    "values": [
+      {
+        "set": "Pset_WallCommon",
+        "name": "FireRating",
+        "kind": "Text",
+        "text": "REI 60",
+        "source": "Type"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "IsExternal",
+        "kind": "Boolean",
+        "flag": false,
+        "source": "Default"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "ThermalTransmittance",
+        "kind": "Real",
+        "number": 0.28,
+        "source": "Type"
+      }
+    ],
+    "findings": [
+      {
+        "set": "Pset_WallAcoustics",
+        "property": "AcousticRating",
+        "issue": "Missing"
+      }
+    ]
+  },
+  "w-south": {
+    "values": [
+      {
+        "set": "Pset_WallAcoustics",
+        "name": "AcousticRating",
+        "kind": "Integer",
+        "number": 45.0,
+        "source": "Own"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "FireRating",
+        "kind": "Text",
+        "text": "REI 60",
+        "source": "Type"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "IsExternal",
+        "kind": "Boolean",
+        "flag": true,
+        "source": "Own"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "ThermalTransmittance",
+        "kind": "Real",
+        "number": 6.5,
+        "source": "Own"
+      }
+    ],
+    "findings": [
+      {
+        "set": "Pset_WallCommon",
+        "property": "ThermalTransmittance",
+        "issue": "AboveMaximum"
+      }
+    ]
+  },
+  "w-west": {
+    "values": [
+      {
+        "set": "Pset_WallAcoustics",
+        "name": "AcousticRating",
+        "kind": "Integer",
+        "number": 55.0,
+        "source": "Own"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "FireRating",
+        "kind": "Text",
+        "text": "REI 60",
+        "source": "Type"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "IsExternal",
+        "kind": "Boolean",
+        "flag": false,
+        "source": "Default"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "ThermalTransmittance",
+        "kind": "Real",
+        "number": 0.28,
+        "source": "Type"
+      }
+    ],
+    "findings": []
+  },
+  "wt-300": {
+    "values": [
+      {
+        "set": "Pset_WallCommon",
+        "name": "FireRating",
+        "kind": "Text",
+        "text": "REI 60",
+        "source": "Own"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "IsExternal",
+        "kind": "Boolean",
+        "flag": false,
+        "source": "Default"
+      },
+      {
+        "set": "Pset_WallCommon",
+        "name": "ThermalTransmittance",
+        "kind": "Real",
+        "number": 0.28,
+        "source": "Own"
+      }
+    ],
+    "findings": []
+  }
+}

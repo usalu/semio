@@ -1,0 +1,7 @@
+{
+  "mutation": "setComponent",
+  "id": "cmp-basin",
+  "host": {
+    "value": null
+  }
+}

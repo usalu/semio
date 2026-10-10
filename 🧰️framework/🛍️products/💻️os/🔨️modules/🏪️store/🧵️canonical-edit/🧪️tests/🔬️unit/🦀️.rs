@@ -197,17 +197,19 @@ fn sealer(authority: &Arc<ArtifactStoreOneItemLiveAuthority>) -> ArtifactStoreOn
 fn close(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: usize) {
     sealer.begin_close();
     assert_eq!(sealer.close_step(RetainedCloneGrant::default()).unwrap().progress(), RetainedCloneProgress::default());
+    let mut last = None;
     for _ in 0..100_000 {
         let demand = sealer.retirement_demands(bytes).unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: bytes.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         let step = sealer.close_step(grant).unwrap();
+        last = Some((demand, step));
         assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(sealer.terminal_is_empty());
             return;
         }
     }
-    panic!("bounded retirement did not terminate");
+    panic!("bounded retirement did not terminate: {last:?}");
 }
 
 fn finish(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: usize) -> [u8; 32] {

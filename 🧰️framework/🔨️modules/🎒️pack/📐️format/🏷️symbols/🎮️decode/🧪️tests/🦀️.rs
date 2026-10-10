@@ -1,24 +1,17 @@
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneSource;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
-use std::sync::Arc;
+
 
 fn bytes(hex: &str) -> Vec<u8> {
     hex.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
 }
 
-fn admitted_source(wire: Vec<u8>) -> (RetainedCloneSource<Vec<u8>>, Arc<Vec<u8>>) {
-    let original = Arc::new(wire);
-    let owner = Arc::clone(&original);
-    let capacity = RetainedCloneSource::<Vec<u8>>::constructor_capacity_bytes::<()>();
-    assert!(capacity <= 4096);
-    let grant = RetainedCloneGrant::one_capacity_turn(capacity, 64);
-    let ((source, progress), heap) = observe_heap_allocations_on_this_thread(|| RetainedCloneSource::admit(owner, (), grant).unwrap());
-    assert!(progress.fits(grant));
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
-    (source, original)
+fn admitted_source(wire:Vec<u8>)->RetainedCloneSource<Vec<u8>>{
+ let pointer=wire.as_ptr();let capacity=RetainedCloneSource::<Vec<u8>>::constructor_capacity_bytes::<()>();
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<Vec<u8>>::constructor_copy_bytes(),maximum_capacity_bytes:capacity,maximum_depth:1,..Default::default()};
+ let(result,heap)=observe_heap_allocations_on_this_thread(||RetainedCloneSource::admit_owned(wire,(),grant));let(source,p)=result.unwrap_or_else(|_|panic!("original wire capture"));assert_eq!(source.borrow().get().as_ptr(),pointer);assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));source
 }
-
 fn close_source(source: &mut RetainedCloneSource<Vec<u8>>) {
     for _ in 0..10000 {
         if source.terminal_is_empty() { return; }
@@ -70,11 +63,11 @@ fn close(cursor: &mut RetainedInlineSymbols, source: &RetainedCloneSource<Vec<u8
 }
 
 fn prepared(wire: Vec<u8>, expected: &[String], prefix: usize, cancel_at: Option<usize>, symbol_offset: usize) {
-    let (mut source, _original) = admitted_source(wire);
+    let mut source = admitted_source(wire);
     let (mut cursor, heap) = observe_heap_allocations_on_this_thread(|| RetainedInlineSymbols::new(symbol_offset, 2048, 262144));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(size_of::<RetainedInlineSymbols>() <= 4096);
-    let (mut other, _other_original) = admitted_source(vec![0]);
+    let mut other = admitted_source(vec![0]);
     for turn in 0..100000 {
         assert_eq!(observed(&mut cursor, &source, RetainedCloneGrant::default(), false).unwrap(), RetainedCloneProgress::default());
         let ((capacity, copied), heap) = observe_heap_allocations_on_this_thread(|| (cursor.next_capacity_byte_demand().unwrap(), cursor.next_copy_byte_demand()));
@@ -107,8 +100,8 @@ fn prepared(wire: Vec<u8>, expected: &[String], prefix: usize, cancel_at: Option
 #[test]
 fn retained_inline_symbols_native_canonical_utf8_paged_indices_and_exact_granted_close() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let (mut original, _original_root) = admitted_source(vec![1, 1, b'x']);
-    let (mut changed, _changed_root) = admitted_source(vec![1, 1, b'y']);
+    let mut original = admitted_source(vec![1, 1, b'x']);
+    let mut changed = admitted_source(vec![1, 1, b'y']);
     let mut bound = RetainedInlineSymbols::new(0, 2048, 262144);
     observed(&mut bound, &original, RetainedCloneGrant::one_payload_turn(1, 64), false).unwrap();
     assert_eq!(observed(&mut bound, &changed, RetainedCloneGrant::one_payload_turn(1, 64), false), Err(InlineSymbolRefusal::Source));
@@ -123,7 +116,7 @@ fn retained_inline_symbols_native_canonical_utf8_paged_indices_and_exact_granted
         prepared(wire, &expected, 0, Some(3), symbol_offset);
     }
     for row in law["invalid"].as_array().unwrap() {
-        let (mut source, _original) = admitted_source(bytes(row["hex"].as_str().unwrap()));
+        let mut source = admitted_source(bytes(row["hex"].as_str().unwrap()));
         let mut cursor = RetainedInlineSymbols::new(0, law["maximumSymbols"].as_u64().unwrap() as usize, law["maximumSymbolBytes"].as_u64().unwrap() as usize);
         let mut refusal = None;
         for turn in 0..100 {
@@ -154,3 +147,4 @@ fn retained_inline_symbols_native_canonical_utf8_paged_indices_and_exact_granted
     prepared(wire.clone(), &vec![String::new(); empty_symbols], prefix, None, 0);
     prepared(wire, &[], 0, Some(2000), 0);
 }
+                                  

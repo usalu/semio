@@ -1,0 +1,63 @@
+{
+  "reveals": {
+    "o-reveal": {
+      "frame_back_y": -0.03,
+      "frame_front_y": 0.05,
+      "jamb_area": 0.48
+    }
+  },
+  "sweeps": {
+    "ws-door": {
+      "gross_volume": 0.0142,
+      "length": 7.1,
+      "section_area": 0.002,
+      "surface_area": 0.994
+    },
+    "ws-rail": {
+      "gross_volume": 0.016,
+      "length": 8.0,
+      "section_area": 0.002,
+      "surface_area": 0.96
+    },
+    "ws-slope": {
+      "gross_volume": 0.016,
+      "length": 8.0,
+      "section_area": 0.002,
+      "surface_area": 1.12
+    }
+  },
+  "walls": {
+    "w-base": {
+      "base_z": -0.903012048769,
+      "side_area": 28.013386883418,
+      "top_z": 3.0,
+      "volume": 8.404016065025
+    },
+    "w-east": {
+      "base_z": 3.0,
+      "side_area": 22.957231275075,
+      "top_z": 7.852410425025
+    },
+    "w-hip": {
+      "base_z": 3.0,
+      "side_area": 32.124244030978,
+      "top_z": 7.491172874953,
+      "volume": 9.637273209293
+    },
+    "w-north": {
+      "base_z": 3.0,
+      "side_area": 22.8,
+      "top_z": 5.85
+    },
+    "w-south": {
+      "base_z": 3.0,
+      "side_area": 22.8,
+      "top_z": 5.85
+    },
+    "w-west": {
+      "base_z": 3.0,
+      "side_area": 22.957231275075,
+      "top_z": 7.852410425025
+    }
+  }
+}

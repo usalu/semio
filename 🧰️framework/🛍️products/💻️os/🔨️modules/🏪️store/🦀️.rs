@@ -273,7 +273,7 @@ struct ArtifactHistoryReadRetirement<P, Mu: self::Mutation<P>> {
     active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     plan_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<HistoryReadPlan>>>,
     draft_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<protocol::HistoryInputDrafts>>>,
-    registry_retirement: std::mem::ManuallyDrop<Option<SnapshotReadRegistryHandle>>,
+    registry_retirement: std::mem::ManuallyDrop<Option<SnapshotReadRegistryAliasRetirement>>,
     snapshots: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>>,
     mutations: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>>>,
     factory_retirement:[Option<semio_framework_value::FactoryAuthority>;2],
@@ -334,7 +334,7 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
             let child_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant};
             return match ReturnedSnapshotReadRetirement::admit(snapshot,factory,child_grant) {Ok((owner,progress))=>{*self.active=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},Err((error,snapshot,factory))=>{preview.state=Some(snapshot);drop(factory);Err(error)}};
         }
-        *self.registry_retirement=Some(preview.registry.clone());drop(self.preview.take());
+        *self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(preview.registry.clone()));drop(self.preview.take());
         Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})))
     }
     fn factory_demands(&self,body:usize)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
@@ -370,7 +370,7 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
         if let Some(owner)=self.loaded_replay.as_mut(){if owner.terminal_is_empty(){drop(self.loaded_replay.take());return Ok(Some(moved));}owner.begin_retirement();let step=owner.close_original_step(child)?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original loaded replay").map(Some);}
         let derived=self.replay.as_mut().expect("observed original derived replay");
         if let Some(owner)=derived.replay.as_mut(){if owner.terminal_is_empty(){drop(derived.replay.take());return Ok(Some(moved));}owner.begin_retirement();let step=owner.close_original_step(child)?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original derived replay").map(Some);}
-        *self.registry_retirement=Some(derived.registry.clone());drop(self.replay.take());Ok(Some(moved))
+        *self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(derived.registry.clone()));drop(self.replay.take());Ok(Some(moved))
     }
 }
 impl<P, Mu> ErasedSnapshotRetirement for ArtifactHistoryReadRetirement<P, Mu>
@@ -484,6 +484,9 @@ impl Drop for SnapshotReadLeaseStateGuard<'_> {
 #[path="🔗️read/🔒️registry/🦀️.rs"]
 mod snapshot_read_registry_handle;
 pub(crate) use snapshot_read_registry_handle::SnapshotReadRegistryHandle;
+#[path="🔗️read/🔒️registry/♻️retirement/🦀️.rs"]
+mod snapshot_read_registry_retirement;
+pub(crate) use snapshot_read_registry_retirement::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
 
 pub(crate) struct SnapshotReadLeaseRegistry {
     state: SnapshotReadLeaseStateLock,
@@ -631,14 +634,19 @@ impl SnapshotReadLeaseRegistry {
         if slot.generation != generation || self.lease_generations[index].load(std::sync::atomic::Ordering::Acquire) & (1u64 << 63) != 0 || Arc::strong_count(&slot.owner) == 1 {
             return false;
         }
+        drop(self.free_slot_locked(&mut state, index));
+        true
+    }
+
+    /// 🪶 Frees one occupied slot under the held registry lock and hands its owner to the caller to drop after unlocking.
+    fn free_slot_locked(&self, state: &mut SnapshotReadLeaseStateGuard<'_>, index: usize) -> SnapshotReadLeaseSlot {
         let slot = unsafe { state.slots[index].assume_init_read() };
-        state.occupied[index / 64] &= !mask;
+        state.occupied[index / 64] &= !(1 << (index % 64));
         let write = (state.free_read + state.free_len) % SNAPSHOT_READ_LEASE_CAPACITY;
         state.free[write] = index as u16;
         state.free_len += 1;
         self.lease_generations[index].store(0, std::sync::atomic::Ordering::Release);
-        drop(slot);
-        true
+        slot
     }
 
     fn returned_admission_demands<T: Send + Sync + 'static>(&self, demand: impl FnOnce(&Arc<T>) -> semio_framework_value::RetirementDemand) -> Result<semio_framework_value::RetirementDemand, SnapshotReadLeaseRefusal> {
@@ -710,15 +718,15 @@ impl Drop for SnapshotReadLeaseRegistry {
     }
 }
 
-struct SnapshotReadLeaseRegistryOwner(Option<SnapshotReadRegistryHandle>);
+struct SnapshotReadLeaseRegistryOwner(Option<SnapshotReadRegistryAliasRetirement>);
 
 impl SnapshotReadLeaseRegistryOwner {
-    fn new() -> Self { Self(Some(SnapshotReadRegistryHandle::new())) }
+    fn new() -> Self { Self(Some(SnapshotReadRegistryAliasRetirement::new(SnapshotReadRegistryHandle::new()))) }
     fn terminal_is_empty(&self) -> bool { self.0.as_ref().is_none_or(|owner| owner.terminal_is_empty()) }
     fn occupied_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.occupied_count()) }
     fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.0.as_ref().map_or(Ok(Default::default()), |owner| owner.empty_backing_demands()) }
     fn close_empty_backing_step(&self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> { self.0.as_ref().map_or(Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())), |owner| owner.close_empty_backing_step(grant)) }
-    fn frame_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |_| snapshot_registry_frame_bytes()) }
+    fn frame_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |owner| owner.frame_byte_demand()) }
     fn close_frame_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
         if self.0.as_ref().is_some_and(|owner| owner.strong_count() != 1 || !owner.terminal_is_empty()) { return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }
         snapshot_registry_alias_close_step(&mut self.0, grant)
@@ -728,30 +736,9 @@ impl SnapshotReadLeaseRegistryOwner {
 fn snapshot_registry_frame_bytes() -> Result<usize, ValueError> {
     std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<SnapshotReadLeaseRegistry>()).map(|(layout, _)| layout.pad_to_align().size()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "snapshot registry Arc layout overflow"))
 }
-pub(crate) fn snapshot_registry_alias_demands(owner: &Option<SnapshotReadRegistryHandle>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-    use semio_framework_value::RetirementDemand;
-    let Some(owner) = owner.as_ref() else { return Ok(Default::default()); };
-    if owner.strong_count() != 1 { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-    let backing = owner.empty_backing_demands()?;
-    Ok(if backing.release_bytes != 0 { backing } else { RetirementDemand { release_bytes: snapshot_registry_frame_bytes()?, depth: 1, ..Default::default() } })
-}
-pub(crate) fn snapshot_registry_alias_close_step(slot: &mut Option<SnapshotReadRegistryHandle>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
-    use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
-    let Some(owner) = slot.as_ref() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
-    if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "registry alias requires admitted depth")); }
-    if owner.strong_count() != 1 { slot.take(); return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-    if !owner.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    if owner.empty_backing_demands()?.release_bytes != 0 { return owner.close_empty_backing_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-    let bytes = snapshot_registry_frame_bytes()?;
-    if bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    let original = slot.take().expect("observed registry alias");
-    match original.try_unwrap() { Ok(owner) => { drop(owner); Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() })) }, Err(original) => { *slot = Some(original); Ok(RetainedCloneStep::Progress(Default::default())) } }
-}
-
 impl std::ops::Deref for SnapshotReadLeaseRegistryOwner {
     type Target = SnapshotReadRegistryHandle;
-    fn deref(&self) -> &Self::Target { self.0.as_ref().expect("snapshot registry is unavailable after exact owned close") }
+    fn deref(&self) -> &Self::Target { self.0.as_ref().expect("snapshot registry is unavailable after exact owned close").alias_handle() }
 }
 
 struct SnapshotReadLease {
@@ -762,6 +749,9 @@ struct SnapshotReadLease {
 
 #[path="🔗️read/♻️retirement/🦀️.rs"]
 mod retained_read_retirement;
+#[path="🔗️read/🪞️projection/🦀️.rs"]
+pub mod snapshot_read_projection;
+pub use snapshot_read_projection::SnapshotReadProjection;
 
 #[path="🔗️read/🧾️return/🦀️.rs"]
 mod retained_read_return_retirement;
@@ -788,6 +778,23 @@ fn return_snapshot_read<T: ?Sized>(owner: &mut Option<Arc<T>>, lease: &mut Optio
     drop(owner.take());
     after_alias_release();
     lease.return_now()
+}
+
+/// 🔐️ Returns only the exact original read while its registry slot protects the payload alias.
+fn try_return_original_snapshot_read<T: ?Sized>(owner: &mut Option<Arc<T>>, lease: &mut Option<SnapshotReadLease>) -> Result<SnapshotReadReturn, ()> {
+    let fields = lease.as_ref().ok_or(())?;
+    let original_owner = owner.as_ref().ok_or(())?;
+    let state = fields.registry.state.try_lock().map_err(|_| ())?;
+    let index = fields.index as usize;
+    if index >= state.slots.len() || state.occupied[index / 64] & (1 << (index % 64)) == 0 { return Err(()); }
+    let slot = unsafe { state.slots[index].assume_init_ref() };
+    if slot.generation != fields.generation || Arc::as_ptr(&slot.owner) as *const () != Arc::as_ptr(original_owner) as *const () { return Err(()); }
+    fields.registry.lease_generations[index].compare_exchange(fields.generation, fields.generation | (1u64 << 63), std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).map_err(|_| ())?;
+    fields.registry.returned.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+    drop(owner.take());
+    drop(state);
+    let original = lease.take().expect("validated original read lease");
+    Ok(SnapshotReadReturn { registry: original.registry, index: original.index, generation: original.generation })
 }
 
 pub struct SnapshotRead<T: ?Sized> {
@@ -826,12 +833,12 @@ impl<T: ?Sized> SnapshotRead<T> {
     }
 
     /// 🧬️ Admits this original captured lease as source authority without replacing its registry.
-    pub fn admit_retained_clone_source(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(semio_framework_value::retained_clone::RetainedCloneSource<T>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,Self)>
+    pub fn admit_retained_clone_source(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(semio_framework_value::retained_clone::RetainedCloneSource<T,Self>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,Self)>
     where
         T: Sized + semio_framework_value::retirement::RetireOwned + Sync,
     {
-        let owner = Arc::clone(self.owner.as_ref().expect("live snapshot read owner is present"));
-        match semio_framework_value::retained_clone::RetainedCloneSource::admit(owner,self,grant){Ok(source)=>Ok(source),Err((error,alias,read))=>{drop(alias);Err((error,read))}}
+
+        semio_framework_value::retained_clone::RetainedCloneSource::admit_borrowed(self,|read:&Self|read.get(),grant)
     }
 
     /// 🧹 Returns this lease to its exact registry while the registry retains the snapshot
@@ -842,7 +849,7 @@ impl<T: ?Sized> SnapshotRead<T> {
 
     /// 🧳️ Rejected return preserves the original read rather than consuming its registry custody.
     pub fn try_return_to_registry_witness(mut self)->Result<SnapshotReadReturn,Self>{
-        let Some(lease)=self.lease.as_ref()else{return Err(self)};let witness=SnapshotReadReturn{registry:lease.registry.clone(),index:lease.index,generation:lease.generation};if return_snapshot_read(&mut self.owner,&mut self.lease,||{}){Ok(witness)}else{Err(self)}
+        match try_return_original_snapshot_read(&mut self.owner, &mut self.lease) { Ok(witness) => Ok(witness), Err(()) => Err(self) }
     }
     /// 🧹 Returns this lease and hands the caller an exact generation witness for store retirement.
     pub fn return_to_registry_witness(mut self) -> Option<SnapshotReadReturn> {
@@ -855,6 +862,12 @@ impl<T: ?Sized> SnapshotRead<T> {
     }
 }
 
+impl<T: Send + Sync + 'static> SnapshotRead<T> {
+    /// 🪞️ Moves the original captured root and lease into erased custody without cloning or allocating.
+    pub fn into_erased(mut self) -> ErasedSnapshotRead {
+        ErasedSnapshotRead { owner: self.owner.take().map(|owner| owner as Arc<dyn std::any::Any + Send + Sync>), lease: self.lease.take() }
+    }
+}
 impl<T: ?Sized> Drop for SnapshotRead<T> {
     fn drop(&mut self) {
         let _ = return_snapshot_read(&mut self.owner, &mut self.lease, || {});
@@ -877,6 +890,10 @@ pub struct ErasedSnapshotRead {
 }
 
 impl ErasedSnapshotRead {
+    /// 🔒️ Revalidates the original erased lease against its issuer's current event authority.
+    pub fn commit_authority_matches(&self,generation:u64,revision:[u8;32])->bool{
+        self.owner.is_some()&&self.lease.as_ref().is_some_and(|lease|lease.registry.authority_matches(generation,revision))
+    }
     /// 📏️ Generation leases use the registry's fixed inline atomics and allocate no per-read backing.
     pub const LEASE_ALLOCATION_BYTES: usize = 0;
 
@@ -892,13 +909,47 @@ impl ErasedSnapshotRead {
         Self { owner: Some(owner), lease: Some(lease) }
     }
 
+    /// 🪪️ Acquires another genuine lease over this exact captured root and original issuer without allocating.
+    pub fn try_duplicate(&self) -> Result<Self, ValueError> {
+        let owner = self.owner.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original erased read has no captured root"))?;
+        let lease = self.lease.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original erased read has no captured lease"))?;
+        let mut state = lease.registry.state.try_lock().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "original read issuer is busy"))?;
+        let index = lease.index as usize;
+        if state.occupied[index / 64] & (1 << (index % 64)) == 0 || lease.registry.lease_generations[index].load(std::sync::atomic::Ordering::Acquire) != lease.generation { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original read generation is unavailable")); }
+        let slot = unsafe { state.slots[index].assume_init_ref() };
+        if slot.generation != lease.generation || !Arc::ptr_eq(&slot.owner, owner) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original read issuer root changed")); }
+        if state.free_len == 0 || state.slots.is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original read issuer has no vacant slot")); }
+        let generation = state.next_generation.checked_add(1).filter(|generation| *generation < 1u64 << 63).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original read issuer generation exhausted"))?;
+        let next = state.free[state.free_read] as usize;
+        state.free_read = (state.free_read + 1) % SNAPSHOT_READ_LEASE_CAPACITY;
+        state.free_len -= 1;
+        state.next_generation = generation;
+        state.slots[next].write(SnapshotReadLeaseSlot { generation, owner: Arc::clone(owner) });
+        lease.registry.lease_generations[next].store(generation, std::sync::atomic::Ordering::Release);
+        state.occupied[next / 64] |= 1 << (next % 64);
+        Ok(Self { owner: Some(Arc::clone(owner)), lease: Some(SnapshotReadLease { registry: lease.registry.clone(), index: next as u16, generation }) })
+    }
     pub fn typed<T: Send + Sync + 'static>(&self) -> Option<SnapshotReadRef<'_, T>> {
         self.owner.as_deref()?.downcast_ref::<T>().map(|owner| SnapshotReadRef { owner })
     }
 
+    /// 🪞️ Moves this original erased root and lease into typed custody; mismatch returns the exact original read.
+    pub fn try_into_typed<T: Send + Sync + 'static>(mut self) -> Result<SnapshotRead<T>, Self> {
+        if self.lease.is_none() { return Err(self); }
+        let Some(owner) = self.owner.take() else { return Err(self); };
+        match owner.downcast::<T>() {
+            Ok(owner) => Ok(SnapshotRead { owner: Some(owner), lease: self.lease.take() }),
+            Err(owner) => { self.owner = Some(owner); Err(self) }
+        }
+    }
     /// 👁️ Borrows one exact concrete owner without exposing or cloning its retained `Arc`.
     pub fn get<T: Send + Sync + 'static>(&self) -> Option<&T> {
         self.owner.as_deref()?.downcast_ref::<T>()
+    }
+
+    /// 🧳️ Returns original erased registry custody only after a validated alias handback.
+    pub fn try_return_to_registry_witness(mut self) -> Result<SnapshotReadReturn, Self> {
+        match try_return_original_snapshot_read(&mut self.owner, &mut self.lease) { Ok(witness) => Ok(witness), Err(()) => Err(self) }
     }
 
     fn admit_retirement<T: Send + Sync + 'static>(&mut self, registry: &SnapshotReadRegistryHandle, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<T>>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), ValueError> {
@@ -1310,6 +1361,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreMutationDagRetirement {
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.demands(copy)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 
 impl Drop for ArtifactStoreMutationDagRetirement {
@@ -1332,12 +1384,9 @@ enum ArtifactStoreVcsRetirementPhase {
 /// 📏️ Observes every current child demand and the separate physical cursor-shell release.
 pub fn artifact_retirement_box_demands(owner: &Box<dyn ErasedSnapshotRetirement>, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
     if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
-    Ok(semio_framework_value::RetirementDemand {
-        copy_bytes: owner.next_copy_byte_demand()?,
-        capacity_bytes: owner.next_capacity_byte_demand(maximum_body_bytes)?,
-        release_bytes: owner.next_release_byte_demand()?,
-        depth: owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement depth overflow"))?,
-    })
+    let mut demand = owner.next_demand(maximum_body_bytes)?;
+    demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement depth overflow"))?;
+    Ok(demand)
 }
 
 /// 📦️ Retires a current nested payload and its original box in separate fully granted turns.
@@ -1397,7 +1446,9 @@ pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::Ret
 /// 🪆️ Observes an inline retained child's fallible demands with its logical parent depth.
 pub fn artifact_retirement_owner_demands<O: ErasedSnapshotRetirement>(owner: &Option<O>, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
     let Some(owner) = owner.as_ref() else { return Ok(Default::default()); };
-    Ok(semio_framework_value::RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inline retirement depth overflow"))? })
+    let mut demand = owner.next_demand(body)?;
+    demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inline retirement depth overflow"))?;
+    Ok(demand)
 }
 
 /// 🧷️ Closes an inline owner under the original grant and removes it only after its exact terminal witness.
@@ -1494,6 +1545,7 @@ impl<T: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerR
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.demands(copy)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 
 impl<T> Drop for ArtifactStoreHistoryLedgerRetirement<T> {
@@ -1623,6 +1675,7 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 impl<Mu> Drop for ArtifactStoreOperationRowsRetirement<Mu> {
     fn drop(&mut self) { assert!(std::thread::panicking() || (self.rows.terminal_is_empty() && self.identity.is_none() && self.active.is_none() && self.pending.is_none() && self.strings.is_none() && self.factory.is_none() && self.closing_factory.is_none()), "operation row retirement retains exact original owners until bounded terminal"); if self.rows.terminal_is_empty() { unsafe { std::mem::ManuallyDrop::drop(&mut self.rows); } } }
@@ -1741,6 +1794,7 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 impl<Mutation> Drop for ArtifactStoreDecodedEditRetirement<Mutation> {
     fn drop(&mut self) { assert!(std::thread::panicking() || (self.edit.is_none() && self.active.is_none() && self.pending_mutation.is_none() && self.mutation_factory.is_none() && self.closing_factory.is_none()), "decoded edit retirement retains its original pending payload until bounded terminal close"); }
@@ -1844,6 +1898,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetiremen
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.demands(copy)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 
 impl<P, Mutation> Drop for ArtifactStoreVcsRetirement<P, Mutation> {
@@ -1852,6 +1907,11 @@ impl<P, Mutation> Drop for ArtifactStoreVcsRetirement<P, Mutation> {
         assert!(std::thread::panicking() || empty, "VCS retirement reached Drop before every exact history backing and factory became terminal-empty");
         if empty { unsafe { std::mem::ManuallyDrop::drop(&mut self.vcs); std::mem::ManuallyDrop::drop(&mut self.active); std::mem::ManuallyDrop::drop(&mut self.initial_snapshot_factory); std::mem::ManuallyDrop::drop(&mut self.mutation_factory); std::mem::ManuallyDrop::drop(&mut self.closing_factories); } }
     }
+}
+
+/// 📏️ Quotes the exact cursor frame [`retire_document_envelope`] births before any original field or factory transfers.
+pub fn retire_document_envelope_birth_bytes<P: Send + Sync + 'static, Mutation: Send + 'static>() -> usize {
+    std::mem::size_of::<ArtifactStoreEnvelopeRetirement<P, Mutation>>()
 }
 
 /// ♻️ Admits whole detached document custody before any original field or factory transfers.
@@ -1922,6 +1982,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetiremen
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
     fn drop(&mut self) {
@@ -1958,6 +2019,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactGenesisRetir
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.demands(copy)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 
 impl<P: Send + Sync + 'static> Drop for ArtifactGenesisRetirement<P> {
@@ -2031,6 +2093,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreDisplac
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.demands(copy)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 
 impl<P: Send + Sync + 'static> Drop for ArtifactStoreDisplacedSnapshotRetirement<P> {
@@ -2311,7 +2374,7 @@ where
                 if store.snapshot_read_leases_terminal_is_empty() { self.phase = ArtifactStoreCursorDisposerPhase::Displaced; }
                 else {
                     let factory = store.initial_snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "returned read requires installed snapshot factory"))?;
-                    return advance_returned_snapshot_read(&store.snapshot_read_leases, &mut self.active, factory, grant);
+                    return advance_returned_snapshot_read(&store.snapshot_read_leases, &mut self.active, factory, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
                 }
             }
             ArtifactStoreCursorDisposerPhase::Displaced => {
@@ -2662,6 +2725,16 @@ where
         self.retire_envelope(envelope, grant)
     }
 
+    /// 🪪️ The catalog's original initial-snapshot issuer, shared with an initialization runtime that retires its current projection.
+    pub fn initial_snapshot_factory(&self) -> Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>> {
+        self.initial_snapshot_retirement.0.clone()
+    }
+
+    /// 📏️ Quotes the constructor frame of [`Self::retire_initial_snapshot_owned`] before ownership transfers.
+    pub fn initial_snapshot_retirement_demand(&self, snapshot: &P) -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { capacity_bytes: self.initial_snapshot_retirement.retirement_birth_bytes(snapshot), depth: 2, ..Default::default() }
+    }
+
     pub fn retire_initial_snapshot_owned(&self, snapshot: P, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, P)>
     where P: Send + Sync + 'static,
     {
@@ -2775,6 +2848,7 @@ where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
     fn terminal_is_empty(&self) -> bool { self.envelope.is_none() && self.owners.is_none() }
 }
 impl<P, M> UninstalledDocumentEnvelopeRetirement<P, M>
@@ -5099,7 +5173,7 @@ pub struct ArtifactEphemeralOneItemPublication<P, Mutation> {
     preparation: std::mem::ManuallyDrop<Option<Box<dyn ArtifactEphemeralOneItemPreparation<P, Mutation>>>>,
     displaced_root_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     root_retirement_factory: std::mem::ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,
-    returned_read_registry: std::mem::ManuallyDrop<Option<SnapshotReadRegistryHandle>>,
+    returned_read_registry: std::mem::ManuallyDrop<Option<SnapshotReadRegistryAliasRetirement>>,
     returned_read_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     owned_retirement_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>>,
     receipt: std::mem::ManuallyDrop<Option<LaneItemReceipt>>,
@@ -5725,6 +5799,19 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     {
         match self.local_reads.as_ref() { Some(reads) => presence_retirement::advance_returned_local(reads, &mut self.active_returned_local, self.local_retirement_factory.as_ref(), grant), None => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) }
     }
+    /// 📏️ Quotes the next returned local-read maintenance turn on every axis without advancing it.
+    pub fn maintenance_local_reads_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>
+    where P: Send + Sync + 'static,
+    {
+        use semio_framework_value::RetirementDemand;
+        let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "presence local maintenance depth overflow"))?; Ok(demand) };
+        if let Some(active) = self.active_returned_local.as_ref() { return nested(artifact_retirement_box_demands(active, body)?); }
+        if let Some(reads) = self.local_reads.as_ref().filter(|reads| reads.has_returned()) {
+            let factory = self.local_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence returned read lacks its original factory"))?;
+            return nested(reads.returned_admission_demands::<P>(|root| RetirementDemand { capacity_bytes: factory.retirement_birth_bytes(root), depth: 1, ..Default::default() }).map_err(SnapshotReadLeaseRefusal::into_value_error)?);
+        }
+        Ok(Default::default())
+    }
     pub fn local_read_maintenance_is_idle(&self) -> bool { self.active_returned_local.is_none() && self.local_reads.as_ref().is_none_or(|reads| !reads.has_returned()) }
 
     /// ✍️ Applies local presence operations atomically, bumping `generation` after the full batch.
@@ -5991,6 +6078,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
 pub struct TransientStore<P, Mutation> {
     current: Option<Arc<P>>,
     reads: Option<SnapshotReadRegistryHandle>,
+    close_started: bool,
     active_returned_read: Option<Box<dyn ErasedSnapshotRetirement>>,
     generation: u64,
     _mutation: PhantomData<fn() -> Mutation>,
@@ -6006,7 +6094,7 @@ impl<P: Clone + Default, Mutation: self::Mutation<P>> Default for TransientStore
 impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     /// 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(current: P) -> Self {
-        Self { current: Some(Arc::new(current)), reads: Some(SnapshotReadRegistryHandle::new()), active_returned_read: None, generation: 0, _mutation: PhantomData }
+        Self { current: Some(Arc::new(current)), reads: Some(SnapshotReadRegistryHandle::new()), close_started: false, active_returned_read: None, generation: 0, _mutation: PhantomData }
     }
 
     pub async fn current(&self) -> &P {
@@ -6043,7 +6131,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     where
         P: Send + Sync + 'static,
     {
-        advance_returned_snapshot_read(self.reads.as_ref().expect("live transient read registry remains"), &mut self.active_returned_read, factory, grant)
+        match self.reads.as_ref() { Some(reads) => advance_returned_snapshot_read(reads, &mut self.active_returned_read, factory, grant), None => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) }
     }
 
     pub fn returned_reads_terminal_is_empty(&self) -> bool {
@@ -6080,7 +6168,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
         root_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
     ) -> Result<ArtifactEphemeralOneItemPublication<P, Mutation>, ArtifactEphemeralOneItemAdmissionRejected<Mutation>> {
         let reject = |reason: String, mutation: Mutation| ArtifactEphemeralOneItemAdmissionRejected { reason, mutation };
-        if self.generation != expected_generation {
+        if self.close_started || self.generation != expected_generation {
             return Err(reject("transient publication generation is stale".into(), mutation));
         }
         let Some(factory) = factory else {
@@ -6136,7 +6224,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
         P: Send + Sync + 'static,
     {
         let reject = |reason: String, mutation: Mutation| ArtifactEphemeralOneItemAdmissionRejected { reason, mutation };
-        if self.generation != expected_generation {
+        if self.close_started || self.generation != expected_generation {
             return Err(reject("transient publication generation is stale".into(), mutation));
         }
         let footprint = match factory.preflight(&mutation) {
@@ -6160,7 +6248,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
             preparation: std::mem::ManuallyDrop::new(Some(preparation)),
             displaced_root_retirement: std::mem::ManuallyDrop::new(None),
             root_retirement_factory: std::mem::ManuallyDrop::new(None),
-            returned_read_registry: std::mem::ManuallyDrop::new(Some(self.reads.as_ref().expect("live transient read registry remains").clone())),
+            returned_read_registry: std::mem::ManuallyDrop::new(Some(SnapshotReadRegistryAliasRetirement::new(self.reads.as_ref().expect("live transient read registry remains").clone()))),
             returned_read_retirement: std::mem::ManuallyDrop::new(None),
             owned_retirement_factory: std::mem::ManuallyDrop::new(Some(owned_retirement_factory)),
             receipt: std::mem::ManuallyDrop::new(None),
@@ -6192,7 +6280,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
             publication.begin_close();
             return Ok(ArtifactStoreOneItemAdvance::Blocked);
         }
-        if self.generation != publication.expected_generation {
+        if self.close_started || self.generation != publication.expected_generation {
             *publication.fault = Some(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"transient publication became stale before commit"));
             publication.phase = ArtifactStoreOneItemPublicationPhase::Fault;
             publication.begin_close();
@@ -6258,7 +6346,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
 
     /// 🎯️ Applies one retained local-only item against an exact live generation.
     pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)> {
-        if self.generation != expected_generation {
+        if self.close_started || self.generation != expected_generation {
             return Err(("transient publication generation is stale".into(), mutation));
         }
         let before = self.generation;
@@ -6273,6 +6361,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
 
     /// 🔄️ Discards everything — what a host does when a view closes.
     pub async fn reset(&mut self, current: P) {
+        assert!(!self.close_started, "closed transient store cannot be reset");
         self.current = Some(Arc::new(current));
         self.generation = self.generation.wrapping_add(1);
     }
@@ -6299,7 +6388,8 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     /// 🏁️ Moves every original root and tracked read into close custody without a replacement allocation.
     pub fn begin_close_retirement(&mut self, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> TransientStoreRetirement<P>
     where P: Send + Sync + 'static {
-        TransientStoreRetirement { root: std::mem::ManuallyDrop::new(self.current.take()), reads: std::mem::ManuallyDrop::new(self.reads.take()), active_returned: std::mem::ManuallyDrop::new(self.active_returned_read.take()), active_root: std::mem::ManuallyDrop::new(None), factory: Some(factory), factory_close: None }
+        self.close_started = true;
+        TransientStoreRetirement { root: std::mem::ManuallyDrop::new(self.current.take()), reads: std::mem::ManuallyDrop::new(self.reads.take().map(SnapshotReadRegistryAliasRetirement::new)), active_returned: std::mem::ManuallyDrop::new(self.active_returned_read.take()), active_root: std::mem::ManuallyDrop::new(None), factory: Some(factory), factory_close: None }
     }
 
     /// 🫙️ The live shell owns no root, tracked registry or returned read after consuming close.
@@ -6315,12 +6405,16 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
         self.generation = next_generation;
         TransientStoreRetirement::new(displaced, factory)
     }
+
+    /// 🧾️ Closed stores retain no substitute root, read registry or returned cursor.
+    pub fn detached_terminal_is_empty(&self) -> bool { self.close_started && self.current.is_none() && self.reads.is_none() && self.active_returned_read.is_none() }
+
 }
 
 /// ♻️ Detached transient root plus every returned/live tracked read.
 pub struct TransientStoreRetirement<P> {
     root: std::mem::ManuallyDrop<Option<Arc<P>>>,
-    reads: std::mem::ManuallyDrop<Option<SnapshotReadRegistryHandle>>,
+    reads: std::mem::ManuallyDrop<Option<SnapshotReadRegistryAliasRetirement>>,
     active_returned: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     active_root: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     factory: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
@@ -6329,7 +6423,7 @@ pub struct TransientStoreRetirement<P> {
 impl<P> TransientStoreRetirement<P> {
     fn new<Mutation>(store: TransientStore<P, Mutation>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> Self {
         let store = std::mem::ManuallyDrop::new(store);
-        Self { root: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.current) }), reads: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.reads) }), active_returned: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.active_returned_read) }), active_root: std::mem::ManuallyDrop::new(None), factory: Some(factory), factory_close: None }
+        Self { root: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.current) }), reads: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.reads) }.map(SnapshotReadRegistryAliasRetirement::new)), active_returned: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.active_returned_read) }), active_root: std::mem::ManuallyDrop::new(None), factory: Some(factory), factory_close: None }
     }
     pub fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.reads.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.factory.is_none() && self.factory_close.is_none() }
 }
@@ -9154,6 +9248,7 @@ where
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(self.demands(maximum_body_bytes)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 
 impl<P, Mutation> ArtifactEnvelopeReturnedFieldDecoder<P, Mutation> {
@@ -10524,6 +10619,7 @@ where
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(self.demands(maximum_body_bytes)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 
 impl<P, Mutation> Drop for ArtifactEnvelopeUnadmittedDecodeRejected<P, Mutation> {
@@ -12003,7 +12099,7 @@ pub trait ArtifactPack: Sized {
 /// `spr` (whole `.spr` op-log bytes, carrying real `inverse`/binary op payloads/cursor — see
 /// `print_document_spr`) are AUTHORITATIVE; `ops` stays the op-log TEXT as a human-readable mirror
 /// only (format-invariant across text/pack/spr, but forwards-only — see `print_ops_log`'s doc).
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq,semio_framework_value::RetireOwned)]
 pub struct ArtifactPackFiles {
     pub pack: Vec<u8>,
     pub spr: Vec<u8>,
@@ -12364,6 +12460,67 @@ where
     fund_document_store_owners(bounded_artifact_store_owners_birth_demand::<P, Mutation>()?, bounded_artifact_store_owners::<P, Mutation>)
 }
 
+/// 📏️ Quotes the bounded catalog together with the [`ArtifactCanonicalAuthoringFactory`] Arc it installs.
+pub fn canonical_authoring_store_owners_birth_demand<P, Mutation>() -> Result<RetainedCloneBirthDemand, ValueError>
+where
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson,
+{
+    let bounded = bounded_artifact_store_owners_birth_demand::<P, Mutation>()?;
+    let capacity_bytes = bounded.capacity_bytes.checked_add(semio_framework_value::factory_arc_birth_bytes::<ArtifactCanonicalAuthoringFactory<P, Mutation>>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "canonical authoring catalog extent overflow"))?;
+    Ok(RetainedCloneBirthDemand { capacity_bytes, depth: bounded.depth })
+}
+
+/// 🗃️ Admits the bounded catalog whose mutation names its own canonical JSON wire, so authoring mints operation identities from the original operation.
+pub fn canonical_authoring_store_owners<P, Mutation>(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<P, Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
+where
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson,
+{
+    let preparation = RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<ArtifactCanonicalAuthoringFactory<P, Mutation>>(), depth: 1 };
+    bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || Arc::new(ArtifactCanonicalAuthoringFactory::<P, Mutation>::new()))
+}
+
+/// 🗃️ Funds the canonical authoring catalog for a store that no scheduler grants.
+pub fn funded_canonical_authoring_store_owners<P, Mutation>() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>
+where
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson,
+{
+    fund_document_store_owners(canonical_authoring_store_owners_birth_demand::<P, Mutation>()?, canonical_authoring_store_owners::<P, Mutation>)
+}
+
+/// 🗃️ Names the funded catalog a linked codec's throwaway reduction store installs.
+trait ArtifactCodecCatalog<P, Mutation>
+where
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
+{
+    fn funded() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>;
+}
+
+/// 🗃️ The framework's bounded catalog: it retires, but carries no operation wire, so a reduction store over it cannot author.
+struct BoundedCodecCatalog;
+
+impl<P, Mutation> ArtifactCodecCatalog<P, Mutation> for BoundedCodecCatalog
+where
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
+{
+    fn funded() -> Result<DocumentStoreOwners<P, Mutation>, ValueError> { funded_bounded_artifact_store_owners::<P, Mutation>() }
+}
+
+/// 🗃️ The canonical authoring catalog: the mutation names its wire, so a reduction store over it authors.
+struct CanonicalCodecCatalog;
+
+impl<P, Mutation> ArtifactCodecCatalog<P, Mutation> for CanonicalCodecCatalog
+where
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson,
+{
+    fn funded() -> Result<DocumentStoreOwners<P, Mutation>, ValueError> { funded_canonical_authoring_store_owners::<P, Mutation>() }
+}
+
 /// 🧺️ Runs a throwaway reduction store's close cursor to exact terminal emptiness and forgets the
 /// shell, so no codec thunk can reach `ArtifactStore`'s asserting `Drop` with a live owner. Shared by
 /// [`ArtifactCodec::apply_ops_binary`] and [`replay_envelopes_onto_pair`].
@@ -12515,11 +12672,40 @@ impl ArtifactCodec {
         codec
     }
 
+    /// 🔏️ Constructs a codec with a required relational snapshot whose mutation names its canonical JSON wire, so its reduction store authors.
+    pub fn of_authoring<P, Mutation>(schema: impl Into<String>) -> Self
+    where
+        P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson + Sync,
+    {
+        let mut codec = Self::bare_authoring::<P, Mutation>(schema);
+        codec.snapshot_sqlite = Some(P::sqlite_codec());
+        codec
+    }
+
     /// 📦️ Constructs a native document codec from its owner's declared capabilities.
     pub fn bare<P, Mutation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
         Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync,
+    {
+        Self::assemble::<P, Mutation, BoundedCodecCatalog>(schema)
+    }
+
+    /// 🔏️ Constructs a native document codec whose reduction store authors from the mutation's own canonical JSON wire.
+    pub fn bare_authoring<P, Mutation>(schema: impl Into<String>) -> Self
+    where
+        P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson + Sync,
+    {
+        Self::assemble::<P, Mutation, CanonicalCodecCatalog>(schema)
+    }
+
+    fn assemble<P, Mutation, C>(schema: impl Into<String>) -> Self
+    where
+        P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync,
+        C: ArtifactCodecCatalog<P, Mutation>,
     {
         /// 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
         /// `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
@@ -12578,10 +12764,11 @@ impl ArtifactCodec {
         /// shallow shell, so an early return here aborts the process instead of reporting the
         /// fault. Capture every fallible step as a value, run the close cursor, forget the
         /// store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
-        fn apply_ops_binary_impl<'a, 'b, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
+        fn apply_ops_binary_impl<'a, 'b, P, Mutation, C>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
         where
             P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
             Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync,
+            C: ArtifactCodecCatalog<P, Mutation>,
         {
             Box::pin(async move {
                 let mutations: Vec<Mutation> = if ops_vec.is_empty() {
@@ -12616,7 +12803,7 @@ impl ArtifactCodec {
                     };
                     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
                     let mut store = ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await?;
-                    let installed = funded_bounded_artifact_store_owners::<P, Mutation>().and_then(|owners| store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); error })).map_err(|error| VcsError::ValidationFailed(error.into_message()));
+                    let installed = C::funded().and_then(|owners| store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); error })).map_err(|error| VcsError::ValidationFailed(error.into_message()));
                     (store, installed)
                 };
                 let applied = match installed {
@@ -12635,13 +12822,14 @@ impl ArtifactCodec {
             })
         }
 
-        fn replay_envelopes_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
+        fn replay_envelopes_impl<'a, P, Mutation, C>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
         where
             P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
             Mutation: Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync,
+            C: ArtifactCodecCatalog<P, Mutation>,
         {
             Box::pin(async move {
-                let files = replay_envelopes_onto_pair::<P, Mutation>(pack, spr, envelopes, funded_bounded_artifact_store_owners::<P, Mutation>).await?;
+                let files = replay_envelopes_onto_pair::<P, Mutation>(pack, spr, envelopes, C::funded).await?;
                 Ok((files.pack, files.spr, files.ops))
             })
         }
@@ -12668,8 +12856,8 @@ impl ArtifactCodec {
             compile_dsl: compile_dsl_impl::<P, Mutation>,
             print_mirror: print_mirror_impl::<P, Mutation>,
             edit_text_from_envelope: edit_text_from_envelope_impl::<P, Mutation>,
-            apply_ops_binary: apply_ops_binary_impl::<P, Mutation>,
-            replay_envelopes: replay_envelopes_impl::<P, Mutation>,
+            apply_ops_binary: apply_ops_binary_impl::<P, Mutation, C>,
+            replay_envelopes: replay_envelopes_impl::<P, Mutation, C>,
         }
     }
 }
@@ -14279,14 +14467,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// persist. Answers the replayed head projection.
 fn replay_loaded_history<P, Mutation, I, S>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<P, VcsError>
 where
-    P: Clone,
-    Mutation: self::Mutation<P> + OpBinary,
+    P: Clone + 'static,
+    Mutation: self::Mutation<P> + OpBinary + 'static,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
-    let mut replay = loaded_history_replay(envelope, applied, supersessions)?;
-    while !matches!(replay.step(&envelope.vcs.edits, &mut || false)?, ReplayStep::Finished(_)) {}
-    let state = adopt_loaded_replay(envelope, replay.finish()?)?;
+    let result = loaded_history_replay(envelope, applied, supersessions)?.run(&envelope.vcs.edits)?;
+    let state = adopt_loaded_replay(envelope, result)?;
     Ok(Arc::try_unwrap(state).unwrap_or_else(|shared| (*shared).clone()))
 }
 
@@ -14306,6 +14493,22 @@ where
 /// ✍️ Writes a finished load replay into `envelope` — every applied edit's rebased inverse and messages, every supersession
 /// envelope's conflict target — and answers the replayed head projection.
 fn adopt_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, mut result: EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
+where
+    P: Clone + 'static,
+    Mutation: self::Mutation<P> + OpBinary + 'static,
+{
+    let adopted = take_loaded_replay(envelope, &mut result);
+    let retired = result.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message()));
+    let state = adopted?;
+    if let Err(error) = retired {
+        retire_shared_projection::<P, Mutation>(state);
+        return Err(error);
+    }
+    Ok(state)
+}
+
+/// 🎴️ Writes a finished load replay into `envelope` and takes its reached projection; every untaken owner stays attached to `result`.
+fn take_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, result: &mut EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P> + OpBinary,
@@ -15032,8 +15235,8 @@ where
 /// snapshot comes from `pack` via `ArtifactPack::decode_pack`, matching `parse_document_pack`'s contract.
 pub async fn parse_document_spr<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactPack,
-    Mutation: OpText + OpBinary + self::Mutation<P>,
+    P: Clone + ArtifactPack + 'static,
+    Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
     parse_decoded_document_spr(pack, log).await
@@ -15048,8 +15251,8 @@ where
 /// `?` above as well, which the explicit call below never covered.
 pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: crate::os_spr::HistoryLog) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactPack,
-    Mutation: OpText + OpBinary + self::Mutation<P>,
+    P: Clone + ArtifactPack + 'static,
+    Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     let initial_snapshot = P::decode_pack(pack).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
 
@@ -15178,8 +15381,8 @@ where
 /// metadata record per forward operation, durable messages/conflicts, and exactly one cursor.
 async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactGenesisCodec,
-    Mutation: OpText + OpBinary + self::Mutation<P>,
+    P: Clone + ArtifactGenesisCodec + 'static,
+    Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     let mut schema = String::new();
     let mut id = String::new();
@@ -15401,8 +15604,8 @@ where
 /// genesis. A refused document is discarded through [`discard_parsed_envelope`], never dropped.
 async fn settle_parsed_envelope<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone,
-    Mutation: self::Mutation<P> + OpBinary,
+    P: Clone + 'static,
+    Mutation: self::Mutation<P> + OpBinary + 'static,
 {
     let settled = match project_envelope_history(&mut envelope) {
         Ok(supersessions) => validate_durable_history(&envelope).await.map(|()| supersessions),
@@ -15445,8 +15648,8 @@ where
 /// snapshot — obtains the initial snapshot via `P::parse_dsl` then shares `replay_ops`.
 pub async fn parse_document_text<P, Mutation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactDsl + ArtifactGenesisCodec,
-    Mutation: OpText + OpBinary + self::Mutation<P>,
+    P: Clone + ArtifactDsl + ArtifactGenesisCodec + 'static,
+    Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     let initial_snapshot = P::parse_dsl(dsl)?;
     replay_ops(initial_snapshot, ops).await
@@ -15457,8 +15660,8 @@ where
 /// recovers real `inverse`/`mutation_meta`/`cursor` instead of recomputing them via replay.
 pub async fn parse_document_pack<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactPack,
-    Mutation: OpText + OpBinary + self::Mutation<P>,
+    P: Clone + ArtifactPack + 'static,
+    Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     parse_document_spr(pack, spr).await
 }
@@ -16699,6 +16902,14 @@ pub(crate) mod hot_path_census {
 #[cfg(test)]
 const MIRROR_ORACLE_HISTORY: usize = 256;
 
+/// 🔬️ The history length up to which the test oracle rebuilds every mirror on every bump; beyond it only every [`MIRROR_ORACLE_STRIDE`]th length is rebuilt, so a production-shaped history costs O(n²/stride) instead of O(n²).
+#[cfg(test)]
+const MIRROR_ORACLE_EVERY_HISTORY: usize = 64;
+
+/// 🔬️ The history-length stride of the sampled test oracle ([`MIRROR_ORACLE_EVERY_HISTORY`]).
+#[cfg(test)]
+const MIRROR_ORACLE_STRIDE: usize = 32;
+
 /// 🔗️ Running per-list digests of a coalesced edit's operations: what lets an amend extend its edit's revision identity by
 /// the operations it appended instead of re-encoding the whole run (a typing run amends one edit per key).
 #[derive(Clone, Copy, Default)]
@@ -17620,7 +17831,7 @@ impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRetirement {
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "message directory requires admitted original depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.active.is_some() { return artifact_retirement_owner_close(&mut self.active, grant); }
+        if self.active.is_some() { return artifact_retirement_owner_close(&mut self.active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(entry) = self.original.pop() {
             self.active = Some(ArtifactStoreMessageLedgerRetirement::new(entry.edit_id, entry.messages));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
@@ -17645,6 +17856,7 @@ impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRetirement {
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 impl Drop for ArtifactEditMessageLedgerRetirement {
     fn drop(&mut self) {
@@ -18046,7 +18258,7 @@ pub use canonical_edit::{
 
 #[path = "🧵️operation-wire/🦀️.rs"]
 mod prepared_operation_wire;
-pub use prepared_operation_wire::{ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
+pub use prepared_operation_wire::{ArtifactCanonicalAuthoringFactory, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
 
 pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS: usize = 65_536;
 pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES: usize = 1_048_576;
@@ -18758,7 +18970,7 @@ pub trait ErasedMemberStoreOneItemPublication: Send {
 }
 
 struct MemberStoreOneItemPublication<P, Mutation> {
-    member: Option<SnapshotReadRegistryHandle>,
+    member: Option<SnapshotReadRegistryAliasRetirement>,
     publication: ArtifactStoreBatchPublication<P, Mutation>,
     group_history: Option<ArtifactStoreHistoryCommitReservation>,
     group_displaced: Option<ArtifactStoreDisplacedOwnerReservation>,
@@ -19486,6 +19698,7 @@ impl ErasedSnapshotRetirement for ArtifactStorePendingReportRetirement {
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.demands(body) }
 }
 
 impl Drop for ArtifactStorePendingReportRetirement {
@@ -19679,9 +19892,9 @@ where
         let mut revision_accumulator = CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision, applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
         revision_accumulator.reconcile::<P, Mutation>(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits, &supersessions, StackMirrorDirt::ALL, None);
         if !revision_accumulator.unit_flags.is_empty() {
-            let mut units = EditReplay::new(ReplayMode::Report, envelope.vcs.genesis.facts().share_snapshot(), applied_edit_ids.to_vec(), 0, &envelope.schema, supersessions.clone(), &envelope.vcs.edits)?;
-            while matches!(units.step(&envelope.vcs.edits, &mut || false)?, ReplayStep::Pending(_)) {}
-            revision_accumulator.unit_flags.extend(units.finish()?.unit_flags.iter().map(|(key, flag)| (*key, *flag)));
+            let units = EditReplay::new(ReplayMode::Report, envelope.vcs.genesis.facts().share_snapshot(), applied_edit_ids.to_vec(), 0, &envelope.schema, supersessions.clone(), &envelope.vcs.edits)?.run(&envelope.vcs.edits)?;
+            revision_accumulator.unit_flags.extend(units.unit_flags.iter().map(|(key, flag)| (*key, *flag)));
+            units.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
         }
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
         let local_actor_id = actor;
@@ -19977,7 +20190,9 @@ where
             self.displaced_retirements.push_reserved(owner);
         }
         self.push_revision_replacement_reserved(revision_accumulator);
-        drop(self.pending_reprojection.take());
+        if let Some(pending) = self.pending_reprojection.take() {
+            self.retire_pending_replay(pending.replay)?;
+        }
         self.mirror_dirt = StackMirrorDirt::ALL;
         self.fold_frontier = None;
         self.bump()?;
@@ -20057,6 +20272,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         Ok(ErasedSnapshotRead::new(alias, lease))
     }
 
+    /// 🧳️ Retains an original projection from this exact issuer, including an older captured frontier, for readonly custody.
+    pub fn retained_derived_read(&self, source: &ArtifactDerivedSnapshot<P>) -> Result<ErasedSnapshotRead, ValueError>
+    where P: Sync {
+        if !source.registry.ptr_eq(&self.snapshot_read_leases) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "projection read requires its original Store issuer")); }
+        let owner = Arc::clone(&source.owner);
+        let lease = match source.registry.try_issue(Arc::clone(&owner)) { Ok(lease) => lease, Err(alias) => { drop(alias); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "original projection read issuer is unavailable")); } };
+        Ok(ErasedSnapshotRead::new(owner, lease))
+    }
     /// 🧩️ Derives a provisional member projection through this Store's own operation vocabulary and merge policy.
     pub fn derive_provisional_snapshot(&self, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<Option<ArtifactDerivedSnapshot<P>>, VcsError> {
         self.admit_derived_source(&source.registry, source.generation, source.revision)?;
@@ -20235,10 +20458,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if let (Some(snapshots), Some(mutations)) = ((*self.initial_snapshot_retirement_factory).clone(), (*self.mutation_retirement_factory).clone()) {
                 replay = replay.with_retirement_factories(snapshots, mutations);
             } else if replay.operation_preparation_factory.is_some() {
+                let _ = replay.retire_unscheduled();
                 return Err(VcsError::ValidationFailed("interactive operation preparation requires exact replay retirement factories".into()));
             }
             if let (Some(horizon), Some(equal)) = (horizon, self.snapshot_equality) {
-                replay = replay.with_convergence(Some(self.convergence_checkpoints(horizon, equal)?));
+                match self.convergence_checkpoints(horizon, equal) {
+                    Ok(checkpoints) => replay = replay.with_convergence(Some(checkpoints)),
+                    Err(error) => {
+                        let _ = replay.retire_unscheduled();
+                        return Err(error);
+                    }
+                }
             }
             owner.replay = Some(replay);
             return Ok(ReplayStep::Pending(owner.replay.as_ref().expect("planned replay").progress()));
@@ -20423,8 +20653,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let snapshot_factory = (*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root replacement requires its exact snapshot retirement factory".into()))?;
         let previous_envelope = std::mem::replace(&mut *self.envelope, next_envelope);
         let previous_current = std::mem::replace(&mut *self.current, next_current);
+        let current_is_genesis = std::ptr::eq(previous_current.as_ref(), previous_envelope.vcs.genesis.facts().snapshot());
         self.displaced_retirements.push_reserved(Box::new(ArtifactStoreEnvelopeRetirement::new(previous_envelope, initial_snapshot_factory, mutation_factory)));
-        self.displaced_retirements.push_reserved(ArtifactStoreDisplacedSnapshotRetirement::boxed(previous_current, snapshot_factory));
+        if current_is_genesis {
+            drop(previous_current);
+        } else {
+            self.displaced_retirements.push_reserved(ArtifactStoreDisplacedSnapshotRetirement::boxed(previous_current, snapshot_factory));
+        }
         Ok(())
     }
 
@@ -20451,7 +20686,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if !edit_id.is_empty() {
                 self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringRetirement::new(edit_id)));
             }
-            if !self.current_detached && Arc::ptr_eq(&snapshot, &self.current) {
+            if (!self.current_detached && Arc::ptr_eq(&snapshot, &self.current)) || std::ptr::eq(snapshot.as_ref(), self.envelope.vcs.genesis.facts().snapshot()) {
                 drop(snapshot);
             } else {
                 self.displaced_retirements.push_reserved(ArtifactStoreDisplacedSnapshotRetirement::boxed(snapshot, Arc::clone(&authority.snapshot)));
@@ -20460,8 +20695,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let previous_envelope = std::mem::replace(&mut *self.envelope, next_envelope);
         let previous_current = std::mem::replace(&mut *self.current, next_current);
         let previous_dag = std::mem::replace(&mut *self.dag, next_dag);
+        let current_is_genesis = std::ptr::eq(previous_current.as_ref(), previous_envelope.vcs.genesis.facts().snapshot());
         self.displaced_retirements.push_reserved(Box::new(ArtifactStoreEnvelopeRetirement::new(previous_envelope, authority.initial_snapshot, authority.mutation)));
-        self.displaced_retirements.push_reserved(ArtifactStoreDisplacedSnapshotRetirement::boxed(previous_current, Arc::clone(&authority.snapshot)));
+        if current_is_genesis {
+            drop(previous_current);
+        } else {
+            self.displaced_retirements.push_reserved(ArtifactStoreDisplacedSnapshotRetirement::boxed(previous_current, Arc::clone(&authority.snapshot)));
+        }
         self.displaced_retirements.push_reserved(Box::new(ArtifactStoreMutationDagRetirement::new(previous_dag)));
         *self.tail_undo_cache = next_tail;
     }
@@ -21188,9 +21428,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         supersessions: &EffectiveSupersessions,
         policy: crate::os_spr::MergePolicy,
     ) -> Result<EditReplayResult<P, Mutation>, VcsError> {
-        let mut replay = EditReplay::new(ReplayMode::Merge(policy), base, order.to_vec(), k, schema, supersessions.clone(), edits)?;
-        while matches!(replay.step(edits, &mut || false)?, ReplayStep::Pending(_)) {}
-        replay.finish()
+        EditReplay::new(ReplayMode::Merge(policy), base, order.to_vec(), k, schema, supersessions.clone(), edits)?.run(edits)
     }
 
     /// 🎯️ HIGH-2 (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` J1
@@ -21528,13 +21766,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 🛡️ Judges the folded history as a whole under `MergePolicy::Normal`: one Report replay of every applied edit from the
     /// genesis, refused with its blocking messages when the report blocks finalize.
     pub fn refuse_blocking_history(&self) -> Result<(), VcsError> {
-        let mut replay = EditReplay::new(ReplayMode::Report, self.envelope.vcs.genesis.facts().share_snapshot(), self.applied_edit_ids.to_vec(), 0, &self.envelope.schema, (*self.supersessions).clone(), &self.envelope.vcs.edits)?;
-        while matches!(replay.step(&self.envelope.vcs.edits, &mut || false)?, ReplayStep::Pending(_)) {}
-        let result = replay.finish()?;
-        if !result.report().blocks_finalize() {
+        let result = EditReplay::new(ReplayMode::Report, self.envelope.vcs.genesis.facts().share_snapshot(), self.applied_edit_ids.to_vec(), 0, &self.envelope.schema, (*self.supersessions).clone(), &self.envelope.vcs.edits)?.run(&self.envelope.vcs.edits)?;
+        let blocks = result.report().blocks_finalize();
+        let messages: Vec<_> = if blocks { result.report().outcomes.iter().flat_map(|outcome| outcome.messages.iter()).filter(|message| crate::os_spr::MergePolicy::Normal.rejects(message.level)).cloned().collect() } else { Vec::new() };
+        result.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
+        if !blocks {
             return Ok(());
         }
-        let messages = result.report().outcomes.iter().flat_map(|outcome| outcome.messages.iter()).filter(|message| crate::os_spr::MergePolicy::Normal.rejects(message.level)).cloned().collect();
         Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages })
     }
 
@@ -22502,7 +22740,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             self.pending_reprojection = (!pending.transitions.is_empty() || pending.local.is_some()).then_some(pending);
             return Err(error);
         }
-        drop(pending.replay.take());
+        self.retire_pending_replay(pending.replay.take())?;
         self.pending_reprojection = Some(pending);
         match self.advance_reprojection(None).await? {
             Some(ReprojectionAdvance::Adopted(replayed)) => Ok(replayed),
@@ -22601,7 +22839,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// recorded.
     async fn install_transitions(&mut self, envelopes: Vec<crate::os_spr::MutationEnvelope>, clock: HybridLogicalTimestamp, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> {
         if let Err(error) = self.admit_history_shape(&envelopes) {
-            drop(replayed);
+            if let Some(replayed) = replayed {
+                let _ = self.retire_replay_result(replayed);
+            }
             return Err(error);
         }
         if let (None, [envelope]) = (&replayed, envelopes.as_slice()) {
@@ -22853,9 +23093,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             return Ok(None);
         }
         let (from, horizon) = self.replay_window(&fold.applied, &fold.supersessions)?;
-        let mut replay = self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon, Self::prefix_stride(fold.applied.len()))?;
-        while matches!(replay.step(&self.envelope.vcs.edits, &mut || false)?, ReplayStep::Pending(_)) {}
-        replay.finish().map(Some)
+        self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon, Self::prefix_stride(fold.applied.len()))?.run(&self.envelope.vcs.edits).map(Some)
     }
 
     /// 🚀️ Adopts an already finished Report replay of exactly the folded event log instead of replaying again — the fast path
@@ -22863,9 +23101,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// another order or other effective inputs is dropped and the log is replayed as usual.
     fn reproject_replayed(&mut self, result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
         self.fold_frontier = None;
-        let fold = self.fold_live_log()?;
+        let fold = match self.fold_live_log() {
+            Ok(fold) => fold,
+            Err(error) => {
+                let _ = self.retire_replay_result(result);
+                return Err(error);
+            }
+        };
         if fold.applied != result.order || !same_effective_inputs(&fold.supersessions, &result.supersessions) {
-            drop(result);
+            self.retire_replay_result(result)?;
             let replay = self.reprojection_replay(&fold)?;
             return self.adopt_reprojection(fold, replay);
         }
@@ -22888,9 +23132,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     retire_shared_projection::<P, Mutation>(snapshot);
                 }
             }
+            if let Some(result) = replay {
+                let _ = self.retire_replay_result(result);
+            }
             return Err(error);
         }
-        self.adopt_history_facts(&fold)?;
+        if let Err(error) = self.adopt_history_facts(&fold) {
+            if let Some((current, recorded)) = prefix {
+                retire_shared_projection::<P, Mutation>(current);
+                for (_, _, snapshot) in recorded {
+                    retire_shared_projection::<P, Mutation>(snapshot);
+                }
+            }
+            if let Some(result) = replay {
+                let _ = self.retire_replay_result(result);
+            }
+            return Err(error);
+        }
         let crate::os_spr::HistoryFold { applied, redo, checkpoint, alternative, supersessions, .. } = fold;
         let replayed = match (replay, prefix) {
             (Some(result), _) => self.adopt_replayed_projection(applied, supersessions, result)?,
@@ -22985,7 +23243,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let (start, base) = self.live_base(from);
         let replay = EditReplay::new_after_prefix(ReplayMode::Report, start, base, applied.to_vec(), from, &self.envelope.schema, supersessions, &self.envelope.vcs.edits)?.with_base(self.generation, self.content_revision).recording(stride, Vec::new());
         let convergence = match (horizon, self.snapshot_equality) {
-            (Some(horizon), Some(equal)) if self.applied_edit_ids.eq_slice(applied) => Some(self.convergence_checkpoints(horizon, equal)?),
+            (Some(horizon), Some(equal)) if self.applied_edit_ids.eq_slice(applied) => match self.convergence_checkpoints(horizon, equal) {
+                Ok(checkpoints) => Some(checkpoints),
+                Err(error) => {
+                    let _ = replay.retire_unscheduled();
+                    return Err(error);
+                }
+            },
             _ => None,
         };
         Ok(replay.with_convergence(convergence))
@@ -23053,6 +23317,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// the replay itself, [`bound_edit_messages`]), `tail` becomes the tail snapshot and the reached projection becomes
     /// `current`.
     fn adopt_report_replay(&mut self, mut result: EditReplayResult<P, Mutation>, tail: Option<(String, Arc<P>)>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let taken = self.take_report_replay(&mut result);
+        let retired = self.retire_replay_result(result);
+        let (replayed, state) = taken?;
+        if let Err(error) = retired {
+            retire_shared_projection::<P, Mutation>(state);
+            return Err(error);
+        }
+        self.replace_tail_undo_cache_retained(tail)?;
+        self.replace_current_retained(state)?;
+        for entry in &replayed {
+            self.replace_edit_messages(&entry.edit_id, entry.messages.clone())?;
+        }
+        Ok(replayed)
+    }
+
+    /// 🎴️ Takes what a finished Report replay publishes — its messages and reached projection — and installs its unit flags
+    /// and rebased inverses; every untaken owner stays attached for [`Self::retire_replay_result`].
+    fn take_report_replay(&mut self, result: &mut EditReplayResult<P, Mutation>) -> Result<(Vec<crate::os_spr::EditMessages>, Arc<P>), VcsError> {
         self.revision_accumulator.unit_flags.extend(std::mem::take(&mut result.unit_flags));
         let replayed = result.take_replayed();
         if let Some(entry) = replayed.iter().find(|entry| entry.edit_id.len() > ARTIFACT_EDIT_MESSAGE_ID_BYTES) {
@@ -23065,13 +23347,44 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 None => retire_scratch_operations::<P, Mutation>(inverse),
             }
         }
-        drop(result);
-        self.replace_tail_undo_cache_retained(tail)?;
-        self.replace_current_retained(state)?;
-        for entry in &replayed {
-            self.replace_edit_messages(&entry.edit_id, entry.messages.clone())?;
+        Ok((replayed, state))
+    }
+
+    /// 🧹️ Hands a finished replay's untaken outputs and original residual to the displaced queue; a replay without installed
+    /// issuers (its aliases would wait behind the queue's own shared-root retirements) or a saturated queue retires them
+    /// unscheduled from their own quoted demands instead.
+    fn retire_replay_result(&mut self, mut result: EditReplayResult<P, Mutation>) -> Result<(), VcsError> {
+        result.begin_retirement();
+        if result.terminal_is_empty() {
+            return Ok(());
         }
-        Ok(replayed)
+        match self.displaced_retirements.reserve(1) {
+            Ok(()) if !result.cold_authority() => {
+                self.displaced_retirements.push_reserved(Box::new(result));
+                Ok(())
+            }
+            _ => result.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message())),
+        }
+    }
+
+    /// 🧹️ Hands a raw replay's original owners to the displaced queue; a saturated queue retires them unscheduled instead.
+    fn retire_raw_replay(&mut self, mut replay: EditReplay<P, Mutation>) -> Result<(), VcsError> {
+        replay.begin_retirement();
+        if replay.terminal_is_empty() {
+            return Ok(());
+        }
+        match self.displaced_retirements.reserve(1) {
+            Ok(()) if !replay.cold_authority() => {
+                self.displaced_retirements.push_reserved(Box::new(replay));
+                Ok(())
+            }
+            _ => replay.retire_unscheduled().map_err(|error| VcsError::ValidationFailed(error.into_message())),
+        }
+    }
+
+    /// 🧹️ Hands the running replay of a deferred reprojection, if any, to [`Self::retire_raw_replay`].
+    fn retire_pending_replay(&mut self, replay: Option<([u8; 32], EditReplay<P, Mutation>)>) -> Result<(), VcsError> {
+        replay.map_or(Ok(()), |(_, replay)| self.retire_raw_replay(replay))
     }
 
     /// 🔄️ Replaces the supersessions `current` is projected with; the displaced map retires one byte grant at a time.
@@ -23589,7 +23902,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         };
         let discarded = pending.local.take().is_some();
         if discarded {
-            drop(pending.replay.take());
+            let _ = self.retire_pending_replay(pending.replay.take());
         }
         self.pending_reprojection = (!pending.transitions.is_empty() || pending.local.is_some()).then_some(pending);
         discarded
@@ -23610,7 +23923,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// local step too — [`Self::discard_local_step`] drops it) and the next step replays it from the start. Answers whether a
     /// replay was running.
     pub fn cancel_reprojection(&mut self) -> bool {
-        self.pending_reprojection.as_mut().and_then(|pending| pending.replay.take()).is_some()
+        let Some(replay) = self.pending_reprojection.as_mut().and_then(|pending| pending.replay.take()) else {
+            return false;
+        };
+        let _ = self.retire_pending_replay(Some(replay));
+        true
     }
 
     /// ⏭️ Advances the deferred reprojection by one turn — until `deadline_us` on the budget's clock when the runtime names
@@ -23647,7 +23964,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             self.pending_reprojection = Some(pending);
             return Err(VcsError::HistoryReplaying);
         }
-        drop(pending.replay.take());
+        self.retire_pending_replay(pending.replay.take())?;
         pending.local = Some(step);
         self.pending_reprojection = Some(pending);
         self.clock = clock;
@@ -23670,7 +23987,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             return Ok(None);
         };
         if pending.replay.as_ref().is_none_or(|(revision, _)| *revision != self.content_revision) {
-            drop(pending.replay.take());
+            let _ = self.retire_pending_replay(pending.replay.take());
             let started = self.pending_fold(&pending).and_then(|fold| {
                 if fold.supersessions == *self.supersessions && self.applied_edit_ids.starts_with(&fold.applied) {
                     return Ok(None);
@@ -23704,13 +24021,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 self.pending_reprojection = Some(pending);
                 Ok(Some(ReprojectionAdvance::Pending(progress)))
             }
-            Ok(ReplayStep::Finished(_)) => match pending.replay.take().expect("a finished deferred replay").1.finish() {
-                Ok(result) => self.adopt_pending(pending, Some(result)).await.map(|replayed| Some(ReprojectionAdvance::Adopted(replayed))),
-                Err(error) => {
-                    self.refuse_local_step(pending);
-                    Err(error)
+            Ok(ReplayStep::Finished(_)) => {
+                let (_, mut replay) = pending.replay.take().expect("a finished deferred replay");
+                match replay.finish() {
+                    Ok(result) => self.adopt_pending(pending, Some(result)).await.map(|replayed| Some(ReprojectionAdvance::Adopted(replayed))),
+                    Err(error) => {
+                        let _ = self.retire_raw_replay(replay);
+                        self.refuse_local_step(pending);
+                        Err(error)
+                    }
                 }
-            },
+            }
             Err(error) => {
                 self.refuse_local_step(pending);
                 Err(error)
@@ -23730,7 +24051,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// ⛔️ Drops a refused waiting change: its local step is refused with nothing of it recorded, and its remote transitions
     /// wait again (their replay restarts) — or, refused themselves, are dropped.
     fn refuse_local_step(&mut self, mut pending: PendingReprojection<P, Mutation>) {
-        drop(pending.replay.take());
+        let _ = self.retire_pending_replay(pending.replay.take());
         if pending.local.take().is_some() && !pending.transitions.is_empty() {
             self.pending_reprojection = Some(pending);
         }
@@ -23743,20 +24064,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// wait again. Atomic: a refused adoption keeps the log and the head.
     async fn adopt_pending(&mut self, pending: PendingReprojection<P, Mutation>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
         let PendingReprojection { transitions, local, replay } = pending;
-        drop(replay);
+        self.retire_pending_replay(replay)?;
         let Some(local) = local else {
             return self.adopt_remote_transitions(transitions, replayed).await;
         };
         let report = match replayed.as_ref().filter(|_| local.finalizing).map(|result| self.replay_report(result)).transpose() {
             Ok(report) => report,
             Err(error) => {
-                drop(replayed);
+                if let Some(replayed) = replayed {
+                    let _ = self.retire_replay_result(replayed);
+                }
                 self.refuse_local_step(PendingReprojection { transitions, local: Some(local), replay: None });
                 return Err(error);
             }
         };
         if let Some(report) = report.as_ref().filter(|report| report.blocks_finalize()) {
-            drop(replayed);
+            if let Some(replayed) = replayed {
+                let _ = self.retire_replay_result(replayed);
+            }
             let messages = report.outcomes.iter().flat_map(|outcome| outcome.messages.iter().cloned()).collect();
             self.refuse_local_step(PendingReprojection { transitions, local: Some(local), replay: None });
             return Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages });
@@ -23828,6 +24153,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     where
         P: Sync,
     {
+        let mut slot = Some(finished);
+        let outcome = self.commit_slotted_replay(&mut slot, finalization, identity).await;
+        if let Some(unused) = slot {
+            let _ = self.retire_replay_result(unused);
+        }
+        outcome
+    }
+
+    /// 🔚️ [`Self::commit_finished_replay`] over a slot that keeps the replay with the caller until the supersession takes it.
+    async fn commit_slotted_replay(&mut self, slot: &mut Option<EditReplayResult<P, Mutation>>, finalization: HistoryFinalization, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
+    where
+        P: Sync,
+    {
         self.ensure_durable_group_idle()?;
         if let Some(open) = self.envelope.open_transaction.as_ref() {
             return Err(VcsError::TransactionOpen { transaction_id: open.transaction.id.clone() });
@@ -23835,13 +24173,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         if self.local_step_pending() {
             return Err(VcsError::HistoryReplaying);
         }
+        let finished = slot.as_ref().expect("a committing replay stays in its slot until its supersession takes it");
         if finished.revision != self.content_revision {
             return Err(VcsError::Stale { expected_generation: finished.generation, generation: self.generation });
         }
         if finished.drafts.is_empty() {
             return Err(VcsError::ValidationFailed("a finished replay without drafts supersedes nothing".into()));
         }
-        let report = self.replay_report(&finished)?;
+        let report = self.replay_report(finished)?;
         if report.blocks_finalize() {
             return Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages: report.outcomes.into_iter().flat_map(|outcome| outcome.messages).collect() });
         }
@@ -23853,7 +24192,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             HistoryFinalization::Alternative { name } => SupersedeScope::NewAlternative(name),
         };
         self.replace_pending_report_retained(PendingCommandReport::default())?;
-        self.author_supersession(scope, inputs, target, Some(finished), identity).await?;
+        self.author_supersession(scope, inputs, target, slot.take(), identity).await?;
         self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
         self.flush_outbound().await?;
         Ok(CommandReceipt { edit_ids: Vec::new(), generation: self.generation(), messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
@@ -23866,6 +24205,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// check-in strictness) with `Rejected { policy: Normal }` and every replay message, and installs everything atomically
     /// without replaying again.
     async fn author_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: Option<EditReplayResult<P, Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+        let mut slot = replayed;
+        let outcome = self.author_slotted_supersession(scope, inputs, target, &mut slot, identity).await;
+        if let Some(unused) = slot {
+            let _ = self.retire_replay_result(unused);
+        }
+        outcome
+    }
+
+    /// ✍️ [`Self::author_supersession`] over a slot that keeps `replayed` with the caller until the resulting log takes it.
+    async fn author_slotted_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: &mut Option<EditReplayResult<P, Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         let mut clock = self.clock;
         let mut envelopes = Vec::with_capacity(3);
         let saved_line = self.envelope.active_alternative_id.clone();
@@ -23905,16 +24254,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 return Err(error);
             }
         };
-        let result = match replayed {
+        let result = match replayed.take() {
             Some(result) if result.order == fold.applied && same_effective_inputs(&result.supersessions, &fold.supersessions) => result,
             other if self.local_replay_budget.is_some() => {
-                drop((other, fold));
+                *replayed = other;
+                drop(fold);
                 let head = self.viewer_head_now();
                 restore_head(self);
                 return self.defer_local_step(PendingLocalStep { envelopes, head, finalizing: true }, clock).await.map(|_| ());
             }
             other => {
-                drop(other);
+                *replayed = other;
                 match self.dry_run(&fold) {
                     Ok(result) => result,
                     Err(error) => {
@@ -23927,13 +24277,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let report = match self.replay_report(&result) {
             Ok(report) => report,
             Err(error) => {
-                drop(result);
+                let _ = self.retire_replay_result(result);
                 restore_head(self);
                 return Err(error);
             }
         };
         if report.blocks_finalize() {
-            drop(result);
+            let _ = self.retire_replay_result(result);
             restore_head(self);
             return Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages: report.outcomes.iter().flat_map(|outcome| outcome.messages.iter().cloned()).collect() });
         }
@@ -23990,9 +24340,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// [`Self::defer_local_replays`] [`Self::author_supersession`] steps the same replay across turns instead.
     fn dry_run(&self, fold: &crate::os_spr::HistoryFold) -> Result<EditReplayResult<P, Mutation>, VcsError> {
         let (from, horizon) = self.replay_window(&fold.applied, &fold.supersessions)?;
-        let mut replay = self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon, Self::prefix_stride(fold.applied.len()))?;
-        while matches!(replay.step(&self.envelope.vcs.edits, &mut || false)?, ReplayStep::Pending(_)) {}
-        replay.finish()
+        self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon, Self::prefix_stride(fold.applied.len()))?.run(&self.envelope.vcs.edits)
     }
 
     /// 🛃️ Validates and encodes supersede inputs: every target is an applied operation and every input obeys the supersede
@@ -24956,7 +25304,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         let replay = Self::replay_suffix_partitioned(base, &order, k, &edits_by_id, &self.envelope.schema, &self.supersessions, self.merge_policy);
         let (state, committed_ids, quarantined_ids, rebased_inverse, replayed) = match replay {
-            Ok(mut replay) => (replay.take_state().expect("a finished merge replay holds its projection"), replay.take_committed(), replay.take_quarantined(), replay.take_rebased_undo_rows(), replay.take_replayed()),
+            Ok(mut replay) => {
+                let taken = (replay.take_state().expect("a finished merge replay holds its projection"), replay.take_committed(), replay.take_quarantined(), replay.take_rebased_undo_rows(), replay.take_replayed());
+                let _ = self.retire_replay_result(replay);
+                taken
+            }
             Err(error) => {
                 retire_scratch_edits::<P, Mutation>(batch);
                 retire_scratch_edits::<P, Mutation>(edits_by_id.into_values());
@@ -25223,7 +25575,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let replay = Self::replay_suffix_partitioned(self.envelope.vcs.genesis.facts().share_snapshot(), &fold.applied, 0, &edits_by_id, &self.envelope.schema, &fold.supersessions, crate::os_spr::MergePolicy::LaissezFaire);
         retire_scratch_edits::<P, Mutation>(edits_by_id.into_values());
         let (state, quarantined_ids, mut rebased_inverse, replayed) = match replay {
-            Ok(mut replay) => (replay.take_state(), replay.take_quarantined(), replay.take_rebased_undo_rows().into_iter().collect::<HashMap<String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>>>(), replay.take_replayed()),
+            Ok(mut replay) => {
+                let taken = (replay.take_state(), replay.take_quarantined(), replay.take_rebased_undo_rows().into_iter().collect::<HashMap<String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>>>(), replay.take_replayed());
+                let _ = self.retire_replay_result(replay);
+                taken
+            }
             Err(error) => {
                 retire_scratch_edits::<P, Mutation>(admitted);
                 return Err(error);
@@ -25487,7 +25843,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// the fold of the log.
     #[cfg(test)]
     fn assert_mirrors_are_live(&self) {
-        if self.applied_edit_ids.len() > MIRROR_ORACLE_HISTORY {
+        let length = self.applied_edit_ids.len();
+        if length > MIRROR_ORACLE_HISTORY || (length > MIRROR_ORACLE_EVERY_HISTORY && length % MIRROR_ORACLE_STRIDE != 0) {
             return;
         }
         let cursor = self.envelope.cursor.as_ref().expect("a bumped store holds its cursor");
@@ -26598,6 +26955,21 @@ impl<P, Mutation: self::Mutation<P> + OpBinary> EditReplay<P, Mutation> {
         if self.retiring { return Err(VcsError::HistoryReplaying); }
         self.original.step_operations(edits, maximum_operations, deadline)
     }
+    /// 🏃️ Steps the replay to its result without a deadline; a refusal retires the raw replay unscheduled before it surfaces.
+    pub fn run(mut self, edits: &impl ReplayEdits<Mutation>) -> Result<EditReplayResult<P, Mutation>, VcsError> where P: 'static, Mutation: 'static {
+        let outcome = loop {
+            match self.step(edits, &mut || false) {
+                Ok(ReplayStep::Pending(_)) => {}
+                Ok(ReplayStep::Finished(_)) => break self.finish(),
+                Err(error) => break Err(error),
+            }
+        };
+        if outcome.is_err() {
+            let _ = self.retire_unscheduled();
+        }
+        outcome
+    }
+
     /// 🏁️ The finished replay's result; refused while operations remain.
     pub fn finish(&mut self) -> Result<EditReplayResult<P, Mutation>, VcsError> {
         if !self.finished || self.retiring {
@@ -28112,7 +28484,7 @@ where
         }
         let source = ArtifactStoreBatchSourceOf::new(Arc::clone(factory), vec![request.wire], None);
         let publication = self.begin_apply_batch_owned(request.operation, request.expected_generation, request.expected_revision, request.actor, HistoryLane::Document, request.group_id, source, false, None)?;
-        Ok(Box::new(MemberStoreOneItemPublication { member: Some(self.snapshot_read_leases.clone()), publication, group_history: None, group_displaced: None }))
+        Ok(Box::new(MemberStoreOneItemPublication { member: Some(SnapshotReadRegistryAliasRetirement::new(self.snapshot_read_leases.clone())), publication, group_history: None, group_displaced: None }))
     }
 
     fn owned_publication_birth_bytes(&self, request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> {
@@ -28143,7 +28515,7 @@ where
         let inputs = request.mutations.take_mutations::<Mutation>().ok_or_else(|| "member batch source is already transferred or closing".to_string())?;
         let source = ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority { preparation: Arc::clone(factory), retirement: Arc::clone(self.mutation_retirement_factory.as_ref().expect("admitted original mutation retirement authority")) }, inputs, Some(issuer));
         match self.begin_apply_batch_owned(request.operation, request.expected_generation, request.expected_revision, request.actor.clone(), HistoryLane::Document, request.group_id.clone(), source, false, request.transaction.clone()) {
-            Ok(publication) => Ok(Some(Box::new(MemberStoreOneItemPublication { member: Some(self.snapshot_read_leases.clone()), publication, group_history: None, group_displaced: None }))),
+            Ok(publication) => Ok(Some(Box::new(MemberStoreOneItemPublication { member: Some(SnapshotReadRegistryAliasRetirement::new(self.snapshot_read_leases.clone())), publication, group_history: None, group_displaced: None }))),
             Err(rejected) => {
                 let (reason, inputs) = rejected.into_owners();
                 request.mutations.restore_mutations(inputs);
@@ -29415,8 +29787,7 @@ impl ArtifactPack for SpaceHistorySnapshot {
 /// `edit history insertion requires its exact mutation retirement factory` and the meta store could
 /// never reach `ArtifactStore::drop`'s terminal-empty witness either.
 pub fn space_history_store_owners() -> Result<DocumentStoreOwners<SpaceHistorySnapshot, SpaceHistoryMutation>, ValueError> {
-    let demand = bounded_artifact_store_owners_birth_demand::<SpaceHistorySnapshot, SpaceHistoryMutation>()?;
-    complete_unscheduled_catalog(bounded_artifact_store_owners::<SpaceHistorySnapshot, SpaceHistoryMutation>(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth.max(1), ..Default::default() }))
+    funded_canonical_authoring_store_owners::<SpaceHistorySnapshot, SpaceHistoryMutation>()
 }
 
 /// 🏛️ Composes many `SpaceMember` documents under one space-wide checkpoint/alternative
@@ -30619,7 +30990,7 @@ pub mod test_support {
     pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
     where
         P: Clone + ToValue + FromValue + ArtifactPack + PartialEq + std::fmt::Debug + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
         let mut store = plain_test_store(envelope).await;
@@ -30921,18 +31292,62 @@ pub mod test_support {
     pub fn plain_document_store_owners<P, Mutation>() -> DocumentStoreOwners<P, Mutation>
     where
         P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
     {
-        let birth = DocumentStoreOwners::<P, Mutation>::source_birth_bytes::<RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer<P, Mutation>>().expect("plain test catalog source layout");
+        let preparation = RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<PlainAuthoringFactory<P, Mutation>>(), depth: 1 };
+        let birth = DocumentStoreOwners::<P, Mutation>::source_birth_bytes::<RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer<P, Mutation>>().expect("plain test catalog source layout") + preparation.capacity_bytes;
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth, maximum_depth: 1, ..Default::default() };
-        complete_unscheduled_catalog(DocumentStoreOwners::admit_source_constructor(grant, || (RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer::<P, Mutation>::new()))).expect("plain test catalog completes its funded constructor tickets")
+        complete_unscheduled_catalog(DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer::<P, Mutation>::new(), Arc::new(PlainAuthoringFactory::<P, Mutation>(std::marker::PhantomData)) as Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>))).expect("plain test catalog completes its funded constructor tickets")
+    }
+
+    /// 🧾️ A plain test mutation viewed as its `OpBinary` image, one scalar leaf. The image is re-encoded per bounded copy turn
+    /// and copied out by offset, so the wire owns no storage and nothing outlives the borrow of the original mutation.
+    #[repr(transparent)]
+    struct PlainOperationImage<M>(M);
+
+    impl<M: OpBinary + Sync> ArtifactOperationText for PlainOperationImage<M> {
+        fn operation_text_node(&self, path: &[usize]) -> Result<ArtifactOperationTextNode<'_>, String> {
+            if path.is_empty() { Ok(ArtifactOperationTextNode::Scalar) } else { Err("plain operation image has no children".into()) }
+        }
+
+        fn operation_text_scalar(&self, path: &[usize], offset: usize, output: &mut [u8]) -> Result<(usize, bool), String> {
+            if !path.is_empty() { return Err("plain operation image has no children".into()); }
+            let image = self.0.encode_op().map_err(|error| error.to_string())?;
+            let count = output.len().min(image.len().saturating_sub(offset));
+            output[..count].copy_from_slice(&image[offset..offset + count]);
+            Ok((count, offset + count >= image.len()))
+        }
+    }
+
+    /// 🏭️ Authoring-only semantic authority of a plain test catalog: it names each mutation's `OpBinary` image as its
+    /// wire, borrowed from the original mutation, and prepares no retained gesture.
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
+    struct PlainAuthoringFactory<P: 'static, M: 'static>(std::marker::PhantomData<fn() -> (P, M)>);
+
+    impl<P: Send + Sync + 'static, M: OpBinary + Sync + 'static> ArtifactStoreOneItemPreparationFactory<P, M> for PlainAuthoringFactory<P, M> {
+        fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> {
+            let body: &'a PlainOperationImage<M> = unsafe { &*(mutation as *const M).cast::<PlainOperationImage<M>>() };
+            Some(ArtifactPreparedOperationSource::Text { header: b"plain", body })
+        }
+
+        fn preflight(&self, _mutation: &M, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+            Err("plain test catalog prepares no retained gesture".into())
+        }
+
+        fn begin_demand(&self, _mutation: &M, _lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> {
+            Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plain test catalog prepares no retained gesture"))
+        }
+
+        fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, M>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, M>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, M>)> {
+            Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plain test catalog prepares no retained gesture"), request))
+        }
     }
 
     /// 🧪️ A store over `envelope` carrying [`plain_document_store_owners`].
     pub async fn plain_test_store<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>) -> ArtifactStore<P, Mutation>
     where
         P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
     {
         let mut store = ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid");
         install_unscheduled_catalog(&mut store, Ok(plain_document_store_owners())).expect("test store installs its funded plain catalog");
@@ -31117,7 +31532,7 @@ pub mod test_support {
     /// 🪆 Subset-facing surface the integrated harness needs. Implement on a thin adapter per subset.
     pub trait SubsetRoundtripSpec {
         type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + ToValue + FromValue;
-        type Mutation: Clone + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary;
+        type Mutation: Clone + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Sync;
         type Inference: Clone + PartialEq + std::fmt::Debug + Default;
         async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect;
         async fn fidelity() -> IoFidelityClass;
@@ -31365,3 +31780,4 @@ mod schema_composition_tests;
 #[cfg(test)]
 #[path = "📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_space_history_baseline;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    

@@ -4,8 +4,7 @@
     "artifactId": "flow-member",
     "artifactKind": "s.stdio.semio",
     "standard": "v1",
-    "subset": "flow",
-    "identityBytes": 30
+    "subset": "flow"
   },
   "admission": [
     {
@@ -46,11 +45,9 @@
     "labelRepeats": 1024,
     "wireBytes": 4249,
     "inputBytes": 4252,
-    "inputPages": 2,
-    "snapshotRetiredBytes": 4190,
-    "totalRetiredBytes": 8472
+    "inputPages": 2
   },
-  "retirementGrants": [
+  "retirementItemGrants": [
     [
       1
     ],

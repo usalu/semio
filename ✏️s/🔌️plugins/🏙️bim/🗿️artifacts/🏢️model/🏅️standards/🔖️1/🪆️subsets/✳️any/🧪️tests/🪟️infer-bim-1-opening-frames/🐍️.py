@@ -176,7 +176,7 @@ def host_extent(snapshot, levels, host_id):
         face_left = left_face_distance(record["location"], layers, thickness)
     elif host_id in snapshot.get("curtain_walls", {}):
         record = snapshot["curtain_walls"][host_id]
-        thickness = mullion_depth(record["mullion"])
+        thickness = mullion_depth(snapshot["curtain_wall_types"][record["curtain_wall_type"]]["interior_mullion"])
         face_left = thickness / 2.0
     else:
         return None

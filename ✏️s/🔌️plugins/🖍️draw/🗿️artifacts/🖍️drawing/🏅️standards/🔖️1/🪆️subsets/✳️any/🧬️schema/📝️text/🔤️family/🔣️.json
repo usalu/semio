@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/drawing/text/font-family.json",
+  "title": "DrawingFontFamily",
+  "enum": ["anta", "kellySlab", "shareTechMono", "notoEmoji"],
+  "x-semio-state": "artifact"
+}

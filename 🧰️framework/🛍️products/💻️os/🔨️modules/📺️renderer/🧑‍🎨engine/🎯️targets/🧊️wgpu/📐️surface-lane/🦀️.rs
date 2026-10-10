@@ -267,7 +267,7 @@ impl MountedSurfaceResizeLane {
             operation,
             generation: Generation(request.metrics_generation),
             cancel,
-            config: BatchDriveConfig { site: "os_renderer_surface_resize", stage: InteractiveStage::InteractiveStep, fuel_per_step: SURFACE_RESIZE_STEP_FUEL, step_budget_us: SURFACE_RESIZE_STEP_BUDGET_US },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "os_renderer_surface_resize", stage: InteractiveStage::InteractiveStep, fuel_per_step: SURFACE_RESIZE_STEP_FUEL, step_budget_us: SURFACE_RESIZE_STEP_BUDGET_US },
             now_us: semio_framework_job::default_now_us,
         };
         self.session = Some(match MountedWorkerJobSession::try_new(SurfaceResizeJob::new(request), params) {

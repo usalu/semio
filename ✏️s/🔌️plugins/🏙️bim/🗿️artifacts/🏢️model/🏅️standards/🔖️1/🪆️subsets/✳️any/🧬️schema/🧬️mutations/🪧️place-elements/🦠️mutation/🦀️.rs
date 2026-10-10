@@ -5,7 +5,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 use super::super::elements::Placement;
 use std::collections::BTreeMap;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct PlaceElements {
     pub placements: BTreeMap<String, Placement>,

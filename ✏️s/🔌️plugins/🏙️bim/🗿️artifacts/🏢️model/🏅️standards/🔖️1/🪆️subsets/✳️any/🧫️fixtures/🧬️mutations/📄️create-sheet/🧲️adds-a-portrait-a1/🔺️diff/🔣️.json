@@ -1,1 +1,21 @@
-{}
+{
+  "sheets": {
+    "sh-2": {
+      "checked_by": "",
+      "date": "",
+      "drawn_by": "",
+      "entry": "Created",
+      "name": "Elevations",
+      "number": "A-102",
+      "orientation": "Portrait",
+      "paper": {
+        "Iso": {
+          "size": "A1"
+        }
+      },
+      "project": "",
+      "revision": "",
+      "scale_label": ""
+    }
+  }
+}

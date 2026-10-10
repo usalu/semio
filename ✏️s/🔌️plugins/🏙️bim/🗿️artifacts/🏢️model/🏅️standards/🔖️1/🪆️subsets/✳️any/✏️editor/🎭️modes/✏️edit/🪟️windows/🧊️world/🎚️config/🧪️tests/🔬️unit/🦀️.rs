@@ -11,6 +11,8 @@ fn pinned() -> BimWorldWindowConfig {
         section_axis: "x".into(),
         section_offset: 2.5,
         framed: true,
+        energy_overlay: true,
+        energy_mode: "boundary".into(),
         ..BimWorldWindowConfig::default()
     }
 }

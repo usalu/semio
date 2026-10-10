@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "r-1": {
+      "entry": "Created",
+      "kind": "MinDoorWidth",
+      "limit": 0.9,
+      "name": "Minimum door width",
+      "scope": {
+        "filter": "",
+        "ids": [],
+        "phases": [],
+        "storeys": [
+          "st-ground"
+        ]
+      },
+      "severity": "Warning"
+    }
+  }
+}

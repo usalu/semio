@@ -62,7 +62,7 @@ fn session(probe: Probe) -> BatchJobSession<Probe> {
         operation: operation.operation,
         generation: operation.generation,
         cancel: root_cancel_token(),
-        config: BatchDriveConfig { site: "wfc.publication.fixture", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 4_000 },
+        config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "wfc.publication.fixture", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 4_000 },
         now_us: || Some(0),
     };
     match BatchJobSession::try_new(probe, params) {

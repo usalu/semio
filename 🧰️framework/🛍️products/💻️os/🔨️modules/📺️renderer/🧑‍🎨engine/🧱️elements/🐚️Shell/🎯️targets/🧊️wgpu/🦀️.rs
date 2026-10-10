@@ -7776,8 +7776,8 @@ impl ShellState {
                 focused_window_id: Some(s_app.window_kinds.first().id.clone()),
                 window_instances: Vec::new(),
                 active_tool_id: None,
-                active_utility_by_window_id: HashMap::new(),
-                tool_run_trace_cursor_by_window_id: HashMap::new(),
+                active_utility_by_window_id: Default::default(),
+                tool_run_trace_cursor_by_window_id: Default::default(),
                 tree_windows: Vec::new(),
                 tree_viewport_rows: None,
             };
@@ -7822,8 +7822,8 @@ impl ShellState {
                     focused_window_id: self.active_window_id.clone(),
                     window_instances: Vec::new(),
                     active_tool_id: None,
-                    active_utility_by_window_id: HashMap::new(),
-                    tool_run_trace_cursor_by_window_id: HashMap::new(),
+                    active_utility_by_window_id: Default::default(),
+                    tool_run_trace_cursor_by_window_id: Default::default(),
                     tree_windows: Vec::new(),
                     tree_viewport_rows: None,
                 },
@@ -8665,8 +8665,8 @@ impl ShellState {
                                 focused_window_id: Some(spawned.id.clone()),
                                 window_instances: vec![semio_framework::ViewWindowInstance { id: spawned.id.clone(), window_kind_id: app.window_kinds.first().id.clone() }],
                                 active_tool_id: None,
-                                active_utility_by_window_id: HashMap::new(),
-                                tool_run_trace_cursor_by_window_id: HashMap::new(),
+                                active_utility_by_window_id: Default::default(),
+                                tool_run_trace_cursor_by_window_id: Default::default(),
                                 tree_windows: Vec::new(),
                                 tree_viewport_rows: None,
                             };
@@ -14538,8 +14538,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             focused_window_id: Some(app.window_kinds.first().id.clone()),
             window_instances: Vec::new(),
             active_tool_id: None,
-            active_utility_by_window_id: HashMap::new(),
-            tool_run_trace_cursor_by_window_id: HashMap::new(),
+            active_utility_by_window_id: Default::default(),
+            tool_run_trace_cursor_by_window_id: Default::default(),
             tree_windows: Vec::new(),
             tree_viewport_rows: None,
         };
@@ -14602,8 +14602,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             focused_window_id: Some(landing_window_id.clone()),
             window_instances: Vec::new(),
             active_tool_id: None,
-            active_utility_by_window_id: HashMap::new(),
-            tool_run_trace_cursor_by_window_id: HashMap::new(),
+            active_utility_by_window_id: Default::default(),
+            tool_run_trace_cursor_by_window_id: Default::default(),
             tree_windows: Vec::new(),
             tree_viewport_rows: None,
         };
@@ -14964,8 +14964,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             focused_window_id: Some(app.window_kinds.first().id.clone()),
             window_instances: Vec::new(),
             active_tool_id: None,
-            active_utility_by_window_id: HashMap::new(),
-            tool_run_trace_cursor_by_window_id: HashMap::new(),
+            active_utility_by_window_id: Default::default(),
+            tool_run_trace_cursor_by_window_id: Default::default(),
             tree_windows: Vec::new(),
             tree_viewport_rows: None,
         };
@@ -26052,7 +26052,7 @@ fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework::Tutorial
     semio_framework::TutorialUiSnapshot {
         active_mode_id: state.session.as_ref().and_then(|s| s.view_state.active_mode_id.clone()),
         focused_window_id: state.active_window_id.clone(),
-        active_utility_by_window_id: state.active_utility_by_window.clone(),
+        active_utility_by_window_id: state.active_utility_by_window.iter().map(|(key,value)|(key.clone(),value.clone())).collect(),
         active_tool_id: state.session.as_ref().and_then(|s| s.view_state.active_tool_id.clone()),
         layout: Some(state.dock.to_window_layout()),
         active_panel_tab_by_group,
@@ -27420,7 +27420,7 @@ impl ShellState {
             &mut self.world3d_retirement_sequence,
         );
 
-        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,&mut context);
         if !terrain.ownership.fits(terrain_grant) {self.world3d_retirement_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));return true;}
         match terrain.step {
@@ -27436,7 +27436,7 @@ impl ShellState {
         !self.retired_world3d_states.is_empty()
     }
 
-    pub(crate) fn close_component_world_step(&mut self, target: &crate::interpreter::ScenePointerTarget, grant: semio_framework_value::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
+    pub(crate) fn close_component_world_step(&mut self, target: &crate::interpreter::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueRefusalKind};
         use infinite_world::world::{WorldDynamicFault,WorldTerrainMeshPublicationStep};
         if !matches!(target.kind, ui_wgpu::wgpu::SurfaceKind::World3d | ui_wgpu::wgpu::SurfaceKind::IconRender) {

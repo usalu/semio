@@ -1,1 +1,24 @@
-{}
+{
+  "views": {
+    "v-section": {
+      "building": "bldg-1",
+      "depth": 100.0,
+      "detail": "Medium",
+      "entry": "Created",
+      "hidden": [],
+      "kind": "Section",
+      "name": "Section A",
+      "plane": {
+        "end": {
+          "x": 8.0,
+          "y": 3.0
+        },
+        "start": {
+          "x": 0.0,
+          "y": 3.0
+        }
+      },
+      "scale": 100
+    }
+  }
+}

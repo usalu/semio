@@ -1,0 +1,705 @@
+{
+  "snapshot": {
+    "schema": "s.bim.model@1",
+    "project": {
+      "name": "Frame",
+      "description": "",
+      "author": "",
+      "organization": "",
+      "phase_names": []
+    },
+    "materials": {
+      "m-concrete": {
+        "name": "Concrete",
+        "category": "Concrete",
+        "color": {
+          "r": 0.6,
+          "g": 0.6,
+          "b": 0.6
+        },
+        "density": 2400,
+        "conductivity": 1,
+        "specific_heat": 900
+      },
+      "m-steel": {
+        "name": "Steel",
+        "category": "Metal",
+        "color": {
+          "r": 0.6,
+          "g": 0.62,
+          "b": 0.65
+        },
+        "density": 7850,
+        "conductivity": 1,
+        "specific_heat": 900
+      },
+      "m-wood": {
+        "name": "Oak",
+        "category": "Wood",
+        "color": {
+          "r": 0.55,
+          "g": 0.4,
+          "b": 0.2
+        },
+        "density": 700,
+        "conductivity": 1,
+        "specific_heat": 900
+      },
+      "m-clay": {
+        "name": "Clay Tile",
+        "category": "Masonry",
+        "color": {
+          "r": 0.7,
+          "g": 0.3,
+          "b": 0.2
+        },
+        "density": 1900,
+        "conductivity": 1,
+        "specific_heat": 900
+      }
+    },
+    "sites": {
+      "site-1": {
+        "name": "Plot",
+        "latitude": 47,
+        "longitude": 8,
+        "elevation": 100,
+        "true_north": 0,
+        "boundary": []
+      }
+    },
+    "buildings": {
+      "bldg-1": {
+        "site": "site-1",
+        "name": "Frame",
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "rotation": 0,
+        "elevation": 2.5
+      }
+    },
+    "storeys": {
+      "st-ground": {
+        "building": "bldg-1",
+        "name": "Ground",
+        "level": 0,
+        "height": 3
+      },
+      "st-first": {
+        "building": "bldg-1",
+        "name": "First",
+        "level": 1,
+        "height": 2.8
+      }
+    },
+    "column_types": {
+      "ct-rect": {
+        "name": "Rect 400x300",
+        "profile": {
+          "Rectangle": {
+            "width": 0.4,
+            "depth": 0.3
+          }
+        },
+        "material": "m-concrete"
+      },
+      "ct-circle": {
+        "name": "Round 500",
+        "profile": {
+          "Circle": {
+            "diameter": 0.5
+          }
+        },
+        "material": "m-concrete"
+      },
+      "ct-i": {
+        "name": "I 200x300",
+        "profile": {
+          "IShape": {
+            "width": 0.2,
+            "depth": 0.3,
+            "web": 0.01,
+            "flange": 0.015
+          }
+        },
+        "material": "m-steel"
+      },
+      "ct-custom": {
+        "name": "L angle",
+        "profile": {
+          "Custom": {
+            "outline": [
+              {
+                "point": {
+                  "x": 0,
+                  "y": 0
+                },
+                "bulge": 0
+              },
+              {
+                "point": {
+                  "x": 0.4,
+                  "y": 0
+                },
+                "bulge": 0
+              },
+              {
+                "point": {
+                  "x": 0.4,
+                  "y": 0.1
+                },
+                "bulge": 0
+              },
+              {
+                "point": {
+                  "x": 0.1,
+                  "y": 0.1
+                },
+                "bulge": 0
+              },
+              {
+                "point": {
+                  "x": 0.1,
+                  "y": 0.4
+                },
+                "bulge": 0
+              },
+              {
+                "point": {
+                  "x": 0,
+                  "y": 0.4
+                },
+                "bulge": 0
+              }
+            ]
+          }
+        },
+        "material": "m-steel"
+      },
+      "ct-bad": {
+        "name": "Zero",
+        "profile": {
+          "Rectangle": {
+            "width": 0,
+            "depth": 0.3
+          }
+        },
+        "material": "m-concrete"
+      },
+      "ct-square": {
+        "name": "Square 400",
+        "profile": {
+          "Rectangle": {
+            "width": 0.4,
+            "depth": 0.4
+          }
+        },
+        "material": "m-concrete"
+      }
+    },
+    "beam_types": {
+      "bt-rect": {
+        "name": "Rect 200x400",
+        "profile": {
+          "Rectangle": {
+            "width": 0.2,
+            "depth": 0.4
+          }
+        },
+        "material": "m-concrete"
+      },
+      "bt-i": {
+        "name": "I 150x300",
+        "profile": {
+          "IShape": {
+            "width": 0.15,
+            "depth": 0.3,
+            "web": 0.008,
+            "flange": 0.012
+          }
+        },
+        "material": "m-steel"
+      },
+      "bt-circle": {
+        "name": "Pipe 100",
+        "profile": {
+          "Circle": {
+            "diameter": 0.1
+          }
+        },
+        "material": "m-steel"
+      }
+    },
+    "columns": {
+      "c-plumb": {
+        "storey": "st-ground",
+        "column_type": "ct-rect",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "rotation": 0.5,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Plumb"
+      },
+      "c-lean": {
+        "storey": "st-ground",
+        "column_type": "ct-rect",
+        "position": {
+          "x": 4,
+          "y": 0
+        },
+        "rotation": 0.3,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Leaning rectangle",
+        "tilt": {
+          "direction": 0.7,
+          "angle": 0.25
+        }
+      },
+      "c-lean-i": {
+        "storey": "st-first",
+        "column_type": "ct-i",
+        "position": {
+          "x": 8,
+          "y": 0
+        },
+        "rotation": 0,
+        "base_offset": 0.2,
+        "top": {
+          "Unconnected": {
+            "height": 2
+          }
+        },
+        "phase": "New",
+        "name": "Leaning I",
+        "tilt": {
+          "direction": -2,
+          "angle": 0.5
+        }
+      },
+      "c-w": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 0,
+          "y": 6
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "West"
+      },
+      "c-e": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 6,
+          "y": 6
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "East"
+      },
+      "c-lean-end": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 12,
+          "y": 6
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Leaning away",
+        "tilt": {
+          "direction": 0,
+          "angle": 0.2
+        }
+      },
+      "c-ia": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 0,
+          "y": 14
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Incline west"
+      },
+      "c-ib": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 6,
+          "y": 14
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Incline east"
+      }
+    },
+    "beams": {
+      "b-joined": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 6
+            },
+            "end": {
+              "x": 6,
+              "y": 6
+            }
+          }
+        },
+        "top_offset": -0.1,
+        "phase": "New",
+        "name": "Joined at both ends"
+      },
+      "b-joined-lean": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 6,
+              "y": 6
+            },
+            "end": {
+              "x": 12,
+              "y": 6
+            }
+          }
+        },
+        "top_offset": -0.1,
+        "phase": "New",
+        "name": "Joined at the start, the end column leans away"
+      },
+      "b-incline": {
+        "storey": "st-ground",
+        "beam_type": "bt-i",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 10
+            },
+            "end": {
+              "x": 6,
+              "y": 10
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Inclined",
+        "end_top_offset": -0.8
+      },
+      "b-incline-joined": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 14
+            },
+            "end": {
+              "x": 6,
+              "y": 14
+            }
+          }
+        },
+        "top_offset": -0.1,
+        "phase": "New",
+        "name": "Inclined and joined",
+        "end_top_offset": -0.7
+      }
+    }
+  },
+  "expected": {
+    "c-plumb": {
+      "family": "Column",
+      "volume": 0.36,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.247430343169,
+        -0.227522492004,
+        0.0
+      ],
+      "max": [
+        0.247430343169,
+        0.227522492004,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "c-lean": {
+      "family": "Column",
+      "volume": 0.371550608634,
+      "volume_tolerance": 1e-09,
+      "min": [
+        3.761517555261,
+        -0.207419509325,
+        0.0
+      ],
+      "max": [
+        4.824371265336,
+        0.700906855157,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "c-lean-i": {
+      "family": "Column",
+      "volume": 0.019827194335,
+      "volume_tolerance": 1e-09,
+      "min": [
+        7.434982462107,
+        -1.166081857411,
+        3.2
+      ],
+      "max": [
+        8.110333432,
+        0.172578960844,
+        5.2
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 2.0,
+      "base_z": 3.2,
+      "top_z": 5.2
+    },
+    "c-w": {
+      "family": "Column",
+      "volume": 0.48,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.2,
+        5.8,
+        0.0
+      ],
+      "max": [
+        0.2,
+        6.2,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "c-e": {
+      "family": "Column",
+      "volume": 0.48,
+      "volume_tolerance": 1e-09,
+      "min": [
+        5.8,
+        5.8,
+        0.0
+      ],
+      "max": [
+        6.2,
+        6.2,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "c-lean-end": {
+      "family": "Column",
+      "volume": 0.489762645572,
+      "volume_tolerance": 1e-09,
+      "min": [
+        11.795932231012,
+        5.8,
+        0.0
+      ],
+      "max": [
+        12.812197875514,
+        6.2,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "c-ia": {
+      "family": "Column",
+      "volume": 0.48,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.2,
+        13.8,
+        0.0
+      ],
+      "max": [
+        0.2,
+        14.2,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "c-ib": {
+      "family": "Column",
+      "volume": 0.48,
+      "volume_tolerance": 1e-09,
+      "min": [
+        5.8,
+        13.8,
+        0.0
+      ],
+      "max": [
+        6.2,
+        14.2,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "b-joined": {
+      "family": "Beam",
+      "volume": 0.448,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.2,
+        5.9,
+        2.5
+      ],
+      "max": [
+        5.8,
+        6.1,
+        2.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 2.9
+    },
+    "b-joined-lean": {
+      "family": "Beam",
+      "volume": 0.464,
+      "volume_tolerance": 1e-09,
+      "min": [
+        6.2,
+        5.9,
+        2.5
+      ],
+      "max": [
+        12.0,
+        6.1,
+        2.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 2.9
+    },
+    "b-incline": {
+      "family": "Beam",
+      "volume": 0.035156395392,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.039649116027,
+        9.925,
+        1.902631629795
+      ],
+      "max": [
+        6.0,
+        10.075,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 3.0
+    },
+    "b-incline-joined": {
+      "family": "Beam",
+      "volume": 0.450234427826,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.160198512392,
+        13.9,
+        1.921985123916
+      ],
+      "max": [
+        5.8,
+        14.1,
+        2.88
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 2.9
+    }
+  },
+  "meshes": {}
+}

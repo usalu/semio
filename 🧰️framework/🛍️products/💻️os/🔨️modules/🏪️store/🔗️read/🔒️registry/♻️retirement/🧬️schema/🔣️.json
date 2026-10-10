@@ -1,0 +1,13 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://json.schemas.assets.semio-tech.com/framework/os/store/read/registry/retirement/laws.json",
+  "type":"object","additionalProperties":false,
+  "required":["version","parallelShares","maximumSteps","occupiedSlotValue","cases"],
+  "properties":{
+    "version":{"const":1},
+    "parallelShares":{"const":2},
+    "maximumSteps":{"type":"integer","minimum":4,"maximum":32},
+    "occupiedSlotValue":{"type":"integer","minimum":0,"maximum":4294967295},
+    "cases":{"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["id","otherAliases","closeOthersFirst"],"properties":{"id":{"type":"string","minLength":1},"otherAliases":{"type":"integer","minimum":0,"maximum":8},"closeOthersFirst":{"type":"boolean"}}}}
+  }
+}

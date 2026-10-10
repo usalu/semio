@@ -5,7 +5,7 @@
 use semio_framework_expression::{ErrorKind, ExprError, ParseError};
 
 /// 🏷️ What kind of fault a formula or a solid has.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum FamilyIssueCode {
     Syntax,
     Kind,
@@ -39,7 +39,7 @@ impl FamilyIssueCode {
 }
 
 /// 🧩 What an issue belongs to.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum IssueOwner {
     Parameter,
     Solid,
@@ -48,7 +48,7 @@ pub enum IssueOwner {
 
 /// 🚨️ One fault of a family. `subject` is the parameter name or the solid id (empty for the family); `field` names the formula slot (`value`, `height`, `profile.width`, ...); `path` addresses the node
 /// of the formula; `detail` is the English fallback text; `names` are the parameters or the material the fault is about.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FamilyIssue {
     pub code: FamilyIssueCode,
     pub owner: IssueOwner,

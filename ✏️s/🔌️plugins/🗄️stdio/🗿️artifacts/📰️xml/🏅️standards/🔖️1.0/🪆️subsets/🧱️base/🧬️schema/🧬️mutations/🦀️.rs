@@ -12,7 +12,7 @@ pub use super::set_text::{SetTextMutation, SetTextPayload};
 pub use crate::schema::mutation_support::XmlNodePath;
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = XmlSnapshot, diff = XmlDiff, schema = "s.stdio.xml")]
 pub enum XmlMutation {

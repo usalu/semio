@@ -1,0 +1,7 @@
+{
+  "mutation": "setSpaceConditions",
+  "id": "sp-1",
+  "lighting_power_density": {
+    "value": -5
+  }
+}

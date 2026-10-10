@@ -3,6 +3,10 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
+#[path="🧭️path/🦀️.rs"]
+mod path_codec;
+use path_codec::{enc_semio_path_bin,dec_semio_path_bin};
+
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;

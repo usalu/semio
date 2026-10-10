@@ -8,7 +8,7 @@
 //!
 //! Every tool shows the result as a ghost before the click, a refused result as a warning.
 
-use super::plane::{axis_bulge, axis_ends, dist, flatten, from_point2, point2, project, same, P};
+use super::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, dist, flatten, from_point2, point2, project, same, P};
 use super::session::{length_label, Mark, Pick, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use super::transform::{ghost, outline};
 use crate::editor::bim::modes::edit::windows::plan;
@@ -203,9 +203,8 @@ impl Reshape {
 /// 🔢️ The fraction of a beam at which the pointer stands, rounded to a thousandth; none for an element that is no beam.
 pub fn beam_fraction(ctx: &ToolContext<'_>, id: &str, at: P) -> Option<f64> {
     let beam = ctx.snapshot.beams.get(id)?;
-    let axis = Axis::Line { start: beam.start, end: beam.end };
-    let length = dist(from_point2(beam.start), from_point2(beam.end));
-    (length > 0.0).then(|| (project(&axis, at).offset / length * 1000.0).round() / 1000.0)
+    let length = axis_length(&beam.axis);
+    (length > 0.0).then(|| (project(&beam.axis, at).offset / length * 1000.0).round() / 1000.0)
 }
 
 //#region 🔖️Marks
@@ -278,10 +277,8 @@ fn split_marks(ctx: &ToolContext<'_>, held: Option<&String>, start: Option<P>, p
         return highlighted(ctx, &hit);
     }
     let (Some(beam), Some(t)) = (ctx.snapshot.beams.get(&hit), beam_fraction(ctx, &hit, pointer.at)) else { return Vec::new() };
-    let (start, end) = (from_point2(beam.start), from_point2(beam.end));
-    let length = dist(start, end);
-    let (along, across) = ([(end[0] - start[0]) / length, (end[1] - start[1]) / length], CUT_MARK / 2.0);
-    let centre = [start[0] + (end[0] - start[0]) * t, start[1] + (end[1] - start[1]) * t];
+    let (along, across) = (axis_tangent_at(&beam.axis, axis_length(&beam.axis) * t), CUT_MARK / 2.0);
+    let centre = axis_point_at(&beam.axis, axis_length(&beam.axis) * t);
     let mark = [[centre[0] - along[1] * across, centre[1] + along[0] * across], [centre[0] + along[1] * across, centre[1] - along[0] * across]];
     let probe = ModelMutation::SplitBeam(crate::mutations::split_beam::SplitBeam { id: hit, t, new_id: "probe".into() });
     vec![Mark::path(&mark, false, if ctx.accepts(&probe) { Style::Ghost } else { Style::Warning })]

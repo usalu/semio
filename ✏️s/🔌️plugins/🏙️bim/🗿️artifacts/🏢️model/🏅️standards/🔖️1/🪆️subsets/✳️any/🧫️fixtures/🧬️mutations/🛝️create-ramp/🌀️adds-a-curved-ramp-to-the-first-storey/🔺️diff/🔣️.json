@@ -1,1 +1,41 @@
-{}
+{
+  "ramps": {
+    "rp-3": {
+      "base_offset": 0.1,
+      "entry": "Created",
+      "landing_end": 1.5,
+      "landing_start": 1.5,
+      "landing_turn": 1.5,
+      "material": "m-concrete",
+      "max_slope": 0.0833333333333333,
+      "name": "Curved Ramp",
+      "path": [
+        {
+          "bulge": 0.4142135623730951,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 5.0,
+            "y": 5.0
+          }
+        }
+      ],
+      "railing_left": false,
+      "railing_right": false,
+      "storey": "st-first",
+      "thickness": 0.2,
+      "top": {
+        "Storey": {
+          "offset": 0.5,
+          "storey": "st-first"
+        }
+      },
+      "width": 1.2
+    }
+  }
+}

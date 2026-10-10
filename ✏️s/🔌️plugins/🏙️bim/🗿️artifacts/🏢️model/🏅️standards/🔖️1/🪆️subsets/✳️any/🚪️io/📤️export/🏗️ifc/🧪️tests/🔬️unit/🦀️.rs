@@ -130,7 +130,7 @@ fn a_model_without_any_element_exports_the_project_skeleton_only() {
 fn a_wall_with_a_missing_type_is_skipped_with_a_note_instead_of_failing() {
     let mut model = house();
     model.walls.get_mut("w-free").expect("the free wall").wall_type = "missing".into();
-    let (document, notes) = model_to_part21(&model).expect("the model exports");
+    let (document, notes) = model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("the model exports");
     assert!(notes.iter().any(|note| note.starts_with("wall w-free")), "{notes:?}");
     assert!(!tags(&document, "IFCWALLSTANDARDCASE").contains(&"w-free".to_string()));
 }
@@ -150,8 +150,8 @@ async fn the_serializer_returns_the_file_as_a_binary_payload_with_a_diagnostic_p
 fn the_document_of_the_export_is_the_document_of_the_inference_it_is_built_from() {
     let model = house();
     let inferred = ModelInference::infer(&model).expect("the house infers");
-    let (from_inference, notes) = inferred_to_part21(&model, &inferred);
-    let (from_model, again) = model_to_part21(&model).expect("the house exports");
+    let (from_inference, notes) = inferred_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model, &inferred);
+    let (from_model, again) = model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("the house exports");
     assert_eq!((from_inference, notes), (from_model, again), "the export reads only the inference it is given");
 }
 
@@ -160,14 +160,14 @@ fn every_written_base_quantity_is_a_value_of_the_inferred_take_off() {
     use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityKind};
     let model = house();
     let inferred = ModelInference::infer(&model).expect("the house infers");
-    let (document, _) = inferred_to_part21(&model, &inferred);
+    let (document, _) = inferred_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model, &inferred);
     let sets: [(QuantityKind, &str, fn(&ElementQuantity) -> Vec<(&'static str, f64)>); 10] = [
         (QuantityKind::Wall, "Qto_WallBaseQuantities", |q| vec![("Length", q.length), ("Width", q.width), ("Height", q.height), ("GrossFootprintArea", q.gross_area), ("GrossSideArea", q.gross_side_area), ("NetSideArea", q.net_side_area), ("GrossVolume", q.gross_volume), ("NetVolume", q.net_volume)]),
         (QuantityKind::CurtainWall, "Qto_CurtainWallQuantities", |q| vec![("Length", q.length), ("Height", q.height), ("GrossSideArea", q.gross_side_area)]),
         (QuantityKind::Slab, "Qto_SlabBaseQuantities", |q| vec![("Width", q.width), ("Perimeter", q.perimeter), ("GrossArea", q.gross_area), ("NetArea", q.net_area), ("GrossVolume", q.gross_volume), ("NetVolume", q.net_volume)]),
         (QuantityKind::Roof, "Qto_RoofBaseQuantities", |q| vec![("ProjectedArea", q.gross_area)]),
-        (QuantityKind::Column, "Qto_ColumnBaseQuantities", |q| vec![("Length", q.length), ("CrossSectionArea", q.gross_area), ("GrossVolume", q.gross_volume)]),
-        (QuantityKind::Beam, "Qto_BeamBaseQuantities", |q| vec![("Length", q.length), ("CrossSectionArea", q.gross_area), ("GrossVolume", q.gross_volume)]),
+        (QuantityKind::Column, "Qto_ColumnBaseQuantities", |q| vec![("Length", q.length), ("CrossSectionArea", q.gross_area), ("GrossVolume", q.gross_volume), ("NetVolume", q.net_volume)]),
+        (QuantityKind::Beam, "Qto_BeamBaseQuantities", |q| vec![("Length", q.length), ("CrossSectionArea", q.gross_area), ("GrossVolume", q.gross_volume), ("NetVolume", q.net_volume)]),
         (QuantityKind::Window, "Qto_WindowBaseQuantities", |q| vec![("Height", q.height), ("Width", q.width), ("Area", q.gross_area)]),
         (QuantityKind::Door, "Qto_DoorBaseQuantities", |q| vec![("Height", q.height), ("Width", q.width), ("Area", q.gross_area)]),
         (QuantityKind::Railing, "Qto_RailingBaseQuantities", |q| vec![("Length", q.length), ("Height", q.height)]),
@@ -192,7 +192,7 @@ fn a_wall_net_side_area_discounts_only_the_openings_the_take_off_clips_to_the_wa
     let before = ModelInference::infer(&model).expect("infers");
     model.openings.get_mut(&id).expect("the opening").offset = 1.0e3;
     let after = ModelInference::infer(&model).expect("infers");
-    let (document, _) = inferred_to_part21(&model, &after);
+    let (document, _) = inferred_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model, &after);
     let written = quantity(&document, &host, "Qto_WallBaseQuantities", "NetSideArea").expect("the wall net side area");
     assert!((written - after.quantities.elements[&host].net_side_area).abs() < 1e-9);
     assert!(written > before.quantities.elements[&host].net_side_area, "an opening that left the wall no longer discounts it: {written}");
@@ -202,7 +202,7 @@ fn a_wall_net_side_area_discounts_only_the_openings_the_take_off_clips_to_the_wa
 fn the_layers_of_a_roof_carry_the_volumes_of_the_take_off_and_of_their_solid() {
     let model = house();
     let inferred = ModelInference::infer(&model).expect("the house infers");
-    let (document, _) = inferred_to_part21(&model, &inferred);
+    let (document, _) = inferred_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model, &inferred);
     for (id, roof) in &model.roofs {
         let solid = &inferred.element_solids[id];
         let storey = &inferred.storey_levels[&roof.storey];

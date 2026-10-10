@@ -1,0 +1,16 @@
+{
+  "mutation": "createRule",
+  "id": "r-1",
+  "rule": {
+    "name": "Maximum riser",
+    "kind": "MaxRampSlope",
+    "limit": 1.5,
+    "severity": "Error",
+    "scope": {
+      "storeys": [],
+      "phases": [],
+      "ids": [],
+      "filter": ""
+    }
+  }
+}

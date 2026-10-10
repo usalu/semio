@@ -117,6 +117,7 @@ SOLIDS_DIRECTORY = "🧊️element-solids"
 
 EPS = 1e-9
 PANEL_THICKNESS = 0.024
+SOLID_THICKNESS = 0.06
 GLASS_THICKNESS = 0.02
 LEAF_THICKNESS = 0.04
 KERNEL_TOLERANCE = 1e-7
@@ -354,34 +355,59 @@ def filler(snapshot, opening_id, opening):
     return measured(boxes, origin, x_axis, y_axis)
 
 
-def curtain_wall(snapshot, curtain):
-    """🪞️ Closed-form measures of a straight curtain wall: a mullion on every grid line plus a thin panel per cell."""
+def grid_edges(extent, rule):
+    """🕸️ The cell edges `0 ..= extent` of one direction under a grid rule: equal cells of about a spacing, or the explicit lines strictly inside the extent (repeated ones dropped)."""
+    if rule is None:
+        return [0.0, extent]
+    kind, body = next(iter(rule.items()))
+    if kind == "Spacing":
+        count = 1 if body["spacing"] <= EPS or extent <= EPS else max(1, math.ceil(extent / body["spacing"] - EPS))
+        return [extent * k / count for k in range(count + 1)]
+    inside = sorted(line for line in body["positions"] if EPS < line < extent - EPS)
+    kept = [line for index, line in enumerate(inside) if index == 0 or line - inside[index - 1] > EPS]
+    return [0.0, *kept, extent]
+
+
+def curtain_wall(snapshot, curtain_id, curtain):
+    """🪞️ Closed-form measures of a straight curtain wall: a mullion on every grid line plus the panel of every cell (glass pane, opaque panel or nothing), the grid rules of the wall over those of its type and the panel overrides of the wall over the default panel of its type; `None` when a door or window panel fills a cell (those have no closed form here)."""
+    kind = snapshot["curtain_wall_types"][curtain["curtain_wall_type"]]
+    overrides = {(row["u"], row["v"]): row["panel"] for row in snapshot.get("curtain_panel_overrides", {}).values() if row["curtain"] == curtain_id}
     start, end = tips_of(curtain)
     length = math.dist(start, end)
     base, top = vertical_of(snapshot, curtain)
     height = top - base
-    across, depth = curtain["mullion"]["Rectangle"]["width"], curtain["mullion"]["Rectangle"]["depth"]
+    u_edges = grid_edges(length, curtain.get("u_grid") or kind["u_grid"])
+    v_edges = grid_edges(height, curtain.get("v_grid") or kind["v_grid"])
+    border, interior = kind["border_mullion"]["Rectangle"], kind["interior_mullion"]["Rectangle"]
+    depth = min(border["depth"], interior["depth"])
 
-    def cells(extent, spacing):
-        return 1 if spacing <= EPS else max(1, math.ceil(extent / spacing - EPS))
-
-    def member(extent, count, k):
-        centre = min(max(extent * k / count, across / 2.0), max(extent - across / 2.0, across / 2.0))
+    def member(extent, edge, k, last):
+        across = (border if k in (0, last) else interior)["width"]
+        centre = min(max(edge, across / 2.0), max(extent - across / 2.0, across / 2.0))
         return centre - across / 2.0, centre + across / 2.0
 
-    columns, rows = cells(length, curtain["u_spacing"]), cells(height, curtain["v_spacing"])
-    verticals = [member(length, columns, k) for k in range(columns + 1)]
-    horizontals = [member(height, rows, k) for k in range(rows + 1)]
-    lateral = (-depth / 2.0, depth / 2.0)
-    boxes = [((a, b), lateral, (base, base + height)) for a, b in verticals]
-    for a, b in horizontals:
-        boxes += [((verticals[i][1], verticals[i + 1][0]), lateral, (base + a, base + b)) for i in range(columns) if verticals[i + 1][0] - verticals[i][1] > EPS]
-    thickness = min(PANEL_THICKNESS, depth)
-    for i in range(columns):
-        for j in range(rows):
+    verticals = [member(length, edge, k, len(u_edges) - 1) for k, edge in enumerate(u_edges)]
+    horizontals = [member(height, edge, k, len(v_edges) - 1) for k, edge in enumerate(v_edges)]
+    boxes = []
+    for k, (a, b) in enumerate(verticals):
+        lateral = (border if k in (0, len(verticals) - 1) else interior)["depth"]
+        boxes.append(((a, b), (-lateral / 2.0, lateral / 2.0), (base, base + height)))
+    for k, (a, b) in enumerate(horizontals):
+        lateral = (border if k in (0, len(horizontals) - 1) else interior)["depth"]
+        boxes += [((verticals[i][1], verticals[i + 1][0]), (-lateral / 2.0, lateral / 2.0), (base + a, base + b)) for i in range(len(u_edges) - 1) if verticals[i + 1][0] - verticals[i][1] > EPS]
+    for j in range(len(v_edges) - 1):
+        for i in range(len(u_edges) - 1):
+            panel = overrides.get((i, j), kind["panel"])
             x, z = (verticals[i][1], verticals[i + 1][0]), (base + horizontals[j][1], base + horizontals[j + 1][0])
-            if x[1] - x[0] > EPS and z[1] - z[0] > EPS:
-                boxes.append((x, (-thickness / 2.0, thickness / 2.0), z))
+            if x[1] - x[0] <= EPS or z[1] - z[0] <= EPS or panel == "Empty":
+                continue
+            if panel == "Glass":
+                thickness = min(PANEL_THICKNESS, depth)
+            elif "Solid" in panel:
+                thickness = min(SOLID_THICKNESS, depth)
+            else:
+                return None
+            boxes.append((x, (-thickness / 2.0, thickness / 2.0), z))
     d = ((end[0] - start[0]) / length, (end[1] - start[1]) / length)
     return measured(boxes, start, d, (-d[1], d[0]))
 
@@ -392,7 +418,9 @@ def expected_table(snapshot):
     for wall_id, wall in sorted(snapshot.get("walls", {}).items()):
         table[wall_id] = straight_wall(snapshot, wall_id, wall) if "Line" in wall["axis"] else arc_wall(snapshot, wall_id, wall)
     for curtain_id, curtain in sorted(snapshot.get("curtain_walls", {}).items()):
-        table[curtain_id] = curtain_wall(snapshot, curtain)
+        row = curtain_wall(snapshot, curtain_id, curtain)
+        if row is not None:
+            table[curtain_id] = row
     for opening_id, opening in sorted(snapshot.get("openings", {}).items()):
         row = filler(snapshot, opening_id, opening)
         if row is not None:
@@ -543,6 +571,7 @@ def solids_main(command, root):
         failures += problems
         if command == "write":
             head = json.dumps({"snapshot": document["snapshot"], "expected": table}, indent=2, ensure_ascii=False)[:-2]
+            path.unlink()
             path.write_text("%s,\n  \"meshes\": %s\n}\n" % (head, json.dumps(document.get("meshes", {}), separators=(",", ":"), ensure_ascii=False)), encoding="utf-8")
         elif document["expected"] != table:
             failures.append("%s: the committed expected table differs from the closed forms (run write)" % name)

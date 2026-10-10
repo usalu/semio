@@ -1,0 +1,286 @@
+{
+  "spaces": {
+    "sp-a": {
+      "conditioned": true,
+      "heated": true,
+      "floor_area": 9.990000000000002,
+      "volume": 29.970000000000006,
+      "height": 3,
+      "open_length": 0.0,
+      "groups": {
+        "ceiling|exterior||-": {
+          "area": 9.990000000000002
+        },
+        "door|adjacent|sp-b|2": {
+          "area": 2.1,
+          "loss": 3.7800000000000002
+        },
+        "floor|ground||-": {
+          "area": 9.990000000000002,
+          "loss": 20.704663212435236
+        },
+        "wall|adjacent|sp-b|2": {
+          "area": 5.999999999999959,
+          "loss": 1.9933554817275612
+        },
+        "wall|exterior||0": {
+          "area": 11.099999999999895,
+          "loss": 3.8013698630136625
+        },
+        "wall|exterior||4": {
+          "area": 9.659999999999895,
+          "loss": 3.308219178082156
+        },
+        "wall|exterior||6": {
+          "area": 8.099999999999959,
+          "loss": 2.7739726027397116
+        },
+        "window|exterior||4": {
+          "area": 1.44,
+          "loss": 1.584
+        }
+      }
+    },
+    "sp-b": {
+      "conditioned": true,
+      "heated": true,
+      "floor_area": 9.989999999999998,
+      "volume": 29.969999999999995,
+      "height": 3,
+      "open_length": 0.0,
+      "groups": {
+        "ceiling|exterior||-": {
+          "area": 9.989999999999998
+        },
+        "door|adjacent|sp-a|6": {
+          "area": 2.1,
+          "loss": 3.7800000000000002
+        },
+        "floor|ground||-": {
+          "area": 9.989999999999998,
+          "loss": 20.70466321243523
+        },
+        "wall|adjacent|sp-a|6": {
+          "area": 5.999999999999959,
+          "loss": 1.9933554817275612
+        },
+        "wall|exterior||0": {
+          "area": 11.099999999999895,
+          "loss": 3.8013698630136625
+        },
+        "wall|exterior||2": {
+          "area": 8.099999999999959,
+          "loss": 2.7739726027397116
+        },
+        "wall|exterior||4": {
+          "area": 9.659999999999895,
+          "loss": 3.308219178082156
+        },
+        "window|exterior||4": {
+          "area": 1.44,
+          "loss": 1.584
+        }
+      }
+    }
+  },
+  "totals": {
+    "zone:z-a": {
+      "spaces": [
+        "sp-a"
+      ],
+      "floor_area": 9.990000000000002,
+      "volume": 29.970000000000006,
+      "envelope_area": 58.37999999999971,
+      "a_over_v": 1.947947947947938,
+      "transmission": 26.777037312160452,
+      "h_t_prime": 0.5086679909585575,
+      "opaque_by_sector": [
+        11.099999999999895,
+        0.0,
+        8.099999999999959,
+        0.0,
+        9.659999999999895,
+        0.0,
+        8.099999999999959,
+        0.0
+      ],
+      "window_by_sector": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.44,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "solar_by_sector": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.54,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "roof_area": 9.990000000000002,
+      "floor_envelope_area": 9.990000000000002,
+      "glazing_area": 1.44,
+      "glazing_ratio": 0.03750000000000028,
+      "solar_aperture": 0.54,
+      "mean_u_opaque": 0.7744745545899585,
+      "mean_u_window": 1.1,
+      "missing": 1
+    },
+    "zone:z-b": {
+      "spaces": [
+        "sp-b"
+      ],
+      "floor_area": 9.989999999999998,
+      "volume": 29.969999999999995,
+      "envelope_area": 58.3799999999997,
+      "a_over_v": 1.9479479479479382,
+      "transmission": 26.77703731216045,
+      "h_t_prime": 0.5086679909585575,
+      "opaque_by_sector": [
+        11.099999999999895,
+        0.0,
+        8.099999999999959,
+        0.0,
+        9.659999999999895,
+        0.0,
+        8.099999999999959,
+        0.0
+      ],
+      "window_by_sector": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.44,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "solar_by_sector": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.54,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "roof_area": 9.989999999999998,
+      "floor_envelope_area": 9.989999999999998,
+      "glazing_area": 1.44,
+      "glazing_ratio": 0.03750000000000028,
+      "solar_aperture": 0.54,
+      "mean_u_opaque": 0.7744745545899584,
+      "mean_u_window": 1.1,
+      "missing": 1
+    },
+    "building:bldg": {
+      "spaces": [
+        "sp-a",
+        "sp-b"
+      ],
+      "floor_area": 19.98,
+      "volume": 59.94,
+      "envelope_area": 100.55999999999949,
+      "a_over_v": 1.6776776776776692,
+      "transmission": 47.78071914259334,
+      "h_t_prime": 0.5251463717441686,
+      "opaque_by_sector": [
+        22.19999999999979,
+        0.0,
+        8.099999999999959,
+        0.0,
+        19.31999999999979,
+        0.0,
+        8.099999999999959,
+        0.0
+      ],
+      "window_by_sector": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.88,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "solar_by_sector": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.08,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "roof_area": 19.98,
+      "floor_envelope_area": 19.98,
+      "glazing_area": 2.88,
+      "glazing_ratio": 0.047524752475247914,
+      "solar_aperture": 1.08,
+      "mean_u_opaque": 0.7873416951421096,
+      "mean_u_window": 1.1,
+      "missing": 2
+    },
+    "project": {
+      "spaces": [
+        "sp-a",
+        "sp-b"
+      ],
+      "floor_area": 19.98,
+      "volume": 59.94,
+      "envelope_area": 100.55999999999949,
+      "a_over_v": 1.6776776776776692,
+      "transmission": 47.78071914259334,
+      "h_t_prime": 0.5251463717441686,
+      "opaque_by_sector": [
+        22.19999999999979,
+        0.0,
+        8.099999999999959,
+        0.0,
+        19.31999999999979,
+        0.0,
+        8.099999999999959,
+        0.0
+      ],
+      "window_by_sector": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.88,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "solar_by_sector": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.08,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "roof_area": 19.98,
+      "floor_envelope_area": 19.98,
+      "glazing_area": 2.88,
+      "glazing_ratio": 0.047524752475247914,
+      "solar_aperture": 1.08,
+      "mean_u_opaque": 0.7873416951421096,
+      "mean_u_window": 1.1,
+      "missing": 2
+    }
+  }
+}

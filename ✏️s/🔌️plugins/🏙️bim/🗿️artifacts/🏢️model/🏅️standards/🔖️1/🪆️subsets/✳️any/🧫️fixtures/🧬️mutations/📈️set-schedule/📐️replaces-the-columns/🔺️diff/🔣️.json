@@ -1,1 +1,43 @@
-{}
+{
+  "schedules": {
+    "sch-walls": {
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Name"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "Type"
+            }
+          },
+          "total": false
+        },
+        {
+          "heading": "Area",
+          "key": {
+            "Field": {
+              "field": "NetSideArea"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Property": {
+              "name": "FireRating",
+              "set": "Pset_WallCommon"
+            }
+          },
+          "total": false
+        }
+      ],
+      "entry": "Patched"
+    }
+  }
+}

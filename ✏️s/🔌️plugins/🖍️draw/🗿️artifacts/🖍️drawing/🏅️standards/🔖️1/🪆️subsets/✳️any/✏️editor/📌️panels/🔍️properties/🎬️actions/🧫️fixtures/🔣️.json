@@ -1,0 +1,485 @@
+{
+  "actions": [
+    "group",
+    "ungroup",
+    "toPath",
+    "duplicate",
+    "delete",
+    "bringForward",
+    "sendBackward",
+    "bringToFront",
+    "sendToBack",
+    "alignLeft",
+    "alignCenter",
+    "alignRight",
+    "alignTop",
+    "alignMiddle",
+    "alignBottom",
+    "distributeHorizontal",
+    "distributeVertical"
+  ],
+  "cases": [
+    {
+      "name": "empty",
+      "selection": {
+        "count": 0,
+        "locked": false,
+        "sameParent": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 0,
+        "arrangeable": true
+      },
+      "expected": []
+    },
+    {
+      "name": "one editable layer",
+      "selection": {
+        "count": 1,
+        "locked": false,
+        "sameParent": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 1,
+        "arrangeable": true
+      },
+      "expected": [
+        "group",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ]
+    },
+    {
+      "name": "two editable siblings",
+      "selection": {
+        "count": 2,
+        "locked": false,
+        "sameParent": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 2,
+        "arrangeable": true
+      },
+      "expected": [
+        "group",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack",
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom"
+      ]
+    },
+    {
+      "name": "three editable siblings",
+      "selection": {
+        "count": 3,
+        "locked": false,
+        "sameParent": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 3,
+        "arrangeable": true
+      },
+      "expected": [
+        "group",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack",
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom",
+        "distributeHorizontal",
+        "distributeVertical"
+      ]
+    },
+    {
+      "name": "inherited lock",
+      "selection": {
+        "count": 3,
+        "locked": true,
+        "sameParent": true,
+        "convertibleShapes": true,
+        "ungroupableGroups": true,
+        "complete": true,
+        "arrangementCount": 3,
+        "arrangeable": false
+      },
+      "expected": []
+    },
+    {
+      "name": "two layers in different groups",
+      "selection": {
+        "count": 2,
+        "locked": false,
+        "sameParent": false,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 2,
+        "arrangeable": true
+      },
+      "expected": [
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom"
+      ]
+    },
+    {
+      "name": "three layers in different groups",
+      "selection": {
+        "count": 3,
+        "locked": false,
+        "sameParent": false,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 3,
+        "arrangeable": true
+      },
+      "expected": [
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom",
+        "distributeHorizontal",
+        "distributeVertical"
+      ]
+    },
+    {
+      "name": "one convertible shape",
+      "selection": {
+        "count": 1,
+        "locked": false,
+        "sameParent": true,
+        "convertibleShapes": true,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 1,
+        "arrangeable": true
+      },
+      "expected": [
+        "group",
+        "toPath",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ]
+    },
+    {
+      "name": "one ungroupable group",
+      "selection": {
+        "count": 1,
+        "locked": false,
+        "sameParent": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": true,
+        "complete": true,
+        "arrangementCount": 1,
+        "arrangeable": true
+      },
+      "expected": [
+        "group",
+        "ungroup",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ]
+    },
+    {
+      "name": "one unresolved composited group",
+      "selection": {
+        "count": 1,
+        "locked": false,
+        "sameParent": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 1,
+        "arrangeable": true
+      },
+      "expected": [
+        "group",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ]
+    },
+    {
+      "name": "convertible shapes in different groups",
+      "selection": {
+        "count": 2,
+        "locked": false,
+        "sameParent": false,
+        "convertibleShapes": true,
+        "ungroupableGroups": false,
+        "complete": true,
+        "arrangementCount": 2,
+        "arrangeable": true
+      },
+      "expected": [
+        "toPath",
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom"
+      ]
+    },
+    {
+      "name": "ungroupable groups in different groups",
+      "selection": {
+        "count": 2,
+        "locked": false,
+        "sameParent": false,
+        "convertibleShapes": false,
+        "ungroupableGroups": true,
+        "complete": true,
+        "arrangementCount": 2,
+        "arrangeable": true
+      },
+      "expected": [
+        "ungroup",
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom"
+      ]
+    },
+    {
+      "expected": [],
+      "name": "selected ancestor and child",
+      "selection": {
+        "locked": false,
+        "complete": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "count": 2,
+        "arrangementCount": 1,
+        "arrangeable": true,
+        "sameParent": false
+      },
+      "structure": "ancestorChild"
+    },
+    {
+      "expected": [
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom"
+      ],
+      "name": "selected ancestor child and sibling",
+      "selection": {
+        "locked": false,
+        "complete": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "count": 3,
+        "arrangementCount": 2,
+        "arrangeable": true,
+        "sameParent": false
+      },
+      "structure": "ancestorChildSibling"
+    },
+    {
+      "expected": [],
+      "name": "existing group and missing selection",
+      "selection": {
+        "locked": false,
+        "complete": false,
+        "convertibleShapes": false,
+        "ungroupableGroups": true,
+        "count": 1,
+        "arrangementCount": 1,
+        "arrangeable": true,
+        "sameParent": true
+      },
+      "structure": "missing"
+    },
+    {
+      "expected": [
+        "group",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ],
+      "name": "hidden selected siblings",
+      "selection": {
+        "locked": false,
+        "complete": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "count": 3,
+        "arrangementCount": 3,
+        "arrangeable": false,
+        "sameParent": true
+      },
+      "structure": "hidden"
+    },
+    {
+      "expected": [
+        "group",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ],
+      "name": "inherited hidden selected siblings",
+      "selection": {
+        "locked": false,
+        "complete": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "count": 3,
+        "arrangementCount": 3,
+        "arrangeable": false,
+        "sameParent": true
+      },
+      "structure": "inheritedHidden"
+    },
+    {
+      "expected": [
+        "group",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ],
+      "name": "isolated group",
+      "selection": {
+        "locked": false,
+        "complete": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "count": 1,
+        "arrangementCount": 1,
+        "arrangeable": true,
+        "sameParent": true
+      },
+      "structure": "isolated"
+    },
+    {
+      "expected": [
+        "group",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ],
+      "name": "blended group",
+      "selection": {
+        "locked": false,
+        "complete": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": false,
+        "count": 1,
+        "arrangementCount": 1,
+        "arrangeable": true,
+        "sameParent": true
+      },
+      "structure": "blended"
+    },
+    {
+      "expected": [
+        "group",
+        "ungroup",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack"
+      ],
+      "name": "duplicate group row ids",
+      "selection": {
+        "locked": false,
+        "complete": true,
+        "convertibleShapes": false,
+        "ungroupableGroups": true,
+        "count": 1,
+        "arrangementCount": 1,
+        "arrangeable": true,
+        "sameParent": true
+      },
+      "structure": "duplicateRows"
+    },
+    {
+      "expected": [
+        "group",
+        "toPath",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack",
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom"
+      ],
+      "name": "shape and path siblings",
+      "selection": {
+        "locked": false,
+        "complete": true,
+        "convertibleShapes": true,
+        "ungroupableGroups": false,
+        "count": 2,
+        "arrangementCount": 2,
+        "arrangeable": true,
+        "sameParent": true
+      },
+      "structure": "shapePath"
+    }
+  ]
+}

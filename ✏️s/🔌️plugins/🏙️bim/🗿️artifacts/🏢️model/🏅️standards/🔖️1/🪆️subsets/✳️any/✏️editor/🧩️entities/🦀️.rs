@@ -71,6 +71,9 @@ fn top_text(top: &TopConstraint) -> String {
         TopConstraint::Unconnected { height } => format!("{}", number(*height)),
         TopConstraint::StoreyTop { offset } => format!("storey top {}", number(*offset)),
         TopConstraint::Storey { storey, offset } => format!("{storey} {}", number(*offset)),
+        TopConstraint::Roof { roof, offset } => format!("roof {roof} {}", number(*offset)),
+        TopConstraint::Slab { slab, offset } => format!("slab {slab} {}", number(*offset)),
+        TopConstraint::Ceiling { ceiling, offset } => format!("ceiling {ceiling} {}", number(*offset)),
     }
 }
 
@@ -155,8 +158,23 @@ fn parse_top(text: &str) -> Option<TopConstraint> {
     if let Some(offset) = text.strip_prefix("storey top") {
         return Some(TopConstraint::StoreyTop { offset: parse_number(offset)? });
     }
+    if let Some(attached) = parse_attach(text) {
+        return Some(attached);
+    }
     let (storey, offset) = text.rsplit_once(' ')?;
     Some(TopConstraint::Storey { storey: storey.trim().to_string(), offset: parse_number(offset)? })
+}
+
+fn parse_attach(text: &str) -> Option<TopConstraint> {
+    let (keyword, rest) = text.split_once(' ')?;
+    let (target, offset) = rest.trim().rsplit_once(' ')?;
+    let (target, offset) = (target.trim().to_string(), parse_number(offset)?);
+    match keyword {
+        "roof" => Some(TopConstraint::Roof { roof: target, offset }),
+        "slab" => Some(TopConstraint::Slab { slab: target, offset }),
+        "ceiling" => Some(TopConstraint::Ceiling { ceiling: target, offset }),
+        _ => None,
+    }
 }
 
 fn variant<T: Clone + std::fmt::Debug>(text: &str, all: &[T]) -> Option<T> {
@@ -165,24 +183,35 @@ fn variant<T: Clone + std::fmt::Debug>(text: &str, all: &[T]) -> Option<T> {
 
 fn profile_text(profile: &Profile) -> String {
     match profile {
-        Profile::Rectangle { width, depth } => format!("rectangle {} × {}", number(*width), number(*depth)),
+        Profile::Rectangle { width, depth } => format!("rect {} x {}", number(*width), number(*depth)),
         Profile::Circle { diameter } => format!("circle {}", number(*diameter)),
-        Profile::IShape { width, depth, web, flange } => format!("i {} × {} web {} flange {}", number(*width), number(*depth), number(*web), number(*flange)),
-        Profile::Custom { outline } => format!("custom {} vertices", outline.len()),
+        Profile::IShape { width, depth, web, flange } => format!("i {} x {} web {} flange {}", number(*width), number(*depth), number(*web), number(*flange)),
+        Profile::Custom { outline } => format!("custom {}", loop_text(outline)),
         Profile::Family { family } => format!("family {family}"),
     }
 }
 
+fn size_pair(text: &str) -> Option<(f64, f64)> {
+    let (first, second) = text.split_once(['x', '×'])?;
+    Some((parse_number(first)?, parse_number(second)?))
+}
+
 fn parse_profile(text: &str) -> Option<Profile> {
     let text = text.trim();
-    if let Some(rest) = text.strip_prefix("rectangle") {
-        let (width, depth) = rest.split_once('×')?;
-        return Some(Profile::Rectangle { width: parse_number(width)?, depth: parse_number(depth)? });
+    let (name, rest) = text.split_once(' ').map_or((text, ""), |(name, rest)| (name, rest.trim()));
+    match name.to_ascii_lowercase().as_str() {
+        "rect" | "rectangle" => size_pair(rest).map(|(width, depth)| Profile::Rectangle { width, depth }),
+        "circle" => parse_number(rest).map(|diameter| Profile::Circle { diameter }),
+        "i" => {
+            let (size, tail) = rest.split_once("web")?;
+            let (web, flange) = tail.split_once("flange")?;
+            let (width, depth) = size_pair(size)?;
+            Some(Profile::IShape { width, depth, web: parse_number(web)?, flange: parse_number(flange)? })
+        }
+        "custom" => parse_loop(rest).map(|outline| Profile::Custom { outline }),
+        "family" => Some(rest).filter(|family| !family.is_empty()).map(|family| Profile::Family { family: family.to_string() }),
+        _ => None,
     }
-    if let Some(family) = text.strip_prefix("family").map(str::trim).filter(|family| !family.is_empty()) {
-        return Some(Profile::Family { family: family.to_string() });
-    }
-    text.strip_prefix("circle").and_then(parse_number).map(|diameter| Profile::Circle { diameter })
 }
 
 fn stringer_text(stringer: &StairStringer) -> String {
@@ -449,6 +478,9 @@ pub mod notations;
 #[path = "📄️sheets/🦀️.rs"]
 pub mod sheets;
 
+#[path = "🤝️coordination/🦀️.rs"]
+pub mod coordination;
+
 #[path = "🔲️ceilings/🦀️.rs"]
 pub mod ceilings;
 
@@ -458,8 +490,29 @@ pub mod phasing;
 #[path = "🛝️ramps/🦀️.rs"]
 pub mod ramps;
 
+#[path = "🧷️wall-sweeps/🦀️.rs"]
+pub mod wall_sweeps;
+
 #[path = "🏷️psets/🦀️.rs"]
 pub mod psets;
+
+#[path = "🏗️frame/🦀️.rs"]
+pub mod frame;
+
+#[path = "🧬️families/🦀️.rs"]
+pub mod families;
+
+#[path = "🪑️components/🦀️.rs"]
+pub mod components;
+
+#[path = "🌀️mep/🦀️.rs"]
+pub mod mep;
+
+#[path = "🌡️energy/🦀️.rs"]
+pub mod energy;
+
+#[path = "🧭️options/🦀️.rs"]
+pub mod options;
 
 //#region 🔖️Fields
 static SITE_FIELDS: &[FieldRow] = &[
@@ -502,7 +555,9 @@ static WALL_FIELDS: &[FieldRow] = &[
     field!("location", field_location, Text, |s, id| s.walls.get(id).map(|row| format!("{:?}", row.location)), parse_location => set_wall_location::SetWallLocation),
     field!("base_offset", field_base_offset, Number, |s, id| s.walls.get(id).map(|row| number(row.base_offset)), parse_number => set_wall_base_offset::SetWallBaseOffset),
     field!("top", field_top, Text, |s, id| s.walls.get(id).map(|row| top_text(&row.top)), parse_top => set_wall_top::SetWallTop),
-    field!("start_join", field_start_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.start_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::mutations::modify::WallEnd::Start, join: parse_join(value)? }))),
+    field!("top_attach", field_top_attach, Text, |s, id| wall_sweeps::top_attach_text(s, id), choices: wall_sweeps::surface_choices, write: wall_sweeps::write_top_attach),
+    field!("base_slab", field_base_slab, Text, |s, id| wall_sweeps::base_slab_text(s, id), choices: wall_sweeps::slab_choices, write: wall_sweeps::write_base_slab),
+    field!("start_join",field_start_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.start_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::mutations::modify::WallEnd::Start, join: parse_join(value)? }))),
     field!("end_join", field_end_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.end_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::mutations::modify::WallEnd::End, join: parse_join(value)? }))),
 ];
 
@@ -513,10 +568,9 @@ static CURTAIN_WALL_FIELDS: &[FieldRow] = &[
     field!("axis", field_axis, Text, |s, id| s.curtain_walls.get(id).map(|row| axis_text(&row.axis)), parse_axis => set_curtain_wall::SetCurtainWall),
     field!("base_offset", field_base_offset, Number, |s, id| s.curtain_walls.get(id).map(|row| number(row.base_offset)), parse_number => set_curtain_wall::SetCurtainWall),
     field!("top", field_top, Text, |s, id| s.curtain_walls.get(id).map(|row| top_text(&row.top)), parse_top => set_curtain_wall::SetCurtainWall),
-    field!("u_spacing", field_width, Number, |s, id| s.curtain_walls.get(id).map(|row| number(row.u_spacing)), parse_number => set_curtain_wall::SetCurtainWall),
-    field!("v_spacing", field_height, Number, |s, id| s.curtain_walls.get(id).map(|row| number(row.v_spacing)), parse_number => set_curtain_wall::SetCurtainWall),
-    field!("panel_material", field_panel_material, Text, |s, id| s.curtain_walls.get(id).map(|row| row.panel_material.clone()), parse_text => set_curtain_wall::SetCurtainWall),
-    field!("mullion_material", field_mullion_material, Text, |s, id| s.curtain_walls.get(id).map(|row| row.mullion_material.clone()), parse_text => set_curtain_wall::SetCurtainWall),
+    field!("curtain_wall_type", field_curtain_wall_type, Text, |s, id| s.curtain_walls.get(id).map(|row| row.curtain_wall_type.clone()), choices: frame::type_choices, write: frame::write_curtain_wall_type),
+    field!("u_grid", field_u_grid, Text, |s, id| s.curtain_walls.get(id).map(|row| frame::override_text(row.u_grid.as_ref())), |s, id, value| frame::write_u_grid(s, id, value)),
+    field!("v_grid", field_v_grid, Text, |s, id| s.curtain_walls.get(id).map(|row| frame::override_text(row.v_grid.as_ref())), |s, id, value| frame::write_v_grid(s, id, value)),
 ];
 
 static COLUMN_FIELDS: &[FieldRow] = &[
@@ -526,6 +580,7 @@ static COLUMN_FIELDS: &[FieldRow] = &[
     field!("column_type", field_column_type, Text, |s, id| s.columns.get(id).map(|row| row.column_type.clone()), parse_text => set_column::SetColumn),
     field!("position", field_position, Text, |s, id| s.columns.get(id).map(|row| point(row.position.x, row.position.y)), parse_point => set_column::SetColumn),
     field!("rotation", field_rotation, Number, |s, id| s.columns.get(id).map(|row| number(row.rotation)), parse_number => set_column::SetColumn),
+    field!("tilt", field_tilt, Text, |s, id| s.columns.get(id).map(|row| ceilings::slope_text(row.tilt)), |s, id, value| frame::write_tilt(s, id, value)),
     field!("base_offset", field_base_offset, Number, |s, id| s.columns.get(id).map(|row| number(row.base_offset)), parse_number => set_column::SetColumn),
     field!("top", field_top, Text, |s, id| s.columns.get(id).map(|row| top_text(&row.top)), parse_top => set_column::SetColumn),
 ];
@@ -535,9 +590,9 @@ static BEAM_FIELDS: &[FieldRow] = &[
     field!("storey", field_storey, Text, |s, id| s.beams.get(id).map(|row| row.storey.clone()), choices: phasing::storey_choices, write: phasing::write_storey),
     field!("phase", field_phase, Text, |s, id| s.beams.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("beam_type", field_beam_type, Text, |s, id| s.beams.get(id).map(|row| row.beam_type.clone()), parse_text => set_beam::SetBeam),
-    field!("start", field_start, Text, |s, id| s.beams.get(id).map(|row| point(row.start.x, row.start.y)), parse_point => set_beam::SetBeam),
-    field!("end", field_end, Text, |s, id| s.beams.get(id).map(|row| point(row.end.x, row.end.y)), parse_point => set_beam::SetBeam),
+    field!("axis", field_axis, Text, |s, id| s.beams.get(id).map(|row| axis_text(&row.axis)), |s, id, value| frame::write_beam_axis(s, id, value)),
     field!("top_offset", field_offset, Number, |s, id| s.beams.get(id).map(|row| number(row.top_offset)), parse_number => set_beam::SetBeam),
+    field!("end_top_offset", field_end_offset, Number, |s, id| s.beams.get(id).map(|row| row.end_top_offset.map_or_else(String::new, number)), |s, id, value| frame::write_end_offset(s, id, value)),
 ];
 
 static SLAB_FIELDS: &[FieldRow] = &[
@@ -583,6 +638,8 @@ static OPENING_FIELDS: &[FieldRow] = &[
     field!("height", field_height, Number, |s, id| s.openings.get(id).and_then(|row| row.height).map(number), |_, id, value| set!(set_opening::SetOpening, id, "height", &Assigned::new(Some(parse_number(value)?)))),
     field!("flip_hand", field_flip_hand, Text, |s, id| s.openings.get(id).map(|row| row.flip_hand.to_string()), parse_flag => set_opening::SetOpening),
     field!("flip_facing", field_flip_facing, Text, |s, id| s.openings.get(id).map(|row| row.flip_facing.to_string()), parse_flag => set_opening::SetOpening),
+    field!("reveal_depth", field_reveal_depth, Number, |s, id| wall_sweeps::reveal_depth_text(s, id), |s, id, value| wall_sweeps::write_reveal_depth(s, id, value)),
+    field!("reveal_material", field_reveal_material, Text, |s, id| wall_sweeps::reveal_material_text(s, id), choices: zoning::material_choices, write: wall_sweeps::write_reveal_material),
 ];
 
 static STAIR_FIELDS: &[FieldRow] = &[
@@ -631,6 +688,14 @@ static SPACE_FIELDS: &[FieldRow] = &[
     field!("floor_finish", field_floor_finish, Text, |s, id| s.spaces.get(id).map(|row| row.floor_finish.clone().unwrap_or_default()), choices: zoning::material_choices, write: zoning::write_floor_finish),
     field!("wall_finish", field_wall_finish, Text, |s, id| s.spaces.get(id).map(|row| row.wall_finish.clone().unwrap_or_default()), choices: zoning::material_choices, write: zoning::write_wall_finish),
     field!("ceiling_finish", field_ceiling_finish, Text, |s, id| s.spaces.get(id).map(|row| row.ceiling_finish.clone().unwrap_or_default()), choices: zoning::material_choices, write: zoning::write_ceiling_finish),
+    field!("occupancy", field_occupancy_type, Text, |s, id| energy::condition(s, id, |c| c.occupancy.clone()), |_, id, value| set!(set_space_conditions::SetSpaceConditions, id, "occupancy", &Assigned::new(energy::stated(value)))),
+    field!("occupancy_density", field_occupancy_density, Number, |s, id| energy::condition(s, id, |c| c.occupancy_density.map(number)), |_, id, value| set!(set_space_conditions::SetSpaceConditions, id, "occupancy_density", &Assigned::new(parse_optional_number(value)?))),
+    field!("heating_setpoint", field_heating_setpoint, Number, |s, id| energy::condition(s, id, |c| c.heating_setpoint.map(number)), |_, id, value| set!(set_space_conditions::SetSpaceConditions, id, "heating_setpoint", &Assigned::new(parse_optional_number(value)?))),
+    field!("cooling_setpoint", field_cooling_setpoint, Number, |s, id| energy::condition(s, id, |c| c.cooling_setpoint.map(number)), |_, id, value| set!(set_space_conditions::SetSpaceConditions, id, "cooling_setpoint", &Assigned::new(parse_optional_number(value)?))),
+    field!("ventilation_rate", field_ventilation_rate, Number, |s, id| energy::condition(s, id, |c| c.ventilation_rate.map(number)), |_, id, value| set!(set_space_conditions::SetSpaceConditions, id, "ventilation_rate", &Assigned::new(parse_optional_number(value)?))),
+    field!("lighting_power_density", field_lighting_power_density, Number, |s, id| energy::condition(s, id, |c| c.lighting_power_density.map(number)), |_, id, value| set!(set_space_conditions::SetSpaceConditions, id, "lighting_power_density", &Assigned::new(parse_optional_number(value)?))),
+    field!("equipment_power_density", field_equipment_power_density, Number, |s, id| energy::condition(s, id, |c| c.equipment_power_density.map(number)), |_, id, value| set!(set_space_conditions::SetSpaceConditions, id, "equipment_power_density", &Assigned::new(parse_optional_number(value)?))),
+    field!("schedule", field_schedule_profile, Text, |s, id| energy::condition(s, id, |c| c.schedule.clone()), |_, id, value| set!(set_space_conditions::SetSpaceConditions, id, "schedule", &Assigned::new(energy::stated(value)))),
 ];
 
 static MATERIAL_FIELDS: &[FieldRow] = &[
@@ -678,6 +743,9 @@ static WINDOW_TYPE_FIELDS: &[FieldRow] = &[
     field!("frame_depth", field_frame_depth, Number, |s, id| s.window_types.get(id).map(|row| number(row.frame_depth)), parse_number => set_window_type::SetWindowType),
     field!("panes", field_panes, Number, |s, id| s.window_types.get(id).map(|row| row.panes.to_string()), parse_count => set_window_type::SetWindowType),
     field!("material", field_material, Text, |s, id| s.window_types.get(id).map(|row| row.material.clone()), parse_text => set_window_type::SetWindowType),
+    field!("u_value", field_u_value, Number, |s, id| s.window_types.get(id).map(|row| row.u_value.map_or_else(String::new, number)), |_, id, value| set!(set_type_thermal_data::SetTypeThermalData, id, "u_value", &Assigned::new(parse_optional_number(value)?))),
+    field!("g_value", field_g_value, Number, |s, id| s.window_types.get(id).map(|row| row.g_value.map_or_else(String::new, number)), |_, id, value| set!(set_type_thermal_data::SetTypeThermalData, id, "g_value", &Assigned::new(parse_optional_number(value)?))),
+    field!("frame_fraction", field_frame_fraction, Number, |s, id| s.window_types.get(id).map(|row| row.frame_fraction.map_or_else(String::new, number)), |_, id, value| set!(set_type_thermal_data::SetTypeThermalData, id, "frame_fraction", &Assigned::new(parse_optional_number(value)?))),
 ];
 
 static DOOR_TYPE_FIELDS: &[FieldRow] = &[
@@ -689,6 +757,7 @@ static DOOR_TYPE_FIELDS: &[FieldRow] = &[
     field!("leaves", field_leaves, Text, |s, id| s.door_types.get(id).map(|row| format!("{:?}", row.leaves)), parse_leaves => set_door_type::SetDoorType),
     field!("swing", field_swing, Text, |s, id| s.door_types.get(id).map(|row| format!("{:?}", row.swing)), parse_swing => set_door_type::SetDoorType),
     field!("material", field_material, Text, |s, id| s.door_types.get(id).map(|row| row.material.clone()), parse_text => set_door_type::SetDoorType),
+    field!("u_value", field_u_value, Number, |s, id| s.door_types.get(id).map(|row| row.u_value.map_or_else(String::new, number)), |_, id, value| set!(set_type_thermal_data::SetTypeThermalData, id, "u_value", &Assigned::new(parse_optional_number(value)?))),
 ];
 //#endregion 🔖️Fields
 
@@ -700,6 +769,8 @@ static STOREY_INFERRED: &[InferredRow] = &[
 
 /// 💡️ The quantities of a placed element, read off the `quantities` inference; a measure that does not apply to the kind is 0 and shows no row.
 static QUANTITY_INFERRED: &[InferredRow] = &[
+    inferred!("elevation", field_elevation, |_, inference, id| inference.wall_layout.get(id).map(|row| number(row.base_z))),
+    inferred!("top_elevation", field_top_elevation, |_, inference, id| inference.wall_layout.get(id).map(|row| number(row.top_z))),
     inferred!("length", field_length, |_, inference, id| inference.quantities.elements.get(id).filter(|row| row.length > 0.0).map(|row| number(row.length))),
     inferred!("width", field_width, |_, inference, id| inference.quantities.elements.get(id).filter(|row| row.width > 0.0).map(|row| number(row.width))),
     inferred!("height", field_height, |_, inference, id| inference.quantities.elements.get(id).filter(|row| row.height > 0.0).map(|row| number(row.height))),
@@ -709,6 +780,16 @@ static QUANTITY_INFERRED: &[InferredRow] = &[
     inferred!("floor_finish_area", field_floor_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Floor)),
     inferred!("wall_finish_area", field_wall_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Wall)),
     inferred!("ceiling_finish_area", field_ceiling_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Ceiling)),
+    inferred!("envelope_surfaces", field_envelope_surfaces, |_, inference, id| energy::envelope(inference, id, |_, facts| facts.surfaces.to_string())),
+    inferred!("envelope_area", field_envelope_area, |_, inference, id| energy::envelope(inference, id, |_, facts| energy::fixed(facts.envelope_area))),
+    inferred!("glazing_area", field_glazing_area, |_, inference, id| energy::envelope(inference, id, |_, facts| energy::fixed(facts.glazing_area))),
+    inferred!("glazing_ratio", field_glazing_ratio, |_, inference, id| energy::envelope(inference, id, |_, facts| energy::fixed(facts.glazing_ratio))),
+    inferred!("open_length", field_open_length, |_, inference, id| energy::envelope(inference, id, |space, _| energy::fixed(space.open_length)).filter(|length| length != "0.00")),
+    inferred!("envelope_findings", field_envelope_findings, |_, inference, id| energy::envelope(inference, id, |space, _| space.issues.len().to_string()).filter(|count| count != "0")),
+    inferred!("zone_h_t_prime", field_zone_h_t_prime, |s, inference, id| energy::zone_of_space(s, inference, id, |totals| totals.h_t_prime)),
+    inferred!("zone_a_over_v", field_zone_a_over_v, |s, inference, id| energy::zone_of_space(s, inference, id, |totals| totals.a_over_v)),
+    inferred!("zone_envelope_area", field_zone_envelope_area, |s, inference, id| energy::zone_of_space(s, inference, id, |totals| totals.envelope_area)),
+    inferred!("zone_glazing_ratio", field_zone_glazing_ratio, |s, inference, id| energy::zone_of_space(s, inference, id, |totals| totals.glazing_ratio)),
 ];
 //#endregion 🔖️Inferred
 
@@ -764,23 +845,11 @@ fn create_wall(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> 
 
 fn create_curtain_wall(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
-    let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
+    let curtain_wall_type = first(&snapshot.curtain_wall_types).ok_or("bim.create.curtain-wall-type-missing")?;
     let (start, end) = along(snapshot.curtain_walls.values().filter(|wall| wall.storey == storey).count() as f64);
     Ok(ModelMutation::CreateCurtainWall(crate::mutations::create_curtain_wall::CreateCurtainWall {
         id: id.into(),
-        curtain_wall: crate::CurtainWall {
-            storey,
-            axis: Axis::Line { start, end },
-            base_offset: 0.0,
-            top: TopConstraint::StoreyTop { offset: 0.0 },
-            u_spacing: 1.5,
-            v_spacing: 1.5,
-            mullion: Profile::Rectangle { width: 0.05, depth: 0.1 },
-            panel_material: material.clone(),
-            mullion_material: material,
-            phase: Phase::New,
-            name: name.into(),
-        },
+        curtain_wall: crate::CurtainWall { storey, curtain_wall_type, axis: Axis::Line { start, end }, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -790,7 +859,7 @@ fn create_column(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -
     let position = Point2 { x: snapshot.columns.values().filter(|column| column.storey == storey).count() as f64 * 3.0, y: 0.0 };
     Ok(ModelMutation::CreateColumn(crate::mutations::create_column::CreateColumn {
         id: id.into(),
-        column: crate::Column { storey, column_type, position, rotation: 0.0, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: name.into() },
+        column: crate::Column { storey, column_type, position, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -798,7 +867,7 @@ fn create_beam(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> 
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let beam_type = first(&snapshot.beam_types).ok_or("bim.create.beam-type-missing")?;
     let (start, end) = along(snapshot.beams.values().filter(|beam| beam.storey == storey).count() as f64);
-    Ok(ModelMutation::CreateBeam(crate::mutations::create_beam::CreateBeam { id: id.into(), beam: crate::Beam { storey, beam_type, start, end, top_offset: 0.0, phase: Phase::New, name: name.into() } }))
+    Ok(ModelMutation::CreateBeam(crate::mutations::create_beam::CreateBeam { id: id.into(), beam: crate::Beam { storey, beam_type, axis: Axis::Line { start, end }, top_offset: 0.0, end_top_offset: None, phase: Phase::New, name: name.into() } }))
 }
 
 fn create_slab(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
@@ -919,7 +988,7 @@ fn create_window_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
     Ok(ModelMutation::CreateWindowType(crate::mutations::create_window_type::CreateWindowType {
         id: id.into(),
-        window_type: crate::WindowType { name: name.into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material },
+        window_type: crate::WindowType { name: name.into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material, u_value: None, g_value: None, frame_fraction: None },
     }))
 }
 
@@ -927,7 +996,7 @@ fn create_door_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &st
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
     Ok(ModelMutation::CreateDoorType(crate::mutations::create_door_type::CreateDoorType {
         id: id.into(),
-        door_type: crate::DoorType { name: name.into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material },
+        door_type: crate::DoorType { name: name.into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material, u_value: None },
     }))
 }
 //#endregion 🔖️Create
@@ -935,10 +1004,13 @@ fn create_door_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &st
 //#region 🔖️Table
 /// 🧩️ Every entity kind, structure first (site to space), then the library (materials and types). A new mutation kind is one row.
 pub static ENTITIES: &[EntityKind] = &[
+    options::OPTION_GROUP,
+    options::DESIGN_OPTION,
+    options::WORKSET,
     kind!("site", "map", false, kind_site, group_sites, sites . name, parent: |_, _| None,
         delete: delete!(delete_site::DeleteSite), rename: Some(rename_element), create: Some(create_site), fields: SITE_FIELDS, inferred: &[]),
     kind!("building", "building", false, kind_building, group_buildings, buildings . name, parent: |s, id| s.buildings.get(id).map(|row| row.site.clone()),
-        delete: delete!(delete_building::DeleteBuilding), rename: Some(rename_element), create: Some(create_building), fields: BUILDING_FIELDS, inferred: &[]),
+        delete: delete!(delete_building::DeleteBuilding), rename: Some(rename_element), create: Some(create_building), fields: BUILDING_FIELDS, inferred: energy::BUILDING_INFERRED),
     kind!("storey", "layers", false, kind_storey, group_storeys, storeys . name, parent: |s, id| s.storeys.get(id).map(|row| row.building.clone()),
         delete: delete!(delete_storey::DeleteStorey), rename: Some(rename_element), create: Some(create_storey), fields: STOREY_FIELDS, inferred: STOREY_INFERRED),
     kind!("grid", "grid", false, kind_grid, group_grids, grids . label, parent: |s, id| s.grids.get(id).map(|row| row.building.clone()),
@@ -947,6 +1019,7 @@ pub static ENTITIES: &[EntityKind] = &[
         delete: delete!(delete_wall::DeleteWall), rename: Some(rename_element), create: Some(create_wall), fields: WALL_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("curtain-wall", "panels-top-left", false, kind_curtain_wall, group_curtain_walls, curtain_walls . name, parent: |s, id| s.curtain_walls.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_curtain_wall::DeleteCurtainWall), rename: Some(rename_element), create: Some(create_curtain_wall), fields: CURTAIN_WALL_FIELDS, inferred: QUANTITY_INFERRED),
+    frame::CURTAIN_PANEL_OVERRIDE,
     kind!("column", "columns", false, kind_column, group_columns, columns . name, parent: |s, id| s.columns.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_column::DeleteColumn), rename: Some(rename_element), create: Some(create_column), fields: COLUMN_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("beam", "minus", false, kind_beam, group_beams, beams . name, parent: |s, id| s.beams.get(id).map(|row| row.storey.clone()),
@@ -959,12 +1032,17 @@ pub static ENTITIES: &[EntityKind] = &[
         delete: delete!(delete_roof::DeleteRoof), rename: Some(rename_element), create: Some(create_roof), fields: ROOF_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("opening", "door-open", false, kind_opening, group_openings, openings . name, parent: |s, id| s.openings.get(id).map(|row| row.host.clone()),
         delete: delete!(delete_opening::DeleteOpening), rename: Some(rename_element), create: Some(create_opening), fields: OPENING_FIELDS, inferred: QUANTITY_INFERRED),
+    kind!("wall-sweep", "baseline", false, kind_wall_sweep, group_wall_sweeps, wall_sweeps . name, parent: |s, id| s.wall_sweeps.get(id).map(|row| row.host.clone()),
+        delete: delete!(delete_wall_sweep::DeleteWallSweep), rename: Some(rename_element), create: Some(wall_sweeps::create_wall_sweep), fields: wall_sweeps::SWEEP_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("stair", "footprints", false, kind_stair, group_stairs, stairs . name, parent: |s, id| s.stairs.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_stair::DeleteStair), rename: Some(rename_element), create: Some(create_stair), fields: STAIR_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("railing", "fence", false, kind_railing, group_railings, railings . name, parent: |s, id| s.railings.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_railing::DeleteRailing), rename: Some(rename_element), create: Some(create_railing), fields: RAILING_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("ramp", "trending-up", false, kind_ramp, group_ramps, ramps . name, parent: |s, id| s.ramps.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_ramp::DeleteRamp), rename: Some(rename_element), create: Some(ramps::create_ramp), fields: ramps::RAMP_FIELDS, inferred: ramps::RAMP_INFERRED),
+    components::COMPONENT,
+    components::COMPONENT_OVERRIDE,
+    mep::MEP_ELEMENT,
     kind!("space", "square-dashed", false, kind_space, group_spaces, spaces . name, parent: |s, id| s.spaces.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_space::DeleteSpace), rename: Some(rename_element), create: Some(create_space), fields: SPACE_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("zone", "group", false, kind_zone, group_zones, zones . name, parent: |_, _| None,
@@ -980,6 +1058,14 @@ pub static ENTITIES: &[EntityKind] = &[
     sheets::SHEET,
     sheets::VIEWPORT,
     sheets::REVISION,
+    coordination::CLASH_SET,
+    coordination::RULE,
+    coordination::ISSUE,
+    coordination::ISSUE_COMMENT,
+    kind!("family", "shapes", true, kind_family, group_families, families . name, parent: |_, _| None,
+        delete: delete!(delete_family::DeleteFamily), rename: renaming!(set_family::SetFamily), create: Some(families::create_family), fields: families::FAMILY_FIELDS, inferred: families::FAMILY_INFERRED),
+    kind!("family-solid", "box", false, kind_family_solid, group_family_solids, family_solids . name, parent: |s, id| s.family_solids.get(id).map(|row| row.family.clone()),
+        delete: delete!(delete_family_solid::DeleteFamilySolid), rename: renaming!(set_family_solid::SetFamilySolid), create: Some(families::create_family_solid), fields: families::FAMILY_SOLID_FIELDS, inferred: families::FAMILY_SOLID_INFERRED),
     kind!("material", "palette", true, kind_material, group_materials, materials . name, parent: |_, _| None,
         delete: delete!(delete_material::DeleteMaterial), rename: renaming!(set_material::SetMaterial), create: Some(create_material), fields: MATERIAL_FIELDS, inferred: &[]),
     kind!("wall-type", "brick-wall", true, kind_wall_type, group_wall_types, wall_types . name, parent: |_, _| None,
@@ -992,6 +1078,7 @@ pub static ENTITIES: &[EntityKind] = &[
         delete: delete!(delete_roof_type::DeleteRoofType), rename: renaming!(set_roof_type::SetRoofType), create: Some(create_roof_type), fields: ROOF_TYPE_FIELDS, inferred: &[]),
     kind!("column-type", "columns", true, kind_column_type, group_column_types, column_types . name, parent: |_, _| None,
         delete: delete!(delete_column_type::DeleteColumnType), rename: renaming!(set_column_type::SetColumnType), create: Some(create_column_type), fields: COLUMN_TYPE_FIELDS, inferred: &[]),
+    frame::CURTAIN_WALL_TYPE,
     kind!("beam-type", "minus", true, kind_beam_type, group_beam_types, beam_types . name, parent: |_, _| None,
         delete: delete!(delete_beam_type::DeleteBeamType), rename: renaming!(set_beam_type::SetBeamType), create: Some(create_beam_type), fields: BEAM_TYPE_FIELDS, inferred: &[]),
     kind!("window-type", "app-window", true, kind_window_type, group_window_types, window_types . name, parent: |_, _| None,
@@ -1036,7 +1123,8 @@ pub fn classification_text(snapshot: &ModelSnapshot, id: &str) -> String {
 
 /// 🧾️ Every parameter row of a kind.
 pub fn fields_of(row: &EntityKind) -> impl Iterator<Item = &'static FieldRow> {
-    row.fields.iter()
+    let physical = matches!(row.kind, "wall" | "curtain-wall" | "column" | "beam" | "slab" | "ceiling" | "roof" | "opening" | "stair" | "railing" | "ramp" | "space" | "component" | "mep-element" | "wall-sweep");
+    row.fields.iter().chain(options::MEMBERSHIP_FIELDS.iter().filter(move |_| physical))
 }
 //#endregion 🔖️Classification
 
@@ -1136,8 +1224,8 @@ pub fn storey_of(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
     let row = kind_holding(snapshot, id)?;
     match row.kind {
         "storey" => Some(id.to_string()),
-        "opening" => (row.parent)(snapshot, id).and_then(|host| storey_of(snapshot, &host)),
-        "site" | "building" | "grid" | "view" | "zone" | "area-scheme" | "sheet" | "viewport" | "sheet-revision" => None,
+        "opening" | "wall-sweep" | "component-override" => (row.parent)(snapshot, id).and_then(|host| storey_of(snapshot, &host)),
+        "site" | "building" | "grid" | "view" | "zone" | "area-scheme" | "sheet" | "viewport" | "sheet-revision" | "clash-set" | "rule" | "issue" | "issue-comment" => None,
         _ if row.library => None,
         _ => (row.parent)(snapshot, id),
     }

@@ -4,18 +4,18 @@
       "entry": "Patched",
       "properties": [
         {
-          "name": "Reference",
+          "allowed": [],
           "kind": "Text",
-          "required": true,
-          "allowed": []
+          "name": "Reference",
+          "required": true
         },
         {
-          "name": "Width",
-          "kind": "Length",
-          "required": false,
           "allowed": [],
+          "kind": "Length",
+          "maximum": 2.5,
           "minimum": 0.7,
-          "maximum": 2.5
+          "name": "Width",
+          "required": false
         }
       ]
     }

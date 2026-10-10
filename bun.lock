@@ -651,10 +651,6 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust": {
       "name": "@semio-tech/neural-engine-rs",
     },
-    "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg": {
-      "name": "@semio-tech/framework-os-rs",
-      "version": "0.1.0",
-    },
     "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript": {
       "name": "@semio-tech/print",
       "version": "0.1.0",
@@ -1760,8 +1756,6 @@
     "@semio-tech/framework-os-mcp": ["@semio-tech/framework-os-mcp@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-os-node-graph-rs": ["@semio-tech/framework-os-node-graph-rs@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust"],
-
-    "@semio-tech/framework-os-rs": ["@semio-tech/framework-os-rs@workspace:🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg"],
 
     "@semio-tech/framework-os-shell": ["@semio-tech/framework-os-shell@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript"],
 

@@ -6,8 +6,16 @@ import { child, em, subset } from "./r3-f1-paths.ts";
 import * as F from "./r3-f1-fixtures.ts";
 import { viewsFor } from "./r10-w12-views-examples.ts";
 import { annotationsFor } from "./r11-w11-annotations-examples.ts";
+import { psetsFor } from "./r12-w2-wp18-psets-examples.ts";
+import { familiesFor } from "./r12-w2-f2-families-examples.ts";
+import { componentsFor } from "./r12-w2-f3-assets-examples.ts";
 import { rampsFor } from "./r11-w09-ramps-examples.ts";
+import { wallDepthFor } from "./r12-w2-wp08-examples.ts";
+import { frameFor } from "./r12-w2-wp19-examples.ts";
+import { energyFor } from "./r12-w2-wp20-examples.ts";
 import { MOVES, phasesFor } from "./r11-w04-phase-examples.ts";
+import { sheetsFor } from "./r12-w2-wp14-sheets-examples.ts";
+import { coordinationFor } from "./r12-w2-wp16-coordination-examples.ts";
 
 type Pt = [number, number];
 type Json = Record<string, unknown>;
@@ -47,7 +55,7 @@ const rectProfile = (width: number, depth: number) => ({ Rectangle: { width, dep
 
 const wall = (storey: string, type: string, axis: unknown, top: unknown, name: string) => F.wall(storey, type, axis, top, name);
 const column = (storey: string, type: string, at: Pt, name: string, top: unknown = F.storeyTop(0)) => ({ storey, column_type: type, position: pt(at), rotation: 0, base_offset: 0, top, name });
-const beam = (storey: string, type: string, start: Pt, end: Pt, top_offset: number, name: string) => ({ storey, beam_type: type, start: pt(start), end: pt(end), top_offset, name });
+const beam = (storey: string, type: string, start: Pt, end: Pt, top_offset: number, name: string) => ({ storey, beam_type: type, axis: { Line: { start: pt(start), end: pt(end) } }, top_offset, name });
 const slab = (storey: string, type: string, boundary: unknown[], holes: unknown[][], name: string) => ({ storey, slab_type: type, boundary, holes, offset: 0, name });
 const ceiling = (storey: string, type: string, boundary: unknown[], holes: unknown[][], offset: number, name: string, slope?: { direction: number; angle: number }) => ({ storey, ceiling_type: type, boundary, holes, offset, ...(slope ? { slope } : {}), name });
 const roof = (storey: string, type: string, footprint: unknown[], shape: unknown, overhang: number, base_offset: number, name: string) => ({ storey, roof_type: type, footprint, shape, overhang, base_offset, name });
@@ -64,7 +72,7 @@ const finishes = (model: any, ids: string[], over: Json) => ids.forEach((id) => 
 const seed = (x: number, y: number) => ({ Bounded: { seed: P(x, y) } });
 const outline = (vertices: unknown[]) => ({ Explicit: { outline: vertices } });
 const grid = (building: string, label: string, a: Pt, b: Pt) => ({ building, label, start: pt(a), end: pt(b) });
-const curtainWall = (storey: string, axis: unknown, name: string) => ({ storey, axis, base_offset: 0, top: F.storeyTop(0), u_spacing: 1.5, v_spacing: 1.3, mullion: rectProfile(0.05, 0.15), panel_material: "m-glass", mullion_material: "m-steel", name });
+const curtainWall = (storey: string, axis: unknown, name: string) => ({ storey, curtain_wall_type: "cwt-facade", axis, base_offset: 0, top: F.storeyTop(0), name });
 
 type OpeningOptions = { width?: number; height?: number; sillOverride?: number; flipHand?: boolean; flipFacing?: boolean };
 const opened = (host: string, kind: unknown, offset: number, name: string, o: OpeningOptions) => ({
@@ -118,7 +126,8 @@ function verify(model: any) {
   for (const [id, e] of Object.entries<any>(c("railings"))) reference(`railings/${id}/material`, e.material, c("materials"));
   for (const [id, e] of Object.entries<any>(c("ramps") ?? {})) { reference(`ramps/${id}/storey`, e.storey, c("storeys")); reference(`ramps/${id}/material`, e.material, c("materials")); if (e.top.Storey) reference(`ramps/${id}/top`, e.top.Storey.storey, c("storeys")); }
   for (const [id, e] of Object.entries<any>(c("railings"))) if (e.host) reference(`railings/${id}/host`, e.host.element, c("stairs"), c("ramps") ?? {}, c("slabs"));
-  for (const [id, e] of Object.entries<any>(c("curtain_walls"))) { reference(`curtain_walls/${id}/panel`, e.panel_material, c("materials")); reference(`curtain_walls/${id}/mullion`, e.mullion_material, c("materials")); }
+  for (const [id, e] of Object.entries<any>(c("curtain_walls"))) reference(`curtain_walls/${id}/type`, e.curtain_wall_type, c("curtain_wall_types"));
+  for (const [id, t] of Object.entries<any>(c("curtain_wall_types"))) { reference(`curtain_wall_types/${id}/panel`, t.panel_material, c("materials")); reference(`curtain_wall_types/${id}/mullion`, t.mullion_material, c("materials")); }
   for (const kind of ["wall_types", "slab_types", "roof_types"]) for (const [id, t] of Object.entries<any>(c(kind))) for (const l of t.layers) reference(`${kind}/${id}/layer`, l.material, c("materials"));
   for (const kind of ["column_types", "beam_types", "window_types", "door_types"]) for (const [id, t] of Object.entries<any>(c(kind))) reference(`${kind}/${id}/material`, t.material, c("materials"));
   for (const [id, e] of Object.entries<any>(c("spaces"))) {
@@ -148,7 +157,7 @@ function verify(model: any) {
     (byHost.get(o.host) ?? byHost.set(o.host, []).get(o.host)!).push({ id, from, to });
   }
   for (const [host, rows] of byHost) for (const a of rows) for (const b of rows) if (a.id < b.id && a.from < b.to + 0.05 && b.from < a.to + 0.05) throw new Error(`openings ${a.id} and ${b.id} overlap on ${host}`);
-  const owners = new Set(["walls", "curtain_walls", "columns", "beams", "slabs", "ceilings", "roofs", "openings", "stairs", "railings", "ramps", "spaces", "zones", "area_schemes"].flatMap((name) => Object.keys(c(name) ?? {})));
+  const owners = new Set(["walls", "curtain_walls", "columns", "beams", "slabs", "ceilings", "roofs", "openings", "stairs", "railings", "ramps", "spaces", "zones", "area_schemes", "wall_types", "slab_types", "ceiling_types", "roof_types", "column_types", "beam_types", "curtain_wall_types", "window_types", "door_types"].flatMap((name) => Object.keys(c(name) ?? {})));
   for (const name of ["properties", "classifications"]) for (const id of Object.keys(c(name))) if (!owners.has(id)) throw new Error(`${name} of unknown element ${id}`);
   const numbers = new Set<string>();
   for (const s of Object.values<any>(c("spaces"))) {
@@ -559,7 +568,15 @@ for (const [dir, name, build] of [[em(0x1f3e1) + "house", "house", house], [em(0
   const ramps = rampsFor(name, model);
   Object.assign(model, { ramps: ramps.ramps, railings: { ...model.railings, ...ramps.railings } });
   Object.assign(model, annotationsFor(name, model));
+  Object.assign(model, psetsFor(name, model));
+  Object.assign(model, familiesFor(name, model));
+  Object.assign(model, componentsFor(name, model));
+  wallDepthFor(name, model);
+  frameFor(name, model);
+  energyFor(name, model);
   Object.assign(model, { views: viewsFor(model) });
+  Object.assign(model, sheetsFor(name, model));
+  Object.assign(model, coordinationFor(name, model));
   phasesFor(name, model);
   verify(model);
   const assets = join(child(subset, "assets"), dir);

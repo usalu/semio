@@ -46,6 +46,7 @@ test = [
     "anastruct>=1.6.1",
     "scikit-fem>=10.0.2",
     "PyNiteFEA>=1.1.6",
+    "pypdf>=6.0.0",
 ]
 
 [tool.pytest.ini_options]

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:value:ordered-map-clone-grants",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pageCapacity", "workBytes", "interruptAfter", "deniedAxes", "cases"],
+  "properties": {
+    "pageCapacity": { "const": 16 },
+    "workBytes": { "type": "integer", "minimum": 1 },
+    "interruptAfter": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+    "deniedAxes": { "const": ["items", "copy", "capacity", "release", "depth"] },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entryCount", "expectedKeys"],
+        "properties": {
+          "entryCount": { "type": "integer", "minimum": 0 },
+          "expectedKeys": { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+        }
+      }
+    }
+  }
+}

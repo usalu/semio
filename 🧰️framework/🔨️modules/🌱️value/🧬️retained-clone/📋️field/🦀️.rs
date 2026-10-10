@@ -17,7 +17,7 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
         if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained field cursor is closing")); }
         if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth == 0 { return Err(crate::ValueError::new(crate::ValueRefusalKind::DepthLimit, "retained typed field structural depth limit exceeded")); }
-        source.bind(&mut self.source)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
         if let Some(child) = self.child.as_mut() { return child.advance(source, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
         let bytes = size_of::<T::Cursor>();
         let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: bytes, released_bytes: 0 };

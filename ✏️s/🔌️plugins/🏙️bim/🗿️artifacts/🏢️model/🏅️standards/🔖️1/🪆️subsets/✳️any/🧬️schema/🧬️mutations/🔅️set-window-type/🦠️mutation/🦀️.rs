@@ -3,7 +3,7 @@
 use crate::{ModelDiff, ModelMutation, ModelSnapshot, WindowTypePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetWindowType {
     pub id: String,
@@ -28,7 +28,7 @@ pub struct SetWindowType {
 impl SetWindowType {
     /// 🩹 The sparse entity patch this payload names: every provided field, restated values included.
     pub fn patch(&self) -> WindowTypePatch {
-        WindowTypePatch { name: self.name.clone(), width: self.width.clone(), height: self.height.clone(), sill: self.sill.clone(), frame_width: self.frame_width.clone(), frame_depth: self.frame_depth.clone(), panes: self.panes.clone(), material: self.material.clone() }
+        WindowTypePatch { name: self.name.clone(), width: self.width.clone(), height: self.height.clone(), sill: self.sill.clone(), frame_width: self.frame_width.clone(), frame_depth: self.frame_depth.clone(), panes: self.panes.clone(), material: self.material.clone(), ..Default::default() }
     }
 
     /// 🧩 The payload that provides exactly the fields `patch` names.

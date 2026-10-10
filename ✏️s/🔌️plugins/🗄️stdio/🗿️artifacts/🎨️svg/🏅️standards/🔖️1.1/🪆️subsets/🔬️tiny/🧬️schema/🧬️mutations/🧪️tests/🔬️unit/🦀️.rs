@@ -24,7 +24,7 @@ fn kinds_matches_enum_variants_and_manifest() {
         SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: Vec::new(), view_box: None, index: None }),
         SvgTinyMutation::SetTransform(set_transform::SetTransform { path: Vec::new(), transform: None, index: None }),
         SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {}),
-        SvgTinyMutation::ReinstateNonTiny(restore_non_tiny::ReinstateNonTiny { elements: Vec::new(), attributes: Vec::new() }),
+        SvgTinyMutation::RestoreNonTiny(restore_non_tiny::RestoreNonTiny { elements: Vec::new(), attributes: Vec::new() }),
     ];
     let spelled: Vec<&'static str> = every.iter().map(kind_of).collect();
     assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
@@ -118,9 +118,9 @@ async fn strip_and_restore_non_tiny_satisfy_the_inverse_sum_law() {
     let base = document(elem("svg", vec![("style", SvgAttributeValue::Text("x".into())), ("id", SvgAttributeValue::Text("a".into()))], vec![elem("g", vec![("opacity", SvgAttributeValue::Text("0.5".into()))], vec![elem("linearGradient", vec![], vec![]), elem("rect", vec![], vec![])]), elem("filter", vec![], vec![])]));
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {}), &base).await;
     let stripped = document(elem("svg", vec![("id", SvgAttributeValue::Text("a".into()))], vec![elem("g", vec![], vec![elem("rect", vec![], vec![])])]));
-    let restore = SvgTinyMutation::ReinstateNonTiny(restore_non_tiny::ReinstateNonTiny {
-        elements: vec![restore_non_tiny::ReinstatedElement { parent: vec![0], index: 0, node: elem("linearGradient", vec![], vec![]) }, restore_non_tiny::ReinstatedElement { parent: Vec::new(), index: 1, node: elem("filter", vec![], vec![]) }],
-        attributes: vec![restore_non_tiny::ReinstatedAttribute { path: Vec::new(), index: 0, name: "style".into(), value: SvgAttributeValue::Text("x".into()) }, restore_non_tiny::ReinstatedAttribute { path: vec![0], index: 0, name: "opacity".into(), value: SvgAttributeValue::Text("0.5".into()) }],
+    let restore = SvgTinyMutation::RestoreNonTiny(restore_non_tiny::RestoreNonTiny {
+        elements: vec![restore_non_tiny::RestoredElement { parent: vec![0], index: 0, node: elem("linearGradient", vec![], vec![]) }, restore_non_tiny::RestoredElement { parent: Vec::new(), index: 1, node: elem("filter", vec![], vec![]) }],
+        attributes: vec![restore_non_tiny::RestoredAttribute { path: Vec::new(), index: 0, name: "style".into(), value: SvgAttributeValue::Text("x".into()) }, restore_non_tiny::RestoredAttribute { path: vec![0], index: 0, name: "opacity".into(), value: SvgAttributeValue::Text("0.5".into()) }],
     });
     let mut restored = stripped.clone();
     apply_svg_tiny_mutation(&mut restored, &restore);

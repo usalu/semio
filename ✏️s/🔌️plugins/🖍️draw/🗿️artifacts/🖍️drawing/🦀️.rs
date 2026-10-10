@@ -24,6 +24,7 @@ extern crate semio_framework_schema as framework_schema;
 pub use store::ArtifactDsl;
 pub use schema::stroke::{StrokeCap, StrokeJoin};
 pub use schema::fill_rule::FillRule;
+pub use schema::font_family::DrawingFontFamily;
 
 pub const DRAWING_DOCUMENT_SCHEMA: &str = "drawing.document";
 pub const DRAWING_BLEND_MODES: &[&str] = &["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
@@ -280,6 +281,7 @@ pub struct DrawingTextBody {
     pub y: f64,
     pub content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     pub size: f64,
+    pub font_family: DrawingFontFamily,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]

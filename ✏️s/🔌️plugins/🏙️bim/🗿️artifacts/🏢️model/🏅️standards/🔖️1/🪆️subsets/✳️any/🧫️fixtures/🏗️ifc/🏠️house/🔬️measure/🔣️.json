@@ -26,7 +26,7 @@
     "IfcRelFillsElement": 5,
     "IfcRelAggregates": 9,
     "IfcRelContainedInSpatialStructure": 4,
-    "IfcRelDefinesByType": 10,
+    "IfcRelDefinesByType": 11,
     "IfcRelAssociatesMaterial": 18,
     "IfcRelAssociatesClassification": 2,
     "IfcMaterialLayerSet": 4,
@@ -38,11 +38,31 @@
     "IfcBeamType": 2,
     "IfcWindowStyle": 1,
     "IfcDoorStyle": 2,
-    "IfcFacetedBrep": 9,
+    "IfcFacetedBrep": 11,
     "IfcClassification": 2,
     "IfcClassificationReference": 2,
+    "IfcAnnotation": 0,
+    "IfcTextLiteralWithExtent": 0,
+    "IfcPolyline": 34,
+    "IfcPlanarExtent": 0,
+    "IfcCovering": 0,
+    "IfcCoveringType": 0,
     "IfcRamp": 0,
-    "IfcRampFlight": 0
+    "IfcRampFlight": 0,
+    "IfcRelConnectsElements": 0,
+    "IfcFurnishingElement": 0,
+    "IfcFurnitureType": 0,
+    "IfcFlowTerminal": 0,
+    "IfcFlowTerminalType": 0,
+    "IfcSanitaryTerminalType": 0,
+    "IfcLightFixtureType": 0,
+    "IfcBuildingElementProxy": 0,
+    "IfcFlowSegment": 0,
+    "IfcDuctSegmentType": 0,
+    "IfcPipeSegmentType": 0,
+    "IfcCableCarrierSegmentType": 0,
+    "IfcSystem": 0,
+    "IfcRelAssignsToGroup": 0
   },
   "containment": {
     "st-base": [],
@@ -85,9 +105,38 @@
     "w-south": 6.201,
     "w-west": 5.4,
     "c-1": 0.27,
-    "b-1": 0.01037612,
-    "b-2": 0.4,
+    "b-1": 0.009561528484,
+    "b-2": 0.384298726,
     "sl-first": 12.0,
     "sl-ground": 11.75
-  }
+  },
+  "annotations": {},
+  "classifications": {
+    "systems": {
+      "Omniclass|": {
+        "source": "",
+        "entries": [
+          "21-02 10 10|Columns|"
+        ]
+      },
+      "Uniclass 2015|": {
+        "source": "",
+        "entries": [
+          "EF_25_10|Walls|"
+        ]
+      }
+    },
+    "attached": {
+      "c-1": [
+        "Omniclass||21-02 10 10"
+      ],
+      "w-east": [
+        "Uniclass 2015||EF_25_10"
+      ],
+      "w-south": [
+        "Uniclass 2015||EF_25_10"
+      ]
+    }
+  },
+  "type_properties": {}
 }

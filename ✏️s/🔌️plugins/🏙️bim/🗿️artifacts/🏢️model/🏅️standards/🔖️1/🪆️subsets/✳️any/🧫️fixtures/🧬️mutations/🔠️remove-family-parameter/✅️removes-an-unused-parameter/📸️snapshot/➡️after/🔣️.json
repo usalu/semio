@@ -1,1 +1,226 @@
-{}
+{
+  "beam_types": {},
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "classifications": {},
+  "column_types": {},
+  "columns": {},
+  "curtain_walls": {},
+  "door_types": {},
+  "families": {
+    "fam-hea": {
+      "category": "Profile",
+      "name": "HEA 200"
+    },
+    "fam-table": {
+      "category": "Furniture",
+      "name": "Table"
+    }
+  },
+  "family_parameters": {
+    "fam-hea.b": {
+      "family": "fam-hea",
+      "kind": "Length",
+      "name": "b",
+      "value": "200 mm"
+    },
+    "fam-hea.h": {
+      "family": "fam-hea",
+      "kind": "Length",
+      "name": "h",
+      "value": "190 mm"
+    },
+    "fam-table.depth": {
+      "family": "fam-table",
+      "kind": "Length",
+      "name": "depth",
+      "value": "0.8 m"
+    },
+    "fam-table.width": {
+      "family": "fam-table",
+      "kind": "Length",
+      "name": "width",
+      "value": "1.6 m"
+    }
+  },
+  "family_solids": {
+    "s-hea": {
+      "family": "fam-hea",
+      "material": "\"m-brick\"",
+      "name": "HEA",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      },
+      "shape": {
+        "Extrusion": {
+          "base": "0 m",
+          "height": "1 m",
+          "profile": {
+            "IShape": {
+              "depth": "h",
+              "flange": "10 mm",
+              "web": "6.5 mm",
+              "width": "b"
+            }
+          }
+        }
+      },
+      "visible": "true"
+    },
+    "s-top": {
+      "family": "fam-table",
+      "material": "\"m-brick\"",
+      "name": "Top",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      },
+      "shape": {
+        "Cuboid": {
+          "depth": "depth",
+          "height": "40 mm",
+          "width": "width",
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0.7 m"
+        }
+      },
+      "visible": "true"
+    }
+  },
+  "grids": {},
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {},
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    },
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  },
+  "window_types": {}
+}

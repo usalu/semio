@@ -43,7 +43,7 @@ pub struct DiscoveredProtocolFacet {
 //#region 🔖️Walk
 const ARTIFACTS_DIR: &str = "🗿️artifacts";
 const STANDARDS_DIR: &str = "🏅️standards";
-const SCHEMA_DIR: &str = "🧬️schema";
+const IO_DIR: &str = "🚪️io";
 const SNAPSHOT_DIR: &str = "📸️snapshot";
 const MUTATIONS_DIR: &str = "🧬️mutations";
 const TEXT_DIR: &str = "📝️text";
@@ -127,11 +127,11 @@ async fn walk(dir: &Path, hits: &mut RawHits) {
             continue;
         }
         let Some(file_name) = path.file_name().and_then(|n| n.to_str()) else { continue };
-        if file_name == GRAMMAR_FILE && parent_chain_is(&path, &[TEXT_DIR, SNAPSHOT_DIR, SCHEMA_DIR]).await {
+        if file_name == GRAMMAR_FILE && parent_chain_is(&path, &[SNAPSHOT_DIR, TEXT_DIR, IO_DIR]).await {
             hits.grammar_snapshot.push(path);
-        } else if file_name == PROTOCOL_FILE && parent_chain_is(&path, &[BINARY_DIR, SNAPSHOT_DIR, SCHEMA_DIR]).await {
+        } else if file_name == PROTOCOL_FILE && parent_chain_is(&path, &[SNAPSHOT_DIR, BINARY_DIR, IO_DIR]).await {
             hits.protocol_pack.push(path);
-        } else if file_name == PROTOCOL_FILE && parent_chain_is(&path, &[BINARY_DIR, MUTATIONS_DIR, SCHEMA_DIR]).await {
+        } else if file_name == PROTOCOL_FILE && parent_chain_is(&path, &[MUTATIONS_DIR, BINARY_DIR, IO_DIR]).await {
             hits.protocol_spr.push(path);
         }
     }

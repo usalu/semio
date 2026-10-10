@@ -9,7 +9,6 @@ pub mod derived_composition {
     use crate::standards::v1_0::subsets::base::io::XmlComposer as XmlAnyComposer;
     use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
     use semio_framework_diagnostic::Diagnostic;
-use crate::apply_mutation;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
@@ -100,7 +99,8 @@ pub mod derived_construction {
     use crate::standards::v1_0::subsets::base::schema::diff::XmlDiff;
     use crate::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
     use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
-    use crate::standards::v1_0::subsets::valid::schema::valid_mutations::{XmlValidMutation};
+    use crate::apply_mutation;
+    use crate::standards::v1_0::subsets::valid::schema::valid_mutations::XmlValidMutation;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;

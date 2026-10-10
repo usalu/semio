@@ -1,0 +1,283 @@
+{
+  "beam_types": {},
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "clash_sets": {
+    "cs-1": {
+      "a": {
+        "classes": [
+          "Beam"
+        ],
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "b": {
+        "classes": [
+          "Wall"
+        ],
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "clearance": 0.0,
+      "name": "Beams against walls",
+      "tolerance": 0.001
+    },
+    "cs-2": {
+      "a": {
+        "classes": [
+          "Wall"
+        ],
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "b": {
+        "classes": [
+          "Wall"
+        ],
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "clearance": 0.05,
+      "name": "Walls against walls",
+      "tolerance": 0.001
+    }
+  },
+  "classifications": {},
+  "column_types": {},
+  "columns": {},
+  "curtain_walls": {},
+  "door_types": {},
+  "grids": {},
+  "issue_comments": {
+    "c-1": {
+      "author": "AB",
+      "date": "2026-10-09T09:00:00Z",
+      "issue": "i-1",
+      "text": "I will check the structure tomorrow."
+    },
+    "c-2": {
+      "author": "UG",
+      "date": "2026-10-09T10:00:00Z",
+      "issue": "i-1",
+      "text": "Thanks."
+    },
+    "c-3": {
+      "author": "AB",
+      "date": "2026-10-09T09:00:00Z",
+      "issue": "i-2",
+      "text": "I will check the structure."
+    }
+  },
+  "issues": {
+    "i-1": {
+      "assignee": "",
+      "author": "UG",
+      "created": "2026-10-09T08:30:00Z",
+      "description": "The beam runs through the wall.",
+      "elements": [
+        "w-south",
+        "w-east"
+      ],
+      "labels": [
+        "Clash"
+      ],
+      "priority": "Normal",
+      "status": "Open",
+      "title": "Beam hits the south wall",
+      "viewpoint": {
+        "camera": {
+          "azimuth": 0.8,
+          "distance": 25.0,
+          "pitch": 0.5,
+          "target": {
+            "x": 4.0,
+            "y": 3.0
+          },
+          "target_height": 1.5
+        },
+        "isolate": []
+      }
+    },
+    "i-2": {
+      "assignee": "AB",
+      "author": "UG",
+      "clash": {
+        "first": "w-south",
+        "second": "w-east",
+        "set": "cs-1"
+      },
+      "created": "2026-10-09T08:30:00Z",
+      "description": "The beam runs through the wall.",
+      "elements": [
+        "w-east"
+      ],
+      "labels": [],
+      "priority": "High",
+      "status": "Open",
+      "title": "Door too narrow"
+    }
+  },
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "rules": {
+    "r-1": {
+      "kind": "MaxRiser",
+      "limit": 0.19,
+      "name": "Maximum riser",
+      "scope": {
+        "filter": "",
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "severity": "Error"
+    },
+    "r-2": {
+      "kind": "MinDoorWidth",
+      "limit": 0.9,
+      "name": "Minimum door width",
+      "scope": {
+        "filter": "",
+        "ids": [],
+        "phases": [],
+        "storeys": [
+          "st-ground"
+        ]
+      },
+      "severity": "Warning"
+    }
+  },
+  "schema": "s.bim.model@1",
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {},
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    },
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  },
+  "window_types": {}
+}

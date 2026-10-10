@@ -1,1 +1,12 @@
-{}
+{
+  "wall_sweeps": {
+    "ws-base": {
+      "entry": "Deleted"
+    }
+  },
+  "walls": {
+    "w-south": {
+      "entry": "Deleted"
+    }
+  }
+}

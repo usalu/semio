@@ -943,6 +943,7 @@ pub struct StepContext<'a> {
     preview_sequence: &'a mut u64,
     payload_ledger: JobPayloadLedgerReference<'a>,
     payload_page_granted: bool,
+    retained_work: retained_work::RetainedWorkBudget,
 }
 
 impl<'a> StepContext<'a> {
@@ -2659,7 +2660,7 @@ pub fn pump_worker_job_retirements(maximum_sessions:usize,grant:RetainedCloneGra
     if worker_job_retirements_are_parked(){WORKER_JOB_RETIREMENT_WAKE.store(true,Ordering::Release);WorkerJobCloseStep::Blocked}else{WorkerJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
 }
 
-struct WorkerJobSessionInner<J> {
+pub(crate) struct WorkerJobSessionInner<J> {
     generation: Generation,
     phase: AtomicU8,
     authority: ManuallyDrop<std::cell::UnsafeCell<Option<WorkerJobAuthorityOwner<J>>>>,
@@ -2772,7 +2773,7 @@ unsafe impl<J: InteractiveJob + 'static> Sync for WorkerJobSession<J> {}
 #[repr(C)]
 struct WorkerJobRetirementNode<J> {
     header: WorkerJobRetirementHeader,
-    inner: Option<Arc<WorkerJobSessionInner<J>>>,
+    inner: Option<session_return::SessionHandle<J>>,
 }
 
 unsafe fn worker_job_retirement_node_phase<J:InteractiveJob+'static>(pointer:*mut WorkerJobRetirementHeader)->WorkerJobClosePhase{
@@ -2906,7 +2907,7 @@ impl<J> Drop for WorkerJobSessionAdmissionRejected<J> {
 }
 
 struct WorkerJobSubmission<J> {
-    inner: Arc<WorkerJobSessionInner<J>>,
+    inner: session_return::SessionHandle<J>,
     authority: Option<WorkerJobAuthorityOwner<J>>,
     ran: bool,
 }
@@ -3273,7 +3274,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         let ticket = WorkerJobTicket { generation: self.inner.generation, step_sequence: authority.step_sequence };
         self.inner.rejection_kind.store(u8::MAX, Ordering::Release);
         self.inner.phase.store(SESSION_SUBMITTED, Ordering::Release);
-        let submission = WorkerJobSubmission { inner: Arc::clone(&self.inner), authority: Some(authority), ran: false };
+        let submission = WorkerJobSubmission { inner: session_return::SessionHandle::clone(&self.inner), authority: Some(authority), ran: false };
         let closure: semio_framework_async::Job = Box::new(move || submission.run());
         match pool.try_submit(lane, closure) {
             Ok(()) => Ok(ticket),
@@ -3299,7 +3300,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
             unsafe { self.inner.put_authority(authority, SESSION_OUTCOME) };
             return Err(WorkerJobTakeFault::Stale);
         }
-        Ok(WorkerJobOutcome { inner: Arc::clone(&self.inner), authority: Some(authority), restore_phase: SESSION_OUTCOME })
+        Ok(WorkerJobOutcome { inner: session_return::SessionHandle::clone(&self.inner), authority: Some(authority), restore_phase: SESSION_OUTCOME })
     }
 
     pub fn take_terminal(&self) -> Result<WorkerJobOutcome<J>, WorkerJobTakeFault> {
@@ -3308,7 +3309,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
             return Err(if self.inner.phase() == SESSION_SUBMITTED { WorkerJobTakeFault::Pending } else { WorkerJobTakeFault::WrongPhase });
         }
         let authority = unsafe { self.inner.take_authority() };
-        Ok(WorkerJobOutcome { inner: Arc::clone(&self.inner), authority: Some(authority), restore_phase: SESSION_TERMINAL })
+        Ok(WorkerJobOutcome { inner: session_return::SessionHandle::clone(&self.inner), authority: Some(authority), restore_phase: SESSION_TERMINAL })
     }
 
     pub fn take_rejected(&self) -> Result<WorkerJobRejected<J>, WorkerJobTakeFault> {
@@ -3318,7 +3319,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         }
         let authority = unsafe { self.inner.take_authority() };
         let kind = worker_rejection_kind(self.inner.rejection_kind.load(Ordering::Acquire));
-        Ok(WorkerJobRejected { inner: Arc::clone(&self.inner), authority: Some(authority), kind })
+        Ok(WorkerJobRejected { inner: session_return::SessionHandle::clone(&self.inner), authority: Some(authority), kind })
     }
 
     pub fn begin_close(&self) -> WorkerJobCloseStep {
@@ -3478,7 +3479,7 @@ impl<J: InteractiveJob + 'static> Drop for WorkerJobSession<J> {
 }
 
 pub struct WorkerJobOutcome<J> {
-    inner: Arc<WorkerJobSessionInner<J>>,
+    inner: session_return::SessionHandle<J>,
     authority: Option<WorkerJobAuthorityOwner<J>>,
     restore_phase: u8,
 }
@@ -3546,7 +3547,7 @@ impl<J> Drop for WorkerJobOutcome<J> {
 }
 
 pub struct WorkerJobRejected<J> {
-    inner: Arc<WorkerJobSessionInner<J>>,
+    inner: session_return::SessionHandle<J>,
     authority: Option<WorkerJobAuthorityOwner<J>>,
     kind: semio_framework_async::WorkerSubmitErrorKind,
 }

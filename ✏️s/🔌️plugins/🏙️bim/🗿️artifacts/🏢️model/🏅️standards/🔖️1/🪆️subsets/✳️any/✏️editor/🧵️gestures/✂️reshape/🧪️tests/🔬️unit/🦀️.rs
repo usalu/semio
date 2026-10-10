@@ -108,7 +108,7 @@ async fn with_nothing_selected_align_first_selects_the_pressed_element() {
 #[semio_framework_async_macros::async_test]
 async fn split_parts_a_beam_where_it_is_pressed() {
     let mut snapshot = room();
-    let beam = Beam { storey: "st-ground".into(), beam_type: "bm-20".into(), start: Point2 { x: 0.0, y: 2.0 }, end: Point2 { x: 8.0, y: 2.0 }, top_offset: 0.0, phase: Phase::New, name: "Beam".into() };
+    let beam = Beam { storey: "st-ground".into(), beam_type: "bm-20".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 2.0 }, end: Point2 { x: 8.0, y: 2.0 } }, top_offset: 0.0, end_top_offset: None, phase: Phase::New, name: "Beam".into() };
     snapshot.beams.insert("b-1".into(), beam);
     let mut rig = Rig::plan("split", snapshot);
     rig.mv(2.0, 2.0);
@@ -116,8 +116,10 @@ async fn split_parts_a_beam_where_it_is_pressed() {
     let step = rig.down(2.0, 2.0);
     let ModelMutation::SplitBeam(split) = only(&step.mutations) else { panic!("a split-beam") };
     assert_eq!((split.id.as_str(), split.t), ("b-1", 0.25));
-    assert_eq!(rig.snapshot.beams["b-1"].end, Point2 { x: 2.0, y: 2.0 });
-    assert_eq!(rig.snapshot.beams[&split.new_id].start, Point2 { x: 2.0, y: 2.0 });
+    let crate::Axis::Line { end, .. } = rig.snapshot.beams["b-1"].axis else { panic!("a straight beam") };
+    assert_eq!(end, Point2 { x: 2.0, y: 2.0 });
+    let crate::Axis::Line { start, .. } = rig.snapshot.beams[&split.new_id].axis else { panic!("a straight beam") };
+    assert_eq!(start, Point2 { x: 2.0, y: 2.0 });
 }
 
 #[semio_framework_async_macros::async_test]

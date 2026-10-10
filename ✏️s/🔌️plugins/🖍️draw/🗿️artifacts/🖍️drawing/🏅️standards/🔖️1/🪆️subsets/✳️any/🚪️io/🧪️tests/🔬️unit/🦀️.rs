@@ -19,7 +19,7 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     if let DrawingLayerNode::Shape(shape) = &mut gradient_rect {
         shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![crate::GradientStop {offset:0.0,color:[1.0,0.0,0.0,1.0]},crate::GradientStop {offset:1.0,color:[0.0,0.0,1.0,0.5]}].into() });
     }
-    let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0 });
+    let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0, font_family: crate::DrawingFontFamily::Anta });
     let mut assets = semio_framework_value::paged::PagedMap::default();
     assets.insert("img".into(), DrawingImageAsset { width: 4, height: 4, samples: vec![[0,0,0,0];16].into() });
     let image = create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image", "img");

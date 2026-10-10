@@ -5,8 +5,11 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
 use crate::{ModelInference, ModelSnapshot};
+use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use std::collections::BTreeMap;
 
 #[path = "✒️ink/🦀️.rs"]
@@ -15,6 +18,8 @@ pub mod ink;
 pub mod pdf;
 #[path = "🎨️svg/🦀️.rs"]
 pub mod svg;
+#[path = "📊️tables/🦀️.rs"]
+pub mod tables;
 
 pub use ink::TitleLabels;
 
@@ -62,6 +67,23 @@ pub fn sheets_pdf(model: &ModelSnapshot, inferred: &ModelInference, only: Option
     let title = if model.project.name.is_empty() { "BIM model" } else { model.project.name.as_str() };
     pdf::sheets_pdf(title, &layouts(model, inferred, only), &drawings(inferred), labels)
 }
+
+//#region 🔖️Serializer
+/// 📖️ The PDF 1.7 serializer of the sheet set of the BIM model: one page per sheet in print order, English headings.
+pub struct ModelIntoSheetsPdf;
+
+impl Serializer<ModelSnapshot> for ModelIntoSheetsPdf {
+    const INTO: Dialect = PDF_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let bytes = registry::try_with_inference(None, from, |inferred| sheets_pdf(from, inferred, None, &TitleLabels::english()))
+            .map_err(|error| error.to_string())
+            .and_then(|written| written)
+            .map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoSheetsPdf: {message}"))))?;
+        Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
+    }
+}
+//#endregion 🔖️Serializer
 
 #[cfg(test)]
 #[path = "🧪️tests/🧰️testkit/🦀️.rs"]

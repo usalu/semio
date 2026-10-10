@@ -1,1 +1,15 @@
-{}
+{
+  "text_notes": {
+    "note-1": {
+      "entry": "Created",
+      "position": {
+        "x": 2.0,
+        "y": 2.0
+      },
+      "rotation": 0.0,
+      "storey": "st-ground",
+      "style": "as-plan",
+      "text": "Verify on site"
+    }
+  }
+}

@@ -24,6 +24,7 @@ export class ScenePlanCloseJob{
    case "group":this.leaf(owner.value.id);this.leaf(owner.value.blendMode);break;
    case "content":{const c=owner.value;switch(c.kind){
     case "path":this.leaf(c.segments);this.paint(c.fill,c.stroke);break;
+    case "glyphs":this.leaf(c.content);this.leaf(c.segments);this.paint(c.fill,c.stroke);break;
     case "image":this.leaf(c.asset);break;
     case "group":this.stack.push({kind:"strings",value:c.children});break;
     case "text":this.leaf(c.content);this.paint(c.fill,c.stroke);break;

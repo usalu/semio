@@ -3,19 +3,7 @@
 //! and md's `MdBlock`/`MdInline`; replaces `PageDoc`/`TextDoc`. Reused by `presentation`'s
 //! `SlideShape::TextBox`, which embeds `DocBlock` directly (spec-mandated cross-reuse, see
 //! `w1b-type-ownership.md`) — `DocBlock`/`DocRun`/`DocStyle` are this subset's owned types.
-
-
-
-
-
-
-
-
-
-
-
 use framework_schema::ArtifactSchema;
-
 //#region 🔖️DocumentModel
 /// 🎨️ Character-level formatting for one `DocRun`. Named struct (never a bare tuple) per the f6
 /// §4.3 `DslField`-for-tuples gap this schema style avoids everywhere.
@@ -37,7 +25,6 @@ pub struct RunStyle {
     #[value(default)]
     pub link: Option<String>,
 }
-
 /// ✍️ One inline run of literal text plus its formatting.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -46,14 +33,12 @@ pub struct DocRun {
     #[value(default)]
     pub style: RunStyle,
 }
-
 impl DocRun {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn plain(text: impl Into<String>) -> Self {
         Self { text: text.into(), style: RunStyle::default() }
     }
 }
-
 /// 🎨️ One named paragraph/character style (docx `w:style`-shaped: id, display name, optional
 /// parent for inheritance chains).
 /// 🩹 Derives `Default` (empty id/name, no parent) so `DocStyle` satisfies the shared
@@ -72,7 +57,6 @@ pub struct DocStyle {
     #[value(default)]
     pub based_on: Option<String>,
 }
-
 /// 🖼️ One embedded raster/vector image, addressed by id from `DocBlock::Image`. Derives
 /// `Default` for the same shared-`engine::triples`-bound reason as `DocStyle` above.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -85,7 +69,6 @@ pub struct DocImage {
     #[value(default)]
     pub bytes: Vec<u8>,
 }
-
 /// 🔲 One list item — recursively holds its own block content (a list item may itself contain
 /// paragraphs, nested lists, tables, …), matching CommonMark/WordprocessingML's own model.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -94,7 +77,6 @@ pub struct DocListItem {
     #[value(default)]
     pub blocks: Vec<DocBlock>,
 }
-
 /// 🔲️ One table cell — recursively holds block content.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -102,7 +84,6 @@ pub struct DocTableCell {
     #[value(default)]
     pub blocks: Vec<DocBlock>,
 }
-
 /// ➖️ One table row.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -110,7 +91,6 @@ pub struct DocTableRow {
     #[value(default)]
     pub cells: Vec<DocTableCell>,
 }
-
 /// 🧱️ One block-level content item — the recursive tree shape the master plan's snapshot spec
 /// names: Paragraph/Heading/List/Table/Code/Quote/Image/PageBreak. `List`/`Table`/`Quote` nest
 /// `DocBlock` recursively (list items, table cells, blockquote body), the same recursive-diff
@@ -118,7 +98,7 @@ pub struct DocTableRow {
 /// 🩹 Derives `Default` (`#[default]` on the fieldless `PageBreak` variant) for the same shared
 /// `engine::triples::IndexedTripleDiff<D,T>` bound reason `DocStyle` documents above — `DocBlock`
 /// is used as `T` in `BlocksDiff = IndexedTripleDiff<DocBlockDiff, DocBlock>`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum DocBlock {
     Paragraph {
@@ -166,7 +146,6 @@ pub enum DocBlock {
     #[default]
     PageBreak,
 }
-
 impl DocBlock {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn paragraph(text: impl Into<String>) -> Self {
@@ -174,11 +153,9 @@ impl DocBlock {
     }
 }
 //#endregion 🔖️DocumentModel
-
 //#region 🔖️Ids
 pub const STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.document";
 //#endregion 🔖️Ids
-
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -199,68 +176,20 @@ pub struct SemioDocumentSnapshot {
     #[value(default)]
     pub blocks: Vec<DocBlock>,
 }
-
 impl Default for SemioDocumentSnapshot {
     fn default() -> Self {
         Self { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Default::default(), images: Default::default(), blocks: Default::default() }
     }
 }
 //#endregion 🔖️Snapshot
-
 //#region 🔖️TextCodec
-
-
 //#endregion 🔖️TextCodec
-
 //#region 🔖️BinaryCodec
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️BinaryCodec
-
 //#region 🔖️HandcraftedArtifactCodecs
-
-
-
 //#endregion 🔖️HandcraftedArtifactCodecs
-
 //#region 🌉️ExternalCodecBridge
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🌉️ExternalCodecBridge
-
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.document` snapshot — one style, one image, and one block of every
 /// kind (Heading/Paragraph/List/Table/Code/Quote/Image/PageBreak), exercising every leaf shape at
@@ -286,15 +215,9 @@ pub(crate) fn demo_semio_document_snapshot() -> SemioDocumentSnapshot {
     }
 }
 //#endregion 🔖️Demo
-
 //#region 🔖️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-
-
-
-
-
-
+                                                   

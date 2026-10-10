@@ -1,0 +1,26 @@
+{
+  "mutation": "createMepElement",
+  "id": "mep-new",
+  "mep": {
+    "storey": "st-ground",
+    "system": "Gas",
+    "shape": {
+      "Pipe": {
+        "diameter": -0.02
+      }
+    },
+    "path": [
+      {
+        "x": 0,
+        "y": 4,
+        "z": 2.6
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "z": 2.6
+      }
+    ],
+    "name": "Thin"
+  }
+}

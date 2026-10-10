@@ -3,7 +3,7 @@
 use super::transient_publication::transient_store_disposer;
 use crate::store::TransientStore;
 use crate::{store, ArtifactOwnedDisposer, NoTransient, NoTransientMutation};
-use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use std::sync::Arc;
 
 type Store = TransientStore<NoTransient, NoTransientMutation>;
@@ -14,95 +14,14 @@ const _: () = assert!(size_of::<NoTransientMutation>() == 0 && !std::mem::needs_
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct NoTransientRetirementFactory;
 
-struct NoTransientRetirement(Option<Arc<NoTransient>>);
-struct NoTransientOwnedRetirement(Option<NoTransient>);
-
 impl store::SnapshotRetirementFactory<NoTransient> for NoTransientRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<NoTransient>) -> usize { std::mem::size_of::<NoTransientRetirement>() }
-
-    fn retire(&self, root: Arc<NoTransient>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<NoTransient>)> {
-        match (RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<NoTransientRetirement>(), depth: 1 }).admit(grant) {
-            Ok(progress) => Ok((Box::new(NoTransientRetirement(Some(root))), progress)),
-            Err(error) => Err((error, root)),
-        }
-    }
+    fn retirement_birth_bytes(&self, _: &Arc<NoTransient>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<NoTransient>() }
+    fn retire(&self, root: Arc<NoTransient>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<NoTransient>)> { semio_framework_value::retirement::shared::admit_shared_retirement(root, grant, true) }
 }
 
 impl store::ArtifactOwnedValueRetirementFactory<NoTransient> for NoTransientRetirementFactory {
-    fn retirement_birth_bytes(&self, _root: &NoTransient) -> usize { std::mem::size_of::<NoTransientOwnedRetirement>() }
-
-    fn retire_owned(&self, root: NoTransient, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, NoTransient)> {
-        match (RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<NoTransientOwnedRetirement>(), depth: 1 }).admit(grant) {
-            Ok(progress) => Ok((Box::new(NoTransientOwnedRetirement(Some(root))), progress)),
-            Err(error) => Err((error, root)),
-        }
-    }
-}
-
-fn close_empty<T>(slot: &mut Option<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    if slot.is_none() {
-        return Ok(RetainedCloneStep::Complete(Default::default()));
-    }
-    if grant.maximum_depth < 1 {
-        return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "empty transient retirement exceeds admitted depth"));
-    }
-    if grant.maximum_items == 0 {
-        return Ok(RetainedCloneStep::Progress(Default::default()));
-    }
-    drop(slot.take());
-    Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-}
-
-impl store::ErasedSnapshotRetirement for NoTransientRetirement {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        close_empty(&mut self.0, grant)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(self.0.is_some())) }
-}
-
-impl Drop for NoTransientRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.0.is_none(), "empty transient must return its exact root before drop");
-        }
-    }
-}
-
-impl store::ErasedSnapshotRetirement for NoTransientOwnedRetirement {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        close_empty(&mut self.0, grant)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(self.0.is_some())) }
-}
-
-impl Drop for NoTransientOwnedRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.0.is_none(), "empty transient owned value must retire before drop");
-        }
-    }
+    fn retirement_birth_bytes(&self, _: &NoTransient) -> usize { semio_framework_value::retirement::owned_retirement_birth_bytes::<NoTransient>() }
+    fn retire_owned(&self, root: NoTransient, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, NoTransient)> { semio_framework_value::retirement::admit_owned_retirement(root, grant) }
 }
 
 pub fn no_transient_store_disposer() -> Box<dyn ArtifactOwnedDisposer<Store>> {

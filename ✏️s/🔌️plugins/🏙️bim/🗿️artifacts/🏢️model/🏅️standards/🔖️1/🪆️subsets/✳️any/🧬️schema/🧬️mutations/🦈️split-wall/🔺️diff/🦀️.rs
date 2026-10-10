@@ -3,7 +3,7 @@
 //! patch with its offset re-based onto the new wall, and every sweep of the wall is repeated on the new wall (as `<sweep id>-<new wall id>`), because a sweep runs along the whole face of its host. Both parts of an arc keep the sweep share of their arc length
 //! (`bulge = tan(sweep / 4)`); an opening belongs to the part that contains its offset.
 
-use super::super::elements;
+use super::super::{component_rules, elements};
 use super::super::wall_geometry::{snap, split, Split};
 use super::SplitWall;
 use crate::{Entry, KeyedDelta, ModelDiff, ModelSnapshot, Opening, OpeningPatch, Wall, WallPatch, WallSweep};
@@ -28,6 +28,9 @@ pub fn diff(payload: &SplitWall, base: &ModelSnapshot) -> MutationOutcome<ModelD
     let Some(parts) = plan(payload, base) else {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A wall splits strictly between its ends into two parts that both have length.", ["t"]);
     };
+    if let Some(component) = component_rules::mounted_on(base, &payload.id).next() {
+        return MutationOutcome::refuse(OutcomeCode::TargetReferenced, format!("Wall \"{}\" still carries component \"{component}\"; unmount it before the wall is split.", payload.id), [payload.id.clone()]);
+    }
     let moved: BTreeMap<String, Entry<Opening, OpeningPatch>> = carried(base, &payload.id, parts.at)
         .map(|(id, opening)| (id.clone(), Entry::Patched(OpeningPatch { host: Some(payload.new_id.clone()), offset: Some(snap(opening.offset - parts.at)), ..Default::default() })))
         .collect();

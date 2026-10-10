@@ -71,7 +71,7 @@ mod app_commands_tests {
 
     mod keyed {
         use semio_framework_value_derive::{FromValue, ToValue};
-        #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+        #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
         pub struct AddWidget {
             pub kind: String,
         }
@@ -84,7 +84,7 @@ mod app_commands_tests {
 
     mod keyed_unit {
         use semio_framework_value_derive::{FromValue, ToValue};
-        #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+        #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
         pub struct DeleteSelection {}
 
         pub fn handle(_payload: &DeleteSelection, _doc: &crate::ArtifactView<'_, u32>, _cfg: &crate::ConfigView<'_, ()>, _ctx: &mut u32) -> Result<crate::Emit<String, crate::NoConfigMutation>, crate::Fault> {

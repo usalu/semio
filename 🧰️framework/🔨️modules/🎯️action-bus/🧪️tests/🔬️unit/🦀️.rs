@@ -17,7 +17,6 @@ struct ImmediateJob {
     cursor: usize,
     closing: bool,
 }
-
 impl InteractiveJob for ImmediateJob {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,ValueError> {
         if self.published.is_some() { return JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref()); }
@@ -81,8 +80,12 @@ impl ImmediateJob {
         if let Some(payload)=self.published.as_ref(){return payload.retirement_demands()}
         Ok(Default::default())
     }
+    fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.rejected.is_none()}
 }
-
+fn exact_close_grant(job:&impl InteractiveJob)->semio_framework_job::RetainedCloneGrant{
+    let copy=job.next_close_copy_byte_demand().unwrap();let release=job.next_close_release_byte_demand().unwrap();
+    semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:job.next_close_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:job.next_close_depth_demand().unwrap()}
+}
 struct EchoFactory {
     keys: Vec<ToolFactoryKey>,
     classification: InteractiveJobClassification,
@@ -478,7 +481,6 @@ fn retained_wire_pages_are_admitted_sealed_transferred_and_closed_by_logical_byt
     println!("[DEBUG] ActionBus original short wire logical8 physical={} body8 denieditems/release/depth0 terminalComplete", grant.maximum_release_bytes);
     assert!(dispatch.job.terminal_is_empty());
 }
-
 #[test]
 fn production_typed_payload_and_retained_pages_enter_the_same_registered_factory_job() {
     let bus = ActionBus::new();

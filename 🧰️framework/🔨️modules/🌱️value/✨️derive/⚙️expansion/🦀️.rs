@@ -231,6 +231,7 @@ struct ContainerAttrs {
     crate_path: Option<String>,
     retire_with: Option<String>,
     default_controlled: Option<String>,
+    deserialize_controlled_with: Option<String>,
 }
 
 impl ContainerAttrs {
@@ -324,6 +325,7 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
             "crate" => out.crate_path = value,
             "retire_with" => out.retire_with = value,
             "default_controlled" => out.default_controlled = value,
+            "deserialize_controlled_with" => out.deserialize_controlled_with = value,
             other => return Err(syn::Error::new_spanned(&attrs[0], format!("#[value(...)] does not support container attribute `{other}`"))),
         }
     }
@@ -2212,6 +2214,7 @@ fn type_mentions_owner(ty:&syn::Type,owner:&syn::Ident)->bool {
 }
 
 fn controlled_from_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Path)->syn::Result<proc_macro2::TokenStream>{
+    if let Some(path)=&container.deserialize_controlled_with{let visitor:syn::Path=syn::parse_str(path).map_err(|error|syn::Error::new_spanned(input,error))?;return Ok(quote!{#visitor(value,control)});}
     let recursive=input.data.clone();
     let mentions=match &recursive{Data::Struct(data)=>data.fields.iter().any(|f|type_mentions_owner(&f.ty,&input.ident)),Data::Enum(data)=>data.variants.iter().flat_map(|v|v.fields.iter()).any(|f|type_mentions_owner(&f.ty,&input.ident)),_=>false};
     if mentions&&container.retire_with.is_none(){return Ok(quote!{control.checkpoint()?;Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "recursive value owner requires explicit controlled retirement"))})}

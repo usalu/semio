@@ -18,7 +18,11 @@
     "diagnostics",
     "zone_totals",
     "scheme_totals",
-    "diagnostic_index"
+    "diagnostic_index",
+    "families",
+    "effective_properties",
+    "components",
+    "mep"
   ],
   "properties": {
     "element_solids": {
@@ -112,6 +116,45 @@
     "diagnostic_index": {
       "$ref": "#/$defs/DiagnosticIndex",
       "x-semio-derived": true
+    },
+    "families": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/FamilyValue"
+      },
+      "x-semio-derived": true
+    },
+    "effective_properties": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/EffectiveProperties"
+      },
+      "x-semio-derived": true
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ComponentValue"
+      },
+      "x-semio-derived": true
+    },
+    "mep": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/MepValue"
+      },
+      "x-semio-derived": true
+    },
+    "analytical_members": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/AnalyticalMember"
+      },
+      "x-semio-state": "derived"
+    },
+    "structural_analysis": {
+      "$ref": "#/$defs/StructuralAnalysis",
+      "x-semio-state": "derived"
     }
   },
   "$defs": {
@@ -823,6 +866,12 @@
           "items": {
             "$ref": "#/$defs/MullionQuantity"
           }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -841,7 +890,9 @@
         "Railing",
         "Ramp",
         "Space",
-        "Ceiling"
+        "Ceiling",
+        "Component",
+        "Mep"
       ]
     },
     "LayerQuantity": {
@@ -901,6 +952,12 @@
           }
         },
         "finishes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Totals"
+          }
+        },
+        "groups": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/Totals"
@@ -1551,7 +1608,13 @@
         "RampOutline",
         "RampLanding",
         "RampArrow",
-        "RampTag"
+        "RampTag",
+        "ComponentOutline",
+        "ComponentFront",
+        "ComponentConnector",
+        "MepAxis",
+        "MepBand",
+        "MepDrop"
       ]
     },
     "PlanVertex": {
@@ -1860,7 +1923,31 @@
         "RefCurtainWallType",
         "RefCurtainPanel",
         "RefCurtainOverrideHost",
-        "ColumnTiltInvalid"
+        "ColumnTiltInvalid",
+        "FamilySyntax",
+        "FamilyKind",
+        "FamilyCycle",
+        "FamilyUnknown",
+        "FamilyDivisionByZero",
+        "FamilyNegative",
+        "FamilyDependency",
+        "FamilyDomain",
+        "FamilyOutline",
+        "RefProfileFamily",
+        "PropertyRequiredMissing",
+        "PropertyKindMismatch",
+        "PropertyOutOfRange",
+        "PropertyNotAllowed",
+        "ClassificationUnknownCode",
+        "RefClassificationSystem",
+        "ComponentOutsideStorey",
+        "ComponentInWall",
+        "RefComponentFamily",
+        "RefComponentHost",
+        "ComponentOverride",
+        "MepDegenerate",
+        "MepClash",
+        "TerminalUnconnected"
       ]
     },
     "Diagnostic": {
@@ -2227,6 +2314,925 @@
         },
         "length": {
           "type": "number"
+        }
+      }
+    },
+    "FamilyCategory": {
+      "enum": [
+        "Furniture",
+        "Equipment",
+        "Casework",
+        "Plumbing",
+        "Lighting",
+        "Mechanical",
+        "Electrical",
+        "Generic",
+        "Profile"
+      ]
+    },
+    "ParameterKind": {
+      "enum": [
+        "Length",
+        "Angle",
+        "Real",
+        "Integer",
+        "Boolean",
+        "Text",
+        "Material"
+      ]
+    },
+    "IssueOwner": {
+      "enum": [
+        "Parameter",
+        "Solid",
+        "Family"
+      ]
+    },
+    "FamilyIssueCode": {
+      "enum": [
+        "Syntax",
+        "Kind",
+        "Cycle",
+        "Unknown",
+        "DivisionByZero",
+        "Negative",
+        "Dependency",
+        "Domain",
+        "Outline"
+      ]
+    },
+    "FamilyIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "owner",
+        "subject",
+        "field",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/FamilyIssueCode"
+        },
+        "owner": {
+          "$ref": "#/$defs/IssueOwner"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "detail": {
+          "type": "string"
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ParameterValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Number"
+          ],
+          "properties": {
+            "Number": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Length"
+          ],
+          "properties": {
+            "Length": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Angle"
+          ],
+          "properties": {
+            "Angle": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Boolean"
+          ],
+          "properties": {
+            "Boolean": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Text"
+          ],
+          "properties": {
+            "Text": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ResolvedParameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "formula"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ParameterKind"
+        },
+        "formula": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/ParameterValue"
+        }
+      }
+    },
+    "FamilySolidMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "material",
+        "visible",
+        "bounds",
+        "volume",
+        "area"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "material": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "bounds": {
+          "$ref": "#/$defs/SolidBounds"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        }
+      }
+    },
+    "FamilyValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/FamilyCategory"
+        },
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ResolvedParameter"
+          }
+        },
+        "solids": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/FamilySolidMesh"
+          }
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vertex"
+          }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FamilyIssue"
+          }
+        }
+      }
+    },
+    "PropertySource": {
+      "enum": [
+        "Own",
+        "Type",
+        "Default"
+      ]
+    },
+    "PropertyIssue": {
+      "enum": [
+        "Missing",
+        "KindMismatch",
+        "BelowMinimum",
+        "AboveMaximum",
+        "NotAllowed"
+      ]
+    },
+    "PropertyFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "template",
+        "set",
+        "property",
+        "issue"
+      ],
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "set": {
+          "type": "string"
+        },
+        "property": {
+          "type": "string"
+        },
+        "issue": {
+          "$ref": "#/$defs/PropertyIssue"
+        }
+      }
+    },
+    "EffectivePropertyValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "source"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/PropertyValue"
+        },
+        "source": {
+          "$ref": "#/$defs/PropertySource"
+        },
+        "template": {
+          "type": "string"
+        }
+      }
+    },
+    "EffectiveProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values",
+        "findings"
+      ],
+      "properties": {
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/EffectivePropertyValue"
+            }
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PropertyFinding"
+          }
+        }
+      }
+    },
+    "MepSystem": {
+      "enum": [
+        "Supply",
+        "Return",
+        "Exhaust",
+        "DomesticWater",
+        "Waste",
+        "Gas",
+        "Power",
+        "Data",
+        "Lighting"
+      ]
+    },
+    "MepSectionKind": {
+      "enum": [
+        "Duct",
+        "Pipe",
+        "Tray"
+      ]
+    },
+    "MepIssueCode": {
+      "enum": [
+        "NonFinite",
+        "SectionDegenerate",
+        "PathDegenerate"
+      ]
+    },
+    "ComponentIssueCode": {
+      "enum": [
+        "FamilyMissing",
+        "FamilyProfile",
+        "HostMissing",
+        "HostOtherStorey",
+        "HostDegenerate",
+        "Override",
+        "NonFinite"
+      ]
+    },
+    "Point3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "HostFit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wall",
+        "station",
+        "side",
+        "face",
+        "normal"
+      ],
+      "properties": {
+        "wall": {
+          "type": "string"
+        },
+        "station": {
+          "type": "number"
+        },
+        "side": {
+          "type": "number"
+        },
+        "face": {
+          "$ref": "#/$defs/Point2"
+        },
+        "normal": {
+          "$ref": "#/$defs/Point2"
+        }
+      }
+    },
+    "ComponentPlacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "yaw",
+        "mirrored"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "yaw": {
+          "type": "number"
+        },
+        "mirrored": {
+          "type": "boolean"
+        },
+        "host": {
+          "$ref": "#/$defs/HostFit"
+        }
+      }
+    },
+    "Connector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "colour",
+        "position"
+      ],
+      "properties": {
+        "system": {
+          "$ref": "#/$defs/MepSystem"
+        },
+        "colour": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Point3"
+        }
+      }
+    },
+    "ComponentIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "subject",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/ComponentIssueCode"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "family_issue": {
+          "$ref": "#/$defs/FamilyIssue"
+        }
+      }
+    },
+    "ComponentValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "family",
+        "placement",
+        "footprint",
+        "footprint_area",
+        "bounds",
+        "volume",
+        "overridden",
+        "parameters",
+        "issues"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "family": {
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/FamilyCategory"
+        },
+        "placement": {
+          "$ref": "#/$defs/ComponentPlacement"
+        },
+        "footprint": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point2"
+          }
+        },
+        "footprint_area": {
+          "type": "number"
+        },
+        "bounds": {
+          "$ref": "#/$defs/SolidBounds"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "connector": {
+          "$ref": "#/$defs/Connector"
+        },
+        "overridden": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ResolvedParameter"
+          }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentIssue"
+          }
+        }
+      }
+    },
+    "MepSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "width",
+        "height",
+        "area",
+        "perimeter",
+        "label"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/MepSectionKind"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        },
+        "perimeter": {
+          "type": "number"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "MepSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "length"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/Point3"
+        },
+        "to": {
+          "$ref": "#/$defs/Point3"
+        },
+        "length": {
+          "type": "number"
+        }
+      }
+    },
+    "MepIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/MepIssueCode"
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "MepValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "system",
+        "colour",
+        "section",
+        "path",
+        "segments",
+        "length",
+        "volume",
+        "surface_area",
+        "bounds",
+        "issues"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "system": {
+          "$ref": "#/$defs/MepSystem"
+        },
+        "colour": {
+          "type": "string"
+        },
+        "section": {
+          "$ref": "#/$defs/MepSection"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point3"
+          }
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MepSegment"
+          }
+        },
+        "length": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "surface_area": {
+          "type": "number"
+        },
+        "bounds": {
+          "$ref": "#/$defs/SolidBounds"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MepIssue"
+          }
+        }
+      }
+    },
+    "AnalyticalMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "element",
+        "storey",
+        "kind",
+        "path",
+        "boundary",
+        "holes",
+        "length",
+        "area",
+        "start_offset",
+        "end_offset"
+      ],
+      "properties": {
+        "element": {
+          "type": "string"
+        },
+        "storey": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+          }
+        },
+        "boundary": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+            }
+          }
+        },
+        "length": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        },
+        "start_offset": {
+          "type": "number"
+        },
+        "end_offset": {
+          "type": "number"
+        }
+      }
+    },
+    "RigidLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "member",
+        "other",
+        "start",
+        "end",
+        "length"
+      ],
+      "properties": {
+        "member": {
+          "type": "string"
+        },
+        "other": {
+          "type": "string"
+        },
+        "start": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+        },
+        "end": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+        },
+        "length": {
+          "type": "number"
+        }
+      }
+    },
+    "ResolvedSupport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authored",
+        "points"
+      ],
+      "properties": {
+        "authored": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralSupport"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+          }
+        }
+      }
+    },
+    "ResolvedLoad": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authored",
+        "points",
+        "factor"
+      ],
+      "properties": {
+        "authored": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralLoad"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+          }
+        },
+        "factor": {
+          "type": "number"
+        }
+      }
+    },
+    "StructuralAnalysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "members",
+        "rigid_links",
+        "supports",
+        "loads",
+        "findings"
+      ],
+      "properties": {
+        "members": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/AnalyticalMember"
+          }
+        },
+        "rigid_links": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/RigidLink"
+          }
+        },
+        "supports": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ResolvedSupport"
+          }
+        },
+        "loads": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ResolvedLoad"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

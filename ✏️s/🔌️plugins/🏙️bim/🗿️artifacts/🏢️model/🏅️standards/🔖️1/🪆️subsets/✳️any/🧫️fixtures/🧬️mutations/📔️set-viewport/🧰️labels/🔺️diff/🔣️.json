@@ -1,1 +1,10 @@
-{}
+{
+  "viewports": {
+    "vp-1": {
+      "entry": "Patched",
+      "label": {
+        "value": "Entrance floor"
+      }
+    }
+  }
+}

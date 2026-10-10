@@ -10,7 +10,7 @@ pub const BIM_VIEW_MODE_VIEW: &str = "view";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::bim::create_bim_viewer`.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: BIM_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native(BimViewerLabels::NATIVE_EN.mode_view.as_str(), BimViewerLabels::NATIVE_DE.mode_view.as_str()), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: BIM_VIEW_MODE_VIEW.into(), label: BimViewerLabels::localized(|labels| labels.mode_view), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ The default layout: the world window on the left and the plan window on the right; the windows carry their own localized labels, so the tabs take them.

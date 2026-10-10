@@ -26,6 +26,10 @@ impl ToValue for LawOp {
     fn to_value(&self) -> DslValue {
         self.0.to_value()
     }
+
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        self.0.to_value_controlled(control)
+    }
 }
 
 impl FromValue for LawOp {
@@ -90,11 +94,25 @@ impl MemberStoreOwner<LawOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, LawOp>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, LawOp>>()?, depth: 1 })
+        super::fixture_authoring_birth_demand::<LawOp>()
     }
 
     fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, LawOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, LawOp>> {
-        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, LawOp>::new()))
+        super::fixture_authoring_member_owners::<LawOp>(grant)
+    }
+}
+
+impl ArtifactCanonicalJson for LawOp {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+        self.0.canonical_json_node(path)
+    }
+
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
+        self.0.canonical_json_key(path, index)
+    }
+
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+        self.0.canonical_json_borrowed_root()
     }
 }
 
@@ -113,8 +131,8 @@ async fn law_store(id: &str) -> LawStore {
     ArtifactStore::new(create_document_envelope::<DemoSnapshot, LawOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None)).await
 }
 
-async fn apply(store: &mut LawStore, operation: LawOp, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, identity).await.expect("a clean edit applies");
+async fn apply(store: &mut LawStore, operation: LawOp, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    test_support::dispatch_test_command(store, ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("a clean edit applies");
 }
 
 fn set(n: i32) -> LawOp {
@@ -214,7 +232,7 @@ async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_inp
     apply(&mut store, add(3), &mut identity).await;
     let ids = operation_ids(&store);
     assert_eq!(store.snapshot_ref().n, Some(1004));
-    store.dispatch(supersede(&ids[1], None), &mut identity).await.expect("an operation that plans foreign steps is withdrawn");
+    test_support::dispatch_test_command(&mut store, supersede(&ids[1], None)).await.expect("an operation that plans foreign steps is withdrawn");
     assert_eq!(store.snapshot_ref().n, Some(4));
     let outcome = store.mutation_outcomes().expect("durable outcomes").into_iter().find(|outcome| outcome.mutation_id == ids[1]).expect("the planner's outcome");
     assert_eq!((outcome.worst, outcome.superseded, outcome.withdrawn), (None, true, true), "a withdrawal carries no fault");
@@ -236,10 +254,10 @@ async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_inp
         assert_eq!((replica.snapshot_ref().n, replica.supersessions().contains_key(&ids[1])), (Some(4), true), "rotation {rotation}");
     }
     let (generation, transitions) = (store.generation(), store.envelope().transitions.len());
-    let refused = store.dispatch(supersede(&ids[1], Some(add(1001))), &mut identity).await;
+    let refused = test_support::dispatch_test_command(&mut store, supersede(&ids[1], Some(add(1001)))).await;
     assert!(matches!(refused, Err(VcsError::ValidationFailed(_))), "{refused:?}");
     assert_eq!((store.generation(), store.envelope().transitions.len(), store.snapshot_ref().n), (generation, transitions, Some(4)), "a refused input records nothing");
-    store.dispatch(supersede(&ids[1], Some(add(1000))), &mut identity).await.expect("the recorded input restores the planner");
+    test_support::dispatch_test_command(&mut store, supersede(&ids[1], Some(add(1000)))).await.expect("the recorded input restores the planner");
     assert_eq!(store.snapshot_ref().n, Some(1004));
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(reloaded(&store).await.snapshot_ref().n, Some(1004));
@@ -286,7 +304,7 @@ async fn every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table
         assert_eq!(hot_path_census::take(), hot_path_census::HotPathCensus::default(), "{name}: opening consumes captured unit facts without prefix folding or hashing");
         assert_eq!(store.unit_operations(&target).expect("the unit's operations"), vec![target.clone()], "{name}: this store's part");
         let (generation, transitions, state) = (store.generation(), store.envelope().transitions.len(), store.snapshot_ref().n);
-        let authored = store.dispatch(supersede(&target, None), &mut identity).await;
+        let authored = test_support::dispatch_test_command(&mut store, supersede(&target, None)).await;
         match row["supersede"].as_str().expect("a supersede verdict") {
             "authored" => {
                 authored.unwrap_or_else(|error| panic!("{name}: an operation that is its own unit withdraws, got {error}"));
@@ -362,7 +380,7 @@ async fn a_refused_inverse_is_one_fatal_mutation_and_the_session_stays_repairabl
     let mut local = law_store("inverse-refused-local").await;
     apply(&mut local, set(500), &mut identity).await;
     let generation = local.generation();
-    let refused = local.dispatch(ArtifactCommand::Apply { mutations: vec![set(13)], transaction: None }, &mut identity).await;
+    let refused = test_support::dispatch_test_command(&mut local, ArtifactCommand::Apply { mutations: vec![set(13)], transaction: None }).await;
     assert!(matches!(refused, Err(VcsError::InverseRefused(_))), "a new command whose inverse is refused is refused whole");
     assert_eq!((local.generation(), local.snapshot_ref().n), (generation, Some(500)));
 }

@@ -65,6 +65,7 @@ fn fresh_ids_avoid_every_collection() {
     assert_eq!(snapshot.fresh_id("Im"), "Im2");
 }
 
+#[cfg(feature = "component-app-assembly")]
 #[test]
 fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     use pack::record as pack_rt;

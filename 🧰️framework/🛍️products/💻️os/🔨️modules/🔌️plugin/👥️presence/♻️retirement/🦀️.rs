@@ -4,7 +4,7 @@ use crate::store::{Mutation, PresenceStore, PresenceStoreRetirement};
 use crate::app::PluginLifecycleStep;
 use crate::{ArtifactOwnedDisposer, Fault};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 
 fn yields(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
     grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes
@@ -156,58 +156,18 @@ impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresen
 }
 
 impl store::SnapshotRetirementFactory<crate::NoPresence> for NoPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<crate::NoPresence>) -> usize { std::mem::size_of::<NoPresenceRetirement>() }
-
-    fn retire(&self, root: Arc<crate::NoPresence>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<crate::NoPresence>)> {
-        match (RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<NoPresenceRetirement>(), depth: 1 }).admit(grant) {
-            Ok(progress) => Ok((Box::new(NoPresenceRetirement(std::mem::ManuallyDrop::new(Some(root)))), progress)),
-            Err(error) => Err((error, root)),
-        }
-    }
-}
-
-struct NoPresenceRetirement(std::mem::ManuallyDrop<Option<Arc<crate::NoPresence>>>);
-
-impl store::ErasedSnapshotRetirement for NoPresenceRetirement {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        if self.0.is_none() {
-            return Ok(RetainedCloneStep::Complete(Default::default()));
-        }
-        if grant.maximum_depth < 1 {
-            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "empty presence retirement exceeds admitted depth"));
-        }
-        if grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        drop(self.0.take());
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    fn retirement_birth_bytes(&self, _: &Arc<crate::NoPresence>) -> usize {
+        semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<crate::NoPresence>()
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(self.0.is_some())) }
-}
-
-impl Drop for NoPresenceRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.0.is_none(), "empty presence must return its exact root before drop");
-        }
+    fn retire(&self, source: Arc<crate::NoPresence>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<crate::NoPresence>)> {
+        semio_framework_value::retirement::shared::admit_shared_retirement(source, grant, true)
     }
 }
 
 /// 🛂️ A domain supplies its exact empty terminal root and predicate; the store supplies its installed factories.
 pub struct PresenceStoreOwnedDisposer<P> {
     terminal: Option<Arc<P>>,
-    terminal_root: Weak<P>,
     terminal_generation: Option<u64>,
     terminal_is_empty: fn(&P) -> bool,
     retirement: Option<PresenceStoreRetirement<P>>,
@@ -218,17 +178,13 @@ impl<P> PresenceStoreOwnedDisposer<P> {
         if !terminal_is_empty(&terminal) {
             return Err(terminal);
         }
-        Ok(Self { terminal_root: Arc::downgrade(&terminal), terminal: Some(terminal), terminal_generation: None, terminal_is_empty, retirement: None })
+        Ok(Self { terminal: Some(terminal), terminal_generation: None, terminal_is_empty, retirement: None })
     }
 }
 
 impl<P: Clone + Send + Sync + 'static> PresenceStoreOwnedDisposer<P> {
     fn owns_terminal<M: Mutation<P>>(&self, owner: &PresenceStore<P, M>) -> bool {
-        self.terminal_generation == Some(owner.generation_now())
-            && owner.retirement_started()
-            && self.terminal_root.upgrade().is_some_and(|terminal| std::ptr::eq(terminal.as_ref(), owner.local()))
-            && (self.terminal_is_empty)(owner.local())
-            && owner.peers_root().is_empty()
+        self.terminal_generation == Some(owner.generation_now()) && owner.detached_terminal_is_empty()
     }
 }
 
@@ -237,7 +193,7 @@ impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> ArtifactOwnedDisposer<Pre
         if self.retirement.is_some() && !self.owns_terminal(owner) {
             return Err(Fault::from("presence close terminal root or generation changed"));
         }
-        if self.retirement.as_ref().is_some_and(PresenceStoreRetirement::terminal_is_empty) {
+        if self.retirement.is_none() && self.terminal.is_none() && self.owns_terminal(owner) {
             return Ok(PluginLifecycleStep::Complete(Default::default()));
         }
         let demand = self.retirement_demands(owner, grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
@@ -249,7 +205,9 @@ impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> ArtifactOwnedDisposer<Pre
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             let step = retirement.close_step(child).map_err(|error| Fault::from(error.into_message()))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "presence store retirement").map_err(|error| Fault::from(error.into_message()))?;
-            return Ok(PluginLifecycleStep::retained(step, retirement.terminal_is_empty()));
+            let terminal = retirement.terminal_is_empty();
+            if terminal { self.retirement = None; }
+            return Ok(PluginLifecycleStep::retained(step, terminal && self.owns_terminal(owner)));
         }
         let terminal = self.terminal.take().ok_or_else(|| Fault::from("presence close lost its exact terminal root"))?;
         match owner.begin_retirement(terminal, self.terminal_is_empty) {
@@ -273,11 +231,16 @@ impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> ArtifactOwnedDisposer<Pre
                 demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "presence disposal depth overflow"))?;
                 Ok(demand)
             }
-            None => Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }),
+            None if self.terminal.is_some() => Ok(RetirementDemand { copy_bytes: std::mem::size_of::<PresenceStoreRetirement<P>>(), depth: 1, ..Default::default() }),
+            None => Ok(Default::default()),
         }
     }
 
     fn terminal_is_empty(&self, owner: &PresenceStore<P, M>) -> bool {
-        self.terminal.is_none() && self.owns_terminal(owner) && self.retirement.as_ref().is_some_and(PresenceStoreRetirement::terminal_is_empty)
+        self.terminal.is_none() && self.owns_terminal(owner) && self.retirement.is_none()
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        (self.terminal.is_none() && self.retirement.is_none()).then_some(std::mem::size_of::<Self>())
     }
 }

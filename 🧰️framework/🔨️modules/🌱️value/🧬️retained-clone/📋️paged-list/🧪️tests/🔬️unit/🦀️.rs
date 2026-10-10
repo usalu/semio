@@ -80,7 +80,7 @@ struct DropProbeCursor {
 
 impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
     fn advance(&mut self, source: RetainedCloneRef<'_, DropProbe>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
-        source.bind(&mut self.source)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
@@ -144,7 +144,7 @@ struct NonconformingChildCursor {
 
 impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
     fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
-        source.bind(&mut self.source)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: grant.maximum_copy_bytes.saturating_add(1), retained_capacity_bytes: 0, released_bytes: 0 }))
     }
 
@@ -195,8 +195,8 @@ struct NonconformingRetirementChildCursor {
 }
 
 impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetirementChildCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
-        source.bind(&mut self.source)?;
+    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if let Some(progress)=source.bind(&mut self.source,grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         self.output = Some(NonconformingRetirementChild);
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
     }
@@ -360,7 +360,7 @@ struct InsufficientScaffoldChildCursor {
 
 impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChildCursor {
     fn advance(&mut self, source: RetainedCloneRef<'_, InsufficientScaffoldChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
-        source.bind(&mut self.source)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
@@ -705,3 +705,4 @@ fn retained_paged_list_abandonment_panics_without_running_payload_destructors() 
     assert_eq!(drops.load(Ordering::SeqCst), 0, "abandonment retains every partial page and payload owner");
     drop(retained);
 }
+ 

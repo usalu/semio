@@ -29,7 +29,7 @@ async fn every_format_is_written_from_the_inference_exactly_like_its_serializer_
     let snapshot = demo();
     let inferred = fresh(&snapshot);
     let ifc_bytes = ifc::export_ifc2x3(&snapshot).expect("the ifc").0;
-    let ifc = encode("ifc", &snapshot, &inferred).expect("ifc");
+    let ifc = encode("ifc2x3", &snapshot, &inferred).expect("ifc");
     assert_eq!((ifc.mime_type, ifc.encoding), ("application/x-step", None));
     assert_eq!(ifc.data.as_bytes(), ifc_bytes.as_slice());
     let glb = encode("glb", &snapshot, &inferred).expect("glb");
@@ -44,23 +44,23 @@ async fn every_format_is_written_from_the_inference_exactly_like_its_serializer_
 async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_for_every_format() {
     let snapshot = demo();
     let inferred = fresh(&snapshot);
-    for (index, format) in FORMATS.iter().enumerate() {
-        let instance = 70 + index as u32;
-        let mut job = ExportJob::with_steps(format, Some(instance), 3);
+    for format in FORMATS {
+        let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+        let mut job = ExportJob::with_steps(format, Some(&instance), 3);
         let (output, stages) = finished(&mut job, &snapshot);
         assert_eq!(output, encode(format, &snapshot, &inferred).expect("the file"), "{format}: the stepped job writes the one-shot file");
         assert_eq!(stages.first(), Some(&"bim-export-infer"));
         assert!(stages.iter().filter(|stage| **stage == "bim-export-infer").count() >= 2, "{format}: three nodes a step need several steps: {stages:?}");
         assert_eq!(stages.last(), Some(&"bim-export-encode"));
         assert_eq!(job.fraction(), 1.0);
-        inference::close(instance);
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_progress_of_a_job_never_decreases() {
+    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = demo();
-    let mut job = ExportJob::with_steps("csv", Some(80), 2);
+    let mut job = ExportJob::with_steps("csv", Some(&instance), 2);
     let mut seen = vec![job.fraction()];
     loop {
         match job.advance(&snapshot).expect("a step") {
@@ -71,31 +71,31 @@ async fn the_progress_of_a_job_never_decreases() {
     assert!(seen.windows(2).all(|pair| pair[0] <= pair[1]), "{seen:?}");
     assert_eq!(seen.first(), Some(&0.0));
     assert_eq!(seen.last(), Some(&1.0));
-    inference::close(80);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_job_keeps_the_finished_nodes_and_the_next_job_finishes_the_rest() {
+    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = demo();
-    let mut cancelled = ExportJob::with_steps("ifc", Some(81), 2);
+    let mut cancelled = ExportJob::with_steps("ifc2x3", Some(&instance), 2);
     cancelled.advance(&snapshot).expect("opens");
     cancelled.advance(&snapshot).expect("infers a little");
     assert!(cancelled.fraction() > 0.0 && cancelled.fraction() < 1.0);
     cancelled.cancel(&snapshot);
-    let report = inference::report(Some(81));
+    let report = inference::report(Some(&instance));
     assert!(report.cancelled && report.computed > 0, "{report:?}");
-    let mut next = ExportJob::with_steps("ifc", Some(81), 1_000);
+    let mut next = ExportJob::with_steps("ifc2x3", Some(&instance), 1_000);
     let (output, _) = finished(&mut next, &snapshot);
-    assert_eq!(output, encode("ifc", &snapshot, &fresh(&snapshot)).expect("the file"));
-    let rest = inference::report(Some(81));
+    assert_eq!(output, encode("ifc2x3", &snapshot, &fresh(&snapshot)).expect("the file"));
+    let rest = inference::report(Some(&instance));
     assert!(rest.reused >= report.computed, "the nodes the cancelled job finished were not computed again: {rest:?}");
-    inference::close(81);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_format_is_a_refusal_before_any_work() {
+    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = demo();
-    let mut job = ExportJob::new("dwg", Some(82));
+    let mut job = ExportJob::new("dwg", Some(&instance));
     assert_eq!(job.advance(&snapshot).expect_err("refused").code.0, "bim.export.format-unknown");
     assert_eq!(encode("dwg", &snapshot, &fresh(&snapshot)).expect_err("refused").code.0, "bim.export.format-unknown");
 }

@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:draw:inspector-selection-actions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "actions",
+    "cases"
+  ],
+  "properties": {
+    "actions": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "selection",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "selection": {
+            "$ref": "#/$defs/selection"
+          },
+          "expected": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/$defs/action"
+            }
+          },
+          "structure": {
+            "enum": [
+              "ancestorChild",
+              "ancestorChildSibling",
+              "missing",
+              "hidden",
+              "inheritedHidden",
+              "isolated",
+              "blended",
+              "duplicateRows",
+              "shapePath"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "action": {
+      "enum": [
+        "group",
+        "ungroup",
+        "toPath",
+        "duplicate",
+        "delete",
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack",
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom",
+        "distributeHorizontal",
+        "distributeVertical"
+      ]
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "locked",
+        "sameParent",
+        "convertibleShapes",
+        "ungroupableGroups",
+        "complete",
+        "arrangementCount",
+        "arrangeable"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "sameParent": {
+          "type": "boolean"
+        },
+        "convertibleShapes": {
+          "type": "boolean"
+        },
+        "ungroupableGroups": {
+          "type": "boolean"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "arrangementCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "arrangeable": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

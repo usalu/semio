@@ -50,6 +50,13 @@ impl FailClosedOp {
     fn of(operation: DemoMutation, fault: Fault) -> Self {
         Self { operation, fault, live: true }
     }
+
+    fn refuse_encode(&self) -> Result<(), String> {
+        if self.fault == Fault::Encode {
+            return Err("the fixture refuses to encode this operation".into());
+        }
+        Ok(())
+    }
 }
 
 impl Drop for FailClosedOp {
@@ -87,6 +94,10 @@ impl semio_framework_value::retirement::RetireOwned for FailClosedOp {
 impl ToValue for FailClosedOp {
     fn to_value(&self) -> DslValue {
         self.operation.to_value()
+    }
+
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        self.operation.to_value_controlled(control)
     }
 }
 
@@ -207,11 +218,28 @@ impl MemberStoreOwner<FailClosedOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, FailClosedOp>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, FailClosedOp>>()?, depth: 1 })
+        super::fixture_authoring_birth_demand::<FailClosedOp>()
     }
 
     fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FailClosedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, FailClosedOp>> {
-        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, FailClosedOp>::new()))
+        super::fixture_authoring_member_owners::<FailClosedOp>(grant)
+    }
+}
+
+impl ArtifactCanonicalJson for FailClosedOp {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+        self.refuse_encode()?;
+        self.operation.canonical_json_node(path)
+    }
+
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
+        self.refuse_encode()?;
+        self.operation.canonical_json_key(path, index)
+    }
+
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+        self.refuse_encode()?;
+        self.operation.canonical_json_borrowed_root()
     }
 }
 //#endregion 🧰️Fixture
@@ -246,6 +274,7 @@ async fn a_refused_apply_retires_everything_its_replay_built() {
         let refusal = match fixture_author(&mut store, ArtifactCommand::Apply { mutations, transaction: None }).await {
             Ok(_) => panic!("{name}: the command is refused"),
             Err(VcsError::ValidationFailed(_)) => "validation-failed",
+            Err(VcsError::Serialize(_) | VcsError::NativeEncoding(_)) => "serialize-failed",
             Err(VcsError::InverseRefused(_)) => "inverse-refused",
             Err(VcsError::MutationApply(_)) => "mutation-apply",
             Err(VcsError::Rejected { .. }) => "rejected",

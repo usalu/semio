@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/2d/text/unicode",
+  "title": "Immutable Unicode Shaping Data",
+  "type": "object",
+  "required": [
+    "version",
+    "byteOrder",
+    "headerBytes",
+    "rangeBytes",
+    "decompositionBytes",
+    "compositionBytes",
+    "sources",
+    "categories",
+    "bidiClasses",
+    "joiningTypes",
+    "graphemeClasses"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "16.0.0"
+    },
+    "byteOrder": {
+      "const": "big-endian"
+    },
+    "headerBytes": {
+      "const": 64
+    },
+    "rangeBytes": {
+      "const": 24
+    },
+    "decompositionBytes": {
+      "const": 16
+    },
+    "compositionBytes": {
+      "const": 12
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "url",
+          "sha256",
+          "bytes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bidiClasses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "joiningTypes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "graphemeClasses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "description": "UCDP header words are magic, version, count/offset pairs for range/decomposition/composition/scalars/mirroring/brackets, exact byte length and zero reserved. Ranges store start/end, canonical combining class, category/bidi/joining/grapheme/flags byte indices, zero padding, ISO script tag and zero reserved. Flags are default-ignorable=1, extended-pictographic=2, full-composition-exclusion=4, variation-selector=8, Indic-consonant=16, Indic-extend=32, Indic-linker=64. Decompositions store code point, scalar index/count and compatibility flag. Composition keys are starter/second/result; mirror records are scalar/mirror; brackets are scalar/paired/type.",
+  "definitions": {
+    "fixtures": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "decompositions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "scalar": {
+                "type": "integer"
+              },
+              "compatibility": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "scalar",
+              "values",
+              "compatibility"
+            ]
+          }
+        },
+        "mirrors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "integer"
+              },
+              "scalar": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "scalar",
+              "result"
+            ]
+          }
+        },
+        "properties": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "bidi": {
+                "type": "string"
+              },
+              "combiningClass": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "category": {
+                "type": "string"
+              },
+              "scalar": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1114111
+              }
+            },
+            "required": [
+              "scalar",
+              "category",
+              "bidi",
+              "combiningClass"
+            ]
+          }
+        },
+        "brackets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "integer"
+              },
+              "scalar": {
+                "type": "integer"
+              },
+              "kind": {
+                "enum": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "required": [
+              "scalar",
+              "result",
+              "kind"
+            ]
+          }
+        },
+        "compositions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "first": {
+                "type": "integer"
+              },
+              "result": {
+                "type": "integer"
+              },
+              "second": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "first",
+              "second",
+              "result"
+            ]
+          }
+        }
+      },
+      "required": [
+        "properties",
+        "compositions",
+        "decompositions",
+        "mirrors",
+        "brackets"
+      ]
+    }
+  }
+}

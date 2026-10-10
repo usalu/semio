@@ -20,7 +20,7 @@ Snapshot (generated from `T/r12-w2-wp08-model.ts` through `T/r3-f1-gen-model.ts`
   (`mutation.target-referenced`), `delete-wall`/`delete-storey`/`delete-elements` cascade the sweeps, `split-wall`/`copy-elements` repeat them. Payload structs are in each leaf's `🦠️mutation/🦀️.rs`
   (`ModelMutation::CreateWallSweep(create_wall_sweep::CreateWallSweep{..})` etc., paths via `crate::mutations::<snake>::<Variant>`).
 * Inference (all in `S/🧬️schema/💡️inferences/`):
-  * `🧱️wall-layout/🔗️attach/🦀️.rs`: `AttachSurface` (graph node `ModelNode::Surface(id)`), `ElevationPoint{s,z}`, `AttachState{target,found,covered,clamped,cycle}`, `sample`, `apply`, `find_cycle`.
+  * `🧱️wall-layout/🧲️attach/🦀️.rs`: `AttachSurface` (graph node `ModelNode::Surface(id)`), `ElevationPoint{s,z}`, `AttachState{target,found,covered,clamped,cycle}`, `sample`, `apply`, `find_cycle`.
   * `WallLayout` (field `inference.wall_layout[wall]`) gained `base_profile`, `top_profile: Vec<ElevationPoint>` (empty = flat; absolute z in building coordinates over arc length `s` of the axis),
     `top_attach`, `base_attach: Option<AttachState>`, methods `top_at(s)`, `base_at(s)`; `base_z` = lowest base, `top_z` = highest top, `height` = their difference, `side_area/left_area/right_area/volume` exact.
   * `🧊️element-solids/🧷️wall-sweeps/🦀️.rs`: `inference.element_solids[sweep_id]` (family `SolidFamily::WallSweep`, one group `body`), `runs`, `path_length`, `section_of`, `extents_of`, `section_area`, `visible_perimeter`.
@@ -68,4 +68,4 @@ Everything under `S/🚪️io/**` and the IFC/glTF/SVG oracles in `S/🧪️test
 
 ## Shared rules for both
 Do not edit the files owned by the core author unless a compile error blocks you (then a surgical fix, reported): `🧬️schema/💡️inferences/{🧱️wall-layout,🧊️element-solids/🧱️walls,🧊️element-solids/🧷️wall-sweeps,🕸️model-graph,⚠️diagnostics}`,
-`🧬️schema/🧬️mutations/{🧗️wall-depth,🌊️cascade,🧵️elements}`, the four new leaf dirs. Peers (other W2/W1 agents, humans) edit shared files concurrently: re-read before every Edit, small edits, keep files compile-atomic.
+`🧬️schema/🧬️mutations/{🧲️wall-depth,🌊️cascade,🧵️elements}`, the four new leaf dirs. Peers (other W2/W1 agents, humans) edit shared files concurrently: re-read before every Edit, small edits, keep files compile-atomic.

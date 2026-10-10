@@ -4,6 +4,8 @@ use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageSnapshot,SemioImageFrame,SemioImageMetadataEntry,SemioColorspace};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_os_kernel::sqlite_snapshot::transfer;
+#[path="💰️reconstruction/🦀️.rs"]
+mod reconstruction;
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🫳️ Visits each Image sample and nullable ICC cell through the same owned or borrowed writer.
@@ -48,33 +50,7 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 
 impl SemioImageSnapshot {
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
-    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>, declared_schema: &str)->Result<Self,ValueError> {
-
-control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;let document=database.table("semio_image_document")?.single_row()?;identity(document,7)?;if document.rowid!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio image document identifier"));}let width=u32::try_from(document.integer(2)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let height=u32::try_from(document.integer(3)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let bit_depth=u8::try_from(document.integer(5)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let colorspace=match document.text(4)?{"rgb"=>SemioColorspace::Rgb,"rgba"=>SemioColorspace::Rgba,"grayscale"=>SemioColorspace::Grayscale,"grayscale_alpha"=>SemioColorspace::GrayscaleAlpha,"indexed"=>SemioColorspace::Indexed,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio image colorspace"))};use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
-let mut result=Owned::new(Self{schema:String::new(),width,height,colorspace,bit_depth,frames:Vec::new(),icc:None,metadata:Vec::new()});result.get_mut().icc=match &document.values[6]{SqliteValue::Null=>None,SqliteValue::Blob(value)=>Some(reconstruct_blob(control,value)?),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio image ICC storage class"))};
-let frame_rows=ordered(&database.table("semio_image_frame")?.rows,2,control)?;
-let metadata_rows=ordered(&database.table("semio_image_metadata")?.rows,2,control)?;
-let sample_rows=&database.table("semio_image_sample")?.rows;
-let frame_ids=identities(&database.table("semio_image_frame")?.rows,4,control)?;
-identities(&database.table("semio_image_metadata")?.rows,5,control)?;
-identities(sample_rows,5,control)?;
-let mut samples=transfer::reserve(sample_rows.len(),control)?;
-for (at,row) in sample_rows.iter().enumerate(){if frame_ids.binary_search(&row.integer(1)?).is_err(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"orphan Semio image sample"));}samples.push(row);if (at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,sample_rows.len())?;}}
-transfer::heap_sort(&mut samples,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.integer(1)?.cmp(&b.integer(1)?).then(a.integer(2)?.cmp(&b.integer(2)?))))?;
-result.get_mut().frames=transfer::reserve(frame_rows.len(),control)?;let mut completed=0usize;
-for row in frame_rows{
-if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio image frame ownership"));}
-control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,samples.len())?;
-let start=samples.partition_point(|sample|sample.integer(1).is_ok_and(|id|id<row.rowid));let end=samples.partition_point(|sample|sample.integer(1).is_ok_and(|id|id<=row.rowid));
-let mut frame=Owned::new(SemioImageFrame{delay_ms:0,rgba8:Vec::new()});frame.get_mut().rgba8=transfer::reserve(end-start,control)?;
-for (ordinal,sample) in samples[start..end].iter().enumerate(){if sample.integer(2)?!=number(ordinal)?||sample.integer(3)?!=number(ordinal%4)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio image sample ordinal or channel"));}frame.get_mut().rgba8.push(u8::try_from(sample.integer(4)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?);completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,samples.len())?;}}
-frame.get_mut().delay_ms=u32::try_from(row.integer(3)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;result.get_mut().frames.push(frame.take());
-}
-if completed!=samples.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unconsumed Semio image sample"));}
-result.get_mut().metadata=transfer::reserve(metadata_rows.len(),control)?;
-for row in metadata_rows{if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio image metadata ownership"));}let mut entry=Owned::new(SemioImageMetadataEntry{key:String::new(),value:String::new()});entry.get_mut().key=reconstruct_text(control,row.text(3)?)?;entry.get_mut().value=reconstruct_text(control,row.text(4)?)?;result.get_mut().metadata.push(entry.take());completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;}}
-result.get_mut().schema=reconstruct_text(control,document.text(1)?)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(result.take())
-    }
+    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 
 impl SemioImageSnapshot{
@@ -85,21 +61,10 @@ pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&s
 impl SemioImageSnapshot{
 /// 🧮️ Projects owned semantic rows under the caller's typed resource control.
 pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()
+semantic::layout(control.limits())?;crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
 }
 }
 
-
-fn ordered<'a>(rows:&'a[SqliteRow],column:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{
- let mut ordered=transfer::reserve(rows.len(),control)?;for(at,row)in rows.iter().enumerate(){ordered.push(row);if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}
- transfer::heap_sort(&mut ordered,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.integer(column)?.cmp(&b.integer(column)?)))?;
- for(at,row)in ordered.iter().enumerate(){if row.integer(column)?!=number(at)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio image ordinals require contiguous occurrences"));}if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(ordered)
-}
-fn identities(rows:&[SqliteRow],columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<i64>,ValueError>{
- let mut ids=transfer::reserve(rows.len(),control)?;for(at,row)in rows.iter().enumerate(){identity(row,columns)?;ids.push(row.rowid);if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}
- transfer::heap_sort(&mut ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.cmp(b)))?;
- for(at,id)in ids.iter().enumerate(){if at>0&&ids[at-1]==*id{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio image row identity"));}if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(ids)
-}
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

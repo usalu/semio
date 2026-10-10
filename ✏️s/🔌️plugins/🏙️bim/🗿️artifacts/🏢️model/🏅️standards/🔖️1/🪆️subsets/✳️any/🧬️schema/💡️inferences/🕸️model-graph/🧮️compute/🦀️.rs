@@ -2,13 +2,22 @@
 //! functions of the leaf modules. Parents are found by key in an [`Index`] built once per call.
 
 use super::super::super::annotation_layout::{self, StoreyAnnotations};
+use super::super::super::clash_sets::{self, ClashSetResult, SolidProbe};
+use super::super::super::rule_results::{self, RuleResult};
+use super::super::super::zones::ZoneTotals;
 use super::super::super::curtain_layout::{self, curtain_layout_of, CurtainLayout};
 use super::super::super::diagnostics::{self, Inputs as FindingInputs};
 use super::super::super::effective_properties::{self, EffectiveProperties};
+use super::super::super::energy_envelope::{self, EnvelopeSpace};
 use super::super::super::element_solids::roofs::RoofFallback;
 use super::super::super::element_solids::{self, beams, ceilings, columns, curtain_walls, dep_object, dep_value, fillers, placement_of, rail_hosts, railings, ramps, roofs, slabs, stairs, wall_sweeps, walls, ElementSolid, SolidEntry, SolidFamily};
 use super::super::super::opening_frames::{self, cut_rect, frame_of, CutRect, HostExtent, OpeningCut, OpeningFrame};
+use super::super::super::components::{self, ComponentEntry, ComponentValue};
+use super::super::super::element_solids::components as component_solids;
+use super::super::super::element_solids::mep as mep_solids;
 use super::super::super::families::{self, FamilyProfiles, FamilyValue};
+use super::super::super::mep::clash::{self, MepClashes};
+use super::super::super::mep::{self, MepValue};
 use super::super::super::phase_visibility;
 use super::super::super::plan_linework::{self, Inputs as PlanInputs};
 use super::super::super::quantities::{self, totals_of, ElementQuantity};
@@ -21,6 +30,7 @@ use super::super::super::storey_levels::{self, resolve, StoreyLevel};
 use super::super::super::sheet_layout;
 use super::super::super::view_linework::{self, ViewInputs, ViewLinework};
 use super::super::super::wall_layout::attach::{self, AttachSurface};
+use crate::standards::v1::subsets::any::schema::authored::references;
 use super::super::super::wall_layout::joins::Band;
 use super::super::super::wall_layout::{self, band_of, layout_of, WallLayout};
 use super::plan::{element_storey, opening_storey};
@@ -69,6 +79,12 @@ pub struct Index<'a> {
     pub ramp_runs: BTreeMap<&'a str, &'a RampRun>,
     pub solids: BTreeMap<&'a str, &'a SolidEntry>,
     pub families: BTreeMap<&'a str, &'a FamilyValue>,
+    pub family_arcs: BTreeMap<&'a str, &'a Arc<FamilyValue>>,
+    pub components: BTreeMap<&'a str, &'a ComponentEntry>,
+    pub meps: BTreeMap<&'a str, &'a MepValue>,
+    pub mep_clashes: BTreeMap<&'a str, &'a MepClashes>,
+    pub probes: BTreeMap<&'a str, &'a SolidProbe>,
+    pub zones: BTreeMap<&'a str, &'a ZoneTotals>,
     pub rooms: BTreeMap<&'a str, &'a StoreyRooms>,
     pub annotations: BTreeMap<&'a str, &'a StoreyAnnotations>,
     pub properties: BTreeMap<&'a str, &'a EffectiveProperties>,
@@ -76,6 +92,7 @@ pub struct Index<'a> {
     pub quantities: Vec<&'a ElementQuantity>,
     pub measured: BTreeMap<&'a str, Option<&'a ElementQuantity>>,
     pub surfaces: BTreeMap<&'a str, &'a AttachSurface>,
+    pub envelopes: BTreeMap<&'a str, &'a EnvelopeSpace>,
 }
 
 impl<'a> Index<'a> {
@@ -92,6 +109,9 @@ impl<'a> Index<'a> {
                 }
                 (ModelNode::Surface(id), Data::Surface(surface)) => {
                     index.surfaces.insert(id, surface);
+                }
+                (ModelNode::Envelope(id), Data::Envelope(envelope)) => {
+                    index.envelopes.insert(id, envelope);
                 }
                 (ModelNode::Cut(id), Data::Cut(cut)) => {
                     index.cuts.insert(id, *cut);
@@ -116,9 +136,25 @@ impl<'a> Index<'a> {
                 }
                 (ModelNode::Family(id), Data::Family(value)) => {
                     index.families.insert(id, value);
+                    index.family_arcs.insert(id, value);
+                }
+                (ModelNode::Component(id), Data::Component(entry)) => {
+                    index.components.insert(id, entry);
+                }
+                (ModelNode::Mep(id), Data::Mep(value)) => {
+                    index.meps.insert(id, value);
+                }
+                (ModelNode::MepClash(id), Data::MepClashes(found)) => {
+                    index.mep_clashes.insert(id, found);
                 }
                 (ModelNode::Solid(key), Data::Solid(entry)) => {
                     index.solids.insert(&key.id, entry);
+                }
+                (ModelNode::Probe(key), Data::Probe(probe)) => {
+                    index.probes.insert(&key.id, probe);
+                }
+                (ModelNode::Zone(id), Data::Zone(totals)) => {
+                    index.zones.insert(id, totals);
                 }
                 (ModelNode::Properties(id), Data::Properties(properties)) => {
                     index.properties.insert(id, properties);
@@ -142,6 +178,11 @@ impl<'a> Index<'a> {
             }
         }
         index
+    }
+
+    /// 🪑️ The values of the components among the parents.
+    pub fn component_values(&self) -> BTreeMap<&'a str, &'a ComponentValue> {
+        self.components.iter().map(|(id, entry)| (*id, &entry.value)).collect()
     }
 
     /// ▭️ The outlines of the profile families among the parents.
@@ -195,19 +236,30 @@ pub fn dependency(snapshot: &ModelSnapshot, key: &ModelNode) -> DslValue {
         ModelNode::Annotation(storey) => annotation_layout::dependency(snapshot, storey),
         ModelNode::View(id) => view_linework::dependency(snapshot, id),
         ModelNode::Sheet(id) => sheet_layout::dependency(snapshot, id),
+        ModelNode::Probe(solid) => solid_dependency(snapshot, solid),
+        ModelNode::ClashSet(id) => clash_sets::dependency(snapshot, id),
+        ModelNode::Rule(id) => rule_results::dependency(snapshot, id),
         ModelNode::Quantity(id) => quantities::dependency(snapshot, id),
         ModelNode::Totals(_) | ModelNode::DiagnosticIndex => DslValue::Null,
         ModelNode::Diagnostics(DiagnosticScope::Storey(id)) => diagnostics::storey_dependency(snapshot, id),
         ModelNode::Diagnostics(DiagnosticScope::Building(id)) => diagnostics::building_dependency(snapshot, id),
         ModelNode::Diagnostics(DiagnosticScope::Model) => dep_object([("model", diagnostics::model_dependency(snapshot)), ("profiles", families::findings::reference_dependency(snapshot))]),
         ModelNode::Diagnostics(DiagnosticScope::Data) => effective_properties::findings_dependency(snapshot),
+        ModelNode::Diagnostics(DiagnosticScope::Energy) => DslValue::Null,
         ModelNode::Properties(id) => effective_properties::dependency(snapshot, id),
         ModelNode::Family(id) => families::dependency(snapshot, id),
+        ModelNode::Component(id) => components::dependency(snapshot, id),
+        ModelNode::StructuralAnalysis => super::super::super::analytical_members::dependency(snapshot),
+        ModelNode::Mep(id) => mep::dependency(snapshot, id),
+        ModelNode::MepClash(_) => DslValue::Null,
+        ModelNode::OptionScope => super::super::super::option_scope::dependency(snapshot),
         ModelNode::Schedule(id) => schedules::dependency(snapshot, id),
         ModelNode::Zone(id) => zones::zone_dependency(snapshot, id),
         ModelNode::Scheme(id) => zones::scheme_dependency(snapshot, id),
         ModelNode::PhaseVisibility(storey) => phase_visibility::dependency(snapshot, storey),
         ModelNode::Surface(id) => attach::dependency(snapshot, id),
+        ModelNode::Envelope(id) => energy_envelope::dependency(snapshot, id),
+        ModelNode::EnergyTotals(scope) => energy_envelope::totals_dependency(snapshot, scope),
     };
     keyed(key, input)
 }
@@ -228,6 +280,7 @@ fn solid_dependency(snapshot: &ModelSnapshot, solid: &element_solids::SolidKey) 
         SolidFamily::Roof => snapshot.roofs.get(id).map_or(DslValue::Null, |roof| roofs::dependency(snapshot, &roof.anonymous())),
         SolidFamily::Stair => snapshot.stairs.get(id).map_or(DslValue::Null, |stair| stairs::dependency(stair)),
         SolidFamily::Ramp => snapshot.ramps.get(id).map_or(DslValue::Null, |ramp| ramps::dependency(&ramp.anonymous())),
+        SolidFamily::Component | SolidFamily::Mep => DslValue::Null,
         SolidFamily::Railing => snapshot.railings.get(id).map_or(DslValue::Null, |railing| dep_object([("railing", railings::dependency(snapshot, &railing.anonymous())), ("host", rail_hosts::dependency(snapshot, railing))])),
     };
     dep_object([("family", family), ("placement", placement(snapshot, &storey))])
@@ -244,9 +297,10 @@ pub fn value(snapshot: &ModelSnapshot, key: &ModelNode, parents: &[ModelValue]) 
     count(key);
     let index = Index::of(parents);
     let data = match key {
+        ModelNode::OptionScope => Data::OptionScope(Arc::new(super::super::super::option_scope::scope_of(snapshot, parents.iter().filter_map(|parent| match (&parent.node, &parent.data) { (ModelNode::Quantity(id), Data::Quantity(Some(quantity))) => Some((id.as_str(), quantity.as_ref())), _ => None })))),
         ModelNode::Storey(id) => Data::Level(resolve(snapshot, id, index.levels.values().next())),
         ModelNode::Band(id) => Data::Band(snapshot.walls.get(id).and_then(|wall| band_of(snapshot, wall))),
-        ModelNode::Cut(id) => Data::Cut(snapshot.openings.get(id).map(|opening| cut_rect(snapshot, opening)).unwrap_or_else(|| CutRect { size: opening_frames::Resolved { width: 0.0, height: 0.0, sill: 0.0, type_found: false }, cut: OpeningCut::default() })),
+        ModelNode::Cut(id) => Data::Cut(snapshot.openings.get(id).map(|opening| cut_rect(snapshot, opening)).unwrap_or_else(|| CutRect { size: crate::standards::v1::subsets::any::schema::authored::sizes::Resolved { width: 0.0, height: 0.0, sill: 0.0, type_found: false }, cut: OpeningCut::default() })),
         ModelNode::WallLayout(id) => Data::Layout(Arc::new(wall_layout_value(snapshot, id, &index))),
         ModelNode::CurtainLayout(id) => Data::Curtain(Arc::new(snapshot.curtain_walls.get(id).map_or_else(CurtainLayout::default, |curtain| curtain_layout_of(snapshot, id, curtain, &index.level(&curtain.storey), index.target(&curtain.storey, &curtain.top).as_ref())))),
         ModelNode::Host(id) => Data::Host(host_value(snapshot, id, &index).map(Arc::new)),
@@ -260,18 +314,61 @@ pub fn value(snapshot: &ModelSnapshot, key: &ModelNode, parents: &[ModelValue]) 
         ModelNode::Properties(id) => Data::Properties(Arc::new(effective_properties::effective_of(snapshot, id, index.properties.values().next().copied()))),
         ModelNode::View(id) => Data::View(Arc::new(view_value(snapshot, id, &index))),
         ModelNode::Sheet(id) => Data::Sheet(Arc::new(sheet_layout::layout_of(snapshot, id, &index.drawings))),
+        ModelNode::Probe(key) => Data::Probe(Arc::new(probe_value(snapshot, key, &index))),
+        ModelNode::ClashSet(id) => Data::Clashes(Arc::new(clash_set_value(snapshot, id, &index))),
+        ModelNode::Rule(id) => Data::Rule(Arc::new(rule_value(snapshot, id, &index))),
         ModelNode::Quantity(id) => Data::Quantity(quantity_value(snapshot, id, &index).map(Arc::new)),
         ModelNode::Totals(scope) => Data::Totals(Arc::new(totals_value(scope, parents))),
         ModelNode::Schedule(id) => Data::Schedule(Arc::new(schedule_value(snapshot, id, parents))),
         ModelNode::Zone(id) => Data::Zone(Arc::new(zone_value(snapshot, id, &index))),
         ModelNode::Scheme(id) => Data::Scheme(Arc::new(scheme_value(snapshot, id, &index))),
         ModelNode::Family(id) => Data::Family(Arc::new(families::family_of(snapshot, id, &BTreeMap::new()))),
+        ModelNode::Component(id) => Data::Component(Arc::new(component_value(snapshot, id, &index))),
+        ModelNode::Mep(id) => Data::Mep(Arc::new(snapshot.mep_elements.get(id).map_or_else(MepValue::default, |element| mep::mep_of(snapshot, id, &index.level(&element.storey))))),
+        ModelNode::StructuralAnalysis => Data::Structure(Arc::new(super::super::super::analytical_members::analysis_of(snapshot, &index.levels, &index.layouts, &index.solids))),
+        ModelNode::MepClash(_) => Data::MepClashes(Arc::new(clash::clashes_of(index.meps.iter().map(|(id, value)| (*id, *value))))),
         ModelNode::PhaseVisibility(storey) => Data::Phases(Arc::new(phase_visibility::visibility_of(snapshot, storey))),
-        ModelNode::Surface(id) => Data::Surface(Arc::new(attach::storey_of(snapshot, id).map_or_else(AttachSurface::default, |storey| attach::surface_of(snapshot, id, &index.level(storey))))),
+        ModelNode::Surface(id) => Data::Surface(Arc::new(references::storey_of(snapshot, id).map_or_else(AttachSurface::default, |storey| attach::surface_of(snapshot, id, &index.level(storey))))),
+        ModelNode::Envelope(id) => Data::Envelope(Arc::new(energy_envelope::envelope_of(snapshot, id, &energy_envelope::Inputs { rooms: &index.rooms, layouts: &index.layouts, frames: &index.frames }))),
+        ModelNode::EnergyTotals(scope) => Data::EnergyTotals(Arc::new(energy_envelope::totals_of(scope, &index.envelopes.values().copied().collect::<Vec<_>>(), &energy_envelope::Climate::of(snapshot)))),
         ModelNode::Diagnostics(scope) => Data::Findings(Arc::new(findings_value(snapshot, scope, &index))),
         ModelNode::DiagnosticIndex => Data::Index(Arc::new(diagnostics::DiagnosticIndex::of(&super::projection::rebuild_diagnostics(parents)))),
     };
     wrap(key, data)
+}
+
+/// 📦️ The spatial index of the solid of a `Probe` node: the world mesh, its box and its hierarchy; an element without a solid gets an empty probe.
+fn probe_value(snapshot: &ModelSnapshot, key: &element_solids::SolidKey, index: &Index<'_>) -> SolidProbe {
+    index.solids.get(key.id.as_str()).map_or_else(
+        || SolidProbe { class: None, storey: String::new(), bounds: None, mesh: Default::default(), bvh: Default::default() },
+        |entry| clash_sets::probe_of(snapshot, &key.id, &entry.solid),
+    )
+}
+
+/// 🔎️ The probes of the parents among the elements `ids`, in id order.
+fn probes_of<'i>(index: &Index<'i>, ids: &'i [String]) -> Vec<(&'i str, &'i SolidProbe)> {
+    ids.iter().filter_map(|element| index.probes.get(element.as_str()).map(|probe| (element.as_str(), *probe))).collect()
+}
+
+/// 🧨️ The clashes of a clash set among the probes of its parents.
+fn clash_set_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> ClashSetResult {
+    let Some(set) = snapshot.clash_sets.get(id) else { return ClashSetResult::default() };
+    let (a, b) = clash_sets::picks(snapshot, set);
+    clash_sets::clashes_of(set, &probes_of(index, &a), &probes_of(index, &b), &clash_sets::hosting(snapshot), &|element| crate::storey_of(snapshot, element).cloned().unwrap_or_default(), &|| false)
+}
+
+/// ⚖️ The findings of a rule over the measures of its parents.
+fn rule_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> RuleResult {
+    let Some(rule) = snapshot.rules.get(id) else { return RuleResult::default() };
+    let inputs = rule_results::Inputs { rooms: index.rooms.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), frames: index.frames.clone(), zones: index.zones.clone() };
+    rule_results::result_of(rule, &rule_results::members(snapshot, rule), &inputs)
+}
+
+fn component_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> ComponentEntry {
+    let Some(component) = snapshot.components.get(id) else { return ComponentEntry::default() };
+    let shared = index.family_arcs.get(component.family.as_str()).map(|family| Arc::clone(family));
+    let host = component.host.as_deref().and_then(|wall| index.layouts.get(wall).copied());
+    components::component_of(snapshot, id, &index.level(&component.storey), shared.as_ref(), host)
 }
 
 fn wall_layout_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> WallLayout {
@@ -346,6 +443,8 @@ fn solid_value(snapshot: &ModelSnapshot, solid: &element_solids::SolidKey, index
         SolidFamily::WallSweep => snapshot.wall_sweeps.get(id).and_then(|sweep| snapshot.walls.get(&sweep.host).zip(index.layouts.get(sweep.host.as_str())).map(|(wall, layout)| SolidEntry { solid: wall_sweeps::sweep_solid(sweep, wall, layout, &walls::cuts_of(index.frames.values().copied())), fallback: None })),
         SolidFamily::Roof => snapshot.roofs.get(id).map(|roof| roofs::roof_solid(snapshot, roof, &own)),
         SolidFamily::Stair => snapshot.stairs.get(id).zip(index.runs.get(id)).map(|(stair, run)| SolidEntry { solid: stairs::stair_solid(stair, run), fallback: None }),
+        SolidFamily::Component => index.components.get(id).map(|entry| SolidEntry { solid: component_solids::component_solid(entry), fallback: None }),
+        SolidFamily::Mep => index.meps.get(id).map(|value| SolidEntry { solid: mep_solids::mep_solid(value), fallback: None }),
         SolidFamily::Ramp => snapshot.ramps.get(id).zip(index.ramp_runs.get(id)).map(|(ramp, run)| SolidEntry { solid: ramps::ramp_solid(ramp, run), fallback: None }),
         SolidFamily::Railing => snapshot.railings.get(id).map(|railing| profiles.resolve_railing(railing)).map(|railing| SolidEntry { solid: if railing.host.is_some() { rail_hosts::hosted_solid(&railing, host_of(snapshot, &railing, index).as_ref()) } else { railings::railing_solid(snapshot, &railing, &own) }, fallback: None }),
     };
@@ -362,7 +461,7 @@ fn room_value(snapshot: &ModelSnapshot, storey: &str, index: &Index<'_>) -> Stor
 fn view_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> view_linework::ViewLinework {
     let Some(view) = snapshot.views.get(id) else { return view_linework::ViewLinework { view: id.to_string(), kind: crate::ViewKind::Plan, scale: 0, detail: crate::DetailLevel::Medium, lines: plan_linework::Sheet::default().finish("", 0.0) } };
     let storey = view.storey.as_deref().unwrap_or_default();
-    let plan = PlanInputs { levels: index.levels.clone(), layouts: index.layouts.clone(), curtains: index.curtains.clone(), frames: index.frames.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), rooms: index.rooms.get(storey).copied(), annotations: None };
+    let plan = PlanInputs { levels: index.levels.clone(), layouts: index.layouts.clone(), curtains: index.curtains.clone(), frames: index.frames.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), components: index.component_values(), meps: index.meps.clone(), rooms: index.rooms.get(storey).copied(), annotations: index.annotations.get(storey).copied() };
     let inputs = ViewInputs { plan, solids: index.solids.iter().map(|(element, entry)| (*element, &entry.solid)).collect() };
     view_linework::view_of(snapshot, id, view, &inputs)
 }
@@ -372,7 +471,7 @@ fn annotation_value(snapshot: &ModelSnapshot, storey: &str, index: &Index<'_>) -
 }
 
 fn plan_value(snapshot: &ModelSnapshot, storey: &str, index: &Index<'_>) -> plan_linework::PlanLinework {
-    let inputs = PlanInputs { levels: index.levels.clone(), layouts: index.layouts.clone(), curtains: index.curtains.clone(), frames: index.frames.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), rooms: index.rooms.get(storey).copied(), annotations: index.annotations.get(storey).copied() };
+    let inputs = PlanInputs { levels: index.levels.clone(), layouts: index.layouts.clone(), curtains: index.curtains.clone(), frames: index.frames.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), components: index.component_values(), meps: index.meps.clone(), rooms: index.rooms.get(storey).copied(), annotations: index.annotations.get(storey).copied() };
     plan_linework::plan_of(snapshot, storey, &inputs)
 }
 
@@ -383,7 +482,7 @@ fn quantity_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> Opti
         return index.layouts.get(id).map(|layout| quantities::wall_quantity(snapshot, wall, layout, &hosted(id)));
     }
     if let Some(curtain) = snapshot.curtain_walls.get(id) {
-        return index.curtains.get(id).map(|layout| quantities::curtain_quantity(snapshot, curtain, layout, &hosted(id), solid(SolidFamily::CurtainWall)));
+        return index.curtains.get(id).map(|layout| quantities::curtain_quantity(snapshot, curtain, layout, &hosted(id), solid(SolidFamily::CurtainWall), &index.profiles()));
     }
     if let Some(sweep) = snapshot.wall_sweeps.get(id) {
         return snapshot.walls.get(&sweep.host).zip(index.layouts.get(sweep.host.as_str())).map(|(wall, layout)| quantities::sweep_quantity(snapshot, sweep, wall, layout, &hosted(&sweep.host), solid(SolidFamily::WallSweep)));
@@ -420,6 +519,12 @@ fn quantity_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> Opti
                 quantities::hosted_railing_quantity(snapshot, railing, length, solid(SolidFamily::Railing))
             }
         });
+    }
+    if let Some(component) = snapshot.components.get(id) {
+        return index.components.get(id).map(|entry| quantities::component_quantity(snapshot, component, &entry.value, solid(SolidFamily::Component)));
+    }
+    if snapshot.mep_elements.contains_key(id) {
+        return index.meps.get(id).map(|value| quantities::mep_quantity(snapshot, id, value, solid(SolidFamily::Mep)));
     }
     let space = snapshot.spaces.get(id)?;
     let frames: Vec<&OpeningFrame> = index.frames.values().copied().collect();
@@ -458,7 +563,7 @@ fn findings_value(snapshot: &ModelSnapshot, scope: &DiagnosticScope, index: &Ind
         DiagnosticScope::Storey(storey) => index.rooms.get(storey.as_str()).copied(),
         _ => None,
     };
-    let inputs = FindingInputs { levels: index.levels.clone(), layouts: index.layouts.clone(), frames: index.frames.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), rooms, fallbacks, curtains: index.curtains.clone() };
+    let inputs = FindingInputs { levels: index.levels.clone(), layouts: index.layouts.clone(), frames: index.frames.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), rooms, fallbacks, curtains: index.curtains.clone(), components: index.component_values(), meps: index.meps.clone(), clashes: match scope { DiagnosticScope::Storey(storey) => index.mep_clashes.get(storey.as_str()).copied(), _ => None } };
     match scope {
         DiagnosticScope::Storey(storey) => {
             let mut found = diagnostics::storey_findings(snapshot, storey, &inputs);
@@ -472,7 +577,29 @@ fn findings_value(snapshot: &ModelSnapshot, scope: &DiagnosticScope, index: &Ind
             found
         }
         DiagnosticScope::Data => effective_properties::findings(snapshot, &index.properties, &|id| element_storey(snapshot, id)),
+        DiagnosticScope::Energy => energy_findings(&index),
     }
+}
+
+/// 🌡️ The findings of the envelopes: surfaces without thermal data, outlines on no wall, and the spaces that state no conditions where others do (one finding for all of them).
+fn energy_findings(index: &Index<'_>) -> Vec<diagnostics::Diagnostic> {
+    use diagnostics::DiagnosticCode as Code;
+    use energy_envelope::EnergyCode;
+    let mut found: Vec<diagnostics::Diagnostic> = Vec::new();
+    let mut unconditioned: Vec<&str> = Vec::new();
+    for envelope in index.envelopes.values() {
+        for issue in &envelope.issues {
+            match issue.code {
+                EnergyCode::ThermalDataMissing => found.push(diagnostics::Diagnostic::new(Code::EnergyThermalMissing, &[&issue.element]).lacking(&issue.detail).on(&envelope.storey)),
+                EnergyCode::OpenBoundary => found.push(diagnostics::Diagnostic::new(Code::EnergyOpenBoundary, &[&issue.element]).lacking(&issue.detail).on(&envelope.storey)),
+                EnergyCode::ConditionsMissing => unconditioned.push(&issue.element),
+            }
+        }
+    }
+    if !unconditioned.is_empty() {
+        found.push(diagnostics::Diagnostic::new(Code::EnergyConditionsMissing, &unconditioned));
+    }
+    found
 }
 /// 🧬️ The findings of the families: their issues and the dangling profile references.
 fn family_findings(snapshot: &ModelSnapshot, index: &Index<'_>) -> Vec<diagnostics::Diagnostic> {

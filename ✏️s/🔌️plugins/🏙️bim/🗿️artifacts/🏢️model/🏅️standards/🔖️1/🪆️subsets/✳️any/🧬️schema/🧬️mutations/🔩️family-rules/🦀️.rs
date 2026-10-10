@@ -2,7 +2,7 @@
 //! records and the text of their formulas only (`semio_framework_expression::dependencies` on the parsed text), never from an inference. A leaf prefixes the field of the [`Fault`] with the record name
 //! on create (`["solid", "height"]`) and uses it as is on set (`["height"]`).
 
-use crate::standards::v1::subsets::any::schema::inferences::families::formula;
+use crate::standards::v1::subsets::any::schema::authored::formula;
 use crate::{Family, FamilyParameter, FamilySolid, ModelSnapshot, ParametricProfile, Profile, SolidShape};
 use protocol::OutcomeCode;
 
@@ -14,11 +14,13 @@ pub struct Fault {
 }
 
 impl Fault {
-    fn missing(noun: &str, id: &str, field: &str) -> Self {
+    /// 🔎️ The fault of a record `noun` named `id` that does not exist, reported on `field`.
+    pub fn missing(noun: &str, id: &str, field: &str) -> Self {
         Self { code: OutcomeCode::TargetMissing, message: format!("{noun} \"{id}\" does not exist."), field: field.to_string() }
     }
 
-    fn invalid(message: impl Into<String>, field: &str) -> Self {
+    /// 🚫️ The fault of a broken invariant, reported on `field`.
+    pub fn invalid(message: impl Into<String>, field: &str) -> Self {
         Self { code: OutcomeCode::Invariant, message: message.into(), field: field.to_string() }
     }
 
@@ -93,6 +95,21 @@ pub fn profile_user(base: &ModelSnapshot, family: &str) -> Option<&'static str> 
     ]
     .into_iter()
     .find_map(|(noun, used)| used.then_some(noun))
+}
+
+/// 🪑️ Who places family `family`, none when nobody does: a component is an instance of it and its solids are the evaluated solids of the family.
+pub fn component_user(base: &ModelSnapshot, family: &str) -> Option<&'static str> {
+    base.components.values().any(|row| row.family == family).then_some("components")
+}
+
+/// 🔑️ The key of the parameter or override `name` of the owner `owner` (a family or a component) in `family_parameters` or `component_overrides`.
+pub fn parameter_key(owner: &str, name: &str) -> String {
+    formula::parameter_id(owner, name)
+}
+
+/// 🔗️ The names a formula text refers to, empty when it does not parse.
+pub fn references(text: &str) -> std::collections::BTreeSet<String> {
+    formula::references(text)
 }
 
 /// 🔗️ Who refers to parameter `name` of `family` in a formula, none when nobody does: another parameter of the family or one of its solids.

@@ -265,6 +265,7 @@ fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retiremen
         assert!(matches!(query.take_reply(), Some(LocalInteractionQueryReply::Started { .. })));
         let mut emitted = 0;
         let mut retired = 0;
+        let mut closed = 0;
         for _ in 0..20_000 {
             if query.is_closing(){
                 let before=query.owned.query.as_ref().unwrap().retired_bytes();
@@ -291,7 +292,8 @@ fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retiremen
         assert!(query.terminal_is_empty());
         let expected = fixture["partialError"]["expectedPrefix"].as_str().unwrap().len();
         assert_eq!(emitted, expected);
-        assert_eq!(retired, expected + fixture["partialError"]["first"].as_str().unwrap().len() + fixture["partialError"]["error"].as_str().unwrap().len());
+        let payload = expected + fixture["partialError"]["first"].as_str().unwrap().len() + fixture["partialError"]["error"].as_str().unwrap().len();
+        assert_eq!(retired + closed, payload, "[DEBUG] retired={retired} closed={closed} bytes={bytes}");
     }
 }
 

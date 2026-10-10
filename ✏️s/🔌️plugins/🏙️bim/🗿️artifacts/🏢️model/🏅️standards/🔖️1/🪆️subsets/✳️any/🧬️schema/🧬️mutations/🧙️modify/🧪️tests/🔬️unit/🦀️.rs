@@ -189,3 +189,27 @@ async fn the_authored_preference_changes_only_the_walls_that_meet_at_the_end() {
     assert_ne!(auto["a"].footprint, before["a"].footprint, "clearing the preference returns the corner to the geometry");
     assert_eq!(auto["far"], with_far["far"]);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn a_free_component_goes_where_shapely_sends_its_origin_and_its_family_frame() {
+    for case in cases()["frames"].as_array().expect("frames") {
+        let map = map_of(case["kind"].as_str().expect("kind"), case);
+        for (instance, expected) in case["instances"].as_array().expect("instances").iter().zip(case["images"].as_array().expect("images")) {
+            let row = crate::Component {
+                storey: "st".into(),
+                family: "fam".into(),
+                position: point(&instance["position"]),
+                elevation: 0.0,
+                rotation: number(&instance["rotation"]),
+                mirrored: instance["mirrored"].as_bool().expect("flag"),
+                host: None,
+                system: None,
+                name: "C".into(),
+            };
+            let image = map::component(&row, &map);
+            assert_point(image.position, &expected["position"], 1e-9, "component origin");
+            assert!(same_direction(image.rotation, number(&expected["rotation"])), "{}: rotation {} turns to {}, not {}", case["kind"], instance["rotation"], expected["rotation"], image.rotation);
+            assert_eq!(image.mirrored, expected["mirrored"].as_bool().expect("flag"), "{}: mirror flag of {instance}", case["kind"]);
+        }
+    }
+}

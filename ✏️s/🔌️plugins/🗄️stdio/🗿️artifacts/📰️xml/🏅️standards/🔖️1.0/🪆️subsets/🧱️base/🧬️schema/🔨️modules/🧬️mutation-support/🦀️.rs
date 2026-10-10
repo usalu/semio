@@ -2,7 +2,7 @@
 use crate::schema::snapshot::{XmlDocument, XmlNode};
 use crate::XmlSnapshot;
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(transparent)]
 pub struct XmlNodePath(pub Vec<usize>);
 impl XmlNodePath {

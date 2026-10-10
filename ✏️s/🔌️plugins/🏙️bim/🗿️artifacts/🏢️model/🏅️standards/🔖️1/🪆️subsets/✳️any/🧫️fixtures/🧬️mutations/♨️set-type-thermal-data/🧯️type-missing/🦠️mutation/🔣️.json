@@ -1,0 +1,7 @@
+{
+  "mutation": "setTypeThermalData",
+  "id": "win-9",
+  "u_value": {
+    "value": 1
+  }
+}

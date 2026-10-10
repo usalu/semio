@@ -208,7 +208,7 @@ export const leaves: (Leaf & { cases: ReturnType<typeof cases> })[] = [
     ]),
   },
   {
-    kind: "set-classification-system", emoji: 0x1f4d6, variant: "SetClassificationSystem", verb: "set", entity: "classification-system", displayName: "Set Classification System", binaryTag: 18004,
+    kind: "set-classification-system", emoji: 0x1f50f, variant: "SetClassificationSystem", verb: "set", entity: "classification-system", displayName: "Set Classification System", binaryTag: 18004,
     doc: "Sets any of a classification system's name, edition, source and entry table (an assigned null removes the source); absent fields stay untouched and the entry table replaces the whole table.",
     props: [
       id("classification-system", "target", { en: "System", de: "System" }),
@@ -232,7 +232,7 @@ export const leaves: (Leaf & { cases: ReturnType<typeof cases> })[] = [
     ]),
   },
   {
-    kind: "delete-classification-system", emoji: 0x1f4d5, variant: "DeleteClassificationSystem", verb: "delete", entity: "classification-system", displayName: "Delete Classification System", binaryTag: 18005,
+    kind: "delete-classification-system", emoji: 0x1f510, variant: "DeleteClassificationSystem", verb: "delete", entity: "classification-system", displayName: "Delete Classification System", binaryTag: 18005,
     doc: "Removes a classification system with every element and type classification that names it; the inverse restores the system and each classification.",
     props: [id("classification-system", "target", { en: "System", de: "System" })],
     inverseRows: { bounded: 8191 },
@@ -303,7 +303,7 @@ const patchPayload = (variant: string, patchType: string, fields: [string, strin
   const entity = kind.replace(/^set-/, "");
   const names = fields.map(([name]) => name);
   const copy = (name: string) => assign[name] ?? `self.${name}.clone()`;
-  return `//! ${doc}\n\nuse crate::{${uses}};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct ${variant} {\n    pub id: String,\n${members}\n}\n\nimpl ${variant} {\n    /// 🩹 The sparse entity patch this payload names: every provided field, restated values included.\n    pub fn patch(&self) -> ${patchType} {\n        ${patchType} { ${names.map((name) => `${name}: ${copy(name)}`).join(", ")} }\n    }\n\n    /// 🧩 The payload that provides exactly the fields \`patch\` names.\n    pub fn from_patch(id: String, patch: ${patchType}) -> Self {\n        Self { id, ${names.map((name) => `${name}: patch.${name}`).join(", ")} }\n    }\n}\n\nimpl MutationKind<ModelSnapshot, ModelMutation> for ${variant} {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "${entity}", kind: "${kind}", record: "${variant}" };\n    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base))\n    }\n    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {\n        semio_framework_ui_locale::LocalizedLabel::native(&${label[0]}, &${label[1]})\n    }\n    fn target(&self) -> Vec<String> {\n        vec![self.id.clone()]\n    }\n}\n`;
+  return `//! ${doc}\n\nuse crate::{${uses}};\nuse protocol::{MutationKind, SemanticDescriptor};\n\n#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]\n#[mutation_leaf(contract = ::protocol)]\npub struct ${variant} {\n    pub id: String,\n${members}\n}\n\nimpl ${variant} {\n    /// 🩹 The sparse entity patch this payload names: every provided field, restated values included.\n    pub fn patch(&self) -> ${patchType} {\n        ${patchType} { ${names.map((name) => `${name}: ${copy(name)}`).join(", ")} }\n    }\n\n    /// 🧩 The payload that provides exactly the fields \`patch\` names.\n    pub fn from_patch(id: String, patch: ${patchType}) -> Self {\n        Self { id, ${names.map((name) => `${name}: patch.${name}`).join(", ")} }\n    }\n}\n\nimpl MutationKind<ModelSnapshot, ModelMutation> for ${variant} {\n    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "${entity}", kind: "${kind}", record: "${variant}" };\n    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {\n        super::diff::diff(self, base)\n    }\n    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {\n        Ok(super::inverse::inverse(self, base))\n    }\n    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {\n        semio_framework_ui_locale::LocalizedLabel::native(&${label[0]}, &${label[1]})\n    }\n    fn target(&self) -> Vec<String> {\n        vec![self.id.clone()]\n    }\n}\n`;
 };
 payloads["set-property-template"] = patchPayload(
   "SetPropertyTemplate",
@@ -319,7 +319,7 @@ payloads["set-classification-system"] = patchPayload(
   "ClassificationSystemPatch",
   [["name", "Option<String>"], ["edition", "Option<String>"], ["source", "Option<Assigned<Option<String>>>"], ["entries", "Option<Vec<ClassificationItem>>"]],
   "Assigned, ClassificationItem, ClassificationSystemPatch, ModelDiff, ModelMutation, ModelSnapshot",
-  "📖️ `set-classification-system` payload. Sets any of a classification system's name, edition, source and entry table (an assigned null removes the source); absent fields stay untouched and the entry table replaces the whole table.",
+  "🔏️ `set-classification-system` payload. Sets any of a classification system's name, edition, source and entry table (an assigned null removes the source); absent fields stay untouched and the entry table replaces the whole table.",
   ['format!("Edit classification system \\"{}\\"", self.id)', 'format!("Klassifikationssystem \\"{}\\" ändern", self.id)'],
   {},
 );

@@ -2,32 +2,30 @@
 use crate::DrawingImageAsset;
 use semio_framework_pixels::{RasterImage,image_decoding::{ImageDecodeInput,ImageDecodeJob,ImageDecodeProgress,ImageDecodeError}};
 
+use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
 #[derive(Clone,Copy,Debug)]
 pub struct DrawingImageAdmissionProgress{pub decoding:Option<ImageDecodeProgress>,pub samples:usize,pub total_samples:usize,pub work:u64,pub done:bool}
-
 #[derive(semio_framework_value::RetireOwned)]
-pub struct DrawingImageAdmissionJob{decoder:Option<ImageDecodeJob>,decoding:Option<ImageDecodeProgress>,image:Option<RasterImage>,asset:Option<DrawingImageAsset>,samples:usize,work:u64,cancelled:bool,failure:Option<ImageDecodeError>,done:bool}
+pub struct DrawingImageAdmissionJob{source_identity:usize,source_length:usize,decoder:ImageDecodeJob,decoding:Option<ImageDecodeProgress>,image:Option<RasterImage>,asset:Option<DrawingImageAsset>,samples:usize,work:u64,phase:u8,cancelled:bool,failure:Option<ImageDecodeError>}
 semio_framework_value::artifact_retire_leaf!(DrawingImageAdmissionProgress);
 impl DrawingImageAdmissionJob{
- pub fn new(input:ImageDecodeInput)->Result<Self,ImageDecodeError>{Ok(Self{decoder:Some(ImageDecodeJob::new(input)?),decoding:None,image:None,asset:None,samples:0,work:0,cancelled:false,failure:None,done:false})}
- fn check(&self)->Result<(),ImageDecodeError>{if self.cancelled{return Err(ImageDecodeError::Cancelled);}if self.done&&self.asset.is_none(){return Err(ImageDecodeError::Incomplete);}if let Some(error)=&self.failure{return Err(error.clone());}Ok(())}
- fn step(&mut self)->Result<(),ImageDecodeError>{
-  if self.asset.is_none(){let decoder=self.decoder.as_mut().unwrap();let progress=decoder.advance(1)?;self.decoding=Some(progress);if progress.done{let image=self.decoder.as_mut().unwrap().take_result()?;self.asset=Some(DrawingImageAsset{width:image.width,height:image.height,samples:Default::default()});self.image=Some(image);}return Ok(());}
-  let image=self.image.as_ref().unwrap();let at=self.samples*4;
-  if at==image.pixels.len(){self.done=true;return Ok(());}
-  self.asset.as_mut().unwrap().samples.push(image.pixels[at..at+4].try_into().unwrap());self.samples+=1;Ok(())
+ pub fn new(input:ImageDecodeInput<'_>)->Result<Self,ImageDecodeError>{Ok(Self{source_identity:input.data.as_ptr()as usize,source_length:input.data.len(),decoder:ImageDecodeJob::new(input)?,decoding:None,image:None,asset:None,samples:0,work:0,phase:0,cancelled:false,failure:None})}
+ fn check(&self)->Result<(),ImageDecodeError>{if self.cancelled{return Err(ImageDecodeError::Cancelled);}if self.phase==4{return Err(ImageDecodeError::Incomplete);}if let Some(error)=&self.failure{return Err(error.clone());}Ok(())}
+ pub fn progress(&self)->DrawingImageAdmissionProgress{DrawingImageAdmissionProgress{decoding:self.decoding,samples:self.samples,total_samples:self.asset.as_ref().map_or(0,|asset|asset.width as usize*asset.height as usize),work:self.work,done:self.phase==3}}
+ pub fn next_copy_byte_demand(&self)->Result<usize,ImageDecodeError>{match self.phase{0=>self.decoder.next_copy_byte_demand(),1=>Ok(size_of::<RasterImage>()+size_of::<DrawingImageAsset>()),2=>{let asset=self.asset.as_ref().unwrap();Ok(if asset.samples.has_reserved_slot()||self.samples==asset.width as usize*asset.height as usize{4+2*size_of::<usize>()}else{asset.samples.next_reserve_copy_byte_demand().map_err(|_|ImageDecodeError::Invalid("Drawing sample metadata demand refused"))?+2*size_of::<usize>()})},_=>Ok(0)}}
+ pub fn next_capacity_byte_demand(&self)->Result<usize,ImageDecodeError>{match self.phase{0=>self.decoder.next_capacity_byte_demand(),2=>{let asset=self.asset.as_ref().unwrap();if self.samples==asset.width as usize*asset.height as usize{Ok(0)}else{asset.samples.next_allocation_bytes().map_err(|_|ImageDecodeError::Invalid("Drawing sample allocation demand refused"))}},_=>Ok(0)}}
+ fn step(&mut self,source:&str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ImageDecodeError>{
+  if self.phase==0{let(progress,receipt)=self.decoder.advance(source,grant)?;self.decoding=Some(progress);if progress.done{self.phase=1;}return Ok(receipt);}
+  if self.phase==1{let Some((image,receipt))=self.decoder.take_result(grant)?else{return Ok(Default::default());};self.asset=Some(DrawingImageAsset{width:image.width,height:image.height,samples:Default::default()});self.image=Some(image);self.phase=2;return Ok(RetainedCloneProgress{copied_bytes:receipt.copied_bytes+size_of::<DrawingImageAsset>(),..receipt});}
+  let image=self.image.as_ref().unwrap();let at=self.samples*4;if at==image.pixels.len(){self.phase=3;return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:4+2*size_of::<usize>(),..Default::default()});}
+  let asset=self.asset.as_mut().unwrap();if !asset.samples.has_reserved_slot(){let copy=asset.samples.next_reserve_copy_byte_demand().map_err(|_|ImageDecodeError::Invalid("Drawing sample metadata refused"))?;let reserved=asset.samples.reserve_one_funded(grant).map_err(|_|ImageDecodeError::Invalid("Drawing sample allocation refused"))?;return Ok(RetainedCloneProgress{copied_items:reserved.copied_items,copied_bytes:if reserved.copied_items>0{copy+2*size_of::<usize>()}else{0},retained_capacity_bytes:reserved.retained_capacity_bytes,..Default::default()});}
+  asset.samples.push_reserved(image.pixels[at..at+4].try_into().unwrap()).map_err(|_|ImageDecodeError::Invalid("Drawing sample reservation refused"))?;self.samples+=1;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:4+2*size_of::<usize>(),..Default::default()})
  }
- pub fn advance(&mut self,grant:usize)->Result<DrawingImageAdmissionProgress,ImageDecodeError>{
-  if grant==0||grant as u128>9_007_199_254_740_991{return Err(ImageDecodeError::Invalid("Invalid drawing image admission work grant".into()));}self.check()?;
-  for _ in 0..grant{if self.done{break;}if let Err(error)=self.step(){self.failure=Some(error.clone());return Err(error);}self.work+=1;}
-  let total_samples=self.asset.as_ref().map_or(0,|asset|asset.width as usize*asset.height as usize);Ok(DrawingImageAdmissionProgress{decoding:self.decoding,samples:self.samples,total_samples,work:self.work,done:self.done})
- }
+ pub fn advance(&mut self,source:&str,grant:RetainedCloneGrant)->Result<(DrawingImageAdmissionProgress,RetainedCloneProgress),ImageDecodeError>{self.check()?;if source.as_ptr()as usize!=self.source_identity||source.len()!=self.source_length{return Err(ImageDecodeError::Invalid("Original drawing image source changed"));}let mut receipt=RetainedCloneProgress::default();for _ in 0..grant.maximum_items{if self.phase==3{break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if grant.maximum_depth==0||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}let child=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes-receipt.released_bytes,maximum_depth:grant.maximum_depth};let step=match self.step(source,child){Ok(step)=>step,Err(error)=>{self.failure=Some(error.clone());return Err(error);}};if step.copied_items==0{break;}self.work+=step.copied_items as u64;receipt.copied_items+=step.copied_items;receipt.copied_bytes+=step.copied_bytes;receipt.retained_capacity_bytes+=step.retained_capacity_bytes;receipt.released_bytes+=step.released_bytes;}Ok((self.progress(),receipt))}
  pub fn cancel(&mut self){self.cancelled=true;}
- pub fn result(&self)->Result<&DrawingImageAsset,ImageDecodeError>{self.check()?;if !self.done{return Err(ImageDecodeError::Incomplete);}self.asset.as_ref().ok_or(ImageDecodeError::Incomplete)}
- pub fn take_result(&mut self)->Result<DrawingImageAsset,ImageDecodeError>{self.result()?;Ok(self.asset.take().unwrap())}
- pub fn into_result(mut self)->Result<DrawingImageAsset,ImageDecodeError>{self.result()?;Ok(self.asset.take().unwrap())}
+ pub fn result(&self)->Result<&DrawingImageAsset,ImageDecodeError>{self.check()?;if self.phase!=3{return Err(ImageDecodeError::Incomplete);}self.asset.as_ref().ok_or(ImageDecodeError::Incomplete)}
+ pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(DrawingImageAsset,RetainedCloneProgress)>,ImageDecodeError>{self.result()?;if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<DrawingImageAsset>()||grant.maximum_depth==0{return Ok(None);}self.phase=4;Ok(Some((self.asset.take().unwrap(),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<DrawingImageAsset>(),..Default::default()})))}
 }
-
 #[derive(Clone,Copy,Debug)]
 pub struct DrawingImageEmissionProgress{pub phase:&'static str,pub samples:usize,pub total_samples:usize,pub encoded_bytes:usize,pub work:u64,pub done:bool}
 
@@ -55,7 +53,6 @@ impl<'a> DrawingImageEmissionJob<'a>{
  fn release(&mut self){if let Some(encoder)=&mut self.encoder{encoder.cancel();}self.encoder=None;self.pixels=Vec::new();self.bytes=None;}
  pub fn cancel(&mut self){self.cancelled=true;self.release();}
  pub fn result(&self)->Result<&[u8],String>{self.check()?;self.bytes.as_deref().ok_or_else(||"Drawing image emission incomplete".into())}
- pub fn take_result(&mut self)->Result<DrawingImageAsset,ImageDecodeError>{self.result()?;Ok(self.asset.take().unwrap())}
  pub fn into_result(mut self)->Result<Vec<u8>,String>{self.result()?;Ok(self.bytes.take().unwrap())}
 }
 
@@ -88,6 +85,15 @@ pub fn prepared_scene_node_value(node:&crate::schema::scene_view::PreparedSceneN
  Ok(value)
 }
 
-/// 🧪️ Physical PNG fixture admission uses the same bounded native publication protocol.
+/// 🧪️ Cold fixture construction retains every decoder child until its quoted physical close.
 #[cfg(test)]
-pub(crate) fn drawing_image_from_png(bytes:&[u8])->DrawingImageAsset{let mut job=DrawingImageAdmissionJob::new(ImageDecodeInput{mime:"image/png".into(),data:std::sync::Arc::new(base64_codec::base64_standard_encode(bytes)),max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536}).expect("valid fixture PNG source");while !job.advance(4096).expect("fixture PNG admission").done{}job.into_result().unwrap()}
+pub(crate) fn drawing_image_from_png(bytes:&[u8])->DrawingImageAsset{
+ let source=base64_codec::base64_standard_encode(bytes);
+ let mut job=DrawingImageAdmissionJob::new(ImageDecodeInput{mime:"image/png",data:&source,max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536}).expect("valid fixture PNG source");
+ let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:16777216,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128};
+ while !job.advance(&source,grant).expect("fixture PNG admission").0.done{}
+ let asset=job.take_result(grant).unwrap().unwrap().0;
+ let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::new(job).unwrap_or_else(|_|panic!("fixture decoder owner unsupported"));
+ for _ in 0..2000000{if close.terminal_is_empty(){return asset;}let copy=close.next_copy_byte_demand().unwrap();let release=close.next_release_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:close.next_depth_demand().unwrap()};assert!(close.step(grant).unwrap().progress().fits(grant));}
+ panic!("fixture decoder close stalled")
+}

@@ -8,36 +8,36 @@ use crate::schema::snapshot::SvgNode as Node;
 
 //#region 🔖️Payload
 /// 🧩 One excluded child element and where it sits among its parent's children once restored.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct ReinstatedElement {
+pub struct RestoredElement {
     pub parent: NodePath,
     pub index: usize,
     pub node: SvgNode,
 }
 
 /// 🏷️ One excluded attribute and the position it takes among its element's attributes once restored.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct ReinstatedAttribute {
+pub struct RestoredAttribute {
     pub path: NodePath,
     pub index: usize,
     pub name: String,
     pub value: SvgAttributeValue,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct ReinstateNonTiny {
+pub struct RestoreNonTiny {
     #[value(default)]
-    pub elements: Vec<ReinstatedElement>,
+    pub elements: Vec<RestoredElement>,
     #[value(default)]
-    pub attributes: Vec<ReinstatedAttribute>,
+    pub attributes: Vec<RestoredAttribute>,
 }
 
 /// 🔺️ The node diff that adds the rows addressed at or below `node` (which sits at `path`), or `None` when none are.
-fn restore_node_diff(node: &Node, path: &NodePath, payload: &ReinstateNonTiny) -> Option<SvgNodeDiff> {
+fn restore_node_diff(node: &Node, path: &NodePath, payload: &RestoreNonTiny) -> Option<SvgNodeDiff> {
     let Node::Element { children, .. } = node else { return None };
     let mut attributes: Vec<SvgAttrAdded> = payload.attributes.iter().filter(|row| row.path == *path).map(|row| SvgAttrAdded { index: row.index, name: row.name.clone(), value: row.value.clone() }).collect();
     attributes.sort_by_key(|row| row.index);
@@ -58,7 +58,7 @@ fn restore_node_diff(node: &Node, path: &NodePath, payload: &ReinstateNonTiny) -
     }))
 }
 
-impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for ReinstateNonTiny {
+impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for RestoreNonTiny {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "non-tiny-content", kind: "restore-non-tiny", record: "RestoredNonTinyContent" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {

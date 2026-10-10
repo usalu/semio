@@ -1,0 +1,108 @@
+[
+  {
+    "name": "Across Latin Graphemes",
+    "font": "🚀️anta/🏛️latin/📖️regular",
+    "family": "Anta",
+    "text": "fi ffi office"
+  },
+  {
+    "name": "Across Mono Graphemes",
+    "font": "⌨️share-tech-mono/🏛️latin/📖️regular",
+    "family": "Share Tech Mono",
+    "text": "fi ffi office"
+  },
+  {
+    "name": "Original Positive Mark",
+    "font": "🚀️anta/🏛️latin/📖️regular",
+    "family": "Anta",
+    "text": "A͏̀",
+    "glyphs": [
+      1,
+      214
+    ],
+    "positions": [
+      [
+        1361,
+        0,
+        0
+      ],
+      [
+        0,
+        -978,
+        374
+      ]
+    ],
+    "ignorableGlyphs": [
+      142
+    ]
+  },
+  {
+    "name": "Original Regional Flags",
+    "font": "😀️noto-emoji/🌍️regions/📖️regular",
+    "family": "Noto Emoji",
+    "text": "🇩🇪🇺🇸",
+    "glyphs": [
+      148,
+      324
+    ],
+    "positions": [
+      [
+        2600,
+        0,
+        0
+      ],
+      [
+        2600,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "name": "Original Unsupported Country Pair",
+    "font": "😀️noto-emoji/🌍️regions/📖️regular",
+    "family": "Noto Emoji",
+    "text": "🇦🇦",
+    "glyphs": [
+      337
+    ],
+    "positions": [
+      [
+        2600,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "name": "Original Odd Regional Input",
+    "font": "😀️noto-emoji/🌍️regions/📖️regular",
+    "family": "Noto Emoji",
+    "text": "🇩🇪🇦",
+    "glyphs": [
+      148,
+      4
+    ],
+    "positions": [
+      [
+        2600,
+        0,
+        0
+      ],
+      [
+        2600,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "name": "Original Extended Font Source Run",
+    "font": "🚀️anta/➕️latin-ext/📖️regular",
+    "family": "Anta",
+    "text": "ĀĀ"
+  },
+  {"name":"Original Right Override Pair","font":"🚀️anta/🏛️latin/📖️regular","family":"Anta","text":"\u202eAV\u202c","oracleText":"AV","oracleDirection":"rtl","paintText":"VA"},
+  {"name":"Original Right Override Ligature","font":"🚀️anta/🏛️latin/📖️regular","family":"Anta","text":"\u202eif\u202c","oracleText":"if","oracleDirection":"rtl","paintText":"fi"},
+  {"name":"Original Mirrored Right Override","font":"🚀️anta/🏛️latin/📖️regular","family":"Anta","text":"\u202e(AV)\u202c","oracleText":"(AV)","oracleDirection":"rtl","paintText":"(VA)"}
+]

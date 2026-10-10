@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 500 350" width="500mm" height="350mm" xmlns="http://www.w3.org/2000/svg" class="sheet-page"
+    version="1.1" data-unit="mm" data-sheet="sh-custom" data-number="A-902" data-name="Custom" data-paper="500 × 350"
+    data-width="500" data-height="350" aria-label="A-902 Custom"><title>A-902 Custom</title><desc>Sheet A-902 Custom: 2 viewport(s) at paper size 500 × 350, paper millimetres.</desc><style>
+      .plan{font-family:sans-serif}
+      path{stroke:#000;stroke-linecap:round;stroke-linejoin:round;fill:none}
+      .cut{stroke-width:0.5}
+      .projection{stroke-width:0.25}
+      .hidden{stroke-width:0.18}
+      .annotation{stroke-width:0.13}
+      .hidden{stroke-dasharray:1.5 0.75}
+      path.region{fill-rule:evenodd}
+      path.region.cut{fill:#1a1a1a}
+      path.region.projection{fill:#e6e6e6}
+      text{fill:#000;stroke:none;font-size:3.2px}
+      text.title{font-size:5px;font-weight:bold}
+      text.space-tag{text-anchor:middle}
+      text.grid-label{font-size:3.5px;text-anchor:middle;dominant-baseline:central}
+    
+      .sheet-page{font-family:sans-serif}
+      rect{fill:none;stroke:#000}
+      line{stroke:#000}
+      text.cell-label,text.revision-heading{fill:#444}
+      text.caption{font-weight:bold}
+    </style><defs><clipPath id="clip-vp-custom"><rect x="30" y="30" width="100" height="30"/></clipPath><clipPath
+            id="clip-vp-custom-b"><rect x="100" y="40" width="20" height="20"/></clipPath></defs><g class="frame"><rect
+            x="20" y="10" width="470" height="330" class="frame" stroke-width="0.7"/></g><g id="viewport-vp-custom"
+        class="viewport section" data-viewport="vp-custom" data-view="v-section-a" data-kind="section" data-scale="100"
+        data-label="Section A" data-window="30 30 100 30" clip-path="url(#clip-vp-custom)" aria-label="Section A"><title>Section A</title><g
+            class="layer regions"><path d="M 38.5 60 L 101.5 60 L 101.5 30 L 38.5 30 Z"
+                class="region projection silhouette" data-element="w2" data-id="w2/Silhouette/0"/><path
+                d="M 50 2 L 50 30 L 90 30 L 90 2 Z" class="region projection silhouette" data-element="w4"
+                data-id="w4/Silhouette/0"/><path d="M 66.807 60 L 73.193 60 L 73.193 30 L 66.807 30 Z"
+                class="region projection silhouette" data-element="col-a" data-id="col-a/Silhouette/0"/><path
+                d="M 53 30 L 57 30 L 57 2 L 53 2 Z" class="region cut section-cut" data-element="col-b"
+                data-id="col-b/SectionCut/0"/><path d="M 98.5 60 L 101.5 60 L 101.5 30 L 98.5 30 Z"
+                class="region cut section-cut" data-element="w1" data-id="w1/SectionCut/0"/><path
+                d="M 41.5 60 L 41.5 30 L 38.5 30 L 38.5 60 Z" class="region cut section-cut" data-element="w3"
+                data-id="w3/SectionCut/0"/></g><g class="layer lines"><path d="M 66.807 60 L 69.683 60"
+                class="line projection edge" data-element="col-a" data-id="col-a/Edge/0"/><path
+                d="M 66.807 60 L 66.807 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/1"/><path
+                d="M 66.807 60 L 70.317 60" class="line projection edge" data-element="col-a" data-id="col-a/Edge/2"/><path
+                d="M 73.193 60 L 69.683 60" class="line projection edge" data-element="col-a" data-id="col-a/Edge/3"/><path
+                d="M 73.193 60 L 73.193 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/4"/><path
+                d="M 73.193 60 L 70.317 60" class="line projection edge" data-element="col-a" data-id="col-a/Edge/5"/><path
+                d="M 69.683 60 L 69.683 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/6"/><path
+                d="M 66.807 30 L 69.683 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/7"/><path
+                d="M 66.807 30 L 70.317 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/8"/><path
+                d="M 69.683 30 L 73.193 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/9"/><path
+                d="M 73.193 30 L 70.317 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/10"/><path
+                d="M 53 30 L 53 2" class="line projection edge" data-element="col-b" data-id="col-b/Edge/0"/><path
+                d="M 53 30 L 57 30" class="line projection edge" data-element="col-b" data-id="col-b/Edge/1"/><path
+                d="M 53 2 L 57 2" class="line projection edge" data-element="col-b" data-id="col-b/Edge/2"/><path
+                d="M 57 30 L 57 2" class="line projection edge" data-element="col-b" data-id="col-b/Edge/3"/><path
+                d="M 98.5 60 L 101.5 60" class="line projection edge" data-element="w1" data-id="w1/Edge/0"/><path
+                d="M 98.5 60 L 98.5 30" class="line projection edge" data-element="w1" data-id="w1/Edge/1"/><path
+                d="M 101.5 60 L 101.5 30" class="line projection edge" data-element="w1" data-id="w1/Edge/2"/><path
+                d="M 98.5 30 L 101.5 30" class="line projection edge" data-element="w1" data-id="w1/Edge/3"/><path
+                d="M 98.5 30 L 41.5 30" class="line projection edge" data-element="w2" data-id="w2/Edge/0"/><path
+                d="M 41.5 60 L 98.5 60" class="line projection edge" data-element="w2" data-id="w2/Edge/1"/><path
+                d="M 41.5 60 L 38.5 60" class="line projection edge" data-element="w2" data-id="w2/Edge/2"/><path
+                d="M 41.5 60 L 41.5 30" class="line projection edge" data-element="w2" data-id="w2/Edge/3"/><path
+                d="M 101.5 30 L 38.5 30" class="line projection edge" data-element="w2" data-id="w2/Edge/4"/><path
+                d="M 101.5 60 L 38.5 60" class="line projection edge" data-element="w2" data-id="w2/Edge/5"/><path
+                d="M 38.5 60 L 38.5 30" class="line projection edge" data-element="w2" data-id="w2/Edge/6"/><path
+                d="M 41.5 30 L 38.5 30" class="line projection edge" data-element="w2" data-id="w2/Edge/7"/><path
+                d="M 50 2 L 50 30" class="line projection edge" data-element="w4" data-id="w4/Edge/0"/><path
+                d="M 50 2 L 90 2" class="line projection edge" data-element="w4" data-id="w4/Edge/1"/><path
+                d="M 90 30 L 50 30" class="line projection edge" data-element="w4" data-id="w4/Edge/2"/><path
+                d="M 90 30 L 90 2" class="line projection edge" data-element="w4" data-id="w4/Edge/3"/><path
+                d="M 30 60 L 110 60" class="line annotation datum" data-element="st-ground"
+                data-id="st-ground/Datum/0"/><path d="M 30 30 L 110 30" class="line annotation datum"
+                data-element="st-first" data-id="st-first/Datum/0"/><path d="M 30 2 L 110 2"
+                class="line annotation datum" data-element="st-first" data-id="st-first/Datum/1"/></g><g
+            class="layer texts"><text x="111.5" y="60" class="annotation datum-label" data-element="st-ground"
+                data-id="st-ground/DatumLabel/0"><tspan x="111.5" dy="-1.84">Ground</tspan><tspan x="111.5"
+                    dy="3.68">+0.00</tspan></text><text x="111.5" y="30" class="annotation datum-label"
+                data-element="st-first" data-id="st-first/DatumLabel/0"><tspan x="111.5" dy="-1.84">First</tspan><tspan
+                    x="111.5" dy="3.68">+3.00</tspan></text><text x="111.5" y="2" class="annotation datum-label"
+                data-element="st-first" data-id="st-first/DatumLabel/1"><tspan x="111.5" dy="-1.84">First top</tspan><tspan
+                    x="111.5" dy="3.68">+5.80</tspan></text></g></g><g id="viewport-vp-custom-b"
+        class="viewport section" data-viewport="vp-custom-b" data-view="v-section-a" data-kind="section"
+        data-scale="100" data-label="Section A" data-window="100 40 20 20" clip-path="url(#clip-vp-custom-b)"
+        aria-label="Section A"><title>Section A</title><g class="layer regions"><path
+                d="M 108.5 60 L 171.5 60 L 171.5 30 L 108.5 30 Z" class="region projection silhouette" data-element="w2"
+                data-id="w2/Silhouette/0"/><path d="M 120 2 L 120 30 L 160 30 L 160 2 Z"
+                class="region projection silhouette" data-element="w4" data-id="w4/Silhouette/0"/><path
+                d="M 136.807 60 L 143.193 60 L 143.193 30 L 136.807 30 Z" class="region projection silhouette"
+                data-element="col-a" data-id="col-a/Silhouette/0"/><path d="M 123 30 L 127 30 L 127 2 L 123 2 Z"
+                class="region cut section-cut" data-element="col-b" data-id="col-b/SectionCut/0"/><path
+                d="M 168.5 60 L 171.5 60 L 171.5 30 L 168.5 30 Z" class="region cut section-cut" data-element="w1"
+                data-id="w1/SectionCut/0"/><path d="M 111.5 60 L 111.5 30 L 108.5 30 L 108.5 60 Z"
+                class="region cut section-cut" data-element="w3" data-id="w3/SectionCut/0"/></g><g class="layer lines"><path
+                d="M 136.807 60 L 139.683 60" class="line projection edge" data-element="col-a" data-id="col-a/Edge/0"/><path
+                d="M 136.807 60 L 136.807 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/1"/><path
+                d="M 136.807 60 L 140.317 60" class="line projection edge" data-element="col-a" data-id="col-a/Edge/2"/><path
+                d="M 143.193 60 L 139.683 60" class="line projection edge" data-element="col-a" data-id="col-a/Edge/3"/><path
+                d="M 143.193 60 L 143.193 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/4"/><path
+                d="M 143.193 60 L 140.317 60" class="line projection edge" data-element="col-a" data-id="col-a/Edge/5"/><path
+                d="M 139.683 60 L 139.683 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/6"/><path
+                d="M 136.807 30 L 139.683 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/7"/><path
+                d="M 136.807 30 L 140.317 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/8"/><path
+                d="M 139.683 30 L 143.193 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/9"/><path
+                d="M 143.193 30 L 140.317 30" class="line projection edge" data-element="col-a"
+                data-id="col-a/Edge/10"/><path d="M 123 30 L 123 2" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/0"/><path d="M 123 30 L 127 30" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/1"/><path d="M 123 2 L 127 2" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/2"/><path d="M 127 30 L 127 2" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/3"/><path d="M 168.5 60 L 171.5 60" class="line projection edge" data-element="w1"
+                data-id="w1/Edge/0"/><path d="M 168.5 60 L 168.5 30" class="line projection edge" data-element="w1"
+                data-id="w1/Edge/1"/><path d="M 171.5 60 L 171.5 30" class="line projection edge" data-element="w1"
+                data-id="w1/Edge/2"/><path d="M 168.5 30 L 171.5 30" class="line projection edge" data-element="w1"
+                data-id="w1/Edge/3"/><path d="M 168.5 30 L 111.5 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/0"/><path d="M 111.5 60 L 168.5 60" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/1"/><path d="M 111.5 60 L 108.5 60" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/2"/><path d="M 111.5 60 L 111.5 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/3"/><path d="M 171.5 30 L 108.5 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/4"/><path d="M 171.5 60 L 108.5 60" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/5"/><path d="M 108.5 60 L 108.5 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/6"/><path d="M 111.5 30 L 108.5 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/7"/><path d="M 120 2 L 120 30" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/0"/><path d="M 120 2 L 160 2" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/1"/><path d="M 160 30 L 120 30" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/2"/><path d="M 160 30 L 160 2" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/3"/><path d="M 100 60 L 180 60" class="line annotation datum" data-element="st-ground"
+                data-id="st-ground/Datum/0"/><path d="M 100 30 L 180 30" class="line annotation datum"
+                data-element="st-first" data-id="st-first/Datum/0"/><path d="M 100 2 L 180 2"
+                class="line annotation datum" data-element="st-first" data-id="st-first/Datum/1"/></g><g
+            class="layer texts"><text x="181.5" y="60" class="annotation datum-label" data-element="st-ground"
+                data-id="st-ground/DatumLabel/0"><tspan x="181.5" dy="-1.84">Ground</tspan><tspan x="181.5"
+                    dy="3.68">+0.00</tspan></text><text x="181.5" y="30" class="annotation datum-label"
+                data-element="st-first" data-id="st-first/DatumLabel/0"><tspan x="181.5" dy="-1.84">First</tspan><tspan
+                    x="181.5" dy="3.68">+3.00</tspan></text><text x="181.5" y="2" class="annotation datum-label"
+                data-element="st-first" data-id="st-first/DatumLabel/1"><tspan x="181.5" dy="-1.84">First top</tspan><tspan
+                    x="181.5" dy="3.68">+5.80</tspan></text></g></g><g class="captions"><text x="30" y="65"
+            class="caption" font-size="3.5" text-anchor="start" font-weight="bold">Section A   1:100</text><text x="100"
+            y="65" class="caption" font-size="3.5" text-anchor="start" font-weight="bold">Section A   1:100</text></g><g
+        class="title-block"><rect x="310" y="292" width="180" height="48" class="title-block" stroke-width="0.5"/><rect
+            x="310" y="292" width="110" height="16" class="title-cell" stroke-width="0.18"/><text x="311.5" y="295.2"
+            class="cell-label" font-size="2" text-anchor="start">Project</text><text x="311.5" y="303.5"
+            class="cell-value" font-size="4" text-anchor="start">Room</text><rect x="420" y="292" width="70" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="421.5" y="295.2" class="cell-label" font-size="2"
+            text-anchor="start">Sheet no.</text><text x="421.5" y="303.5" class="cell-value" font-size="5"
+            text-anchor="start" font-weight="bold">A-902</text><rect x="310" y="308" width="110" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="311.5" y="311.2" class="cell-label" font-size="2"
+            text-anchor="start">Title</text><text x="311.5" y="319.5" class="cell-value" font-size="5"
+            text-anchor="start" font-weight="bold">Custom</text><rect x="420" y="308" width="70" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="421.5" y="311.2" class="cell-label" font-size="2"
+            text-anchor="start">Scale</text><text x="421.5" y="319.5" class="cell-value" font-size="3.5"
+            text-anchor="start">1:100</text><rect x="310" y="324" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="311.5" y="327.2" class="cell-label" font-size="2"
+            text-anchor="start">Drawn by</text><text x="311.5" y="335.5" class="cell-value" font-size="3.5"
+            text-anchor="start">UG</text><rect x="355" y="324" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="356.5" y="327.2" class="cell-label" font-size="2"
+            text-anchor="start">Checked by</text><text x="356.5" y="335.5" class="cell-value" font-size="3.5"
+            text-anchor="start">AB</text><rect x="400" y="324" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="401.5" y="327.2" class="cell-label" font-size="2"
+            text-anchor="start">Date</text><text x="401.5" y="335.5" class="cell-value" font-size="3.5"
+            text-anchor="start">2026-10-09</text><rect x="445" y="324" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="446.5" y="327.2" class="cell-label" font-size="2"
+            text-anchor="start">Revision</text><text x="446.5" y="335.5" class="cell-value" font-size="3.5"
+            text-anchor="start"></text></g></svg>

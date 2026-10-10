@@ -38,7 +38,7 @@ fn the_representation_is_the_plan_drawing_of_the_annotation() {
 #[test]
 fn a_dimension_carries_its_measured_total_and_an_unresolved_one_draws_nothing_and_is_reported() {
     let model = notated();
-    let (document, notes) = model_to_part21(&model).expect("exports");
+    let (document, notes) = model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("exports");
     let value = |name: &str| rows(&document, "IFCANNOTATION").into_iter().find(|(_, args)| string(args, 2).as_deref() == Some(name)).map(|(instance, _)| instance.id).expect("the dimension");
     let totals: Vec<f64> = dimension_total(&document, value("South length")).into_iter().collect();
     assert_eq!(totals.len(), 1);

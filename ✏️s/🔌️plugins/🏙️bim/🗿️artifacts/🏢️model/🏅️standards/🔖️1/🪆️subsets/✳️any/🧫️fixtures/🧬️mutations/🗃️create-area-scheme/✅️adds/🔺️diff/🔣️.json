@@ -1,1 +1,11 @@
-{}
+{
+  "area_schemes": {
+    "as-gfa": {
+      "entry": "Created",
+      "measure": "Gross",
+      "name": "Gross floor area",
+      "usages": [],
+      "zones": []
+    }
+  }
+}

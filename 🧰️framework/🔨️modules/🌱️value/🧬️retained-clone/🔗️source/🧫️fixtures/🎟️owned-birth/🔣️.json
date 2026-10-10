@@ -4,9 +4,11 @@
   "authority": "original publication authority",
   "authorityCapacity": 96,
   "sharedAuthorityRetainsAlias": true,
-  "birth": { "items": 1, "depth": 1, "copyBytes": 0, "releaseBytes": 0 },
+  "closeOrders": ["sourceFirst", "projectionFirst"],
+  "birth": { "items": 1, "depth": 1, "sourceAliasCopies": 1, "releaseBytes": 0 },
   "refusals": [
     { "currency": "items", "shortBy": 1, "kind": "WorkLimit" },
+    { "currency": "copy", "shortBy": 1, "kind": "OwnershipLimit" },
     { "currency": "capacity", "shortBy": 1, "kind": "OwnershipLimit" },
     { "currency": "depth", "shortBy": 1, "kind": "DepthLimit" }
   ],

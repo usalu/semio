@@ -291,6 +291,11 @@ impl<'a> Doc<'a> {
         self.representation_items(product, "FootPrint").into_iter().find_map(|item| self.closed_loop(item))
     }
 
+    /// 〰️ The first polyline of the `identifier` representation of a product as plane points (at least two).
+    pub fn path(&self, product: &[Part21Value], identifier: &str) -> Option<Vec<[f64; 2]>> {
+        self.representation_items(product, identifier).into_iter().find_map(|item| self.follow_args(item, "IFCPOLYLINE").map(|args| self.plane_points(&args[0]))).filter(|points| points.len() >= 2)
+    }
+
     /// 🧊️ The first swept `Body` solid of a product.
     pub fn body(&self, product: &[Part21Value]) -> Option<Extrusion> {
         self.representation_items(product, "Body").into_iter().find_map(|item| {

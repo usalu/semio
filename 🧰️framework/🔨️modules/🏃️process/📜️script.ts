@@ -33,7 +33,7 @@ class TestScript extends BundleScript {
       await testArtifactFiles(output);
       return;
     }
-    const suites: Readonly<Record<string, { source: string; budgetMs: number }>> = {
+    const suites: Readonly<Record<string, { source: string; budgetMs: number; testNamePattern?: string }>> = {
       capture: { source: "📥️capture/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       command: { source: "🧭️routing/🎛️command/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "command-boundary": { source: "🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
@@ -44,6 +44,7 @@ class TestScript extends BundleScript {
       "owner-context": { source: "📋️context/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "vitest-driver": { source: "🧪️testing/🧪️vitest/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "cargo-test-leases": {source:"🧪️testing/🦀️cargo/🔒️lease/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
+      "cargo-profile": { source: "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick, testNamePattern: "Cargo compiles the exact libtest profile" },
       "cargo-driver": { source: "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "test-command": { source: "🧪️testing/🎛️execution/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       routing: { source: "🧭️routing/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
@@ -56,7 +57,7 @@ class TestScript extends BundleScript {
     if (!suite) throw Error(`Unknown process contract suite: ${segments[0]}`);
     if (["routing", "command", "capture"].includes(segments[0]!)) await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", resolve(this.root, suite.source)], this.repoRoot, "process:" + segments[0] + ":types", scriptInvocationBudget(this.invocation, suite.budgetMs), { signal: this.invocation.control.signal });
     const sources = [resolve(this.root, suite.source), ...(segments[0] === "capture" ? [resolve(this.root, "📥️capture/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "exact-cargo-laws" ? [resolve(this.root, "🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "owned-execution" ? [resolve(this.root, "🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts"),resolve(this.root, "🎛️owned-execution/🧪️tests/📬️output/🟦️.ts")] : [])];
-    await runOwnedCommand(process.execPath, ["test", ...sources], this.repoRoot, `process:${segments[0]}`, scriptInvocationBudget(this.invocation, suite.budgetMs), { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output }, signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, ["test", ...sources, ...(suite.testNamePattern ? ["--test-name-pattern", suite.testNamePattern] : [])], this.repoRoot, `process:${segments[0]}`, scriptInvocationBudget(this.invocation, suite.budgetMs), { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output }, signal: this.invocation.control.signal });
   }
 }
 

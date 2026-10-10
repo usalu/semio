@@ -27,6 +27,6 @@ async fn inserts_at_the_placements_it_is_given() {
 
 #[semio_framework_async_macros::async_test]
 async fn replacing_an_installed_entry_inverts_position_exactly() {
-    let base = support::with_tail(&applied(&support::document(), &PdfXMutation::SetOutputIntent { identifier: "first".to_string(), placements: Vec::new(), entry_index: None }));
-    assert_mutation_inverse_sum_law(&PdfXMutation::SetOutputIntent { identifier: "second".to_string(), placements: Vec::new(), entry_index: None }, &base).await;
+    let base = support::with_tail(&applied(&support::document(), &PdfXMutation::SetOutputIntent(SetOutputIntent { identifier: "first".to_string(), placements: Vec::new(), entry_index: None })));
+    assert_mutation_inverse_sum_law(&PdfXMutation::SetOutputIntent(SetOutputIntent { identifier: "second".to_string(), placements: Vec::new(), entry_index: None }), &base).await;
 }

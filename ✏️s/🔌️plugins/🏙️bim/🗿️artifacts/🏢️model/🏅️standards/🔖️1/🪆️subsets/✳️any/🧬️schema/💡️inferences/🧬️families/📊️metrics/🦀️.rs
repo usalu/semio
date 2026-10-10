@@ -7,7 +7,7 @@ use semio_framework_geometry::loops;
 use std::collections::BTreeMap;
 
 /// 🧊️ What the oracle compares of one solid.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SolidMetrics {
     pub visible: bool,
     pub material: String,
@@ -19,7 +19,7 @@ pub struct SolidMetrics {
 }
 
 /// 🧬️ What the oracle compares of one family.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FamilyMetrics {
     pub category: String,
     pub parameters: BTreeMap<String, ResolvedParameter>,

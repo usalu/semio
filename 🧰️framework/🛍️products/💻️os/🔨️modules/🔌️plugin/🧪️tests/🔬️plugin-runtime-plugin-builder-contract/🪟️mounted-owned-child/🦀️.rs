@@ -15,7 +15,7 @@ fn mounted_owned_child_original_preparation_preserves_actual_operation_schema() 
     emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot, TestMutation>("slot", "child-1", original));
     for _ in 0..100000 {
         let before = emit.child_preparations.front().and_then(ChildEmitPreparation::accepted_prefix).map_or(0, |prefix| prefix.op_schema.0.len());
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| emit.prepare_child_one(1, 262144).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| prepare_original_fixture_child(&mut emit,1,262144).unwrap());
         let after = emit.child_preparations.front().and_then(ChildEmitPreparation::accepted_prefix).map_or(before, |prefix| prefix.op_schema.0.len());
         assert!(after.saturating_sub(before) <= 64);
         assert!(heap.requested_bytes <= 262144 && heap.released_bytes <= 262144);
@@ -26,8 +26,8 @@ fn mounted_owned_child_original_preparation_preserves_actual_operation_schema() 
     assert_eq!(emit.owned_child_emits[0].mutations::<TestMutation>().unwrap().as_ptr(), original_pointer);
     let schema = emit.owned_child_emits[0].metadata().unwrap().op_schema.0.clone();
     while !emit.owned_child_emits.is_empty() || emit.owned_child_emits.capacity() != 0 {
-        let bytes = emit.owned_child_emits.last().map_or(emit.owned_child_emits.capacity()*std::mem::size_of::<OwnedChildEmit>(), |child| child.next_close_byte_demand().unwrap()).max(1);
-        emit.close_child_one(1, bytes).unwrap();
+        let demand=emit.close_child_demands(262144).expect("original child retirement quote");
+        let turn=crate::app::plugin_demand_grant(demand);let step=emit.close_child_one(turn).unwrap();if let Some(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=step{assert!(progress.fits(turn));}
     }
     assert_eq!(schema, "count.set-count", "owned typed source carries its first original operation's authored schema before mounted publication");
     println!("[DEBUG] original owned child schema={schema}, source pointer retained, borrowed schema copies<=64 and whole physical births/releases<=262144 per admitted turn");

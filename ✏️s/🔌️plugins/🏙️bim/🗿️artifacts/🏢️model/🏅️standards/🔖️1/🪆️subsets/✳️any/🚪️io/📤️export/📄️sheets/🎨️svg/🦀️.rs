@@ -86,7 +86,7 @@ fn viewport_group(model: &ModelSnapshot, placed: &PlacedViewport, drawing: Optio
     ];
     let mut children = vec![element("title", vec![], vec![text(&placed.label)])];
     if let Some(drawing) = drawing {
-        children.extend(view_layers(&slot, &drawing.lines));
+        children.extend(view_layers(model, &slot, &drawing.lines));
     }
     SvgElement::Group { common, children }
 }

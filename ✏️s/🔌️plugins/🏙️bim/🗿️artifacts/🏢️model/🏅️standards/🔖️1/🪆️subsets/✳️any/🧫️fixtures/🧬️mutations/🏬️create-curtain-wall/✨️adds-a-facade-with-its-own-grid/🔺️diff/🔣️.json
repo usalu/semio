@@ -1,1 +1,42 @@
-{}
+{
+  "curtain_walls": {
+    "cw-2": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 6.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "curtain_wall_type": "cwt-1",
+      "entry": "Created",
+      "name": "Lined facade",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "u_grid": {
+        "Lines": {
+          "positions": [
+            1.0,
+            3.0
+          ]
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.0
+        }
+      }
+    }
+  }
+}

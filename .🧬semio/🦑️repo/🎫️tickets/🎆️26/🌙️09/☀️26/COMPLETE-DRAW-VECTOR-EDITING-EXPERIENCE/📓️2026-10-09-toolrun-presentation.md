@@ -1,0 +1,9 @@
+# Original ToolRun Presentation
+
+The concrete immutable body owns original sealed tool identity text, full progress metadata, joint entity provenance and optional sealed original payload bytes. The original issuer supports fallible funded capture without cloning field contents or exposing raw Arc/Weak authority. Body publication separately quotes its fixed-body transfer and shared header birth. Its RetireOwned facet reaches every concrete original leaf.
+
+Schema-first neutral cases preserve all four body fields, three captures, two original close orders and empty/nonempty payloads. The portable reference-custody implementation agrees with independent RFC6902 canonical fields. Intentional missing portable/native owner reds are frozen as `presentation-source-red.log` and `presentation-native-red.log`.
+
+Actual canonical invocation21280 passed five native progress metadata laws. The presentation law passed four payload/order journeys: nonempty original865 + born41464 = physically released42329 in each order; empty original860 + born41464 = released42324. Every measured physical step matched its genuine capacity/release receipt; denied publication/capture grants retained the same original text, counter, provenance and payload pointers, and terminal drop released zero bytes. Frozen current receipt is `presentation-native-green2.log`. The preceding green1 used directly owned text; green2 is authoritative for the current sealed identity child.
+
+The existing registered original-progress source/native router includes these laws and strict TypeScript. This proves the body and its same-issuer capture, not live publication. Actual OS Entry/view/context still use the preceding synchronous metadata and raw entity/payload fields. The pending tick producer and actual renderer/context adoption remain required.

@@ -1,0 +1,13 @@
+{
+  "space_conditions": {
+    "sp-1": {
+      "entry": "Patched",
+      "occupancy": {
+        "value": "Office"
+      },
+      "schedule": {
+        "value": "Office 08-18"
+      }
+    }
+  }
+}

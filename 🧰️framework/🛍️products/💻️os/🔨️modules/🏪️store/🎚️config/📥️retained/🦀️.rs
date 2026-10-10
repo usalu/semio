@@ -742,9 +742,22 @@ where
         if let Some(value) = self.pending_retired_payload.as_ref() { return controlled(value); }
         if let Some(value) = self.pending_payload.as_ref() { return controlled(value); }
         if let Some(value) = self.pending_metadata.as_ref() { return controlled(value); }
+        if self.owners.is_some() {
+            if let Some(owner) = self.runtime.as_ref() { return child(owner.initialization_retirement_demands(copy)?); }
+            if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
+        }
+        if self.retired_messages.is_some() || self.pending_messages.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>(), depth: 2, ..Default::default() }); }
+        if self.owners.is_none() {
+            if self.runtime.is_some() || self.pending_edit.is_some() || self.pending_snapshot.is_some() || self.validation.is_some() || self.current.is_some() || self.envelope.is_some() || self.initial.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "config root retirement requires its original catalog")); }
+            if let Some(value) = self.history.as_ref() { return controlled(value); }
+            if let Some(value) = self.edit_lookup.as_ref() { return controlled(value); }
+            if let Some(value) = self.expected_id.as_ref() { return controlled(value); }
+            if self.actor.0.has_owner() { return controlled(&self.actor.0); }
+            if let Some(value) = self.schema.as_ref() { return controlled(value); }
+            return Ok(Default::default());
+        }
         if let Some(owner) = self.runtime.as_ref() { return child(owner.initialization_retirement_demands(copy)?); }
         if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
-        if self.retired_messages.is_some() || self.pending_messages.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>(), depth: 2, ..Default::default() }); }
         if let Some(value) = self.pending_snapshot.as_ref().or_else(|| self.validation.as_ref()).or_else(|| self.current.as_ref()) { let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?; return Ok(RetirementDemand { capacity_bytes: owners.initial_snapshot_retirement.retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
         if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
         if self.initial.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactGenesisRetirement<P>>(), depth: 2, ..Default::default() }); }
@@ -832,6 +845,34 @@ where
         controlled!(pending_retired_payload);
         controlled!(pending_payload);
         controlled!(pending_metadata);
+        if self.owners.is_none() {
+            if let Some(messages) = self.retired_messages.take() {
+                match super::admit_artifact_retirement(messages, child, |messages| super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
+                    Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                    Err((error, messages)) => { *self.retired_messages = Some(messages); return Err(error); }
+                }
+            }
+            if let Some(messages) = self.pending_messages.take() {
+                match super::admit_artifact_retirement(messages, child, |messages| super::ArtifactStoreMessageLedgerRetirement::new(messages.edit_id, messages.messages)) {
+                    Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                    Err((error, messages)) => { *self.pending_messages = Some(messages); return Err(error); }
+                }
+            }
+            if self.runtime.is_some() || self.pending_edit.is_some() || self.pending_snapshot.is_some() || self.validation.is_some() || self.current.is_some() || self.envelope.is_some() || self.initial.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "config root retirement requires its original catalog")); }
+            controlled!(history);
+            controlled!(edit_lookup);
+            controlled!(expected_id);
+            if self.actor.0.has_owner() {
+                let original = std::mem::take(&mut self.actor.0);
+                match admit_typed_controlled_retirement(original, child) {
+                    Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
+                    Err((error, original)) => { self.actor.0 = original; return Err(error); }
+                }
+            }
+            controlled!(schema);
+            self.terminal = true;
+            return Ok(RetainedCloneStep::Complete(empty));
+        }
         if let Some(owner) = self.runtime.as_mut() {
             let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
             let step = owner.close_step(&owners.initial_snapshot_retirement, child)?;

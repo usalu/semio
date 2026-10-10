@@ -49,7 +49,7 @@ OPENINGS = {"Window": "Window", "Door": "Door", "Void": "Void"}
 MATERIAL_SOURCES = ["walls", "curtain_walls", "columns", "beams", "slabs", "roofs", "openings", "stairs", "railings", "spaces"]
 STOREYED = ["walls", "curtain_walls", "columns", "beams", "slabs", "roofs", "stairs", "railings", "spaces"]
 PHASED = STOREYED
-TYPES = {"walls": ("wall_type", "wall_types"), "slabs": ("slab_type", "slab_types"), "roofs": ("roof_type", "roof_types"), "columns": ("column_type", "column_types"), "beams": ("beam_type", "beam_types")}
+TYPES = {"walls": ("wall_type", "wall_types"), "curtain_walls": ("curtain_wall_type", "curtain_wall_types"), "slabs": ("slab_type", "slab_types"), "roofs": ("roof_type", "roof_types"), "columns": ("column_type", "column_types"), "beams": ("beam_type", "beam_types")}
 
 
 def load_sibling(case, name):

@@ -2,7 +2,7 @@
 
 use super::{RetainedCloneBinding, RetainedCloneProjection, RetainedCloneRef};
 use crate::{ValueError, ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
-use std::{mem::ManuallyDrop, ptr::NonNull, sync::Arc};
+use std::{mem::ManuallyDrop,ptr::NonNull};
 
 /// 🧷️ Keeps a native field stable through its immutable root lease until explicit alias closure.
 pub struct RetainedOwnedProjection<T: ?Sized + Sync> {
@@ -18,8 +18,10 @@ unsafe impl<T: ?Sized + Sync> Sync for RetainedOwnedProjection<T> {}
 
 impl<T: ?Sized + Sync> RetainedOwnedProjection<T> {
     /// 🛡️ Requires a projection whose lease retains its actual immutable native root.
-    pub(super) unsafe fn from_source(source: RetainedCloneRef<'_, T>) -> Self {
-        Self { value: NonNull::from(source.get()), binding: ManuallyDrop::new(Some(RetainedCloneBinding::new(Arc::clone(source.lease),source.projection))), projection: source.projection }
+    pub(super) unsafe fn from_source(source:RetainedCloneRef<'_,T>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{
+        let mut binding=None;let progress=source.bind(&mut binding,grant)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original projection alias omitted its birth"))?;
+        if binding.is_none(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original projection alias copy is not funded"));}
+        Ok((Self{value:NonNull::from(source.get()),binding:ManuallyDrop::new(binding),projection:source.projection},progress))
     }
 
     /// 📖️ Borrows the projected field for the lifetime of this actual owning alias.
@@ -29,9 +31,9 @@ impl<T: ?Sized + Sync> RetainedOwnedProjection<T> {
     }
 
     /// 🌿️ Projects another native child without allocation or reconstructed field ownership.
-    pub fn project<U: ?Sized + Sync, F>(&self, discriminator: usize, project: F) -> Result<RetainedOwnedProjection<U>, ValueError>
+    pub fn project<U: ?Sized + Sync, F>(&self, discriminator: usize, project: F,grant:RetainedCloneGrant) -> Result<(RetainedOwnedProjection<U>,RetainedCloneProgress), ValueError>
     where F: for<'source> FnOnce(&'source T) -> &'source U {
-        Ok(unsafe { RetainedOwnedProjection::from_source(self.borrow()?.project(discriminator, project)) })
+        unsafe { RetainedOwnedProjection::from_source(self.borrow()?.project(discriminator, project),grant) }
     }
 
     /// ♻️ Releases one alias while the source authority continues to retain the root lease.

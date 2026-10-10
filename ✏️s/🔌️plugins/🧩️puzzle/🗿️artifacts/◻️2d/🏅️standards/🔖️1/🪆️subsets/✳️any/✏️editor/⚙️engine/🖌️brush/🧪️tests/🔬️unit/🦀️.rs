@@ -130,7 +130,7 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel,
-            config: BatchDriveConfig { site: "puzzle2d.fill.test", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.test", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(job, params);
@@ -245,7 +245,7 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.checkpoint", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.checkpoint", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(job, params);
@@ -699,7 +699,7 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel,
-            config: BatchDriveConfig { site: "puzzle2d.fill.cancel", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.cancel", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(job, params);
@@ -728,7 +728,7 @@ mod tests {
             operation: stale_operation.operation,
             generation: semio_framework_job::Generation(5),
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.stale", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.stale", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
         let mut stale = mount_fill_session(stale_job, stale_params);
@@ -765,7 +765,7 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.deadline", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.deadline", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: deadline_now_us,
         };
         let mut session = mount_fill_session(job, params);
@@ -797,7 +797,7 @@ mod tests {
             operation: refused_operation.operation,
             generation: refused_operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.refusal", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.refusal", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
         let refused_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, refused_operation);
@@ -812,7 +812,7 @@ mod tests {
             operation: complete_operation.operation,
             generation: complete_operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.unclaimed-complete", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.unclaimed-complete", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
         let complete_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 0, complete_operation);
@@ -884,7 +884,7 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.saturation", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.saturation", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, operation), params);
@@ -1003,7 +1003,7 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.field-cursors", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.field-cursors", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 2, operation), params);

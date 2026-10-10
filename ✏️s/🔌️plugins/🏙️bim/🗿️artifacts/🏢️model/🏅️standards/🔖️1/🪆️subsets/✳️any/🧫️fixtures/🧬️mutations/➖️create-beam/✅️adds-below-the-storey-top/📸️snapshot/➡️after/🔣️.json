@@ -23,53 +23,53 @@
   },
   "beams": {
     "b-a": {
-      "beam_type": "bt-30x50",
       "axis": {
         "Line": {
-          "start": {
-            "x": 0,
-            "y": 0
-          },
           "end": {
-            "x": 4,
-            "y": 0
+            "x": 4.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
           }
         }
       },
-      "phase": "New",
+      "beam_type": "bt-30x50",
       "name": "Beam A",
+      "phase": "New",
       "storey": "st-ground",
       "top_offset": -0.1
     },
     "b-b": {
-      "beam_type": "bt-40x60",
       "axis": {
         "Line": {
-          "start": {
-            "x": 0,
-            "y": 3
-          },
           "end": {
-            "x": 4,
-            "y": 3
+            "x": 4.0,
+            "y": 3.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 3.0
           }
         }
       },
-      "phase": "New",
+      "beam_type": "bt-40x60",
       "name": "Beam B",
+      "phase": "New",
       "storey": "st-ground",
       "top_offset": -0.2
     }
   },
   "buildings": {
     "bldg-1": {
-      "elevation": 0,
+      "elevation": 0.0,
       "name": "House",
       "origin": {
-        "x": 0,
-        "y": 0
+        "x": 0.0,
+        "y": 0.0
       },
-      "rotation": 0,
+      "rotation": 0.0,
       "site": "site-1"
     }
   },
@@ -109,9 +109,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800,
+      "density": 1800.0,
       "name": "Brick",
-      "specific_heat": 900
+      "specific_heat": 900.0
     }
   },
   "openings": {},
@@ -130,11 +130,11 @@
   "sites": {
     "site-1": {
       "boundary": [],
-      "elevation": 100,
-      "latitude": 47,
-      "longitude": 8,
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
       "name": "Plot",
-      "true_north": 0
+      "true_north": 0.0
     }
   },
   "slab_types": {},
@@ -150,7 +150,7 @@
     },
     "st-ground": {
       "building": "bldg-1",
-      "height": 3,
+      "height": 3.0,
       "level": 0,
       "name": "Ground"
     }
@@ -172,16 +172,16 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8,
-            "y": 6
+            "x": 8.0,
+            "y": 6.0
           },
           "start": {
-            "x": 8,
-            "y": 0
+            "x": 8.0,
+            "y": 0.0
           }
         }
       },
-      "base_offset": 0,
+      "base_offset": 0.0,
       "location": "Center",
       "name": "East",
       "phase": "New",
@@ -197,23 +197,23 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8,
-            "y": 0
+            "x": 8.0,
+            "y": 0.0
           },
           "start": {
-            "x": 0,
-            "y": 0
+            "x": 0.0,
+            "y": 0.0
           }
         }
       },
-      "base_offset": 0,
+      "base_offset": 0.0,
       "location": "Center",
       "name": "South",
       "phase": "New",
       "storey": "st-ground",
       "top": {
         "StoreyTop": {
-          "offset": 0
+          "offset": 0.0
         }
       },
       "wall_type": "wt-300"

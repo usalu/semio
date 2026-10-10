@@ -33,7 +33,12 @@ export const MOVES: Record<string, { id: string; from: string }[]> = {
   office: [],
 };
 
+const PHASED = ["walls", "curtain_walls", "columns", "beams", "slabs", "roofs", "stairs", "railings", "spaces"];
+
 export function phasesFor(name: string, model: Json) {
+  for (const collection of PHASED) {
+    for (const record of Object.values<Json>(model[collection] ?? {})) record.phase ??= "New";
+  }
   for (const [phase, collections] of Object.entries(PHASES[name] ?? {})) {
     for (const [collection, ids] of Object.entries(collections)) {
       for (const id of ids) {

@@ -1,0 +1,11 @@
+{
+  "issues": {
+    "i-2": {
+      "entry": "Patched",
+      "labels": [
+        "Door",
+        "Accessibility"
+      ]
+    }
+  }
+}

@@ -32,6 +32,7 @@ type ModelSnapshot {
   ceilings: [CeilingRow!]! @state(class: ARTIFACT)
   zones: [ZoneRow!]! @state(class: ARTIFACT)
   area_schemes: [AreaSchemeRow!]! @state(class: ARTIFACT)
+  space_conditions: [SpaceConditionsRow!]! @state(class: ARTIFACT)
   views: [ViewRow!]! @state(class: ARTIFACT)
   sheets: [SheetRow!]! @state(class: ARTIFACT)
   viewports: [ViewportRow!]! @state(class: ARTIFACT)
@@ -44,6 +45,13 @@ type ModelSnapshot {
   families: [FamilyRow!]! @state(class: ARTIFACT)
   family_parameters: [FamilyParameterRow!]! @state(class: ARTIFACT)
   family_solids: [FamilySolidRow!]! @state(class: ARTIFACT)
+  components: [ComponentRow!]! @state(class: ARTIFACT)
+  component_overrides: [ComponentOverrideRow!]! @state(class: ARTIFACT)
+  mep_elements: [MepElementRow!]! @state(class: ARTIFACT)
+  clash_sets: [ClashSetRow!]! @state(class: ARTIFACT)
+  rules: [RuleRow!]! @state(class: ARTIFACT)
+  issues: [IssueRow!]! @state(class: ARTIFACT)
+  issue_comments: [IssueCommentRow!]! @state(class: ARTIFACT)
   wall_sweeps: [WallSweepRow!]! @state(class: ARTIFACT)
   schedules: [ScheduleRow!]! @state(class: ARTIFACT)
   property_templates: [PropertyTemplateRow!]! @state(class: ARTIFACT)
@@ -52,3 +60,16 @@ type ModelSnapshot {
   classifications: [ClassificationSetRow!]! @state(class: ARTIFACT)
 }
 
+
+# 🦴️ Authored structural analysis schema
+type StructuralLocation { Point: PointLocation, Line: LineLocation, Area: Boolean }
+type PointLocation { station: Float! }
+type LineLocation { start: Float!, end: Float! }
+type Restraints { x:Boolean!, y:Boolean!, z:Boolean!, rx:Boolean!, ry:Boolean!, rz:Boolean! }
+type StructuralSupport { name: String! member: String! location: StructuralLocation! offset: Point3! restraints: Restraints! }
+type StructuralSupportRow { id:String!, value:StructuralSupport! }
+type LoadCase { name: String! category: String! factor: Float! }
+type LoadCaseRow { id:String!, value:LoadCase! }
+type StructuralLoad { name: String! load_case: String! member: String! location: StructuralLocation! force: Point3! moment: Point3! }
+type StructuralLoadRow { id:String!, value:StructuralLoad! }
+extend type ModelSnapshot { supports: [StructuralSupportRow!]! @state(class: ARTIFACT), load_cases:[LoadCaseRow!]! @state(class: ARTIFACT), loads:[StructuralLoadRow!]! @state(class: ARTIFACT) }

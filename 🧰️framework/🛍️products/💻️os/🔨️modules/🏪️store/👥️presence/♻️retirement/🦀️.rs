@@ -32,7 +32,7 @@ pub struct PresenceStoreRetirement<P> {
     peers: std::mem::ManuallyDrop<Option<Arc<PresencePeersRoot<P>>>>,
     active_local: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     active_peers: std::mem::ManuallyDrop<Option<PresencePeersRetirement<P>>>,
-    reads: std::mem::ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryHandle>>,
+    reads: std::mem::ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryAliasRetirement>>,
     active_returned: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     local_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
     peer_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
@@ -135,12 +135,17 @@ impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> PresenceStore<P, M> {
             peers: std::mem::ManuallyDrop::new(self.peers.take()),
             active_local: std::mem::ManuallyDrop::new(None),
             active_peers: std::mem::ManuallyDrop::new(None),
-            reads: std::mem::ManuallyDrop::new(self.local_reads.take()),
+            reads: std::mem::ManuallyDrop::new(self.local_reads.take().map(crate::os_store::SnapshotReadRegistryAliasRetirement::new)),
             active_returned: std::mem::ManuallyDrop::new(self.active_returned_local.take()),
             local_factory: self.local_retirement_factory.take(),
             peer_factory: self.peer_retirement_factory.take(),
             factory_close: Default::default(),
         })
+    }
+
+    /// 🧾️ Witnesses the exact original store fields after the one-time ownership transfer.
+    pub fn detached_terminal_is_empty(&self) -> bool {
+        self.close_started && self.local.is_none() && self.peers.is_none() && self.local_reads.is_none() && self.active_returned_local.is_none() && self.local_retirement_factory.is_none() && self.peer_retirement_factory.is_none()
     }
 
     pub fn retirement_started(&self) -> bool {

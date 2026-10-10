@@ -10,7 +10,10 @@ Feature: Open the IFC 2x3 export of the BIM house with IfcOpenShell and measure 
   slab, column and beam with its own C++ geometry kernel (openings are subtracted by the kernel). The subject reports the
   same table from its own document and its base quantities: class counts, containment per storey and the net volume
   of every element the kernel can measure exactly. Walls on arcs and faceted breps are counted but not measured (the
-  kernel tessellates arcs), and all quantities of the file must agree with the kernel within 1e-9.
+  kernel tessellates arcs), and all quantities of the file must agree with the kernel within 1e-9. The psets fixture adds classification
+  tables with parents, several systems per element and per type, type-level property sets and the property set templates of the IFC4
+  project library: IfcOpenShell reads the references with ifcopenshell.util.classification, the HasPropertySets of every type object and,
+  in the IFC4 library file, every property set template, enumeration and classification chain, and the subject reports the same tables.
 
   @id-export-ifc-house
   @level-quick
@@ -19,6 +22,14 @@ Feature: Open the IFC 2x3 export of the BIM house with IfcOpenShell and measure 
     Given the committed house shared://🏗️ifc/🏠️house/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🏠️house/🏠️house.ifc
     When the file is opened and every product is counted, located and measured
     Then the counts per IFC class, the containment per storey and the net volumes equal the subject's within 1e-9
+
+  @id-export-ifc-frame
+  @level-quick
+  @mode-differential
+  Scenario: A leaning column, arc, inclined and joined beams and a curtain wall with door, window and open panels are IFC products whose axis curves, extrusions, parts and records IfcOpenShell reads back and whose volumes the kernel measures
+    Given the committed frame model shared://🏗️ifc/🏗️frame/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🏗️frame/🏗️frame.ifc
+    When the file is opened and every column, beam and curtain wall is located, decomposed into its parts, read for its extrusion, axis curve, base quantities and authoring record and tessellated by the kernel
+    Then the counts per IFC class, the containment per storey and the net volumes equal the subject's within 1e-9, the extrusion direction of a leaning column equals its lean, the axis of an arc beam is the trimmed circle of its bulge and the parts of a curtain wall are its members, plates, doors and windows
 
   @id-export-ifc-notated
   @level-quick
@@ -51,3 +62,35 @@ Feature: Open the IFC 2x3 export of the BIM house with IfcOpenShell and measure 
     Given the committed house shared://🏗️ifc/🏠️house/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🏠️house/🏠️house.ifc
     When an export job is cancelled half-way, a second job on the same inference session runs to its end and its file is read back, while the committed file is opened and every product is counted, located and measured
     Then the counts per IFC class, the containment per storey and the net volumes equal the subject's within 1e-9
+
+  @id-export-ifc-psets
+  @level-quick
+  @mode-differential
+  Scenario: Every element and type carries the classification codes of its record, many systems each, and every type object the property sets of its type record, as IfcOpenShell reads them from the file
+    Given the committed psets model shared://🏗️ifc/🏷️psets/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🏷️psets/🏷️psets.ifc
+    When the file is opened and every IfcClassification with its IfcClassificationReference rows, every IfcRelAssociatesClassification and the HasPropertySets of every type object are read with ifcopenshell.util.classification
+    Then the counts per IFC class, the containment per storey, the classification tables with their parents and attached codes and the typed type property sets equal the subject's within 1e-9 and the effective references of an element equal its type's overridden per system by its own
+
+  @id-export-ifc-library
+  @level-quick
+  @mode-differential
+  Scenario: The template library of the psets model is an IFC4 project library whose property set templates, enumerations and classification hierarchy IfcOpenShell reads back and validates
+    Given the committed psets model shared://🏗️ifc/🏷️psets/📸️snapshot/🔣️.json and its library shared://🏗️ifc/🏷️psets/📚️library.ifc
+    When the file is opened, validated against the IFC4 schema and every IfcPropertySetTemplate, IfcSimplePropertyTemplate, IfcPropertyEnumeration, IfcClassification and IfcClassificationReference is read
+    Then the template types, applicable entities, measure types, enumerated values, definition lists, reference parents and declarations equal the subject's
+
+  @id-export-ifc-wall-depth
+  @level-quick
+  @mode-differential
+  Scenario: Walls under roofs and on a sloped slab are faceted breps whose volume and vertical extent IfcOpenShell measures as the shapely-adjudicated wall layout says, and their sweeps, attaches and reveals are read back from the file
+    Given the committed attic shared://💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🧗️wall-depth/🧗️wall-depth.ifc
+    When the file is opened and every wall, every IfcMember sweep run, every IfcRelConnectsElements and every opening with a reveal is located, read for its property sets and quantities and tessellated by the kernel
+    Then the counts per IFC class, the containment per storey and the net volumes equal the subject's within 1e-9, the kernel volume and vertical extent of every attached wall equal the wall-layout table within 1e-6, the runs of every sweep add up to its length, section and volume, and the window of a reveal spans the frame range of the opening-frame table
+
+  @id-export-ifc-components
+  @level-quick
+  @mode-differential
+  Scenario: Every placed component is a furnishing element, flow terminal or proxy and every routed MEP element a flow segment, typed, contained in its storey and assigned to its system, whose placement, volume and quantities IfcOpenShell measures
+    Given the committed components shared://🏗️ifc/🪑️components/📸️snapshot/🔣️.json and its export shared://🏗️ifc/🪑️components/🪑️components.ifc
+    When the file is opened and every component and flow segment is located in its storey, typed, read for its authored record, overrides, system group and base quantities and tessellated by the kernel
+    Then the counts per IFC class, the containment per storey and the net volumes equal the subject's within 1e-9, every kernel volume and bounding box equals the independent family evaluation with the host fit, yaw and mirror of its instance frame, and every flow segment encloses its centre line with the section times the length as volume

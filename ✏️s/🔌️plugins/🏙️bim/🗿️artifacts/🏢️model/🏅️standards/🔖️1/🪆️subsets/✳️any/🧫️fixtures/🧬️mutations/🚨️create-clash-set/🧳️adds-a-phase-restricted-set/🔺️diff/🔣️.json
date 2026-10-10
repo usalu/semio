@@ -1,0 +1,26 @@
+{
+  "clash_sets": {
+    "cs-1": {
+      "a": {
+        "classes": [],
+        "ids": [],
+        "phases": [
+          "New"
+        ],
+        "storeys": []
+      },
+      "b": {
+        "classes": [],
+        "ids": [],
+        "phases": [
+          "Existing"
+        ],
+        "storeys": []
+      },
+      "clearance": 0.0,
+      "entry": "Created",
+      "name": "New against existing",
+      "tolerance": 0.001
+    }
+  }
+}

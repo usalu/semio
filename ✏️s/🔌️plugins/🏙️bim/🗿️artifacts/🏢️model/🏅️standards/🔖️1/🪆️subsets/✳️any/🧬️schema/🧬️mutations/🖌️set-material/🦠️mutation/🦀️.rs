@@ -3,7 +3,7 @@
 use crate::{MaterialCategory, MaterialPatch, ModelDiff, ModelMutation, ModelSnapshot, Rgb};
 use protocol::{MutationKind, SemanticDescriptor};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetMaterial {
     pub id: String,

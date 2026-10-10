@@ -183,7 +183,9 @@ impl ArtifactCanonicalJsonTreeCursor {
                     Phase::ArrayChild | Phase::ObjectChild | Phase::ArrayNext if frame.phase != Phase::ArrayNext || frame.ordinal == 0 && frame.ordinal < frame.length => {
                         let ordinal = frame.ordinal;
                         frame.owner.borrow()?.get().canonical_tree_child(ordinal)?;
-                        self.pending = Some(frame.owner.project(ordinal, |node| node.canonical_tree_child(ordinal).expect("checked immutable native canonical child"))?);
+                        let (child, alias_progress) = frame.owner.project(ordinal, |node| node.canonical_tree_child(ordinal).expect("checked immutable native canonical child"), grant)?;
+                        self.pending = Some(child);
+                        progress = alias_progress;
                         frame.ordinal += 1;
                         frame.phase = if frame.phase == Phase::ObjectChild { Phase::ObjectNext } else { Phase::ArrayNext };
                         progress.copied_bytes = demand.copy_bytes;

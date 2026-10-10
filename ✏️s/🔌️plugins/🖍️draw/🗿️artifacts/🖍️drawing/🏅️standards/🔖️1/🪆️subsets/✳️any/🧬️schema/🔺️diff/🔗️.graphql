@@ -94,6 +94,7 @@ type DrawingLayerPatch {
   pathSegments: [PathSegment!]
   textContent: String
   textSize: Float
+  fontFamily: DrawingFontFamily
   imageKey: String
   imageWidth: Float
   imageHeight: Float
@@ -112,3 +113,5 @@ type DrawingShapeCoordinatePatch {
   index: Int
   value: Float!
 }
+
+enum DrawingFontFamily { anta kellySlab shareTechMono notoEmoji }

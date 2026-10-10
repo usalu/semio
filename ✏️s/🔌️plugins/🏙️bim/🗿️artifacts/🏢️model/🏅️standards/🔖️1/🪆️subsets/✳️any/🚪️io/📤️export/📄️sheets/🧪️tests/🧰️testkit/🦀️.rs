@@ -4,11 +4,27 @@ use super::TitleLabels;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
 use crate::{IsoSize, ModelInference, ModelSnapshot, Orientation, Paper, Point2, Sheet, SheetRevision, Viewport};
+use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+
+/// 📄️ The committed room with its sheet set: three sheets (A3 landscape, A4 portrait, custom paper), seven cropped viewports and two revision rows.
+pub const ROOM: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/📄️sheet-layout/🏠️room/📸️snapshot/🔣️.json");
+
+/// 📁️ The directory of the committed sheet exports of the room (one SVG per sheet and the PDF of the set) that the lxml + shapely and pypdf oracles read.
+pub const ROOM_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️sheets/🏠️room");
+
+/// 📄️ The decoded room with its sheet set.
+pub fn room() -> ModelSnapshot {
+    from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the committed room decodes")
+}
+
+/// 📖️ A committed file of the sheet export directory of the room.
+pub fn read_room(name: &str) -> Vec<u8> {
+    std::fs::read(format!("{ROOM_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))
+}
 
 /// 🗣️ The English headings.
 pub fn labels() -> TitleLabels {
-    let text = |value: &str| value.to_string();
-    TitleLabels { project: text("Project"), number: text("Sheet no."), title: text("Title"), scale: text("Scale"), drawn_by: text("Drawn by"), checked_by: text("Checked by"), date: text("Date"), revision: text("Revision"), revision_mark: text("Mark"), revision_date: text("Date"), revision_description: text("Description"), revision_author: text("By") }
+    TitleLabels::english()
 }
 
 /// 🏠️ The house with three sheets: `sh-plans` (A3 landscape, the plans of the ground and the first storey), `sh-sections` (A3 portrait, section A) and `sh-elevations` (A2 landscape, the south and east elevations, a custom crop on the east one), with a revision table on the plans.

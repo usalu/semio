@@ -5843,10 +5843,13 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
     let mesh=semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut cursor=WorldPlaceholderMeshCursor::inline("authored",mesh.clone(),817,1).unwrap();
     let mut phases=std::collections::BTreeSet::new();
+    let texture_phase=|cursor:&WorldPlaceholderMeshCursor|cursor.texture_job.as_ref().map(|job|job.progress().phase).or_else(||cursor.texture_retirement.as_ref().map(|_|"retiring"));
+    let mut texture_phases=std::collections::BTreeSet::new();
     let mut turns=0;
     let (lease,mut appearance)=loop {
         turns+=1;assert!(turns<32768);
         phases.insert(format!("{:?}",cursor.phase));
+        if let Some(phase)=texture_phase(&cursor){texture_phases.insert(phase);}
         match cursor.step(){WorldPlaceholderMeshStep::Pending=>{},WorldPlaceholderMeshStep::Fault=>panic!("inline surface refused"),WorldPlaceholderMeshStep::Ready(_,lease,appearance)=>break(lease,appearance.unwrap())}
     };
     assert_eq!(lease.schema().unwrap().vertices,6);
@@ -5866,6 +5869,10 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
         }
     }
     assert_eq!(appearance.primitives().len(),2);assert_eq!(appearance.texture_count(),2);
+    let reference=image::load_from_memory(&mesh.textures["pixel"].bytes).unwrap().to_rgba8();
+    let pool=world_scene_raster_pool();
+    for(key,raster)in &appearance.textures{assert_eq!((raster.identity.descriptor().width,raster.identity.descriptor().height),(reference.width(),reference.height()));appearance.texture_upload(key,&pool).unwrap().with_rows(0,8,|pixels,rows|{assert_eq!(rows,reference.height() as usize);assert_eq!(pixels,reference.as_raw());}).unwrap();}
+    assert!(cursor.texture_job.is_none()&&cursor.texture_retirement.is_none());
     let material=&appearance.primitives()[0].material;
     assert_eq!(SceneMaterialKind3d::Authored(material.clone()).texture_keys().count(),5);
     assert_eq!(material.texture_sampler.wrap_u,ui_wgpu::wgpu::SceneTextureWrap3d::ClampToEdge);assert_eq!(material.texture_sampler.wrap_v,ui_wgpu::wgpu::SceneTextureWrap3d::MirrorRepeat);assert_eq!(material.texture_sampler.mag_filter,ui_wgpu::wgpu::SceneTextureFilter3d::Nearest);assert_eq!(material.texture_sampler.min_filter,ui_wgpu::wgpu::SceneTextureFilter3d::Linear);assert_eq!(material.additional_texture_samplers[0],ui_wgpu::wgpu::SceneTextureSampler3d{min_filter:ui_wgpu::wgpu::SceneTextureFilter3d::LinearMipmapLinear,..material.texture_sampler});assert_eq!(material.additional_texture_samplers[1..],[material.texture_sampler;3]);
@@ -5877,6 +5884,12 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
         for _ in 0..32768 {if format!("{:?}",canceled.phase)==phase {break}assert!(matches!(canceled.step(),WorldPlaceholderMeshStep::Pending));}
         let mut steps=0;while !canceled.close_step(){steps+=1;assert!(steps<32768)}assert!(canceled.terminal_is_empty());
     }
+    assert!(texture_phases.contains("retiring"));
+    for phase in texture_phases{
+        let mut canceled=WorldPlaceholderMeshCursor::inline("canceled-decoder",mesh.clone(),820,1).unwrap();
+        for turn in 0..32768{if texture_phase(&canceled)==Some(phase){break}assert!(turn<32767);assert!(matches!(canceled.step(),WorldPlaceholderMeshStep::Pending));}
+        let mut turns=0;while !canceled.close_step(){turns+=1;assert!(turns<32768)}assert!(canceled.terminal_is_empty());assert!(canceled.texture_job.is_none()&&canceled.texture_retirement.is_none());
+    }
     eprintln!("[DEBUG] authored inline: drawVertices=6 materialGroups=2 fiveMaps=5 roleLeases=2 work={turns}; all publication phases canceled");
     while !appearance.close_step() {}mesh3d_begin_close(lease).unwrap();close_oracle_mesh(lease);
     assert!(cursor.terminal_is_empty());
@@ -5885,8 +5898,8 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
 /// ♻️ Retains the exact authored source through independent copy, capacity, release and depth refusals.
 #[test]
 fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
-    use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️inline-source-ownership/🔣️.json")).unwrap();
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/♻️inline-source-ownership/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
         let mut mesh=WorldMeshBuffers::default();
         mesh.positions=row["positions"].as_array().unwrap().iter().map(|value|value.as_f64().unwrap() as f32).collect();
@@ -7543,15 +7556,15 @@ fn terrain_mesh_zero_grant_retains_original_payload_and_phase() {
     let pointer = payload.positions.as_ptr();
     let capacity = payload.positions.capacity();
     let mut cursor = terrain_test_admit("surface", (3,4,5), payload, 90, 9, 9).expect("original cursor");
-    let grant = semio_framework_value::RetainedCloneGrant { maximum_items:0, maximum_copy_bytes:0, maximum_capacity_bytes:0, maximum_release_bytes:0, maximum_depth:0 };
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items:0, maximum_copy_bytes:0, maximum_capacity_bytes:0, maximum_release_bytes:0, maximum_depth:0 };
     let (step, progress) = cursor.step_live(grant).expect("zero grant pauses");
     assert!(matches!(step, WorldTerrainMeshStep::Pending));
-    assert_eq!(progress, semio_framework_value::RetainedCloneProgress::default());
+    assert_eq!(progress, semio_framework_value::retained_clone::RetainedCloneProgress::default());
     assert_eq!(cursor.phase, WorldTerrainMeshPhase::Begin);
     assert_eq!(cursor.payload.positions.as_ptr(), pointer);
     assert_eq!(cursor.payload.positions.capacity(), capacity);
     assert_eq!(cursor.payload.positions.len(), 9);
-    let grant = semio_framework_value::RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:65536, maximum_release_bytes:65536, maximum_depth:64 };
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:65536, maximum_release_bytes:65536, maximum_depth:64 };
     for _ in 0..512 {
         let step = cursor.close_step(grant).expect("finite original source close");
         assert!(step.progress.fits(grant));
@@ -7560,7 +7573,7 @@ fn terrain_mesh_zero_grant_retains_original_payload_and_phase() {
     assert!(cursor.terminal_is_empty());
 }
 
-fn terrain_test_grant()->semio_framework_value::RetainedCloneGrant {semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64}}
+fn terrain_test_grant()->semio_framework_value::retained_clone::RetainedCloneGrant {semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64}}
 fn terrain_test_admit(surface:&str,tile:(u32,u32,u32),payload:TerrainTileMeshPayload,generation:u64,revision:u64,terrain_revision:u64)->Result<WorldTerrainMeshCursor,WorldDynamicFault> {
     WorldTerrainMeshCursor::new(surface,tile,payload,generation,revision,terrain_revision,terrain_test_grant()).map(|(cursor,progress)|{assert!(progress.fits(terrain_test_grant()));cursor}).map_err(|(fault,_)|fault)
 }
@@ -7577,7 +7590,7 @@ fn terrain_test_close(cursor:&mut WorldTerrainMeshCursor)->bool {
 
 #[test]
 fn terrain_constructor_refusal_preserves_original_payload_pointer_and_capacity() {
-    let grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
+    let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
     let payload=TerrainTileMeshPayload{positions:vec![0.0;9],normals:vec![0.0;9],indices:vec![0,1,2],uvs:vec![0.0;6]};
     let pointer=payload.positions.as_ptr();let capacity=payload.positions.capacity();
     let Err((fault,payload))=WorldTerrainMeshCursor::new("surface",(0,0,0),payload,91,1,1,grant) else {panic!("unfunded ID must refuse")};
@@ -7594,7 +7607,7 @@ fn terrain_owner_yield_and_copy_1_3_64_keep_the_original_write_cursor() {
         assert_eq!(cursor.phase,WorldTerrainMeshPhase::Begin);assert_eq!(cursor.payload.positions.as_ptr(),initial);
         for _ in 0..512 {if cursor.phase==WorldTerrainMeshPhase::Positions {break;}terrain_test_step(&mut cursor,1,1);}
         assert_eq!(cursor.phase,WorldTerrainMeshPhase::Positions);
-        let grant=semio_framework_value::RetainedCloneGrant {maximum_copy_bytes,..terrain_test_grant()};
+        let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_copy_bytes,..terrain_test_grant()};
         let (step,progress)=cursor.step_live(grant).expect("caller byte budget");
         assert!(matches!(step,WorldTerrainMeshStep::Pending));assert!(progress.fits(grant));
         assert_eq!(cursor.vertex,if maximum_copy_bytes<12 {0} else {1});
@@ -7619,7 +7632,7 @@ fn terrain_retirement_zero_grant_preserves_original_owner_without_bool_bridge() 
     let payload=TerrainTileMeshPayload{positions:vec![0.0;9],normals:vec![0.0;9],indices:vec![0,1,2],uvs:vec![0.0;6]};
     let pointer=payload.positions.as_ptr();
     state.terrain_pending=Some(((0,0,0),payload,100,1,1));
-    let zero=semio_framework_value::RetainedCloneGrant::default();
+    let zero=semio_framework_value::retained_clone::RetainedCloneGrant::default();
     with_world_step_context(1,|context|{let result=step_world3d_terrain_retirement(&mut state,zero,context);assert_eq!(result.step,WorldTerrainMeshPublicationStep::Pending);assert_eq!(result.ownership,Default::default());});
     assert_eq!(state.terrain_pending.as_ref().unwrap().1.positions.as_ptr(),pointer);
     begin_world3d_dynamic_retirement(&mut state);

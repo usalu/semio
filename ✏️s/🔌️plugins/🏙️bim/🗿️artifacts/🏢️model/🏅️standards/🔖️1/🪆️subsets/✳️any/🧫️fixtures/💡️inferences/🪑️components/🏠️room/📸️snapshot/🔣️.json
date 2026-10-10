@@ -1,0 +1,921 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Components",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-oak": {
+      "name": "Oak",
+      "category": "Wood",
+      "color": {
+        "r": 0.6,
+        "g": 0.45,
+        "b": 0.3
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1600
+    },
+    "m-steel": {
+      "name": "Steel",
+      "category": "Metal",
+      "color": {
+        "r": 0.6,
+        "g": 0.6,
+        "b": 0.62
+      },
+      "density": 7850,
+      "conductivity": 50,
+      "specific_heat": 500
+    }
+  },
+  "wall_types": {
+    "wt-200": {
+      "name": "Brick 200",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.2,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-200",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-200",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 4
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    },
+    "w-north": {
+      "storey": "st-ground",
+      "wall_type": "wt-200",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6,
+            "y": 4
+          },
+          "end": {
+            "x": 0,
+            "y": 4
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "North"
+    },
+    "w-west": {
+      "storey": "st-ground",
+      "wall_type": "wt-200",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 4
+          },
+          "end": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "West"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {},
+  "families": {
+    "fam-table": {
+      "name": "Table",
+      "category": "Furniture"
+    },
+    "fam-chair": {
+      "name": "Chair",
+      "category": "Furniture"
+    },
+    "fam-basin": {
+      "name": "Wash basin",
+      "category": "Plumbing"
+    },
+    "fam-lamp": {
+      "name": "Lamp",
+      "category": "Lighting"
+    },
+    "fam-diffuser": {
+      "name": "Diffuser",
+      "category": "Mechanical"
+    },
+    "fam-niche": {
+      "name": "Niche unit",
+      "category": "Casework"
+    },
+    "fam-hea": {
+      "name": "HEA 200",
+      "category": "Profile"
+    }
+  },
+  "family_parameters": {
+    "fam-table.width": {
+      "family": "fam-table",
+      "name": "width",
+      "kind": "Length",
+      "value": "1.6 m"
+    },
+    "fam-table.depth": {
+      "family": "fam-table",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.8 m"
+    },
+    "fam-table.height": {
+      "family": "fam-table",
+      "name": "height",
+      "kind": "Length",
+      "value": "0.74 m"
+    },
+    "fam-chair.seat": {
+      "family": "fam-chair",
+      "name": "seat",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.size": {
+      "family": "fam-chair",
+      "name": "size",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-basin.width": {
+      "family": "fam-basin",
+      "name": "width",
+      "kind": "Length",
+      "value": "0.6 m"
+    },
+    "fam-basin.depth": {
+      "family": "fam-basin",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-basin.height": {
+      "family": "fam-basin",
+      "name": "height",
+      "kind": "Length",
+      "value": "0.2 m"
+    },
+    "fam-lamp.size": {
+      "family": "fam-lamp",
+      "name": "size",
+      "kind": "Length",
+      "value": "0.3 m"
+    },
+    "fam-lamp.drop": {
+      "family": "fam-lamp",
+      "name": "drop",
+      "kind": "Length",
+      "value": "0.15 m"
+    },
+    "fam-diffuser.size": {
+      "family": "fam-diffuser",
+      "name": "size",
+      "kind": "Length",
+      "value": "0.6 m"
+    },
+    "fam-diffuser.thickness": {
+      "family": "fam-diffuser",
+      "name": "thickness",
+      "kind": "Length",
+      "value": "0.08 m"
+    },
+    "fam-niche.width": {
+      "family": "fam-niche",
+      "name": "width",
+      "kind": "Length",
+      "value": "0.5 m"
+    },
+    "fam-niche.depth": {
+      "family": "fam-niche",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.3 m"
+    },
+    "fam-niche.sunk": {
+      "family": "fam-niche",
+      "name": "sunk",
+      "kind": "Length",
+      "value": "0.1 m"
+    },
+    "fam-niche.height": {
+      "family": "fam-niche",
+      "name": "height",
+      "kind": "Length",
+      "value": "0.6 m"
+    },
+    "fam-hea.h": {
+      "family": "fam-hea",
+      "name": "h",
+      "kind": "Length",
+      "value": "190 mm"
+    }
+  },
+  "family_solids": {
+    "s-table": {
+      "family": "fam-table",
+      "name": "Top",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-seat": {
+      "family": "fam-chair",
+      "name": "Seat",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "seat",
+          "width": "size",
+          "depth": "size",
+          "height": "50 mm"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-back": {
+      "family": "fam-chair",
+      "name": "Back",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "seat + 50 mm",
+          "width": "size",
+          "depth": "50 mm",
+          "height": "0.45 m"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-hidden": {
+      "family": "fam-chair",
+      "name": "Hidden",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "2 m",
+          "depth": "2 m",
+          "height": "2 m"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "false",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-basin": {
+      "family": "fam-basin",
+      "name": "Bowl",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-lamp": {
+      "family": "fam-lamp",
+      "name": "Shade",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - size / 2",
+          "y": "0 m - size / 2",
+          "z": "0 m - drop",
+          "width": "size",
+          "depth": "size",
+          "height": "drop"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-diffuser": {
+      "family": "fam-diffuser",
+      "name": "Plate",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - size / 2",
+          "y": "0 m - size / 2",
+          "z": "0 m - thickness",
+          "width": "size",
+          "depth": "size",
+          "height": "thickness"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-niche": {
+      "family": "fam-niche",
+      "name": "Box",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m - sunk",
+          "z": "0 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-hea": {
+      "family": "fam-hea",
+      "name": "Section",
+      "shape": {
+        "Extrusion": {
+          "profile": {
+            "IShape": {
+              "width": "200 mm",
+              "depth": "h",
+              "web": "6.5 mm",
+              "flange": "10 mm"
+            }
+          },
+          "base": "0 m",
+          "height": "1 m"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    }
+  },
+  "components": {
+    "c-table": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "position": {
+        "x": 2,
+        "y": 2
+      },
+      "elevation": 0,
+      "rotation": 0.5235987755982988,
+      "mirrored": false,
+      "name": "fam-table"
+    },
+    "c-table-wide": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "position": {
+        "x": 4,
+        "y": 1.2
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Wide table"
+    },
+    "c-chair": {
+      "storey": "st-ground",
+      "family": "fam-chair",
+      "position": {
+        "x": 2,
+        "y": 3.4
+      },
+      "elevation": 0,
+      "rotation": 3.141592653589793,
+      "mirrored": true,
+      "name": "fam-chair"
+    },
+    "c-chair-high": {
+      "storey": "st-ground",
+      "family": "fam-chair",
+      "position": {
+        "x": 4.5,
+        "y": 3.2
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-chair"
+    },
+    "c-basin-south": {
+      "storey": "st-ground",
+      "family": "fam-basin",
+      "position": {
+        "x": 3,
+        "y": 0.6
+      },
+      "elevation": 0.85,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-basin",
+      "host": "w-south"
+    },
+    "c-basin-north": {
+      "storey": "st-ground",
+      "family": "fam-basin",
+      "position": {
+        "x": 3,
+        "y": 3.5
+      },
+      "elevation": 0.85,
+      "rotation": 0,
+      "mirrored": true,
+      "name": "fam-basin",
+      "host": "w-north"
+    },
+    "c-niche": {
+      "storey": "st-ground",
+      "family": "fam-niche",
+      "position": {
+        "x": 5.5,
+        "y": 2.5
+      },
+      "elevation": 0.9,
+      "rotation": 0.1,
+      "mirrored": false,
+      "name": "fam-niche",
+      "host": "w-east"
+    },
+    "c-lamp": {
+      "storey": "st-ground",
+      "family": "fam-lamp",
+      "position": {
+        "x": 3,
+        "y": 2
+      },
+      "elevation": 2.9,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-lamp",
+      "system": "Lighting"
+    },
+    "c-diffuser-ok": {
+      "storey": "st-ground",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 5.5,
+        "y": 2
+      },
+      "elevation": 2.6,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-diffuser",
+      "system": "Supply"
+    },
+    "c-diffuser-lost": {
+      "storey": "st-ground",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 1,
+        "y": 1
+      },
+      "elevation": 2.9,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-diffuser",
+      "system": "Supply"
+    },
+    "c-bump": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "position": {
+        "x": 0,
+        "y": 1
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-table"
+    },
+    "c-high": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "position": {
+        "x": 3,
+        "y": 3
+      },
+      "elevation": 3.5,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-table"
+    },
+    "c-ghost": {
+      "storey": "st-ground",
+      "family": "fam-ghost",
+      "position": {
+        "x": 1,
+        "y": 3
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-ghost"
+    },
+    "c-profile": {
+      "storey": "st-ground",
+      "family": "fam-hea",
+      "position": {
+        "x": 1,
+        "y": 3
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-hea"
+    },
+    "c-nowhere": {
+      "storey": "st-ground",
+      "family": "fam-basin",
+      "position": {
+        "x": 3,
+        "y": 0.6
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-basin",
+      "host": "w-nowhere"
+    },
+    "c-bad-override": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "position": {
+        "x": 5,
+        "y": 3.4
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "fam-table"
+    }
+  },
+  "component_overrides": {
+    "c-table-wide.width": {
+      "component": "c-table-wide",
+      "name": "width",
+      "value": "1.8 m"
+    },
+    "c-chair.seat": {
+      "component": "c-chair",
+      "name": "seat",
+      "value": "0.5 m"
+    },
+    "c-chair-high.seat": {
+      "component": "c-chair-high",
+      "name": "seat",
+      "value": "0.55 m"
+    },
+    "c-bad-override.width": {
+      "component": "c-bad-override",
+      "name": "width",
+      "value": "ghost + 1 m"
+    },
+    "c-bad-override.depth": {
+      "component": "c-bad-override",
+      "name": "depth",
+      "value": "0.5"
+    }
+  },
+  "mep_elements": {
+    "m-supply": {
+      "storey": "st-ground",
+      "system": "Supply",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.2
+        }
+      },
+      "path": [
+        {
+          "x": 0.5,
+          "y": 2,
+          "z": 2.6
+        },
+        {
+          "x": 5.5,
+          "y": 2,
+          "z": 2.6
+        }
+      ],
+      "name": "Supply duct"
+    },
+    "m-water": {
+      "storey": "st-ground",
+      "system": "DomesticWater",
+      "shape": {
+        "Pipe": {
+          "diameter": 0.1
+        }
+      },
+      "path": [
+        {
+          "x": 3,
+          "y": 0.5,
+          "z": 2.65
+        },
+        {
+          "x": 3,
+          "y": 3.5,
+          "z": 2.65
+        }
+      ],
+      "name": "Cold water"
+    },
+    "m-waste": {
+      "storey": "st-ground",
+      "system": "Waste",
+      "shape": {
+        "Pipe": {
+          "diameter": 0.11
+        }
+      },
+      "path": [
+        {
+          "x": 5,
+          "y": 3.5,
+          "z": 0
+        },
+        {
+          "x": 5,
+          "y": 3.5,
+          "z": 2.2
+        },
+        {
+          "x": 5.4,
+          "y": 3.5,
+          "z": 2.2
+        }
+      ],
+      "name": "Waste riser"
+    },
+    "m-lighting": {
+      "storey": "st-ground",
+      "system": "Lighting",
+      "shape": {
+        "Tray": {
+          "width": 0.2,
+          "height": 0.05
+        }
+      },
+      "path": [
+        {
+          "x": 0.5,
+          "y": 3,
+          "z": 2.9
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "z": 2.9
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "z": 2.92
+        }
+      ],
+      "name": "Lighting tray"
+    },
+    "m-power": {
+      "storey": "st-ground",
+      "system": "Power",
+      "shape": {
+        "Tray": {
+          "width": 0.3,
+          "height": 0.1
+        }
+      },
+      "path": [
+        {
+          "x": 0.5,
+          "y": 1,
+          "z": 2.6
+        },
+        {
+          "x": 5.5,
+          "y": 1,
+          "z": 2.6
+        }
+      ],
+      "name": "Power tray"
+    },
+    "m-return": {
+      "storey": "st-ground",
+      "system": "Return",
+      "shape": {
+        "Duct": {
+          "width": 0.4,
+          "height": 0.25
+        }
+      },
+      "path": [
+        {
+          "x": 0.5,
+          "y": 0.6,
+          "z": 2.2
+        },
+        {
+          "x": 0.5,
+          "y": 0.6,
+          "z": 2.2
+        }
+      ],
+      "name": "Degenerate return"
+    }
+  }
+}

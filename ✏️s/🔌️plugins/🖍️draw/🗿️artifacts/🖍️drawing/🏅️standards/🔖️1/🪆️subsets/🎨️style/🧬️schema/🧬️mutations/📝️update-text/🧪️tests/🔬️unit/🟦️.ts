@@ -3,7 +3,7 @@ import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import { applyTextEdit } from "../../🦠️mutation/🟦️.ts";
+import { applyTextEdit, textEditPatch } from "../../🦠️mutation/🟦️.ts";
 
 describe("semantic text editing", () => {
   const valid = semioSchemaAjvV1({allErrors: true}).compile(schema);
@@ -15,8 +15,10 @@ describe("semantic text editing", () => {
     const oracle = applyPatch(structuredClone(before), [
       {op: "replace", path: "/layers/0/children/0/content", value: edit.content},
       {op: "replace", path: "/layers/0/children/0/size", value: edit.size},
+      {op:"replace",path:"/layers/0/children/0/fontFamily",value:edit.fontFamily},
     ]).newDocument;
-    const edited = applyTextEdit(before, mutation);
+    expect(textEditPatch(fixture.before as never,mutation as never)).toEqual(fixture.patches[fixture.edits.indexOf(edit)]);
+    const edited = applyTextEdit(before, mutation as never);
     expect(edited).toEqual(oracle);
     expect(applyTextEdit(edited, {layerId: "text", ...fixture.before})).toEqual(before);
     expect(before.layers[0].children[0]).toMatchObject(fixture.before);
@@ -24,12 +26,13 @@ describe("semantic text editing", () => {
   it("rejects invalid sizes, missing targets and non-text targets without changes", () => {
     const before = {layers: [{kind: "text", id: "text", ...fixture.before}]};
     for (const size of [...fixture.invalidSizes, Infinity, NaN]) {
-      const mutation = {layerId: "text", content: "changed", size};
+      const mutation = {layerId: "text", content: "changed", size,fontFamily:"anta"};
       expect(valid({mutation: "updateText", ...mutation})).toBe(false);
       expect(() => applyTextEdit(before, mutation as never)).toThrow();
     }
     expect(() => applyTextEdit(before, {layerId: "missing", ...fixture.before})).toThrow();
     expect(() => applyTextEdit({layers: [{kind: "shape", id: "shape"}]}, {layerId: "shape", ...fixture.before})).toThrow();
+    for(const fontFamily of fixture.invalidFamilies){expect(()=>applyTextEdit(before,{layerId:"text",content:"Family",size:24,fontFamily} as never)).toThrow(/family/);}
     expect(before.layers[0]).toMatchObject(fixture.before);
   });
 

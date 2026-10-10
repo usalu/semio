@@ -368,7 +368,7 @@ where
         for (index, op) in ops.iter().enumerate() {
             let applied = app.store.mutation_ops().map_or(0, |applied| applied.len());
             let receipt =
-                app.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }).await.map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
+                crate::with_authoring_identity!(|identity| app.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity).await).map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
             if matches!(receipt.worst, Some(semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
                 return Err(AcceptanceSeedFault::Operation(index, format!("the seed edit does not apply cleanly: {:?}", receipt.messages)));
             }
@@ -1084,7 +1084,7 @@ where
                 protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault => return Err(format!("the archive load ends {:?}: {}", status.state, String::from_utf8_lossy(&status.fault))),
                 _ if std::time::Instant::now() > deadline => return Err(format!("the archive load never settles ({}/{})", status.completed, status.total)),
                 _ => {
-                    PluginApp::maintenance_step(&mut reloaded, 1, store::OWNED_SCHEMA_DECODE_PAGE_BYTES).map_err(|fault| format!("an archive maintenance step faulted: {fault:?}"))?;
+                    PluginApp::maintenance_step(&mut reloaded, crate::plugin_runtime::runtime_lifecycle_grant()).map_err(|fault| format!("an archive maintenance step faulted: {fault:?}"))?;
                 }
             }
         }

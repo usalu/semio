@@ -232,7 +232,7 @@ pub fn curtain_wall_flaw(base: &ModelSnapshot, wall: &CurtainWall) -> Option<Fla
 //#endregion 🔖️CurtainWall
 
 //#region 🔖️Frame
-pub use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::MAX_TILT;
+pub use crate::standards::v1::subsets::any::schema::authored::plan::MAX_TILT;
 
 /// 🚫 Why a lean is no lean: the direction must be finite and the angle a positive, finite angle of at most [`MAX_TILT`]; plumb is the absence of a tilt.
 pub fn tilt_flaw(tilt: &Slope) -> Option<Flaw> {

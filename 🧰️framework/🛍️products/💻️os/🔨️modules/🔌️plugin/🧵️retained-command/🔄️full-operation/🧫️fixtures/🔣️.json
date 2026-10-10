@@ -3,7 +3,7 @@
   "evidence": "New permanent fixture authored 2026-08-27; not recovered ticket evidence.",
   "capacities": {
     "maxOutputBytes": 16,
-    "maxFaultBytes": 256,
+    "maxFaultBytes": 480,
     "roots": 13,
     "maximumRetries": 2
   },

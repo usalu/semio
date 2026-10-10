@@ -1,6 +1,6 @@
 /** 🔺️ BIM model diff schema — a sparse per-collection keyed delta; absent collections are untouched. */
 
-import type { PropertyDef, ClassificationItem, ExprPoint, ExprPoint3, Point2, Rgb, Vertex, Slope, StairStringer, Baluster, RailingHost, Layer, ViewPlane, ViewCrop, ViewCamera, ScheduleColumn, ScheduleSort, ScheduleFilter, ScheduleGroup, AnnotationAnchor, ParametricProfile, SolidShape, Paper, CurtainGrid, CurtainPanel, Axis, TopConstraint, Profile, RoofShape, OpeningKind, StairFlight, PropertyValue, Infill, SpaceBoundary, ScheduleKey, PropertyKind, TemplateTarget, AnchorEnd, WallSide, TagCategory, Terminator, DimensionUnit, FamilyCategory, ParameterKind, SolidAxis, IsoSize, Orientation, MaterialCategory, LayerFunction, LocationLine, Phase, DoorLeaves, Swing, Turn, StringerKind, RiserKind, ScheduleCategory, ScheduleField, ScheduleOp, EndJoin, ViewKind, DetailLevel, ViewCategory, HostSide, AreaMeasure, PropertyTemplate, ClassificationSystem, Dimension, Tag, TextNote, Leader, AnnotationStyle, Family, FamilyParameter, FamilySolid, Sheet, Viewport, SheetRevision, WallSweep, Material, WallType, SlabType, CeilingType, RoofType, ColumnType, BeamType, WindowType, DoorType, Site, Building, Storey, GridLine, Wall, CurtainWallType, CurtainPanelOverride, CurtainWall, Column, Beam, Slab, Ceiling, Roof, Opening, Stair, Railing, Ramp, Space, Zone, AreaScheme, View, Schedule, Project, PropertySet, ClassificationSet } from "../🟦️.ts";
+import type { PropertyDef, ClassificationItem, ExprPoint, ExprPoint3, Point3, ElementSelector, RuleScope, ClashRef, SectionBox, IssueViewpoint, Point2, Rgb, Vertex, Slope, StairStringer, Baluster, RailingHost, Layer, ViewPlane, ViewCrop, ViewCamera, ScheduleColumn, ScheduleSort, ScheduleFilter, ScheduleGroup, AnnotationAnchor, ParametricProfile, SolidShape, MepShape, Paper, CurtainGrid, CurtainPanel, Axis, TopConstraint, Profile, RoofShape, OpeningKind, StairFlight, PropertyValue, Infill, SpaceBoundary, ScheduleKey, PropertyKind, TemplateTarget, AnchorEnd, WallSide, TagCategory, Terminator, DimensionUnit, FamilyCategory, ParameterKind, SolidAxis, MepSystem, ElementClass, RuleKind, RuleSeverity, IssueStatus, IssuePriority, IsoSize, Orientation, MaterialCategory, LayerFunction, LocationLine, Phase, DoorLeaves, Swing, Turn, StringerKind, RiserKind, ScheduleCategory, ScheduleField, ScheduleOp, EndJoin, ViewKind, DetailLevel, ViewCategory, HostSide, AreaMeasure, PropertyTemplate, ClassificationSystem, SpaceConditions, Dimension, Tag, TextNote, Leader, AnnotationStyle, Family, FamilyParameter, FamilySolid, Component, ComponentOverride, MepElement, ClashSet, Rule, Issue, IssueComment, Sheet, Viewport, SheetRevision, WallSweep, Material, WallType, SlabType, CeilingType, RoofType, ColumnType, BeamType, WindowType, DoorType, Site, Building, Storey, GridLine, Wall, CurtainWallType, CurtainPanelOverride, CurtainWall, Column, Beam, Slab, Ceiling, Roof, Opening, Stair, Railing, Ramp, Space, Zone, AreaScheme, View, Schedule, Project, PropertySet, ClassificationSet } from "../🟦️.ts";
 
 export interface Assigned<T> {
   value: T;
@@ -17,6 +17,17 @@ export interface ClassificationSystemPatch {
   edition?: string;
   source?: Assigned<string | null>;
   entries?: ClassificationItem[];
+}
+
+export interface SpaceConditionsPatch {
+  occupancy?: Assigned<string | null>;
+  occupancy_density?: Assigned<number | null>;
+  heating_setpoint?: Assigned<number | null>;
+  cooling_setpoint?: Assigned<number | null>;
+  ventilation_rate?: Assigned<number | null>;
+  lighting_power_density?: Assigned<number | null>;
+  equipment_power_density?: Assigned<number | null>;
+  schedule?: Assigned<string | null>;
 }
 
 export interface DimensionPatch {
@@ -83,6 +94,69 @@ export interface FamilySolidPatch {
   material?: string;
   visible?: string;
   offset?: ExprPoint3;
+}
+
+export interface ComponentPatch {
+  storey?: string;
+  family?: string;
+  position?: Point2;
+  elevation?: number;
+  rotation?: number;
+  mirrored?: boolean;
+  host?: Assigned<string | null>;
+  system?: Assigned<MepSystem | null>;
+  name?: string;
+}
+
+export interface ComponentOverridePatch {
+  component?: string;
+  name?: string;
+  value?: string;
+}
+
+export interface MepElementPatch {
+  storey?: string;
+  system?: MepSystem;
+  shape?: MepShape;
+  path?: Point3[];
+  name?: string;
+}
+
+export interface ClashSetPatch {
+  name?: string;
+  a?: ElementSelector;
+  b?: ElementSelector;
+  tolerance?: number;
+  clearance?: number;
+}
+
+export interface RulePatch {
+  name?: string;
+  kind?: RuleKind;
+  limit?: number;
+  severity?: RuleSeverity;
+  scope?: RuleScope;
+}
+
+export interface IssuePatch {
+  title?: string;
+  description?: string;
+  status?: IssueStatus;
+  priority?: IssuePriority;
+  assignee?: string;
+  author?: string;
+  created?: string;
+  labels?: string[];
+  elements?: string[];
+  clash?: Assigned<ClashRef | null>;
+  viewpoint?: Assigned<IssueViewpoint | null>;
+}
+
+export interface IssueCommentPatch {
+  issue?: string;
+  author?: string;
+  date?: string;
+  text?: string;
 }
 
 export interface SheetPatch {
@@ -183,6 +257,9 @@ export interface WindowTypePatch {
   frame_depth?: number;
   panes?: number;
   material?: string;
+  u_value?: Assigned<number | null>;
+  g_value?: Assigned<number | null>;
+  frame_fraction?: Assigned<number | null>;
 }
 
 export interface DoorTypePatch {
@@ -194,6 +271,7 @@ export interface DoorTypePatch {
   leaves?: DoorLeaves;
   swing?: Swing;
   material?: string;
+  u_value?: Assigned<number | null>;
 }
 
 export interface SitePatch {
@@ -251,6 +329,9 @@ export interface CurtainWallTypePatch {
   panel?: CurtainPanel;
   panel_material?: string;
   mullion_material?: string;
+  u_value?: Assigned<number | null>;
+  g_value?: Assigned<number | null>;
+  frame_fraction?: Assigned<number | null>;
 }
 
 export interface CurtainPanelOverridePatch {
@@ -482,6 +563,7 @@ export type CeilingTypeEntry = ({ entry: "Created" } & CeilingType) | { entry: "
 export type CeilingEntry = ({ entry: "Created" } & Ceiling) | { entry: "Deleted" } | ({ entry: "Replaced" } & Ceiling) | ({ entry: "Patched" } & CeilingPatch);
 export type ZoneEntry = ({ entry: "Created" } & Zone) | { entry: "Deleted" } | ({ entry: "Replaced" } & Zone) | ({ entry: "Patched" } & ZonePatch);
 export type AreaSchemeEntry = ({ entry: "Created" } & AreaScheme) | { entry: "Deleted" } | ({ entry: "Replaced" } & AreaScheme) | ({ entry: "Patched" } & AreaSchemePatch);
+export type SpaceConditionsEntry = ({ entry: "Created" } & SpaceConditions) | { entry: "Deleted" } | ({ entry: "Replaced" } & SpaceConditions) | ({ entry: "Patched" } & SpaceConditionsPatch);
 export type ViewEntry = ({ entry: "Created" } & View) | { entry: "Deleted" } | ({ entry: "Replaced" } & View) | ({ entry: "Patched" } & ViewPatch);
 export type SheetEntry = ({ entry: "Created" } & Sheet) | { entry: "Deleted" } | ({ entry: "Replaced" } & Sheet) | ({ entry: "Patched" } & SheetPatch);
 export type ViewportEntry = ({ entry: "Created" } & Viewport) | { entry: "Deleted" } | ({ entry: "Replaced" } & Viewport) | ({ entry: "Patched" } & ViewportPatch);
@@ -494,6 +576,13 @@ export type AnnotationStyleEntry = ({ entry: "Created" } & AnnotationStyle) | { 
 export type FamilyEntry = ({ entry: "Created" } & Family) | { entry: "Deleted" } | ({ entry: "Replaced" } & Family) | ({ entry: "Patched" } & FamilyPatch);
 export type FamilyParameterEntry = ({ entry: "Created" } & FamilyParameter) | { entry: "Deleted" } | ({ entry: "Replaced" } & FamilyParameter) | ({ entry: "Patched" } & FamilyParameterPatch);
 export type FamilySolidEntry = ({ entry: "Created" } & FamilySolid) | { entry: "Deleted" } | ({ entry: "Replaced" } & FamilySolid) | ({ entry: "Patched" } & FamilySolidPatch);
+export type ComponentEntry = ({ entry: "Created" } & Component) | { entry: "Deleted" } | ({ entry: "Replaced" } & Component) | ({ entry: "Patched" } & ComponentPatch);
+export type ComponentOverrideEntry = ({ entry: "Created" } & ComponentOverride) | { entry: "Deleted" } | ({ entry: "Replaced" } & ComponentOverride) | ({ entry: "Patched" } & ComponentOverridePatch);
+export type MepElementEntry = ({ entry: "Created" } & MepElement) | { entry: "Deleted" } | ({ entry: "Replaced" } & MepElement) | ({ entry: "Patched" } & MepElementPatch);
+export type ClashSetEntry = ({ entry: "Created" } & ClashSet) | { entry: "Deleted" } | ({ entry: "Replaced" } & ClashSet) | ({ entry: "Patched" } & ClashSetPatch);
+export type RuleEntry = ({ entry: "Created" } & Rule) | { entry: "Deleted" } | ({ entry: "Replaced" } & Rule) | ({ entry: "Patched" } & RulePatch);
+export type IssueEntry = ({ entry: "Created" } & Issue) | { entry: "Deleted" } | ({ entry: "Replaced" } & Issue) | ({ entry: "Patched" } & IssuePatch);
+export type IssueCommentEntry = ({ entry: "Created" } & IssueComment) | { entry: "Deleted" } | ({ entry: "Replaced" } & IssueComment) | ({ entry: "Patched" } & IssueCommentPatch);
 export type WallSweepEntry = ({ entry: "Created" } & WallSweep) | { entry: "Deleted" } | ({ entry: "Replaced" } & WallSweep) | ({ entry: "Patched" } & WallSweepPatch);
 export type ScheduleEntry = ({ entry: "Created" } & Schedule) | { entry: "Deleted" } | ({ entry: "Replaced" } & Schedule) | ({ entry: "Patched" } & SchedulePatch);
 export type PropertyTemplateEntry = ({ entry: "Created" } & PropertyTemplate) | { entry: "Deleted" } | ({ entry: "Replaced" } & PropertyTemplate) | ({ entry: "Patched" } & PropertyTemplatePatch);
@@ -532,6 +621,7 @@ export interface ModelDiff {
   ceilings?: Record<string, CeilingEntry>;
   zones?: Record<string, ZoneEntry>;
   area_schemes?: Record<string, AreaSchemeEntry>;
+  space_conditions?: Record<string, SpaceConditionsEntry>;
   views?: Record<string, ViewEntry>;
   sheets?: Record<string, SheetEntry>;
   viewports?: Record<string, ViewportEntry>;
@@ -544,6 +634,13 @@ export interface ModelDiff {
   families?: Record<string, FamilyEntry>;
   family_parameters?: Record<string, FamilyParameterEntry>;
   family_solids?: Record<string, FamilySolidEntry>;
+  components?: Record<string, ComponentEntry>;
+  component_overrides?: Record<string, ComponentOverrideEntry>;
+  mep_elements?: Record<string, MepElementEntry>;
+  clash_sets?: Record<string, ClashSetEntry>;
+  rules?: Record<string, RuleEntry>;
+  issues?: Record<string, IssueEntry>;
+  issue_comments?: Record<string, IssueCommentEntry>;
   wall_sweeps?: Record<string, WallSweepEntry>;
   schedules?: Record<string, ScheduleEntry>;
   property_templates?: Record<string, PropertyTemplateEntry>;
@@ -551,3 +648,12 @@ export interface ModelDiff {
   properties?: Record<string, PropertySetEntry>;
   classifications?: Record<string, ClassificationSetEntry>;
 }
+
+import type {StructuralSupport,LoadCase,StructuralLoad,StructuralLocation,Restraints} from "../🟦️.ts";
+export interface StructuralSupportPatch { name?: string; member?: string; location?: StructuralLocation; offset?: Point3; restraints?: Restraints; }
+export type StructuralSupportEntry = ({entry:"Created"|"Replaced"} & StructuralSupport) | {entry:"Deleted"} | ({entry:"Patched"} & StructuralSupportPatch);
+export interface LoadCasePatch { name?: string; category?: string; factor?: number; }
+export type LoadCaseEntry = ({entry:"Created"|"Replaced"} & LoadCase) | {entry:"Deleted"} | ({entry:"Patched"} & LoadCasePatch);
+export interface StructuralLoadPatch { name?: string; load_case?: string; member?: string; location?: StructuralLocation; force?: Point3; moment?: Point3; }
+export type StructuralLoadEntry = ({entry:"Created"|"Replaced"} & StructuralLoad) | {entry:"Deleted"} | ({entry:"Patched"} & StructuralLoadPatch);
+export interface ModelDiff { supports?:Record<string,StructuralSupportEntry>; load_cases?:Record<string,LoadCaseEntry>; loads?:Record<string,StructuralLoadEntry>; }

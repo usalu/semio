@@ -1,1 +1,10 @@
-{}
+{
+  "zones": {
+    "z-office": {
+      "category": "Tenant",
+      "entry": "Created",
+      "name": "Office wing",
+      "occupancy_density": 0.1
+    }
+  }
+}

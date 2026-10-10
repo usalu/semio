@@ -1,1 +1,8 @@
-{}
+{
+  "family_solids": {
+    "s-top": {
+      "entry": "Patched",
+      "visible": "width > 2 m"
+    }
+  }
+}

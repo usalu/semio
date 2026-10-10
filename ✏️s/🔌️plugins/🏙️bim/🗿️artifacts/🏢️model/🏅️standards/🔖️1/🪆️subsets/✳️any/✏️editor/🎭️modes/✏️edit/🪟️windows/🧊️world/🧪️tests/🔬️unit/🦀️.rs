@@ -1,4 +1,5 @@
 use super::*;
+use protocol::Inference;
 use serde_json::Value;
 
 fn demo() -> (ModelSnapshot, ModelInference) {

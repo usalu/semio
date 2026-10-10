@@ -7,7 +7,7 @@ pub fn inverse(payload: &SetSheetRevision, base: &ModelSnapshot) -> Vec<ModelMut
     let Some(record) = base.sheet_revisions.get(&payload.id) else {
         return Vec::new();
     };
-    let restore = payload.patch().minimal(record).negate(record);
+    let restore = payload.patch().minimal(record).restoring(record);
     if restore.is_empty() {
         return Vec::new();
     }

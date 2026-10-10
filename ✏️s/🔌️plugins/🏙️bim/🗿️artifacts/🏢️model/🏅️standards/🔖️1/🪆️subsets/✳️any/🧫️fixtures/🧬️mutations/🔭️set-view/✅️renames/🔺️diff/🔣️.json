@@ -1,1 +1,8 @@
-{}
+{
+  "views": {
+    "v-ground": {
+      "entry": "Patched",
+      "name": "Entrance plan"
+    }
+  }
+}

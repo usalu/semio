@@ -9,13 +9,13 @@ struct PublicationMutation {
     broken_inverse: bool,
 }
 
-#[derive(Clone, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 struct PublicationDiff {
     snapshot: Option<DslValue>,
 }
 
 impl kernel::MutationDiff<DslValue> for PublicationDiff {
-    fn apply(&self, base: &DslValue) -> Result<DslValue, kernel::MutationApplyError> {
+    fn apply(&self, base: &DslValue, _capability: kernel::os_spr::command::ApplyCapability) -> Result<DslValue, kernel::MutationApplyError> {
         Ok(self.snapshot.clone().unwrap_or_else(|| base.clone()))
     }
 
@@ -26,6 +26,10 @@ impl kernel::MutationDiff<DslValue> for PublicationDiff {
     }
 }
 
+impl kernel::os_spr::command::DiffAlgebra<DslValue> for PublicationDiff {
+    fn inverse(&self, base: &DslValue) -> Self { Self { snapshot: self.snapshot.as_ref().map(|_| base.clone()) } }
+    fn is_empty(&self) -> bool { self.snapshot.is_none() }
+}
 impl kernel::Mutation<DslValue> for PublicationMutation {
     type Diff = PublicationDiff;
     const DESCRIPTORS: &'static [kernel::MutationLeafDescriptor] = &[];
@@ -622,7 +626,7 @@ fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candi
         assert_eq!(serde_json::from_str::<serde_json::Value>(&patch.print_op()).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());assert_eq!(span.get(0).unwrap()as *const u8,pointer);
         close_original_patch_reader(reader,cleanup);
         let mut canonical=kernel::codec::PackEncodeOptions::default();canonical.limits.max_file_len=patch.encode_op().unwrap().len()as u64;let canonical_text=patch.encode_op().unwrap();let mut comparison=OperationByteComparison::new(kernel::codec::ByteSpan::from_slice(&canonical_text));let mut allowed=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allowed);patch.encode_op_into(&canonical,&mut comparison,&mut encoding).unwrap();comparison.finish().unwrap();
-        let mut close=semio_framework_value::retirement::owned_retirement(patch);while !close.terminal_is_empty(){close.close_step(1,cleanup).unwrap();}close_source(&mut source);
+        let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::new(patch).unwrap();while !close.terminal_is_empty(){let copy=close.next_copy_byte_demand().unwrap();let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};assert!(close.step(grant).unwrap().progress().fits(grant));}close_source(&mut source);
     }
     for row in read_fixture["invalid"].as_array().unwrap(){
         let text=row["source"].as_str().unwrap();assert!(serde_json::from_str::<serde_json::Value>(text).is_ok());assert!(SnapshotPatch::decode_op(text.as_bytes()).is_err());

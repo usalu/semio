@@ -1,10 +1,81 @@
 {
-  "before": {"content": "Text", "size": 24},
+  "before": {
+    "content": "Text",
+    "size": 24,
+    "fontFamily": "anta"
+  },
   "edits": [
-    {"content": "123", "size": 24},
-    {"content": "Grüße — Hello 🌍\n第二行", "size": 32},
-    {"content": "", "size": 0.5},
-    {"content": "Text", "size": 24}
+    {
+      "content": "123",
+      "size": 24,
+      "fontFamily": "anta"
+    },
+    {
+      "content": "Grüße — Hello 🌍\n第二行",
+      "size": 32,
+      "fontFamily": "anta"
+    },
+    {
+      "content": "",
+      "size": 0.5,
+      "fontFamily": "anta"
+    },
+    {
+      "content": "Text",
+      "size": 24,
+      "fontFamily": "anta"
+    },
+    {
+      "content": "Family",
+      "size": 24,
+      "fontFamily": "kellySlab"
+    },
+    {
+      "content": "Mono",
+      "size": 24,
+      "fontFamily": "shareTechMono"
+    },
+    {
+      "size": 24,
+      "content": "Text",
+      "fontFamily": "kellySlab"
+    }
   ],
-  "invalidSizes": [0, -1, "24", null]
+  "invalidSizes": [
+    0,
+    -1,
+    "24",
+    null
+  ],
+  "invalidFamilies": [
+    "unknown",
+    "Anta",
+    "",
+    null
+  ],
+  "patches": [
+    {
+      "textContent": "123"
+    },
+    {
+      "textContent": "Grüße — Hello 🌍\n第二行",
+      "textSize": 32
+    },
+    {
+      "textContent": "",
+      "textSize": 0.5
+    },
+    {},
+    {
+      "textContent": "Family",
+      "fontFamily": "kellySlab"
+    },
+    {
+      "textContent": "Mono",
+      "fontFamily": "shareTechMono"
+    },
+    {
+      "fontFamily": "kellySlab"
+    }
+  ]
 }

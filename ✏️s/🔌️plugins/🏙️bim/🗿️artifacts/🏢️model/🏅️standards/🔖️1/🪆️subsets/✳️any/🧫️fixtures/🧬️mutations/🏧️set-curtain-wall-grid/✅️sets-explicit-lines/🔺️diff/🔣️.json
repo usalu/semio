@@ -1,1 +1,17 @@
-{}
+{
+  "curtain_walls": {
+    "cw-1": {
+      "entry": "Patched",
+      "u_grid": {
+        "value": {
+          "Lines": {
+            "positions": [
+              2.0,
+              4.0
+            ]
+          }
+        }
+      }
+    }
+  }
+}

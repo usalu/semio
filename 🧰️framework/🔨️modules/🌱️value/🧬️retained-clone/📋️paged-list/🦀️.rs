@@ -144,7 +144,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained paged list clone cursor is closing"));
         }
         if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        source.bind(&mut self.source)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
         let source_value = source.get();
         if source_value.len() > N {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained paged list source exceeds its declared logical capacity"));

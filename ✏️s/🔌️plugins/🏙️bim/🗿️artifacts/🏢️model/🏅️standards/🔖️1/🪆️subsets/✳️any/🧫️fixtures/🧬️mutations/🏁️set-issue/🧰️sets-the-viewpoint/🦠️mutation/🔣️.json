@@ -1,0 +1,33 @@
+{
+  "mutation": "setIssue",
+  "id": "i-2",
+  "viewpoint": {
+    "value": {
+      "camera": {
+        "target": {
+          "x": 4,
+          "y": 3
+        },
+        "target_height": 1.5,
+        "azimuth": 0.8,
+        "pitch": 0.5,
+        "distance": 25
+      },
+      "isolate": [
+        "w-east"
+      ],
+      "section": {
+        "min": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "max": {
+          "x": 8,
+          "y": 6,
+          "z": 3
+        }
+      }
+    }
+  }
+}

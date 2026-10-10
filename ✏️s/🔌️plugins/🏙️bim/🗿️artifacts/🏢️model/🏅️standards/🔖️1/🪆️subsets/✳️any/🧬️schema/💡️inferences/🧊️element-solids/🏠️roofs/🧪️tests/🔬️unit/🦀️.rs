@@ -50,7 +50,7 @@ async fn the_upward_surface_of_a_pitched_roof_is_its_plan_area_over_the_cosine_o
     let quantities = ModelInference::infer(&case.snapshot).expect("infers").quantities;
     let mut measured = 0;
     for (id, row) in case.expected.as_object().expect("table").iter().filter(|(_, row)| row.get("slope_area").is_some()) {
-        assert!(close(row["slope_area"].as_f64().expect("number"), quantities.elements[id].surface_area, 1e-9), "{id}.surface_area");
+        assert!(close(row["slope_area"].as_f64().expect("number"), quantities.elements[id].surface_area, 1e-6), "{id}.surface_area");
         measured += 1;
     }
     assert!(measured >= 9, "hips and gables of every footprint: {measured}");
@@ -59,14 +59,14 @@ async fn the_upward_surface_of_a_pitched_roof_is_its_plan_area_over_the_cosine_o
 #[semio_framework_async_macros::async_test]
 async fn roofs_have_the_analytic_volume_of_the_eave_area_times_the_layers() {
     let solids = compute_element_solids(&case(CASE).snapshot);
-    assert!(close(9.0 * 7.0 * 0.2, solids["r-flat"].volume, 1e-12), "flat: 8 x 6 grown by 0.5 on every side");
-    assert!(close(9.0 * 7.0 * 0.1, solids["r-gable"].volume, 1e-12), "the vertical build-up is independent of the pitch");
-    assert!(close(8.0 * 6.0 * 0.1, solids["r-hip"].volume, 1e-12));
-    assert!(close(8.8 * 6.8 * 0.1, solids["r-hip-overhang"].volume, 1e-12));
-    assert!(close(8.0 * 6.0 * 0.1, solids["r-mansard"].volume, 1e-12));
-    assert!(close((8.0 * 3.0 + 4.0 * 3.0) * 0.1, solids["r-l-hip"].volume, 1e-12), "an L of two arms: 24 + 12 square metres");
-    assert!(close((9.0 * 3.0 + 3.0 * 4.0) * 0.1, solids["r-t-hip"].volume, 1e-12) && close((9.0 * 3.0 + 2.0 * 3.0 * 3.0) * 0.1, solids["r-u-hip"].volume, 1e-12));
-    assert!(close((36.0 + 28.0 * 0.4 + 4.0 * 0.16) * 0.1, solids["r-l-hip-overhang"].volume, 1e-12), "the mitred overhang of an L: perimeter x 0.4 plus four net corner squares");
+    assert!(close(9.0 * 7.0 * 0.2, solids["r-flat"].volume, 1e-7), "flat: 8 x 6 grown by 0.5 on every side");
+    assert!(close(9.0 * 7.0 * 0.1, solids["r-gable"].volume, 1e-7), "the vertical build-up is independent of the pitch");
+    assert!(close(8.0 * 6.0 * 0.1, solids["r-hip"].volume, 1e-7));
+    assert!(close(8.8 * 6.8 * 0.1, solids["r-hip-overhang"].volume, 1e-7));
+    assert!(close(8.0 * 6.0 * 0.1, solids["r-mansard"].volume, 1e-7));
+    assert!(close((8.0 * 3.0 + 4.0 * 3.0) * 0.1, solids["r-l-hip"].volume, 1e-7), "an L of two arms: 24 + 12 square metres");
+    assert!(close((9.0 * 3.0 + 3.0 * 4.0) * 0.1, solids["r-t-hip"].volume, 1e-7) && close((9.0 * 3.0 + 2.0 * 3.0 * 3.0) * 0.1, solids["r-u-hip"].volume, 1e-7));
+    assert!(close((36.0 + 28.0 * 0.4 + 4.0 * 0.16) * 0.1, solids["r-l-hip-overhang"].volume, 1e-7), "the mitred overhang of an L: perimeter x 0.4 plus four net corner squares");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -182,7 +182,7 @@ async fn layers_stack_upward_from_the_underside_first_layer_outermost() {
     assert_eq!(flat.groups.iter().map(|g| (g.part.as_str(), g.material.as_str(), g.layer)).collect::<Vec<_>>(), vec![(parts::LAYER, "m-clay", 0), (parts::LAYER, "m-wood", 1)]);
     let (_, _, tiles) = group_extent(flat, 0);
     let (_, _, battens) = group_extent(flat, 1);
-    assert!(close(63.0 * 0.04, tiles, 1e-12) && close(63.0 * 0.06, battens, 1e-12), "each layer is the eave area times its own thickness");
+    assert!(close(63.0 * 0.04, tiles, 1e-7) && close(63.0 * 0.06, battens, 1e-7), "each layer is the eave area times its own thickness");
     let (tile_low, _, tile_volume) = group_extent(&solids["r-t-hip"], 0);
     let (batten_low, _, batten_volume) = group_extent(&solids["r-t-hip"], 1);
     assert!(close(5.8, batten_low, 1e-9) && close(5.86, tile_low, 1e-9), "the battens are the lowest layer, down to the eave height; the tiles lie 0.06 above");

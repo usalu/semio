@@ -1,0 +1,16 @@
+{
+  "mutation": "createRule",
+  "id": "r-1",
+  "rule": {
+    "name": "Corridor width",
+    "kind": "MinCorridorWidth",
+    "limit": 1.2,
+    "severity": "Warning",
+    "scope": {
+      "storeys": [],
+      "phases": [],
+      "ids": [],
+      "filter": "Corridor"
+    }
+  }
+}

@@ -25,3 +25,11 @@ Feature: Open the SVG views of the BIM house with lxml and measure them with sha
     Given the committed room shared://💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json and its export shared://🚪️svg/🪧️notated/🪧️notated.svg
     When the file is parsed and the paths and texts of its annotation layer are counted per kind and measured
     Then the paths and texts per kind, the straight lengths of the dimension, extension and leader lines and the sorted printed texts equal the subject's within 1e-9
+
+  @id-export-svg-components
+  @level-quick
+  @mode-differential
+  Scenario: The plan symbols of the components and routed MEP elements, their centre lines, bands, outlines and the colour of their service, equal the subject's report
+    Given the committed components room shared://🏗️ifc/🪑️components/📸️snapshot/🔣️.json and its export shared://🚪️svg/🪑️components/🪑️components.svg
+    When the file is parsed and the paths of every component and routed element are read, the centre lines and the areas of outlines and bands measured with shapely and the stroke colours collected
+    Then the paths per kind, the centre line lengths, the outline and band areas and the stroke colours of every element equal the subject's within 1e-9

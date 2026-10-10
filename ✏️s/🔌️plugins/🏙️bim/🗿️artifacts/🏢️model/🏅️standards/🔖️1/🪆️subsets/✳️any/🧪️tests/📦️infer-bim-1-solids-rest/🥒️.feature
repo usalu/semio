@@ -21,7 +21,7 @@ Feature: Re-derive the volume and bounds of every planar column, beam, slab, cei
   @level-quick
   @mode-differential
   Scenario: Volume and bounds of every planar element equal the oracle's closed forms
-    Given the committed frame cases shared://💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json and shared://💡️inferences/🧊️element-solids/➖️beams-profiles/🔣️.json
+    Given the committed frame cases shared://💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json, shared://💡️inferences/🧊️element-solids/➖️beams-profiles/🔣️.json and shared://💡️inferences/🧊️element-solids/📐️frame-tilt-joins/🔣️.json
     And the committed horizontal cases shared://💡️inferences/🧊️element-solids/⬜️slabs-holes-slope/🔣️.json, shared://💡️inferences/🧊️element-solids/🔲️ceilings-holes-slope/🔣️.json, shared://💡️inferences/🧊️element-solids/🪵️ceilings-meshes/🔣️.json and shared://💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json
     And the committed circulation cases shared://💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json and shared://💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json
     When every planar element of each case is measured

@@ -3,7 +3,7 @@
 use crate::{CurtainGrid, CurtainPanel, CurtainWallTypePatch, ModelDiff, ModelMutation, ModelSnapshot, Profile};
 use protocol::{MutationKind, SemanticDescriptor};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCurtainWallType {
     pub id: String,
@@ -28,7 +28,7 @@ pub struct SetCurtainWallType {
 impl SetCurtainWallType {
     /// 🩹 The sparse entity patch this payload names: every provided field, restated values included.
     pub fn patch(&self) -> CurtainWallTypePatch {
-        CurtainWallTypePatch { name: self.name.clone(), u_grid: self.u_grid.clone(), v_grid: self.v_grid.clone(), interior_mullion: self.interior_mullion.clone(), border_mullion: self.border_mullion.clone(), panel: self.panel.clone(), panel_material: self.panel_material.clone(), mullion_material: self.mullion_material.clone() }
+        CurtainWallTypePatch { name: self.name.clone(), u_grid: self.u_grid.clone(), v_grid: self.v_grid.clone(), interior_mullion: self.interior_mullion.clone(), border_mullion: self.border_mullion.clone(), panel: self.panel.clone(), panel_material: self.panel_material.clone(), mullion_material: self.mullion_material.clone(), u_value: None, g_value: None, frame_fraction: None }
     }
 
     /// 🧩 The payload that provides exactly the fields `patch` names.

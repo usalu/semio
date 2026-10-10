@@ -7,7 +7,7 @@ use framework_schema::ArtifactSchema;
 /// 🧩 An authored ZIP extra-field record. Derived fields use an empty payload marker: `0x0001`
 /// is regenerated from sizes and offsets, while `0x7075` and `0x6375` are regenerated from the
 /// current Unicode text and the matching explicit legacy bytes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ZipExtraField {
     pub id: u16,
@@ -17,7 +17,7 @@ pub struct ZipExtraField {
 }
 
 /// 📍 Local-file-header state whose values are not derived from payload size, CRC, or offset.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ZipLocalHeaderMetadata {
     pub version_needed: u16,
@@ -37,7 +37,7 @@ impl Default for ZipLocalHeaderMetadata {
 }
 
 /// 📒 Central-directory-header state whose values are not derived from payload size, CRC, or offset.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ZipCentralHeaderMetadata {
     pub version_made_by: u16,
@@ -75,7 +75,7 @@ impl Default for ZipCentralHeaderMetadata {
 }
 
 /// 🎛️ Complete persisted ZIP member serialization policy.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ZipEntryMetadata {
     pub compression_method: u16,
@@ -93,7 +93,7 @@ impl Default for ZipEntryMetadata {
 
 //#region Entry
 /// 🎒️ One logical ZIP archive member with complete, stable serialization metadata.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ZipEntry {
     pub name: String,
@@ -107,7 +107,7 @@ pub struct ZipEntry {
 
 //#region Snapshot
 /// 📸️ Persisted `stdio.zip` snapshot.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.zip")]
 pub struct ZipSnapshot {

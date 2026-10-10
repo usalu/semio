@@ -1,1 +1,40 @@
-{}
+{
+  "family_solids": {
+    "s-rail": {
+      "entry": "Created",
+      "family": "fam-table",
+      "material": "\"m-brick\"",
+      "name": "Rail",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      },
+      "shape": {
+        "Sweep": {
+          "path": [
+            {
+              "x": "0 m",
+              "y": "0 m"
+            },
+            {
+              "x": "width",
+              "y": "0 m"
+            },
+            {
+              "x": "width",
+              "y": "depth"
+            }
+          ],
+          "profile": {
+            "Rectangle": {
+              "depth": "40 mm",
+              "width": "40 mm"
+            }
+          }
+        }
+      },
+      "visible": "true"
+    }
+  }
+}

@@ -1,1 +1,31 @@
-{}
+{
+  "walls": {
+    "w-hall": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "base_slab": "sl-ground",
+      "entry": "Created",
+      "location": "Center",
+      "name": "Hall",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

@@ -7,7 +7,6 @@ use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3,SemioUv,
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_os_kernel::sqlite_snapshot::transfer;
 fn reference(id:Option<&str>)->Cell<'_>{match id{None=>Cell::Null,Some(id)=>Cell::Text(id)}}
-fn optional_text(row:SqliteRow<'_>,column:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Option<String>,ValueError>{if row.is_null(column)?{Ok(None)}else{Ok(Some(reconstruct_text(control,row.text(column)?)?))}}
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🫳️ Visits every Mesh buffer, exact IEEE word and literal reference through the same row writer.
@@ -36,19 +35,6 @@ pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::Native
 fn number(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string()))}
 fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio mesh row identity or columns"))}else{Ok(())}}
 fn tick(control:&mut SqliteSnapshotControl<'_>,completed:&mut usize)->Result<(),ValueError>{*completed+=1;if *completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,*completed,0)?;}Ok(())}
-fn identities(rows:&[SqliteRow<'_>],columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<i64>,ValueError>{
- let mut ids=transfer::reserve(rows.len(),control)?;for(at,row)in rows.iter().enumerate(){identity(row,columns)?;ids.push(row.rowid);if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}
- transfer::heap_sort(&mut ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.cmp(b)))?;for(at,id)in ids.iter().enumerate(){if at>0&&ids[at-1]==*id{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio mesh row identity"));}if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(ids)
-}
-fn owned_rows<'a>(db:&'a SqliteDatabase,table:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{
- let rows=ordered_float_rows(db,table,2,control)?;identities(&rows,columns,control)?;for(at,row)in rows.iter().enumerate(){if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio mesh document parent"));}if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(rows)
-}
-fn relationships<'a>(db:&'a SqliteDatabase,table:&str,columns:usize,owners:&[i64],control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{
- let mut rows=float_rows(db,table,control)?;identities(&rows,columns,control)?;for(at,row)in rows.iter().enumerate(){if owners.binary_search(&row.integer(1)?).is_err(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio mesh structural parent"));}if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}
- transfer::heap_sort(&mut rows,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.integer(1)?.cmp(&b.integer(1)?).then(a.integer(2)?.cmp(&b.integer(2)?))))?;
- let mut parent=None;let mut ordinal=0usize;for(at,row)in rows.iter().enumerate(){let owner=row.integer(1)?;if parent!=Some(owner){parent=Some(owner);ordinal=0;}if row.integer(2)?!=number(ordinal)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio mesh relationship ordinals require contiguous occurrences"));}ordinal+=1;if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(rows)
-}
-fn group<'a,'b>(rows:&'b[SqliteRow<'a>],parent:i64)->&'b[SqliteRow<'a>]{let start=rows.partition_point(|row|row.integer(1).is_ok_and(|id|id<parent));let end=rows.partition_point(|row|row.integer(1).is_ok_and(|id|id<=parent));&rows[start..end]}
 fn topology(value:SemioTopology)->&'static str{match value{SemioTopology::Points=>"points",SemioTopology::Lines=>"lines",SemioTopology::LineStrip=>"line_strip",SemioTopology::Triangles=>"triangles",SemioTopology::TriangleStrip=>"triangle_strip",SemioTopology::TriangleFan=>"triangle_fan"}}
 impl ArtifactSqliteSnapshot for SemioMeshSnapshot{
 fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
@@ -71,43 +57,10 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 
 impl SemioMeshSnapshot {
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
-    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>, declared_schema: &str)->Result<Self,ValueError> {
-control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
-let document=single_float_row(database,"semio_mesh_document")?;identity(document,2)?;if document.rowid!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio mesh document identifier"));}
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
-let mut result=Owned::new(Self{schema:String::new(),meshes:Vec::new(),materials:Vec::new(),textures:Vec::new()});let mut completed=0usize;
-let material_rows=owned_rows(database,"semio_mesh_material",15,control)?;result.get_mut().materials=transfer::reserve(material_rows.len(),control)?;
-for row in material_rows{
- let mut material=Owned::new(SemioMaterial{id:String::new(),base_color:SemioRgba{r:0.0,g:0.0,b:0.0,a:0.0},metallic:0.0,roughness:0.0,base_color_texture:None,metallic_roughness_texture:None,normal_texture:None,occlusion_texture:None,emissive_texture:None});
- material.get_mut().id=reconstruct_text(control,row.text(3)?)?;material.get_mut().base_color=SemioRgba{r:row.binary32(4)?,g:row.binary32(5)?,b:row.binary32(6)?,a:row.binary32(7)?};material.get_mut().metallic=row.binary32(8)?;material.get_mut().roughness=row.binary32(9)?;material.get_mut().base_color_texture=optional_text(row,10,control)?;material.get_mut().metallic_roughness_texture=optional_text(row,11,control)?;material.get_mut().normal_texture=optional_text(row,12,control)?;material.get_mut().occlusion_texture=optional_text(row,13,control)?;material.get_mut().emissive_texture=optional_text(row,14,control)?;
- result.get_mut().materials.push(material.take());tick(control,&mut completed)?;
-}
-let mesh_rows=owned_rows(database,"semio_mesh_mesh",4,control)?;let mesh_ids=identities(&mesh_rows,4,control)?;let primitives=relationships(database,"semio_mesh_primitive",6,&mesh_ids,control)?;let primitive_ids=identities(&primitives,6,control)?;
-let positions=relationships(database,"semio_mesh_position",6,&primitive_ids,control)?;let normals=relationships(database,"semio_mesh_normal",6,&primitive_ids,control)?;let uvs=relationships(database,"semio_mesh_uv",5,&primitive_ids,control)?;let colors=relationships(database,"semio_mesh_color",7,&primitive_ids,control)?;let indices=relationships(database,"semio_mesh_index",4,&primitive_ids,control)?;
-result.get_mut().meshes=transfer::reserve(mesh_rows.len(),control)?;
-for mesh in mesh_rows{
- let primitive_rows=group(&primitives,mesh.rowid);let mut native_mesh=Owned::new(SemioMesh{id:String::new(),primitives:Vec::new()});native_mesh.get_mut().primitives=transfer::reserve(primitive_rows.len(),control)?;
- for primitive in primitive_rows{
-  let topology=match primitive.text(4)?{"points"=>SemioTopology::Points,"lines"=>SemioTopology::Lines,"line_strip"=>SemioTopology::LineStrip,"triangles"=>SemioTopology::Triangles,"triangle_strip"=>SemioTopology::TriangleStrip,"triangle_fan"=>SemioTopology::TriangleFan,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio mesh topology"))};
-  let mut native=Owned::new(SemioPrimitive{id:String::new(),topology,positions:Vec::new(),normals:Vec::new(),uvs:Vec::new(),colors:Vec::new(),indices:Vec::new(),material_id:None});
-  let rows=group(&positions,primitive.rowid);native.get_mut().positions=transfer::reserve(rows.len(),control)?;for row in rows{native.get_mut().positions.push(SemioPoint3{x:row.real(3)?,y:row.real(4)?,z:row.real(5)?});tick(control,&mut completed)?;}
-  let rows=group(&normals,primitive.rowid);native.get_mut().normals=transfer::reserve(rows.len(),control)?;for row in rows{native.get_mut().normals.push(SemioPoint3{x:row.real(3)?,y:row.real(4)?,z:row.real(5)?});tick(control,&mut completed)?;}
-  let rows=group(&uvs,primitive.rowid);native.get_mut().uvs=transfer::reserve(rows.len(),control)?;for row in rows{native.get_mut().uvs.push(SemioUv{u:row.real(3)?,v:row.real(4)?});tick(control,&mut completed)?;}
-  let rows=group(&colors,primitive.rowid);native.get_mut().colors=transfer::reserve(rows.len(),control)?;for row in rows{native.get_mut().colors.push(SemioRgba{r:row.binary32(3)?,g:row.binary32(4)?,b:row.binary32(5)?,a:row.binary32(6)?});tick(control,&mut completed)?;}
-  let rows=group(&indices,primitive.rowid);native.get_mut().indices=transfer::reserve(rows.len(),control)?;for row in rows{native.get_mut().indices.push(u32::try_from(row.integer(3)?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?);tick(control,&mut completed)?;}
-  native.get_mut().id=reconstruct_text(control,primitive.text(3)?)?;native.get_mut().material_id=optional_text(*primitive,5,control)?;native_mesh.get_mut().primitives.push(native.take());tick(control,&mut completed)?;
- }
- native_mesh.get_mut().id=reconstruct_text(control,mesh.text(3)?)?;result.get_mut().meshes.push(native_mesh.take());tick(control,&mut completed)?;
-}
-let texture_rows=owned_rows(database,"semio_mesh_texture",6,control)?;result.get_mut().textures=transfer::reserve(texture_rows.len(),control)?;
-for row in texture_rows{let mut texture=Owned::new(SemioTexture{id:String::new(),mime:String::new(),bytes:Vec::new()});texture.get_mut().id=reconstruct_text(control,row.text(3)?)?;texture.get_mut().mime=reconstruct_text(control,row.text(4)?)?;texture.get_mut().bytes=reconstruct_blob(control,row.blob(5)?)?;result.get_mut().textures.push(texture.take());tick(control,&mut completed)?;}
-result.get_mut().schema=reconstruct_text(control,document.text(1)?)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(result.take())
-}
+    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 
 fn float_columns(table:&str)->&'static [FloatColumn]{match table{"semio_mesh_position"=>&[FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5)],"semio_mesh_normal"=>&[FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5)],"semio_mesh_uv"=>&[FloatColumn::Binary64(3),FloatColumn::Binary64(4)],"semio_mesh_color"=>&[FloatColumn::Binary32(3),FloatColumn::Binary32(4),FloatColumn::Binary32(5),FloatColumn::Binary32(6)],"semio_mesh_material"=>&[FloatColumn::Binary32(4),FloatColumn::Binary32(5),FloatColumn::Binary32(6),FloatColumn::Binary32(7),FloatColumn::Binary32(8),FloatColumn::Binary32(9)],_=>&[]}}
-fn float_rows<'a>(db:&'a SqliteDatabase,table:&str,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{let table_rows=db.table(table)?;control.check_rows(table_rows.rows.len())?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,table_rows.rows.len())?;let mut result=transfer::reserve(table_rows.rows.len(),control)?;for(count,row)in table_rows.rows.iter().enumerate(){result.push(SqliteRow::new(row,float_columns(table))?);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,table_rows.rows.len())?;}}Ok(result)}
-fn ordered_float_rows<'a>(db:&'a SqliteDatabase,table:&str,ordinal:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{let mut result=transfer::reserve(db.table(table)?.rows.len(),control)?;for(count,row)in semio_framework_os_kernel::sqlite_snapshot::artifact::ordered_row_refs(db.table(table)?,ordinal,control)?.into_iter().enumerate(){result.push(SqliteRow::new(row,float_columns(table))?);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,0)?;}}Ok(result)}
 fn single_float_row<'a>(db:&'a SqliteDatabase,table:&str)->Result<SqliteRow<'a>,ValueError>{SqliteRow::new(db.table(table)?.single_row()?,float_columns(table))}
 
 impl SemioMeshSnapshot{
@@ -118,7 +71,7 @@ pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&s
 impl SemioMeshSnapshot{
 /// 🧮️ Projects owned semantic rows under the caller's typed resource control.
 pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()
+semantic::layout(control.limits())?;crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
 }
 }
 
@@ -132,3 +85,5 @@ pub(crate) mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
 pub(crate) mod native_decoding;
+
+#[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

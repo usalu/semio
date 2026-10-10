@@ -1,0 +1,14 @@
+severity,code,storey,elements,missing,message_en,message_de
+error,clash.column-column,st-ground,c-1+c-2,,"Columns c-1, c-2 overlap by 0.180 m3.","Stützen c-1, c-2 überschneiden sich um 0.180 m3."
+error,reference.wall-type,st-ground,w-missing-type,wt-missing,Wall w-missing-type uses the missing wall type wt-missing.,Wand w-missing-type verwendet den fehlenden Wandtyp wt-missing.
+error,reference.opening-host,,o-orphan,w-nowhere,Opening o-orphan is hosted by the missing wall w-nowhere.,Öffnung o-orphan sitzt in der fehlenden Wand w-nowhere.
+error,opening.outside-host,st-ground,o-outside,,Opening o-outside reaches beyond the ends of its wall.,Öffnung o-outside ragt über die Enden ihrer Wand hinaus.
+error,degenerate.axis-length,st-ground,w-zero,,w-zero has an axis of length 0 m.,w-zero hat eine Achse der Länge 0 m.
+error,storey.level-duplicate,,st-dup+st-first,,"Storeys st-dup, st-first share the level 1 and overlap.","Geschosse st-dup, st-first teilen sich die Ebene 1 und überlappen sich."
+warning,clash.wall-column,st-ground,c-1+w-into-column,,"Wall and column c-1, w-into-column overlap by 0.090 m3.","Wand und Stütze c-1, w-into-column überschneiden sich um 0.090 m3."
+warning,clash.wall-column,st-ground,c-2+w-into-column,,"Wall and column c-2, w-into-column overlap by 0.023 m3.","Wand und Stütze c-2, w-into-column überschneiden sich um 0.023 m3."
+warning,clash.stair-wall,st-ground,s-comfort+w-into-column,,"Stair and wall s-comfort, w-into-column overlap by 0.450 m3.","Treppe und Wand s-comfort, w-into-column überschneiden sich um 0.450 m3."
+warning,clash.stair-wall,st-ground,s-comfort+w-part,,"Stair and wall s-comfort, w-part overlap by 0.450 m3.","Treppe und Wand s-comfort, w-part überschneiden sich um 0.450 m3."
+warning,storey.level-gap,,st-dup+st-far,,"Storeys st-dup, st-far are not contiguous: level 1 is followed by level 4.","Geschosse st-dup, st-far sind nicht lückenlos: auf Ebene 1 folgt Ebene 4."
+warning,stair.comfort-rule,st-ground,s-comfort,,Stair s-comfort breaks the comfort rule 2R + T = 0.753 m (allowed 0.590 to 0.650 m).,Treppe s-comfort verletzt die Schrittmaßregel 2h + a = 0.753 m (zulässig 0.590 bis 0.650 m).
+warning,space.duplicate-number,,sp-living+sp-twin,,"Spaces sp-living, sp-twin share the same number.","Räume sp-living, sp-twin haben dieselbe Nummer."

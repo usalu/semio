@@ -1,0 +1,5 @@
+{
+  "mutation": "setComponent",
+  "id": "cmp-table",
+  "family": "fam-ghost"
+}

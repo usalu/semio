@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-issue-comment/schema.json",
+  "title": "CreateIssueComment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "issue_comment"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createIssueComment"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Comment id",
+          "de": "Kommentar-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "issue_comment": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/IssueComment",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Comment",
+          "de": "Kommentar"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

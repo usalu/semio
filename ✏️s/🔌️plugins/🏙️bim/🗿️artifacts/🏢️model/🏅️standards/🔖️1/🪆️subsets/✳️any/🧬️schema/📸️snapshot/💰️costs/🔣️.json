@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/costs.json",
+  "$defs": {
+    "CostBasis": {
+      "type": "string",
+      "enum": ["Count", "Length", "GrossArea", "NetArea", "SurfaceArea", "GrossSideArea", "NetSideArea", "GrossVolume", "NetVolume", "Mass"]
+    },
+    "CostItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "currency", "basis", "unit_cost", "precision"],
+      "properties": {
+        "name": {"type": "string", "pattern": "\\S"},
+        "currency": {"type": "string", "pattern": "\\S"},
+        "basis": {"$ref": "#/$defs/CostBasis"},
+        "unit_cost": {"type": "number", "minimum": 0},
+        "precision": {"type": "integer", "minimum": 0, "maximum": 9}
+      }
+    },
+    "TypeCostLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type_id", "item", "factor"],
+      "properties": {
+        "type_id": {"type": "string", "pattern": "\\S"},
+        "item": {"type": "string", "pattern": "\\S"},
+        "factor": {"type": "number", "minimum": 0}
+      }
+    }
+  }
+}

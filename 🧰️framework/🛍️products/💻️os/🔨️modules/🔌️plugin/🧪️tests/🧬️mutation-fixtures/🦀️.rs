@@ -2,12 +2,16 @@
 
 #[path = "../🧬️mutation-fixtures-dummy/🦀️.rs"]
 pub mod dummy;
+#[path = "../🧬️mutation-fixtures-job-close/🦀️.rs"]
+pub mod job_close;
 #[path = "../🧬️mutation-fixtures-no-state/🦀️.rs"]
 pub mod no_state;
 #[path = "../🧬️mutation-fixtures-surface/🦀️.rs"]
 pub mod surface;
 #[path = "../🧬️mutation-fixtures-transaction/🦀️.rs"]
 pub mod transaction;
+#[path = "../🧬️mutation-fixtures-wire/🦀️.rs"]
+pub mod wire;
 
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
 #[test]

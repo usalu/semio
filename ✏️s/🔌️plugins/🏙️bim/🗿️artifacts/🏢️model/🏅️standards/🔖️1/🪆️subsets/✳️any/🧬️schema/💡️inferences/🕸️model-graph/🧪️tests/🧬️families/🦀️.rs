@@ -1,5 +1,6 @@
 use super::compute::take_hashed;
 use super::*;
+use protocol::Inference;
 use crate::{Entry, FamilyParameterPatch, ModelDiff, Profile, ProjectPatch};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

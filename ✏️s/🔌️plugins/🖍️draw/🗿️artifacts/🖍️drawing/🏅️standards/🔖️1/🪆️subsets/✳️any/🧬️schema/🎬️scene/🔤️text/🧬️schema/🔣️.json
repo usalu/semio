@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/draw/scene/text-fixtures",
+  "title": "Authoritative Glyph Scene Fixtures",
+  "type": "array",
+  "minItems": 1,
+  "definitions": {
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content",
+        "repetitions",
+        "nodes",
+        "maxSegments",
+        "family"
+      ],
+      "properties": {
+        "content": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repetitions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "nodes": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 1024
+        },
+        "maxSegments": {
+          "const": 65536
+        },
+        "family": {
+          "const": "anta"
+        }
+      }
+    }
+  },
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "content",
+      "x",
+      "y",
+      "size",
+      "transform",
+      "fillRule",
+      "fill",
+      "stroke",
+      "expectedGlyphs",
+      "width",
+      "height",
+      "fontFamily"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string",
+        "maxLength": 65536
+      },
+      "x": {
+        "type": "number"
+      },
+      "y": {
+        "type": "number"
+      },
+      "size": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "transform": {
+        "type": "array",
+        "minItems": 6,
+        "maxItems": 6,
+        "items": {
+          "type": "number"
+        }
+      },
+      "fillRule": {
+        "enum": [
+          "nonzero",
+          "evenodd"
+        ]
+      },
+      "fill": {
+        "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fill"
+      },
+      "stroke": {
+        "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+      },
+      "expectedGlyphs": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "width": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "height": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "fontFamily": {
+        "enum": [
+          "anta",
+          "kellySlab",
+          "shareTechMono",
+          "notoEmoji"
+        ]
+      },
+      "oracleText":{"type":"string"},"oracleDirection":{"enum":["ltr","rtl"]},"oracleFace": {
+        "type": "string"
+      },
+      "oracleGlyphs": {
+        "type": "array",
+        "items": {
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "oraclePositions": {
+        "type": "array",
+        "items": {
+          "minItems": 3,
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 3,
+          "type": "array"
+        }
+      }
+    }
+  }
+}

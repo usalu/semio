@@ -1,1 +1,10 @@
-{}
+{
+  "ceilings": {
+    "ce-living": {
+      "entry": "Patched",
+      "slope": {
+        "value": null
+      }
+    }
+  }
+}

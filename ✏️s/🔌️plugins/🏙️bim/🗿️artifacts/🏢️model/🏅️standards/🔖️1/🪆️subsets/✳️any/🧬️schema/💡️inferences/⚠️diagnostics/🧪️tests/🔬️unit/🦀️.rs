@@ -220,6 +220,25 @@ async fn dangling_references_orphans_and_duplicate_ids_are_reported() {
 
 
 #[semio_framework_async_macros::async_test]
+async fn viewports_and_revision_rows_whose_sheet_or_view_is_gone_are_reported_in_both_languages() {
+    use crate::{Point2, Sheet, SheetRevision, Viewport};
+    let mut snapshot = clean();
+    let view = snapshot.views.keys().next().expect("the clean house has a view").clone();
+    snapshot.sheets.insert("sh-1".into(), Sheet::standard("A-101", "Plans"));
+    snapshot.viewports.insert("vp-ok".into(), Viewport::standard("sh-1", &view, Point2 { x: 30.0, y: 30.0 }));
+    assert!(!compute_diagnostics(&snapshot).iter().any(|row| matches!(row.code, DiagnosticCode::RefViewportSheet | DiagnosticCode::RefViewportView | DiagnosticCode::RefRevisionSheet)), "a viewport on an existing sheet showing an existing view is clean");
+    snapshot.viewports.insert("vp-no-sheet".into(), Viewport::standard("sh-x", &view, Point2 { x: 30.0, y: 30.0 }));
+    snapshot.viewports.insert("vp-no-view".into(), Viewport::standard("sh-1", "v-x", Point2 { x: 30.0, y: 30.0 }));
+    snapshot.sheet_revisions.insert("rev-no-sheet".into(), SheetRevision { sheet: "sh-y".into(), number: "A".into(), date: String::new(), description: "x".into(), author: String::new() });
+    let found = compute_diagnostics(&snapshot);
+    for (code, elements) in [(DiagnosticCode::RefViewportSheet, "vp-no-sheet"), (DiagnosticCode::RefViewportView, "vp-no-view"), (DiagnosticCode::RefRevisionSheet, "rev-no-sheet")] {
+        let row = found.iter().find(|row| row.code == code && row.elements == [elements]).unwrap_or_else(|| panic!("{code:?} {elements} in {:?}", rows(&found)));
+        assert_eq!(row.severity, Severity::Error);
+        assert!(row.text("en").is_some() && row.text("de").is_some_and(|german| german != row.text("en").unwrap_or_default()), "{code:?} reads in English and German");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn diagnostics_determinism_default_and_gating_laws() {
     use crate::{Entry, ModelDiff, StoreyPatch};
     let snapshot = defects();

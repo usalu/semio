@@ -35,7 +35,7 @@ pub const SEVERITIES: [Severity; 3] = [Severity::Error, Severity::Warning, Sever
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.panel_diagnostics.as_str(), BimLabels::NATIVE_DE.panel_diagnostics.as_str()),
+        label: BimLabels::localized(|labels| labels.panel_diagnostics),
         group: PanelGroup::Details,
         body_key: Some(BODY_KEY.into()),
         children: Vec::new(),
@@ -150,6 +150,7 @@ pub fn category_label<'a>(labels: &'a BimLabels, category: &'a str) -> &'a str {
         "annotation" => labels.diag_cat_annotation.as_str(),
         "ceiling" => labels.diag_cat_ceiling.as_str(),
         "clash" => labels.diag_cat_clash.as_str(),
+        "curtain-wall" => labels.diag_cat_curtain_wall.as_str(),
         "degenerate" => labels.diag_cat_degenerate.as_str(),
         "opening" => labels.diag_cat_opening.as_str(),
         "railing" => labels.diag_cat_railing.as_str(),
@@ -159,6 +160,8 @@ pub fn category_label<'a>(labels: &'a BimLabels, category: &'a str) -> &'a str {
         "space" => labels.diag_cat_space.as_str(),
         "stair" => labels.diag_cat_stair.as_str(),
         "storey" => labels.diag_cat_storey.as_str(),
+        "wall" => labels.diag_cat_wall.as_str(),
+        "wall-sweep" => labels.diag_cat_wall_sweep.as_str(),
         other => other,
     }
 }

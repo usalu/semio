@@ -16,6 +16,6 @@ test("mounted private group frames retain every original owner on zero or underf
  expect(owner.includes("fn admit_private_child_group_frame(")).toBe(true);
  expect(owner.includes("fn close_private_child_group_step(")).toBe(true);
  expect(owner.includes("self.terminal_is_empty()")).toBe(true);
- expect(owner.includes("grant.maximum_release_bytes < bytes")).toBe(true);
+ expect(owner.includes("grant.maximum_capacity_bytes<bytes")).toBe(true);
  console.log("[DEBUG] mounted frame symbolic-size law agrees with RFC6902; original64child/64copy bounds; whole frame and empty registry extents independently funded");
 });

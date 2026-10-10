@@ -466,3 +466,33 @@ fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
         println!("[DEBUG] PDF retained text case={} exact logical text/date, indirect identity and independent native text admission",case["id"]);
     }
 }
+
+/// 📖️ Proves PDF 1.7 logical carriers, independent content oracles and exact protocol custody.
+#[test]
+fn owned_fixture_publication_reports_canonical_logical_carriers() {
+    use store::{ArtifactDsl, ArtifactPack};
+    logical_character_codes_bind_complete_native_fragments_and_preserve_word_precision();
+    retained_text_dates_admit_owned_values_and_keep_indirect_identity();
+    let snapshot = text_document(&[(300.0, 400.0, "Native PDF 1.7 receipt")]);
+    let text = snapshot.print_dsl();
+    let binary = snapshot.encode_pack_with(&Default::default()).unwrap();
+    assert_eq!(PdfSnapshot::parse_dsl(&text).unwrap(), snapshot);
+    assert_eq!(PdfSnapshot::decode_pack_with(&binary, &Default::default()).unwrap(), snapshot);
+    let factories = crate::native_codecs();
+    let selected = factories.iter().filter(|factory| factory.id == "stdio.native.pdf17.v1").collect::<Vec<_>>();
+    assert_eq!(selected.len(), 1);
+    let factory = selected[0];
+    let codec = (factory.codec)();
+    let kind = (factory.kind)();
+    let compiled = include_bytes!("../../💾️binary/📸️snapshot/📡️.protocol.semio");
+    let current = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")).unwrap();
+    assert_eq!(current.as_slice(), compiled, "the live native receipt requires the current compiled protocol");
+    let digest = semio_framework_hash::Sha256::digest(compiled);
+    assert_ne!(codec.pack_schema_hash, [0; 32]);
+    assert_eq!(kind.id, crate::PDF_ARTIFACT_SCHEMA_ID);
+    assert_eq!(codec.schema, crate::STDIO_PDF17_DOCUMENT_SCHEMA);
+    assert_eq!(codec.extension, "pdf");
+    let hex = |bytes: &[u8]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let receipt = serde_json::json!({"schemaVersion":1,"artifactKind":kind.id,"artifactSchema":codec.schema,"factoryId":factory.id,"extension":codec.extension,"packSchemaHash":hex(&codec.pack_schema_hash),"protocolSourceSha256":hex(&digest)});
+    eprintln!("[DEBUG] native-codec-publication={receipt}");
+}

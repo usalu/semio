@@ -45,9 +45,9 @@ export class DocumentBooleanJob{
  private push(index:number):void{if(this.stack.length>=this.input.limits.maxDepth)invalid("Boolean document dependency depth exceeded");if(this.visiting.has(index))invalid("Cyclic Boolean document operands");this.visiting.add(index);this.stack.push({index,at:0});}
  private index():void{
   const n=this.input.plan.nodes[this.nodes];if(this.nodes===this.input.plan.nodes.length){this.phase="validation";return;}
-  if(!n||typeof n.id!=="string"||!n.id.length||n.id.length>4096||new TextEncoder().encode(n.id).length>4096||this.ids.has(n.id)||!n.content||!["path","group","boolean","text","trace","image"].includes(n.content.kind))invalid("Invalid or duplicate Boolean document node");
+  if(!n||typeof n.id!=="string"||!n.id.length||n.id.length>4096||new TextEncoder().encode(n.id).length>4096||this.ids.has(n.id)||!n.content||!["path","glyphs","group","boolean","text","trace","image"].includes(n.content.kind))invalid("Invalid or duplicate Boolean document node");
   validateSceneSourceAddress(n);matrix(n.transform);const c=n.content;
-  if(c.kind==="path"){if(!Array.isArray(c.segments)||c.segments.length>65536||!["nonzero","evenodd"].includes(c.fillRule))invalid("Invalid Boolean document path");this.sourceSegments+=c.segments.length;if(this.sourceSegments>65536)invalid("Boolean document source segment cap exceeded");}
+  if((c.kind==="path"||c.kind==="glyphs")){if(!Array.isArray(c.segments)||c.segments.length>65536||!["nonzero","evenodd"].includes(c.fillRule))invalid("Invalid Boolean document path");this.sourceSegments+=c.segments.length;if(this.sourceSegments>65536)invalid("Boolean document source segment cap exceeded");}
   if(c.kind==="group"||c.kind==="boolean"){if(!Array.isArray(c.children)||c.children.length>1024)invalid("Invalid Boolean document references");this.references+=c.children.length;if(this.references>this.input.limits.maxReferences)invalid("Boolean document reference cap exceeded");}
   if(c.kind==="boolean"){if(!["union","difference","intersection","xor"].includes(c.operation))invalid("Invalid Boolean document operation");matrix(c.referenceTransform);}
   this.ids.set(n.id,this.nodes++);
@@ -57,7 +57,7 @@ export class DocumentBooleanJob{
   const top=this.stack.at(-1)!,n=this.input.plan.nodes[top.index]!,children=refs(n);
   if(top.at<children.length){const index=this.ids.get(children[top.at++]!)!;if(cycles?this.visited.has(index):this.cache.has(index))return;this.push(index);return;}
   if(cycles){this.stack.pop();this.visiting.delete(top.index);this.visited.add(top.index);this.order.push(top.index);return;}
-  if(n.content.kind!=="path"&&n.content.kind!=="group"&&n.content.kind!=="boolean")invalid("Unsupported Boolean operand "+n.content.kind+": "+n.id);
+  if(n.content.kind!=="path"&&n.content.kind!=="glyphs"&&n.content.kind!=="group"&&n.content.kind!=="boolean")invalid("Unsupported Boolean operand "+n.content.kind+": "+n.id);
   this.current=top.index;this.operandAt=0;this.copyAt=0;this.copied=0;this.operand=null;this.operands=[];this.phase="operands";
  }
  private requirements():void{
@@ -65,11 +65,11 @@ export class DocumentBooleanJob{
   const children=refs(this.input.plan.nodes[this.current]!);if(this.refAt===children.length){this.current=-1;return;}const child=this.ids.get(children[this.refAt++]!)!,factor=this.quality.get(this.current)!;this.impact.set(child,Math.max(this.impact.get(child)??1,factor));
  }
  private prepare():void{
-  const n=this.input.plan.nodes[this.current]!,c=n.content,children=refs(n),count=c.kind==="path"?1:children.length,factor=this.quality.get(this.current)??1,tolerance=this.input.limits.tolerance/factor,epsilon=this.input.limits.epsilon/factor;
+  const n=this.input.plan.nodes[this.current]!,c=n.content,children=refs(n),count=(c.kind==="path"||c.kind==="glyphs")?1:children.length,factor=this.quality.get(this.current)??1,tolerance=this.input.limits.tolerance/factor,epsilon=this.input.limits.epsilon/factor;
   if(tolerance<1e-6||epsilon<1e-12)invalid("Boolean document precision exceeds supported tolerance");
   if(!this.operand){if(this.operandAt===count){if(!this.operands.length)this.operands.push({segments:[],transform:identity,tolerance,fillRule:"nonzero"});this.child=new PathBooleanJob({...this.input.limits,epsilon,operation:c.kind==="boolean"?c.operation:"union",operands:this.operands});this.operands=[];this.phase="geometry";return;}
-   this.operand={segments:[],transform:c.kind==="path"?[...n.transform]:identity,tolerance,fillRule:c.kind==="path"?c.fillRule:"nonzero"};this.copyAt=0;return;}
-  const source=c.kind==="path"?c.segments:this.cache.get(this.ids.get(children[this.operandAt]!)!)!,segments=this.operand.segments as PathSegment[];
+   this.operand={segments:[],transform:(c.kind==="path"||c.kind==="glyphs")?[...n.transform]:identity,tolerance,fillRule:(c.kind==="path"||c.kind==="glyphs")?c.fillRule:"nonzero"};this.copyAt=0;return;}
+  const source=(c.kind==="path"||c.kind==="glyphs")?c.segments:this.cache.get(this.ids.get(children[this.operandAt]!)!)!,segments=this.operand.segments as PathSegment[];
   if(this.copyAt<source.length){if(this.copied>=this.input.limits.maxEdges)invalid("Boolean document operand segment budget exceeded");segments.push(copy(source[this.copyAt++]!));this.copied++;return;}
   this.operands.push(this.operand);this.operand=null;this.operandAt++;
  }

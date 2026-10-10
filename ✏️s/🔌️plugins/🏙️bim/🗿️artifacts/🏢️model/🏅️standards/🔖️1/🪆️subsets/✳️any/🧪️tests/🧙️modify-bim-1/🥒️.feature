@@ -29,6 +29,22 @@ Feature: Copy, mirror, array, offset, trim, extend, align and split authored geo
       | mirror    | 1    |
       | mirror    | 2    |
 
+  @id-modify-frames
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: A free-standing component under the <family> map of case <case> goes where shapely sends its origin and its family frame
+    Given the committed modify cases shared://🧫️fixtures/🧙️modify/🔣️.json
+    When the origin and the two frame axes of every instance of the <family> frame case <case> are sent through the map
+    Then the image position, rotation and mirror flag equal the committed image within 1e-9 metres and radians
+    Examples:
+      | family    | case |
+      | translate | 0    |
+      | rotate    | 1    |
+      | rotate    | 2    |
+      | mirror    | 3    |
+      | mirror    | 4    |
+      | mirror    | 5    |
+
   @id-modify-loops
   @level-exhaustive
   @mode-differential

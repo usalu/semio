@@ -82,9 +82,9 @@
       },
       "name": "Cooking Area",
       "number": "0.01",
+      "phase": "New",
       "storey": "st-ground",
-      "usage": "Dining",
-      "phase": "New"
+      "usage": "Dining"
     },
     "sp-2": {
       "boundary": {
@@ -123,9 +123,9 @@
       },
       "name": "Hall",
       "number": "0.02",
+      "phase": "New",
       "storey": "st-ground",
-      "usage": "Circulation",
-      "phase": "New"
+      "usage": "Circulation"
     },
     "sp-3": {
       "boundary": {
@@ -138,9 +138,9 @@
       },
       "name": "Bedroom",
       "number": "1.01",
+      "phase": "New",
       "storey": "st-first",
-      "usage": "Sleeping",
-      "phase": "New"
+      "usage": "Sleeping"
     }
   },
   "stairs": {},

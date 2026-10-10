@@ -16,11 +16,14 @@ const put = (path: string, text: string) => {
 };
 import { join } from "node:path";
 import { familyCollections, familyDataEnums, familyFieldDocs, familyStructs, familyUnitEnums } from "./r12-w2-f2-families-model.ts";
+import { componentCollections, componentDataEnums, componentFieldDocs, componentStructs, componentUnitEnums } from "./r12-w2-f3-components-model.ts";
 import { annotationCollections, annotationDataEnums, annotationFieldDocs, annotationStructs, annotationUnitEnums } from "./r10-w11-annotations-model.ts";
 import { frameDataEnums, frameFieldDocs, frameStructs } from "./r12-w2-wp19-frame-model.ts";
 import { wallDepthFieldDocs, wallDepthOpeningFields, wallDepthStructs, wallDepthTopVariants, wallDepthWallFields } from "./r12-w2-wp08-model.ts";
 import { sheetCollections, sheetDataEnums, sheetFieldDocs, sheetStructs, sheetUnitEnums } from "./r12-w2-wp14-model.ts";
 import { psetsDataEnums, psetsFieldDocs, psetsStructs, psetsUnitEnums } from "./r12-w2-wp18-psets-model.ts";
+import { doorThermalFields, energyCollections, energyFieldDocs, energyStructs, windowThermalFields } from "./r12-w2-wp20-energy-model.ts";
+import { coordinationCollections, coordinationDataEnums, coordinationFieldDocs, coordinationStructs, coordinationUnitEnums } from "./r12-w2-wp16-model.ts";
 
 const em =(...points: number[]) => String.fromCodePoint(...points) + "️";
 const repo = join(import.meta.dir, "../../../../../../..");
@@ -63,6 +66,8 @@ const unitEnums: UnitEnum[] = [
   ...psetsUnitEnums,
   ...annotationUnitEnums,
   ...familyUnitEnums,
+  ...componentUnitEnums,
+  ...coordinationUnitEnums,
   ...sheetUnitEnums,
   { name: "MaterialCategory", doc: "🧱️ Coarse material family.", variants: ["Concrete", "Masonry", "Wood", "Metal", "Glass", "Insulation", "Finish", "Membrane", "Other"] },
   { name: "LayerFunction", doc: "🍰️ Role of one wall, slab or roof layer.", variants: ["Structure", "Substrate", "Insulation", "Finish", "Membrane", "Core"] },
@@ -74,7 +79,7 @@ const unitEnums: UnitEnum[] = [
   { name: "StringerKind", doc: "🪵️ Stringer construction of a stair: none (cantilevered treads), closed (side boards housing the steps), open (cut stringers carrying the treads) or mono (one central spine).", variants: ["None", "Closed", "Open", "Mono"] },
   { name: "RiserKind", doc: "🪜️ Whether a stair has riser boards between its treads.", variants: ["Open", "Closed"] },
   { name: "ScheduleCategory", doc: "📋️ What the rows of a schedule are: the elements of one kind, or (finish) one row per finished surface of every room, or (material) one row per layer or material run of every element.", variants: ["Wall", "CurtainWall", "Slab", "Roof", "Column", "Beam", "Window", "Door", "Void", "Stair", "Railing", "Space", "Finish", "Material"] },
-  { name: "ScheduleField", doc: "🔑️ The closed vocabulary of the built-in schedule fields: authored fields of the element (id, name, kind, storey, level, type, phase, material, host, number, usage, swing, leaves, panes), the measures of its quantity take-off, for finish rows the surface and its area and for material rows the measures of one layer.", variants: ["Id", "Name", "Kind", "Storey", "Level", "Type", "Phase", "Material", "Host", "Number", "Usage", "Surface", "Swing", "Leaves", "Panes", "Count", "Length", "Width", "Height", "Perimeter", "GrossSideArea", "OpeningArea", "NetSideArea", "GrossArea", "NetArea", "SurfaceArea", "GrossVolume", "NetVolume", "Mass", "Risers", "Thickness", "LayerArea", "LayerVolume", "LayerMass", "FinishArea"] },
+  { name: "ScheduleField", doc: "🔑️ The closed vocabulary of the built-in schedule fields: authored fields of the element (id, name, kind, storey, level, type, phase, material, host, number, usage, swing, leaves, panes), the measures of its quantity take-off, for finish rows the surface and its area and for material rows the measures of one layer.", variants: ["Id", "Name", "Kind", "Storey", "Level", "Type", "Phase", "Material", "Host", "Number", "Usage", "Surface", "Swing", "Leaves", "Panes", "Count", "Length", "Width", "Height", "Perimeter", "GrossSideArea", "OpeningArea", "NetSideArea", "GrossArea", "NetArea", "SurfaceArea", "GrossVolume", "NetVolume", "Mass", "Risers", "Thickness", "LayerArea", "LayerVolume", "LayerMass", "FinishArea", "UValue", "GValue"] },
   { name: "ScheduleOp", doc: "🔎️ How a schedule filter compares a cell with its value: numbers compare as numbers, everything else as text without regard to case.", variants: ["Equals", "NotEquals", "Contains", "Greater", "GreaterOrEqual", "Less", "LessOrEqual", "Empty", "NotEmpty"] },
   { name: "EndJoin", doc: "🔗️ How one end of a wall joins the walls it touches when it is not left to the geometry: mitered (corner nodes of end to end walls, without the miter limit), butted (this end is cut by the near face of the wall it meets while that wall runs through, covering the corner) or not joined at all (a square free end). An absent preference leaves the choice to the geometry.", variants: ["Miter", "Butt", "None"] },
   { name: "ViewKind", doc: "🖼️ What a view draws: a plan cut at a height of one storey, the reflected ceiling plan of that cut, a section or an elevation looking through a vertical plane, or an orthographic or perspective camera.", variants: ["Plan", "CeilingPlan", "Section", "Elevation", "Orthographic", "Perspective"] },
@@ -88,6 +93,8 @@ const dataEnums: DataEnum[] = [
   ...(psetsDataEnums as DataEnum[]),
   ...annotationDataEnums,
   ...familyDataEnums,
+  ...componentDataEnums,
+  ...(coordinationDataEnums as DataEnum[]),
   ...sheetDataEnums,
   ...frameDataEnums,
   { name: "Axis", doc: "〰️ Wall axis: a line, or an arc whose bulge is tan(sweep / 4); a curved wall is an axis whose bulge is set.", variants: [{ name: "Line", fields: f("start:Point2, end:Point2") }, { name: "Arc", fields: f("start:Point2, end:Point2, bulge:f64") }] },
@@ -104,8 +111,11 @@ const dataEnums: DataEnum[] = [
 
 const structs: Struct[] = [
   ...(psetsStructs as Struct[]),
+  ...(energyStructs as Struct[]),
   ...annotationStructs,
   ...familyStructs,
+  ...componentStructs,
+  ...coordinationStructs,
   ...sheetStructs,
   ...wallDepthStructs,
   { name: "Point2", doc: "📍️ Planar point in metres.", copy: true, fields: f("x:f64, y:f64") },
@@ -124,8 +134,8 @@ const structs: Struct[] = [
   { name: "RoofType", doc: "🧱️ Layered roof build-up.", entity: { collection: "roof_types", plural: "RoofTypes" }, fields: f("name:string, layers:vec:Layer") },
   { name: "ColumnType", doc: "🏛️ Column profile and material.", entity: { collection: "column_types", plural: "ColumnTypes" }, fields: f("name:string, profile:Profile, material:string") },
   { name: "BeamType", doc: "🏛️ Beam profile and material.", entity: { collection: "beam_types", plural: "BeamTypes" }, fields: f("name:string, profile:Profile, material:string") },
-  { name: "WindowType", doc: "🪟️ Window family parameters.", entity: { collection: "window_types", plural: "WindowTypes" }, fields: f("name:string, width:f64, height:f64, sill:f64, frame_width:f64, frame_depth:f64, panes:u32, material:string") },
-  { name: "DoorType", doc: "🚪️ Door family parameters.", entity: { collection: "door_types", plural: "DoorTypes" }, fields: f("name:string, width:f64, height:f64, frame_width:f64, frame_depth:f64, leaves:DoorLeaves, swing:Swing, material:string") },
+  { name: "WindowType", doc: "🪟️ Window family parameters.", entity: { collection: "window_types", plural: "WindowTypes" }, fields: f("name:string, width:f64, height:f64, sill:f64, frame_width:f64, frame_depth:f64, panes:u32, material:string, " + windowThermalFields) },
+  { name: "DoorType", doc: "🚪️ Door family parameters.", entity: { collection: "door_types", plural: "DoorTypes" }, fields: f("name:string, width:f64, height:f64, frame_width:f64, frame_depth:f64, leaves:DoorLeaves, swing:Swing, material:string, " + doorThermalFields) },
   { name: "Site", doc: "🌍️ A site: geographic anchor and boundary.", entity: { collection: "sites", plural: "Sites" }, fields: f("name:string, latitude:f64, longitude:f64, elevation:f64, true_north:f64, boundary:vec:Point2") },
   { name: "Building", doc: "🏢️ A building on a site.", entity: { collection: "buildings", plural: "Buildings" }, fields: f("site:string, name:string, origin:Point2, rotation:f64, elevation:f64") },
   { name: "Storey", doc: "🪜️ A storey: authored level index, height and optional plan cut height; its elevation is inferred.", entity: { collection: "storeys", plural: "Storeys" }, fields: f("building:string, name:string, level:i32, height:f64, cut_height:opt:f64") },
@@ -158,8 +168,11 @@ const structs: Struct[] = [
 
 const fieldDocs: Record<string, string> = {
   ...psetsFieldDocs,
+  ...energyFieldDocs,
   ...annotationFieldDocs,
   ...familyFieldDocs,
+  ...componentFieldDocs,
+  ...coordinationFieldDocs,
   ...sheetFieldDocs,
   ...frameFieldDocs,
   ...wallDepthFieldDocs,
@@ -256,7 +269,7 @@ const fieldAttrs = (field: Field, inEnum = false): string => {
 const header = (what: string) => `//! 🤖️ Generated by \`.🧬semio/…/BIM-PLUGIN/r3-f1-gen-model.ts\` — ${what}. Edit the model there, not here.\n\n`;
 let valuesRs = header("value types of `s.bim.model@1`");
 for (const e of unitEnums) {
-  valuesRs += `/// ${e.doc}\n#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]\npub enum ${e.name} {\n${e.variants.map((v) => `    ${v},`).join("\n")}\n}\n\n`;
+  valuesRs += `/// ${e.doc}\n#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]\npub enum ${e.name} {\n${e.variants.map((v) => `    ${v},`).join("\n")}\n}\n\n`;
 }
 valuesRs += `/// 🔷️ A closed loop of bulged vertices (counter-clockwise).\npub type Loop = Vec<Vertex>;\n\n`;
 const variantFields = (v: { name: string; fields: Field[] }) =>
@@ -297,11 +310,11 @@ impl semio_framework_dsl_record::BorrowedDslField for ${name} {
 
 `;
 for (const e of dataEnums) {
-  const derives = `Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue${e.intrinsic ? "" : ", semio_framework_dsl_record_derive::DslEnum"}`;
+  const derives = `semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue${e.intrinsic ? "" : ", semio_framework_dsl_record_derive::DslEnum"}`;
   valuesRs += `/// ${e.doc}\n#[derive(${derives})]\npub enum ${e.name} {\n${e.variants.map(variantFields).join("\n")}\n}\n\n${e.intrinsic ? intrinsicField(e.name) : ""}`;
 }
 const structRs = (s: Struct) => {
-  const derives = `Clone, ${s.copy ? "Copy, " : ""}Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord`;
+  const derives = `semio_framework_value::RetireOwned, Clone, ${s.copy ? "Copy, " : ""}Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord`;
   return `/// ${s.doc}\n#[derive(${derives})]\npub struct ${s.name} {\n${s.fields.map((x) => `${x.doc ? `    /// ${x.doc}\n` : ""}    ${fieldAttrs(x)} pub ${x.name}: ${rust(parseTy(x.type))},`.replace(/\n {4} pub/, "\n    pub").replace(/^ {4} pub/, "    pub")).join("\n")}\n}\n\n`;
 };
 for (const s of structs.filter((x) => !x.entity)) valuesRs += structRs(s);
@@ -318,7 +331,7 @@ const slotTy = (t: Ty) => (t.kind === "opt" ? `Option<Assigned<${rust(t)}>>` : `
 for (const s of patchables) {
   const fields = s.fields.map((x) => ({ ...x, t: parseTy(x.type) }));
   const opt = (x: { t: Ty }) => x.t.kind === "opt";
-  patchRs += `/// 🩹 Sparse patch of [\`${s.name}\`]: an absent field is untouched.\n#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]\n#[value(default)]\npub struct ${s.name}Patch {\n${fields.map((x) => `    #[value(skip_serializing_if = "Option::is_none")]\n    pub ${x.name}: ${slotTy(x.t)},`).join("\n")}\n}\n\n`;
+  patchRs += `/// 🩹 Sparse patch of [\`${s.name}\`]: an absent field is untouched.\n#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]\n#[value(default)]\npub struct ${s.name}Patch {\n${fields.map((x) => `    #[value(skip_serializing_if = "Option::is_none")]\n    pub ${x.name}: ${slotTy(x.t)},`).join("\n")}\n}\n\n`;
   patchRs += `impl Patch<${s.name}> for ${s.name}Patch {\n`;
   patchRs += `    fn write(&self, base: &${s.name}) -> ${s.name} {\n        ${s.name} { ${fields.map((x) => `${x.name}: ${opt(x) ? "take_assigned" : "take"}(&self.${x.name}, &base.${x.name})`).join(", ")} }\n    }\n`;
   patchRs += `    fn restoring(&self, base: &${s.name}) -> Self {\n        Self { ${fields.map((x) => `${x.name}: ${opt(x) ? "restore_assigned" : "restore"}(&self.${x.name}, &base.${x.name})`).join(", ")} }\n    }\n`;
@@ -383,7 +396,7 @@ collections.push(
   { field: "classifications", entity: "ClassificationSet", patch: "ClassificationSetPatch", schemaTy: null },
 );
 // Reorder so the on-wire / Rust order is materials..spaces, properties, classifications.
-const order = ["materials", "wall_types", "slab_types", "roof_types", "column_types", "beam_types", "window_types", "door_types", "curtain_wall_types", "sites", "buildings", "storeys", "grids", "walls", "curtain_walls", "curtain_panel_overrides", "columns", "beams", "slabs", "roofs", "openings", "stairs", "railings", "ramps", "spaces","ceiling_types", "ceilings","zones", "area_schemes", "views", ...sheetCollections, ...annotationCollections, ...familyCollections, "wall_sweeps", "schedules", "property_templates", "classification_systems", "properties", "classifications"];
+const order = ["materials", "wall_types", "slab_types", "roof_types", "column_types", "beam_types", "window_types", "door_types", "curtain_wall_types", "sites", "buildings", "storeys", "grids", "walls", "curtain_walls", "curtain_panel_overrides", "columns", "beams", "slabs", "roofs", "openings", "stairs", "railings", "ramps", "spaces","ceiling_types", "ceilings","zones", "area_schemes", ...energyCollections, "views", ...sheetCollections, ...annotationCollections, ...familyCollections, ...componentCollections, ...coordinationCollections, "wall_sweeps", "schedules", "property_templates", "classification_systems", "properties", "classifications"];
 collections.sort((a, b) => order.indexOf(a.field) - order.indexOf(b.field));
 const snapshotProps = (root: string) => ({
   schema: { type: "string", "x-semio-state": "artifact" },

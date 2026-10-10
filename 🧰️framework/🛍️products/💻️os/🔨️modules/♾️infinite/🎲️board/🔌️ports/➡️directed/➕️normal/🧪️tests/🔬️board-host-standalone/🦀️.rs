@@ -792,6 +792,73 @@
     }
 
 #[cfg(test)]
+    /// ♻️ Every fill close turn quotes its exact release demand, yields without mutation below any demand axis,
+    /// and answers with a receipt that fits the unchanged grant and sums to the owner's physical page backing.
+    #[test]
+    fn fill_close_turns_quote_exact_demands_and_fit_their_unchanged_grants() {
+        use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
+        use semio_framework_value::retained_clone::RetainedCloneGrant;
+        let mut ingress = BoardFillSnapshotIngress::new(0.0);
+        for index in 0..BOARD_FILL_PAGE_ITEMS * 2 + 1 {
+            ingress.begin_node().expect("node begins");
+            ingress.push_node_id_byte(b'a' + index as u8).expect("node id byte");
+            ingress.publish_node().expect("node publishes");
+        }
+        ingress.begin_node().expect("open node stays unpublished");
+        let backing: usize = ingress.snapshot.as_ref().expect("snapshot").nodes.pages.iter().flatten().map(|page| page.backing_bytes).sum();
+        assert!(backing > 0);
+        let mut released = 0usize;
+        for turn in 0.. {
+            assert!(turn < 64, "ingress close reaches terminal-empty");
+            let release = ingress.next_close_release_bytes();
+            let exact = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: release, maximum_depth: 1, ..Default::default() };
+            let under = [Some(RetainedCloneGrant { maximum_items: 0, ..exact }), Some(RetainedCloneGrant { maximum_depth: 0, ..exact }), (release > 0).then(|| RetainedCloneGrant { maximum_release_bytes: release - 1, ..exact })];
+            for grant in under.into_iter().flatten() {
+                assert_eq!(ingress.close_step(grant), InteractiveJobCloseStep::Pending { progress: Default::default() });
+                assert_eq!(ingress.next_close_release_bytes(), release, "a yield never mutates the owner");
+            }
+            let (InteractiveJobCloseStep::Pending { progress } | InteractiveJobCloseStep::Complete { progress }) = ingress.close_step(exact) else { panic!("ingress close was refused or blocked") };
+            assert!(progress.fits(exact));
+            released += progress.released_bytes;
+            if ingress.terminal_is_empty() {
+                break;
+            }
+        }
+        assert_eq!(released, backing, "the receipts account for every retired page backing");
+        let mut seed = BoardFillSnapshotIngress::new(0.0);
+        seed.begin_node().expect("seed node begins");
+        seed.push_node_id_byte(b'n').expect("seed node id byte");
+        seed.publish_node().expect("seed node publishes");
+        let snapshot = seed.take_snapshot().expect("seed snapshot is complete");
+        let mut job = BoardFillJob::with_operation(snapshot, 1, semio_framework_job::Operation::new(semio_framework_job::OperationId(1), semio_framework_job::RevisionId(1), semio_framework_job::Generation(1), 1));
+        for turn in 0.. {
+            assert!(turn < 64, "job close reaches terminal-empty");
+            let copy = job.next_close_copy_byte_demand().expect("job copy demand");
+            let exact = RetainedCloneGrant {
+                maximum_items: 1,
+                maximum_copy_bytes: copy,
+                maximum_capacity_bytes: job.next_close_capacity_byte_demand(copy).expect("job capacity demand"),
+                maximum_release_bytes: job.next_close_release_byte_demand().expect("job release demand"),
+                maximum_depth: job.next_close_depth_demand().expect("job depth demand"),
+            };
+            let under = [Some(RetainedCloneGrant { maximum_items: 0, ..exact }), Some(RetainedCloneGrant { maximum_depth: 0, ..exact }), (exact.maximum_release_bytes > 0).then(|| RetainedCloneGrant { maximum_release_bytes: exact.maximum_release_bytes - 1, ..exact })];
+            for grant in under.into_iter().flatten() {
+                assert_eq!(job.close_step(grant), InteractiveJobCloseStep::Pending { progress: Default::default() });
+                assert_eq!(job.next_close_release_byte_demand().expect("job release demand"), exact.maximum_release_bytes, "a yield never mutates the job");
+            }
+            match job.close_step(exact) {
+                InteractiveJobCloseStep::Pending { progress } => assert!(progress.fits(exact)),
+                InteractiveJobCloseStep::Complete { progress } => {
+                    assert!(progress.fits(exact));
+                    break;
+                }
+                other => panic!("job close ended in {other:?}"),
+            }
+        }
+        assert!(job.terminal_is_empty());
+    }
+
+#[cfg(test)]
     /// 🧮️ The descriptor census is bounded by `BOARD_DESCRIPTOR_ITEM_CAPACITY`, not by the pointer payload
     /// credits: a hundred-placement puzzle 2d fill of an eleven-handle kind (1 200 entities, past the 1 024
     /// pointer credits) must keep painting, while a descriptor past the descriptor cap is still refused.

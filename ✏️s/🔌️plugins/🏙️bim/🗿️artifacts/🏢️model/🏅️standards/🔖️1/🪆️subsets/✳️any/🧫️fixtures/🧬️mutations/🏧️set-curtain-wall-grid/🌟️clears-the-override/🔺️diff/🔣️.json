@@ -1,1 +1,10 @@
-{}
+{
+  "curtain_walls": {
+    "cw-1": {
+      "entry": "Patched",
+      "u_grid": {
+        "value": null
+      }
+    }
+  }
+}

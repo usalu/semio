@@ -1,0 +1,1 @@
+{"name":"ticket-bim-source","targets":{"test":{"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts costs","cwd":"."}}}}

@@ -12,7 +12,7 @@ use crate::{ModelMutation, ModelSnapshot, View, ViewKind};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "create-entity")]
 pub struct CreateEntity {
     pub kind: String,
@@ -25,9 +25,12 @@ fn container_kind(kind: &str) -> Option<&'static str> {
     match kind {
         "building" => Some("site"),
         "storey" | "grid" => Some("building"),
-        "opening" => Some("wall"),
+        "opening" | "wall-sweep" => Some("wall"),
+        "family-solid" => Some("family"),
+        "curtain-panel-override" => Some("curtain-wall"),
         "viewport" | "sheet-revision" => Some("sheet"),
-        "site" | "zone" | "area-scheme" | "schedule" | "sheet" | "material" | "wall-type" | "slab-type" | "ceiling-type" | "roof-type" | "column-type" | "beam-type" | "window-type" | "door-type" => None,
+        "site" | "family" | "zone" | "area-scheme" | "schedule" | "sheet" | "material" | "wall-type" | "slab-type" | "ceiling-type" | "roof-type" | "column-type" | "beam-type" | "curtain-wall-type" | "window-type" | "door-type" | "clash-set" | "rule" | "issue" => None,
+        "issue-comment" => Some("issue"),
         _ => Some("storey"),
     }
 }

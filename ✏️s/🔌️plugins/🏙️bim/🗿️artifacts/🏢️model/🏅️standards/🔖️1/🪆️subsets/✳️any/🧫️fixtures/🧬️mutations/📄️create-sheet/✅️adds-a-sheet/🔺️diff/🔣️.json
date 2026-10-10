@@ -1,1 +1,21 @@
-{}
+{
+  "sheets": {
+    "sh-1": {
+      "checked_by": "",
+      "date": "",
+      "drawn_by": "",
+      "entry": "Created",
+      "name": "Ground floor",
+      "number": "A-101",
+      "orientation": "Landscape",
+      "paper": {
+        "Iso": {
+          "size": "A3"
+        }
+      },
+      "project": "",
+      "revision": "",
+      "scale_label": ""
+    }
+  }
+}

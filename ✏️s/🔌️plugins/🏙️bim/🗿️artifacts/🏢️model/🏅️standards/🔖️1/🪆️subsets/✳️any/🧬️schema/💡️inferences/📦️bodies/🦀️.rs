@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Vocabulary
 /// 📏️ Sagitta (metres) allowed when an arc becomes a polygon ring for booleans and overlap tests.
-pub const CHORD_TOLERANCE: f64 = 1e-4;
+pub use crate::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 
 
 /// 🧱️ What a body is.
@@ -350,11 +350,6 @@ pub fn level_storeys(snapshot: &ModelSnapshot, storey: &str) -> Vec<String> {
     ids
 }
 //#endregion 🔖️Scope
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-️Scope
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

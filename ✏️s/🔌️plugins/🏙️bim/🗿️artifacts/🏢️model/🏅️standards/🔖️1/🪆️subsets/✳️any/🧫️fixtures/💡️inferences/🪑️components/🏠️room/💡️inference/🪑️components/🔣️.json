@@ -1,0 +1,1566 @@
+{
+  "components": {
+    "c-bad-override": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "x": 5,
+      "y": 3.4,
+      "z": 0.0,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [],
+      "footprint_area": 0.0,
+      "bounds": {
+        "min": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "max": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "volume": 0.0,
+      "overridden": [
+        "depth",
+        "width"
+      ],
+      "issues": [
+        "override",
+        "override",
+        "override",
+        "override"
+      ],
+      "category": "Furniture"
+    },
+    "c-basin-north": {
+      "storey": "st-ground",
+      "family": "fam-basin",
+      "x": 3.0,
+      "y": 3.9,
+      "z": 0.85,
+      "yaw_cos": -1.0,
+      "yaw_sin": 1.2246467991473532e-16,
+      "mirrored": true,
+      "footprint": [
+        {
+          "x": 3.0,
+          "y": 3.4499999999999997
+        },
+        {
+          "x": 3.6,
+          "y": 3.4499999999999997
+        },
+        {
+          "x": 3.6,
+          "y": 3.9
+        },
+        {
+          "x": 3.0,
+          "y": 3.9
+        }
+      ],
+      "footprint_area": 0.27,
+      "bounds": {
+        "min": {
+          "x": 3.0,
+          "y": 3.4499999999999997,
+          "z": 0.85
+        },
+        "max": {
+          "x": 3.6,
+          "y": 3.9,
+          "z": 1.05
+        }
+      },
+      "volume": 0.054000000000000006,
+      "overridden": [],
+      "issues": [],
+      "category": "Plumbing",
+      "host": {
+        "wall": "w-north",
+        "station": 3.0,
+        "side": 1.0,
+        "face": {
+          "x": 3.0,
+          "y": 3.9
+        },
+        "normal": {
+          "x": 0.0,
+          "y": -1.0
+        }
+      }
+    },
+    "c-basin-south": {
+      "storey": "st-ground",
+      "family": "fam-basin",
+      "x": 3.0,
+      "y": 0.1,
+      "z": 0.85,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 3.0,
+          "y": 0.1
+        },
+        {
+          "x": 3.6,
+          "y": 0.1
+        },
+        {
+          "x": 3.6,
+          "y": 0.55
+        },
+        {
+          "x": 3.0,
+          "y": 0.55
+        }
+      ],
+      "footprint_area": 0.27,
+      "bounds": {
+        "min": {
+          "x": 3.0,
+          "y": 0.1,
+          "z": 0.85
+        },
+        "max": {
+          "x": 3.6,
+          "y": 0.55,
+          "z": 1.05
+        }
+      },
+      "volume": 0.054000000000000006,
+      "overridden": [],
+      "issues": [],
+      "category": "Plumbing",
+      "host": {
+        "wall": "w-south",
+        "station": 3.0,
+        "side": 1.0,
+        "face": {
+          "x": 3.0,
+          "y": 0.1
+        },
+        "normal": {
+          "x": 0.0,
+          "y": 1.0
+        }
+      }
+    },
+    "c-bump": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "x": 0,
+      "y": 1,
+      "z": 0.0,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 0.0,
+          "y": 1.0
+        },
+        {
+          "x": 1.6,
+          "y": 1.0
+        },
+        {
+          "x": 1.6,
+          "y": 1.8
+        },
+        {
+          "x": 0.0,
+          "y": 1.8
+        }
+      ],
+      "footprint_area": 1.2800000000000002,
+      "bounds": {
+        "min": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 0.0
+        },
+        "max": {
+          "x": 1.6,
+          "y": 1.8,
+          "z": 0.74
+        }
+      },
+      "volume": 0.9472000000000002,
+      "overridden": [],
+      "issues": [],
+      "category": "Furniture"
+    },
+    "c-chair": {
+      "storey": "st-ground",
+      "family": "fam-chair",
+      "x": 2,
+      "y": 3.4,
+      "z": 0.0,
+      "yaw_cos": -1.0,
+      "yaw_sin": 1.2246467991473532e-16,
+      "mirrored": true,
+      "footprint": [
+        {
+          "x": 2.0,
+          "y": 2.9499999999999997
+        },
+        {
+          "x": 2.45,
+          "y": 2.9499999999999997
+        },
+        {
+          "x": 2.45,
+          "y": 3.4
+        },
+        {
+          "x": 2.0,
+          "y": 3.4
+        }
+      ],
+      "footprint_area": 0.2025,
+      "bounds": {
+        "min": {
+          "x": 2.0,
+          "y": 2.9499999999999997,
+          "z": 0.5
+        },
+        "max": {
+          "x": 2.45,
+          "y": 3.4,
+          "z": 1.0
+        }
+      },
+      "volume": 0.020250000000000004,
+      "overridden": [
+        "seat"
+      ],
+      "issues": [],
+      "category": "Furniture"
+    },
+    "c-chair-high": {
+      "storey": "st-ground",
+      "family": "fam-chair",
+      "x": 4.5,
+      "y": 3.2,
+      "z": 0.0,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 4.5,
+          "y": 3.2
+        },
+        {
+          "x": 4.95,
+          "y": 3.2
+        },
+        {
+          "x": 4.95,
+          "y": 3.6500000000000004
+        },
+        {
+          "x": 4.5,
+          "y": 3.6500000000000004
+        }
+      ],
+      "footprint_area": 0.2025,
+      "bounds": {
+        "min": {
+          "x": 4.5,
+          "y": 3.2,
+          "z": 0.55
+        },
+        "max": {
+          "x": 4.95,
+          "y": 3.6500000000000004,
+          "z": 1.05
+        }
+      },
+      "volume": 0.020250000000000004,
+      "overridden": [
+        "seat"
+      ],
+      "issues": [],
+      "category": "Furniture"
+    },
+    "c-diffuser-lost": {
+      "storey": "st-ground",
+      "family": "fam-diffuser",
+      "x": 1,
+      "y": 1,
+      "z": 2.9,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 0.7,
+          "y": 0.7
+        },
+        {
+          "x": 1.3,
+          "y": 0.7
+        },
+        {
+          "x": 1.3,
+          "y": 1.3
+        },
+        {
+          "x": 0.7,
+          "y": 1.3
+        }
+      ],
+      "footprint_area": 0.36,
+      "bounds": {
+        "min": {
+          "x": 0.7,
+          "y": 0.7,
+          "z": 2.82
+        },
+        "max": {
+          "x": 1.3,
+          "y": 1.3,
+          "z": 2.9
+        }
+      },
+      "volume": 0.0288,
+      "overridden": [],
+      "issues": [],
+      "category": "Mechanical",
+      "connector": {
+        "system": "Supply",
+        "colour": "#1f77d4",
+        "position": {
+          "x": 1,
+          "y": 1,
+          "z": 2.9
+        }
+      }
+    },
+    "c-diffuser-ok": {
+      "storey": "st-ground",
+      "family": "fam-diffuser",
+      "x": 5.5,
+      "y": 2,
+      "z": 2.6,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 5.2,
+          "y": 1.7
+        },
+        {
+          "x": 5.8,
+          "y": 1.7
+        },
+        {
+          "x": 5.8,
+          "y": 2.3
+        },
+        {
+          "x": 5.2,
+          "y": 2.3
+        }
+      ],
+      "footprint_area": 0.36,
+      "bounds": {
+        "min": {
+          "x": 5.2,
+          "y": 1.7,
+          "z": 2.52
+        },
+        "max": {
+          "x": 5.8,
+          "y": 2.3,
+          "z": 2.6
+        }
+      },
+      "volume": 0.0288,
+      "overridden": [],
+      "issues": [],
+      "category": "Mechanical",
+      "connector": {
+        "system": "Supply",
+        "colour": "#1f77d4",
+        "position": {
+          "x": 5.5,
+          "y": 2,
+          "z": 2.6
+        }
+      }
+    },
+    "c-ghost": {
+      "storey": "st-ground",
+      "family": "fam-ghost",
+      "x": 1,
+      "y": 3,
+      "z": 0.0,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [],
+      "footprint_area": 0.0,
+      "bounds": {
+        "min": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "max": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "volume": 0.0,
+      "overridden": [],
+      "issues": [
+        "family-missing"
+      ]
+    },
+    "c-high": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "x": 3,
+      "y": 3,
+      "z": 3.5,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 3.0,
+          "y": 3.0
+        },
+        {
+          "x": 4.6,
+          "y": 3.0
+        },
+        {
+          "x": 4.6,
+          "y": 3.8
+        },
+        {
+          "x": 3.0,
+          "y": 3.8
+        }
+      ],
+      "footprint_area": 1.2800000000000002,
+      "bounds": {
+        "min": {
+          "x": 3.0,
+          "y": 3.0,
+          "z": 3.5
+        },
+        "max": {
+          "x": 4.6,
+          "y": 3.8,
+          "z": 4.24
+        }
+      },
+      "volume": 0.9472000000000002,
+      "overridden": [],
+      "issues": [],
+      "category": "Furniture"
+    },
+    "c-lamp": {
+      "storey": "st-ground",
+      "family": "fam-lamp",
+      "x": 3,
+      "y": 2,
+      "z": 2.9,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 2.85,
+          "y": 1.85
+        },
+        {
+          "x": 3.15,
+          "y": 1.85
+        },
+        {
+          "x": 3.15,
+          "y": 2.15
+        },
+        {
+          "x": 2.85,
+          "y": 2.15
+        }
+      ],
+      "footprint_area": 0.09,
+      "bounds": {
+        "min": {
+          "x": 2.85,
+          "y": 1.85,
+          "z": 2.75
+        },
+        "max": {
+          "x": 3.15,
+          "y": 2.15,
+          "z": 2.9
+        }
+      },
+      "volume": 0.0135,
+      "overridden": [],
+      "issues": [],
+      "category": "Lighting",
+      "connector": {
+        "system": "Lighting",
+        "colour": "#ffbf00",
+        "position": {
+          "x": 3,
+          "y": 2,
+          "z": 2.9
+        }
+      }
+    },
+    "c-niche": {
+      "storey": "st-ground",
+      "family": "fam-niche",
+      "x": 5.9,
+      "y": 2.5,
+      "z": 0.9,
+      "yaw_cos": -0.09983341664682818,
+      "yaw_sin": 0.9950041652780257,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 5.999500416527803,
+          "y": 2.509983341664683
+        },
+        {
+          "x": 5.949583708204389,
+          "y": 3.0074854243036957
+        },
+        {
+          "x": 5.651082458620982,
+          "y": 2.977535399309647
+        },
+        {
+          "x": 5.700999166944396,
+          "y": 2.4800333166706343
+        }
+      ],
+      "footprint_area": 0.15,
+      "bounds": {
+        "min": {
+          "x": 5.651082458620982,
+          "y": 2.4800333166706343,
+          "z": 0.9
+        },
+        "max": {
+          "x": 5.999500416527803,
+          "y": 3.0074854243036957,
+          "z": 1.5
+        }
+      },
+      "volume": 0.09,
+      "overridden": [],
+      "issues": [],
+      "category": "Casework",
+      "host": {
+        "wall": "w-east",
+        "station": 2.5,
+        "side": 1.0,
+        "face": {
+          "x": 5.9,
+          "y": 2.5
+        },
+        "normal": {
+          "x": -1.0,
+          "y": 0.0
+        }
+      }
+    },
+    "c-nowhere": {
+      "storey": "st-ground",
+      "family": "fam-basin",
+      "x": 3,
+      "y": 0.6,
+      "z": 0.0,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 3.0,
+          "y": 0.6
+        },
+        {
+          "x": 3.6,
+          "y": 0.6
+        },
+        {
+          "x": 3.6,
+          "y": 1.05
+        },
+        {
+          "x": 3.0,
+          "y": 1.05
+        }
+      ],
+      "footprint_area": 0.27,
+      "bounds": {
+        "min": {
+          "x": 3.0,
+          "y": 0.6,
+          "z": 0.0
+        },
+        "max": {
+          "x": 3.6,
+          "y": 1.05,
+          "z": 0.2
+        }
+      },
+      "volume": 0.054000000000000006,
+      "overridden": [],
+      "issues": [
+        "host-missing"
+      ],
+      "category": "Plumbing"
+    },
+    "c-profile": {
+      "storey": "st-ground",
+      "family": "fam-hea",
+      "x": 1,
+      "y": 3,
+      "z": 0.0,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [],
+      "footprint_area": 0.0,
+      "bounds": {
+        "min": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "max": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "volume": 0.0,
+      "overridden": [],
+      "issues": [
+        "family-profile"
+      ],
+      "category": "Profile"
+    },
+    "c-table": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "x": 2,
+      "y": 2,
+      "z": 0.0,
+      "yaw_cos": 0.8660254037844387,
+      "yaw_sin": 0.49999999999999994,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 2.0,
+          "y": 2.0
+        },
+        {
+          "x": 3.3856406460551023,
+          "y": 2.8
+        },
+        {
+          "x": 2.9856406460551024,
+          "y": 3.492820323027551
+        },
+        {
+          "x": 1.6,
+          "y": 2.692820323027551
+        }
+      ],
+      "footprint_area": 1.2800000000000002,
+      "bounds": {
+        "min": {
+          "x": 1.6,
+          "y": 2.0,
+          "z": 0.0
+        },
+        "max": {
+          "x": 3.3856406460551023,
+          "y": 3.492820323027551,
+          "z": 0.74
+        }
+      },
+      "volume": 0.9472000000000002,
+      "overridden": [],
+      "issues": [],
+      "category": "Furniture"
+    },
+    "c-table-wide": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "x": 4,
+      "y": 1.2,
+      "z": 0.0,
+      "yaw_cos": 1.0,
+      "yaw_sin": 0.0,
+      "mirrored": false,
+      "footprint": [
+        {
+          "x": 4.0,
+          "y": 1.2
+        },
+        {
+          "x": 5.8,
+          "y": 1.2
+        },
+        {
+          "x": 5.8,
+          "y": 2.0
+        },
+        {
+          "x": 4.0,
+          "y": 2.0
+        }
+      ],
+      "footprint_area": 1.4400000000000002,
+      "bounds": {
+        "min": {
+          "x": 4.0,
+          "y": 1.2,
+          "z": 0.0
+        },
+        "max": {
+          "x": 5.8,
+          "y": 2.0,
+          "z": 0.74
+        }
+      },
+      "volume": 1.0656,
+      "overridden": [
+        "width"
+      ],
+      "issues": [],
+      "category": "Furniture"
+    }
+  },
+  "mep": {
+    "m-lighting": {
+      "storey": "st-ground",
+      "system": "lighting",
+      "colour": "#ffbf00",
+      "kind": "tray",
+      "label": "200x50",
+      "width": 0.2,
+      "height": 0.05,
+      "area": 0.010000000000000002,
+      "perimeter": 0.5,
+      "path": [
+        {
+          "x": 0.5,
+          "y": 3,
+          "z": 2.9
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "z": 2.9
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "z": 2.92
+        }
+      ],
+      "length": 3.500199980003999,
+      "volume": 0.03500199980004,
+      "surface_area": 1.7500999900019996,
+      "bounds": {
+        "min": {
+          "x": 0.4,
+          "y": 1.9,
+          "z": 2.8
+        },
+        "max": {
+          "x": 3.1,
+          "y": 3.1,
+          "z": 3.02
+        }
+      },
+      "issues": []
+    },
+    "m-power": {
+      "storey": "st-ground",
+      "system": "power",
+      "colour": "#d62728",
+      "kind": "tray",
+      "label": "300x100",
+      "width": 0.3,
+      "height": 0.1,
+      "area": 0.03,
+      "perimeter": 0.8,
+      "path": [
+        {
+          "x": 0.5,
+          "y": 1,
+          "z": 2.6
+        },
+        {
+          "x": 5.5,
+          "y": 1,
+          "z": 2.6
+        }
+      ],
+      "length": 5.0,
+      "volume": 0.15,
+      "surface_area": 4.0,
+      "bounds": {
+        "min": {
+          "x": 0.35,
+          "y": 0.85,
+          "z": 2.45
+        },
+        "max": {
+          "x": 5.65,
+          "y": 1.15,
+          "z": 2.75
+        }
+      },
+      "issues": []
+    },
+    "m-return": {
+      "storey": "st-ground",
+      "system": "return",
+      "colour": "#f08a24",
+      "kind": "duct",
+      "label": "400x250",
+      "width": 0.4,
+      "height": 0.25,
+      "area": 0.1,
+      "perimeter": 1.3,
+      "path": [
+        {
+          "x": 0.5,
+          "y": 0.6,
+          "z": 2.2
+        }
+      ],
+      "length": 0.0,
+      "volume": 0.0,
+      "surface_area": 0.0,
+      "bounds": {
+        "min": {
+          "x": 0.3,
+          "y": 0.39999999999999997,
+          "z": 2.0
+        },
+        "max": {
+          "x": 0.7,
+          "y": 0.8,
+          "z": 2.4000000000000004
+        }
+      },
+      "issues": [
+        "path-degenerate"
+      ]
+    },
+    "m-supply": {
+      "storey": "st-ground",
+      "system": "supply",
+      "colour": "#1f77d4",
+      "kind": "duct",
+      "label": "300x200",
+      "width": 0.3,
+      "height": 0.2,
+      "area": 0.06,
+      "perimeter": 1.0,
+      "path": [
+        {
+          "x": 0.5,
+          "y": 2,
+          "z": 2.6
+        },
+        {
+          "x": 5.5,
+          "y": 2,
+          "z": 2.6
+        }
+      ],
+      "length": 5.0,
+      "volume": 0.3,
+      "surface_area": 5.0,
+      "bounds": {
+        "min": {
+          "x": 0.35,
+          "y": 1.85,
+          "z": 2.45
+        },
+        "max": {
+          "x": 5.65,
+          "y": 2.15,
+          "z": 2.75
+        }
+      },
+      "issues": []
+    },
+    "m-waste": {
+      "storey": "st-ground",
+      "system": "waste",
+      "colour": "#808000",
+      "kind": "pipe",
+      "label": "Ø110",
+      "width": 0.11,
+      "height": 0.11,
+      "area": 0.009503317777109124,
+      "perimeter": 0.34557519189487723,
+      "path": [
+        {
+          "x": 5,
+          "y": 3.5,
+          "z": 0.0
+        },
+        {
+          "x": 5,
+          "y": 3.5,
+          "z": 2.2
+        },
+        {
+          "x": 5.4,
+          "y": 3.5,
+          "z": 2.2
+        }
+      ],
+      "length": 2.6000000000000005,
+      "volume": 0.02470862622048373,
+      "surface_area": 0.898495498926681,
+      "bounds": {
+        "min": {
+          "x": 4.945,
+          "y": 3.445,
+          "z": -0.055
+        },
+        "max": {
+          "x": 5.455,
+          "y": 3.555,
+          "z": 2.2550000000000003
+        }
+      },
+      "issues": []
+    },
+    "m-water": {
+      "storey": "st-ground",
+      "system": "domestic-water",
+      "colour": "#1ec8d6",
+      "kind": "pipe",
+      "label": "Ø100",
+      "width": 0.1,
+      "height": 0.1,
+      "area": 0.007853981633974483,
+      "perimeter": 0.3141592653589793,
+      "path": [
+        {
+          "x": 3,
+          "y": 0.5,
+          "z": 2.65
+        },
+        {
+          "x": 3,
+          "y": 3.5,
+          "z": 2.65
+        }
+      ],
+      "length": 3.0,
+      "volume": 0.02356194490192345,
+      "surface_area": 0.9424777960769379,
+      "bounds": {
+        "min": {
+          "x": 2.95,
+          "y": 0.45,
+          "z": 2.6
+        },
+        "max": {
+          "x": 3.05,
+          "y": 3.55,
+          "z": 2.6999999999999997
+        }
+      },
+      "issues": []
+    }
+  },
+  "quantities": {
+    "c-bad-override": {
+      "kind": "component",
+      "type_id": "fam-table",
+      "length": 0.0,
+      "width": 0.0,
+      "height": 0.0,
+      "perimeter": 0.0,
+      "gross_area": 0.0,
+      "net_area": 0.0,
+      "gross_volume": 0.0,
+      "groups": [
+        "component-category:furniture"
+      ]
+    },
+    "c-basin-north": {
+      "kind": "component",
+      "type_id": "fam-basin",
+      "length": 0.4500000000000002,
+      "width": 0.6000000000000001,
+      "height": 0.20000000000000007,
+      "perimeter": 2.1000000000000005,
+      "gross_area": 0.27,
+      "net_area": 0.27,
+      "gross_volume": 0.054000000000000006,
+      "groups": [
+        "component-category:plumbing"
+      ]
+    },
+    "c-basin-south": {
+      "kind": "component",
+      "type_id": "fam-basin",
+      "length": 0.45000000000000007,
+      "width": 0.6000000000000001,
+      "height": 0.20000000000000007,
+      "perimeter": 2.1000000000000005,
+      "gross_area": 0.27,
+      "net_area": 0.27,
+      "gross_volume": 0.054000000000000006,
+      "groups": [
+        "component-category:plumbing"
+      ]
+    },
+    "c-bump": {
+      "kind": "component",
+      "type_id": "fam-table",
+      "length": 0.8,
+      "width": 1.6,
+      "height": 0.74,
+      "perimeter": 4.800000000000001,
+      "gross_area": 1.2800000000000002,
+      "net_area": 1.2800000000000002,
+      "gross_volume": 0.9472000000000002,
+      "groups": [
+        "component-category:furniture"
+      ]
+    },
+    "c-chair": {
+      "kind": "component",
+      "type_id": "fam-chair",
+      "length": 0.4500000000000002,
+      "width": 0.4500000000000002,
+      "height": 0.5,
+      "perimeter": 1.8000000000000007,
+      "gross_area": 0.2025,
+      "net_area": 0.2025,
+      "gross_volume": 0.020250000000000004,
+      "groups": [
+        "component-category:furniture"
+      ]
+    },
+    "c-chair-high": {
+      "kind": "component",
+      "type_id": "fam-chair",
+      "length": 0.4500000000000002,
+      "width": 0.4500000000000002,
+      "height": 0.5,
+      "perimeter": 1.8000000000000007,
+      "gross_area": 0.2025,
+      "net_area": 0.2025,
+      "gross_volume": 0.020250000000000004,
+      "groups": [
+        "component-category:furniture"
+      ]
+    },
+    "c-diffuser-lost": {
+      "kind": "component",
+      "type_id": "fam-diffuser",
+      "length": 0.6000000000000001,
+      "width": 0.6000000000000001,
+      "height": 0.08000000000000007,
+      "perimeter": 2.4000000000000004,
+      "gross_area": 0.36,
+      "net_area": 0.36,
+      "gross_volume": 0.0288,
+      "groups": [
+        "component-category:mechanical",
+        "component-system:supply"
+      ]
+    },
+    "c-diffuser-ok": {
+      "kind": "component",
+      "type_id": "fam-diffuser",
+      "length": 0.5999999999999999,
+      "width": 0.5999999999999996,
+      "height": 0.08000000000000007,
+      "perimeter": 2.399999999999999,
+      "gross_area": 0.36,
+      "net_area": 0.36,
+      "gross_volume": 0.0288,
+      "groups": [
+        "component-category:mechanical",
+        "component-system:supply"
+      ]
+    },
+    "c-ghost": {
+      "kind": "component",
+      "type_id": "fam-ghost",
+      "length": 0.0,
+      "width": 0.0,
+      "height": 0.0,
+      "perimeter": 0.0,
+      "gross_area": 0.0,
+      "net_area": 0.0,
+      "gross_volume": 0.0,
+      "groups": []
+    },
+    "c-high": {
+      "kind": "component",
+      "type_id": "fam-table",
+      "length": 0.7999999999999998,
+      "width": 1.5999999999999996,
+      "height": 0.7400000000000002,
+      "perimeter": 4.799999999999999,
+      "gross_area": 1.2800000000000002,
+      "net_area": 1.2800000000000002,
+      "gross_volume": 0.9472000000000002,
+      "groups": [
+        "component-category:furniture"
+      ]
+    },
+    "c-lamp": {
+      "kind": "component",
+      "type_id": "fam-lamp",
+      "length": 0.2999999999999998,
+      "width": 0.2999999999999998,
+      "height": 0.1499999999999999,
+      "perimeter": 1.1999999999999993,
+      "gross_area": 0.09,
+      "net_area": 0.09,
+      "gross_volume": 0.0135,
+      "groups": [
+        "component-category:lighting",
+        "component-system:lighting"
+      ]
+    },
+    "c-niche": {
+      "kind": "component",
+      "type_id": "fam-niche",
+      "length": 0.29999999999999893,
+      "width": 0.5,
+      "height": 0.6,
+      "perimeter": 1.5999999999999979,
+      "gross_area": 0.15,
+      "net_area": 0.15,
+      "gross_volume": 0.09,
+      "groups": [
+        "component-category:casework"
+      ]
+    },
+    "c-nowhere": {
+      "kind": "component",
+      "type_id": "fam-basin",
+      "length": 0.45000000000000007,
+      "width": 0.6000000000000001,
+      "height": 0.2,
+      "perimeter": 2.1000000000000005,
+      "gross_area": 0.27,
+      "net_area": 0.27,
+      "gross_volume": 0.054000000000000006,
+      "groups": [
+        "component-category:plumbing"
+      ]
+    },
+    "c-profile": {
+      "kind": "component",
+      "type_id": "fam-hea",
+      "length": 0.0,
+      "width": 0.0,
+      "height": 0.0,
+      "perimeter": 0.0,
+      "gross_area": 0.0,
+      "net_area": 0.0,
+      "gross_volume": 0.0,
+      "groups": [
+        "component-category:profile"
+      ]
+    },
+    "c-table": {
+      "kind": "component",
+      "type_id": "fam-table",
+      "length": 0.8000000000000005,
+      "width": 1.600000000000001,
+      "height": 0.74,
+      "perimeter": 4.8000000000000025,
+      "gross_area": 1.2800000000000002,
+      "net_area": 1.2800000000000002,
+      "gross_volume": 0.9472000000000002,
+      "groups": [
+        "component-category:furniture"
+      ]
+    },
+    "c-table-wide": {
+      "kind": "component",
+      "type_id": "fam-table",
+      "length": 0.8,
+      "width": 1.7999999999999998,
+      "height": 0.74,
+      "perimeter": 5.199999999999999,
+      "gross_area": 1.4400000000000002,
+      "net_area": 1.4400000000000002,
+      "gross_volume": 1.0656,
+      "groups": [
+        "component-category:furniture"
+      ]
+    },
+    "m-lighting": {
+      "kind": "mep",
+      "type_id": "lighting",
+      "length": 3.500199980003999,
+      "width": 0.2,
+      "height": 0.05,
+      "perimeter": 0.5,
+      "gross_area": 0.010000000000000002,
+      "net_area": 1.7500999900019996,
+      "gross_volume": 0.03500199980004,
+      "groups": [
+        "mep-system:lighting",
+        "mep-size:200x50"
+      ]
+    },
+    "m-power": {
+      "kind": "mep",
+      "type_id": "power",
+      "length": 5.0,
+      "width": 0.3,
+      "height": 0.1,
+      "perimeter": 0.8,
+      "gross_area": 0.03,
+      "net_area": 4.0,
+      "gross_volume": 0.15,
+      "groups": [
+        "mep-system:power",
+        "mep-size:300x100"
+      ]
+    },
+    "m-return": {
+      "kind": "mep",
+      "type_id": "return",
+      "length": 0.0,
+      "width": 0.4,
+      "height": 0.25,
+      "perimeter": 1.3,
+      "gross_area": 0.1,
+      "net_area": 0.0,
+      "gross_volume": 0.0,
+      "groups": [
+        "mep-system:return",
+        "mep-size:400x250"
+      ]
+    },
+    "m-supply": {
+      "kind": "mep",
+      "type_id": "supply",
+      "length": 5.0,
+      "width": 0.3,
+      "height": 0.2,
+      "perimeter": 1.0,
+      "gross_area": 0.06,
+      "net_area": 5.0,
+      "gross_volume": 0.3,
+      "groups": [
+        "mep-system:supply",
+        "mep-size:300x200"
+      ]
+    },
+    "m-waste": {
+      "kind": "mep",
+      "type_id": "waste",
+      "length": 2.6000000000000005,
+      "width": 0.11,
+      "height": 0.11,
+      "perimeter": 0.34557519189487723,
+      "gross_area": 0.009503317777109124,
+      "net_area": 0.898495498926681,
+      "gross_volume": 0.02470862622048373,
+      "groups": [
+        "mep-system:waste",
+        "mep-size:Ø110"
+      ]
+    },
+    "m-water": {
+      "kind": "mep",
+      "type_id": "domestic-water",
+      "length": 3.0,
+      "width": 0.1,
+      "height": 0.1,
+      "perimeter": 0.3141592653589793,
+      "gross_area": 0.007853981633974483,
+      "net_area": 0.9424777960769379,
+      "gross_volume": 0.02356194490192345,
+      "groups": [
+        "mep-system:domestic-water",
+        "mep-size:Ø100"
+      ]
+    }
+  },
+  "groups": {
+    "component-category:furniture": {
+      "count": 7,
+      "length": 4.1000000000000005,
+      "area": 5.685000000000001,
+      "gross_volume": 3.9477
+    },
+    "component-category:plumbing": {
+      "count": 3,
+      "length": 1.3500000000000003,
+      "area": 0.81,
+      "gross_volume": 0.16200000000000003
+    },
+    "component-category:mechanical": {
+      "count": 2,
+      "length": 1.2,
+      "area": 0.72,
+      "gross_volume": 0.0576
+    },
+    "component-system:supply": {
+      "count": 2,
+      "length": 1.2,
+      "area": 0.72,
+      "gross_volume": 0.0576
+    },
+    "component-category:lighting": {
+      "count": 1,
+      "length": 0.2999999999999998,
+      "area": 0.09,
+      "gross_volume": 0.0135
+    },
+    "component-system:lighting": {
+      "count": 1,
+      "length": 0.2999999999999998,
+      "area": 0.09,
+      "gross_volume": 0.0135
+    },
+    "component-category:casework": {
+      "count": 1,
+      "length": 0.29999999999999893,
+      "area": 0.15,
+      "gross_volume": 0.09
+    },
+    "component-category:profile": {
+      "count": 1,
+      "length": 0.0,
+      "area": 0.0,
+      "gross_volume": 0.0
+    },
+    "mep-system:lighting": {
+      "count": 1,
+      "length": 3.500199980003999,
+      "area": 1.7500999900019996,
+      "gross_volume": 0.03500199980004
+    },
+    "mep-size:200x50": {
+      "count": 1,
+      "length": 3.500199980003999,
+      "area": 1.7500999900019996,
+      "gross_volume": 0.03500199980004
+    },
+    "mep-system:power": {
+      "count": 1,
+      "length": 5.0,
+      "area": 4.0,
+      "gross_volume": 0.15
+    },
+    "mep-size:300x100": {
+      "count": 1,
+      "length": 5.0,
+      "area": 4.0,
+      "gross_volume": 0.15
+    },
+    "mep-system:return": {
+      "count": 1,
+      "length": 0.0,
+      "area": 0.0,
+      "gross_volume": 0.0
+    },
+    "mep-size:400x250": {
+      "count": 1,
+      "length": 0.0,
+      "area": 0.0,
+      "gross_volume": 0.0
+    },
+    "mep-system:supply": {
+      "count": 1,
+      "length": 5.0,
+      "area": 5.0,
+      "gross_volume": 0.3
+    },
+    "mep-size:300x200": {
+      "count": 1,
+      "length": 5.0,
+      "area": 5.0,
+      "gross_volume": 0.3
+    },
+    "mep-system:waste": {
+      "count": 1,
+      "length": 2.6000000000000005,
+      "area": 0.898495498926681,
+      "gross_volume": 0.02470862622048373
+    },
+    "mep-size:Ø110": {
+      "count": 1,
+      "length": 2.6000000000000005,
+      "area": 0.898495498926681,
+      "gross_volume": 0.02470862622048373
+    },
+    "mep-system:domestic-water": {
+      "count": 1,
+      "length": 3.0,
+      "area": 0.9424777960769379,
+      "gross_volume": 0.02356194490192345
+    },
+    "mep-size:Ø100": {
+      "count": 1,
+      "length": 3.0,
+      "area": 0.9424777960769379,
+      "gross_volume": 0.02356194490192345
+    }
+  },
+  "findings": [
+    {
+      "code": "component.in-wall",
+      "elements": [
+        "c-bump",
+        "w-west"
+      ],
+      "missing": [],
+      "values": {
+        "overlap_area": 0.08000000000000002,
+        "overlap_height": 0.74
+      }
+    },
+    {
+      "code": "component.in-wall",
+      "elements": [
+        "c-niche",
+        "w-east"
+      ],
+      "missing": [],
+      "values": {
+        "overlap_area": 0.037458165989318656,
+        "overlap_height": 0.6
+      }
+    },
+    {
+      "code": "component.outside-storey",
+      "elements": [
+        "c-high"
+      ],
+      "missing": [],
+      "values": {
+        "height": 3.5,
+        "storey_height": 3.0,
+        "distance": 0.0
+      }
+    },
+    {
+      "code": "component.override",
+      "elements": [
+        "c-bad-override"
+      ],
+      "missing": [
+        "depth",
+        "s-table",
+        "width"
+      ],
+      "values": {}
+    },
+    {
+      "code": "mep.clash",
+      "elements": [
+        "m-power",
+        "m-water"
+      ],
+      "missing": [],
+      "values": {
+        "distance": 0.04999999999999982,
+        "reach": 0.2
+      }
+    },
+    {
+      "code": "mep.clash",
+      "elements": [
+        "m-supply",
+        "m-water"
+      ],
+      "missing": [],
+      "values": {
+        "distance": 0.04999999999999982,
+        "reach": 0.2
+      }
+    },
+    {
+      "code": "mep.degenerate",
+      "elements": [
+        "m-return"
+      ],
+      "missing": [],
+      "values": {
+        "width": 0.4,
+        "height": 0.25,
+        "length": 0.0
+      }
+    },
+    {
+      "code": "mep.terminal-unconnected",
+      "elements": [
+        "c-diffuser-lost"
+      ],
+      "missing": [],
+      "values": {
+        "distance": 0.05
+      }
+    },
+    {
+      "code": "reference.component-family",
+      "elements": [
+        "c-ghost"
+      ],
+      "missing": [
+        "fam-ghost"
+      ],
+      "values": {}
+    },
+    {
+      "code": "reference.component-family",
+      "elements": [
+        "c-profile"
+      ],
+      "missing": [
+        "fam-hea"
+      ],
+      "values": {}
+    },
+    {
+      "code": "reference.component-host",
+      "elements": [
+        "c-nowhere"
+      ],
+      "missing": [
+        "w-nowhere"
+      ],
+      "values": {}
+    }
+  ]
+}

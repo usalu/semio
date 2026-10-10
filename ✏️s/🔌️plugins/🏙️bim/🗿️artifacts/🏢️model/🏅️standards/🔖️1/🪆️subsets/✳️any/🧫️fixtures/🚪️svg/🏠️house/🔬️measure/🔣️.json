@@ -1,10 +1,11 @@
 {
-  "width": 160.75,
-  "height": 582.0,
-  "storeys": {
-    "st-roof": {
-      "name": "Roof",
-      "level": 2,
+  "width": 180.5,
+  "height": 1418.568,
+  "views": {
+    "v-plan-st-roof": {
+      "name": "Plan Roof",
+      "kind": "plan",
+      "scale": 100,
       "regions": 0,
       "lines": 10,
       "texts": 6,
@@ -21,32 +22,38 @@
         "projection": 30.4,
         "hidden": 0.0,
         "annotation": 30.0
-      }
+      },
+      "notation": {},
+      "printed": []
     },
-    "st-first": {
-      "name": "First",
-      "level": 1,
-      "regions": 7,
-      "lines": 41,
+    "v-plan-st-first": {
+      "name": "Plan First",
+      "kind": "plan",
+      "scale": 100,
+      "regions": 5,
+      "lines": 36,
       "texts": 7,
       "styles": {
-        "cut": 14,
-        "projection": 13,
-        "hidden": 9,
+        "cut": 10,
+        "projection": 9,
+        "hidden": 10,
         "annotation": 12
       },
-      "arcs": 14,
-      "pocheArea": 1.8849999999999996,
+      "arcs": 12,
+      "pocheArea": 0.025,
       "lineLength": {
-        "cut": 24.412609238233735,
-        "projection": 52.2,
-        "hidden": 9.0,
+        "cut": 22.612609238233738,
+        "projection": 46.0,
+        "hidden": 25.6,
         "annotation": 53.71851648071345
-      }
+      },
+      "notation": {},
+      "printed": []
     },
-    "st-ground": {
-      "name": "Ground",
-      "level": 0,
+    "v-plan-st-ground": {
+      "name": "Plan Ground",
+      "kind": "plan",
+      "scale": 100,
       "regions": 13,
       "lines": 57,
       "texts": 7,
@@ -63,11 +70,14 @@
         "projection": 70.50001592072772,
         "hidden": 22.8,
         "annotation": 67.95851648071344
-      }
+      },
+      "notation": {},
+      "printed": []
     },
-    "st-base": {
-      "name": "Basement",
-      "level": -1,
+    "v-plan-st-base": {
+      "name": "Plan Basement",
+      "kind": "plan",
+      "scale": 100,
       "regions": 0,
       "lines": 9,
       "texts": 6,
@@ -84,15 +94,167 @@
         "projection": 0.0,
         "hidden": 0.0,
         "annotation": 30.0
-      }
+      },
+      "notation": {},
+      "printed": []
+    },
+    "v-section-a": {
+      "name": "Section A",
+      "kind": "section",
+      "scale": 100,
+      "regions": 38,
+      "lines": 1630,
+      "texts": 5,
+      "styles": {
+        "cut": 21,
+        "projection": 1642,
+        "hidden": 0,
+        "annotation": 5
+      },
+      "arcs": 0,
+      "pocheArea": 11.957455999999993,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 329.71731622776576,
+        "hidden": 0.0,
+        "annotation": 71.5
+      },
+      "notation": {},
+      "printed": []
+    },
+    "v-section-b": {
+      "name": "Section B",
+      "kind": "section",
+      "scale": 100,
+      "regions": 41,
+      "lines": 365,
+      "texts": 5,
+      "styles": {
+        "cut": 20,
+        "projection": 381,
+        "hidden": 0,
+        "annotation": 5
+      },
+      "arcs": 0,
+      "pocheArea": 7.70778806,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 286.7524465221087,
+        "hidden": 0.0,
+        "annotation": 51.5
+      },
+      "notation": {},
+      "printed": []
+    },
+    "v-elevation-east": {
+      "name": "East",
+      "kind": "elevation",
+      "scale": 100,
+      "regions": 31,
+      "lines": 2395,
+      "texts": 5,
+      "styles": {
+        "cut": 0,
+        "projection": 2421,
+        "hidden": 0,
+        "annotation": 5
+      },
+      "arcs": 0,
+      "pocheArea": 0.0,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 241.79348489140506,
+        "hidden": 0.0,
+        "annotation": 51.5
+      },
+      "notation": {},
+      "printed": []
+    },
+    "v-elevation-north": {
+      "name": "North",
+      "kind": "elevation",
+      "scale": 100,
+      "regions": 46,
+      "lines": 1300,
+      "texts": 5,
+      "styles": {
+        "cut": 0,
+        "projection": 1341,
+        "hidden": 0,
+        "annotation": 5
+      },
+      "arcs": 0,
+      "pocheArea": 0.0,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 336.4677515488369,
+        "hidden": 0.0,
+        "annotation": 71.5
+      },
+      "notation": {},
+      "printed": []
+    },
+    "v-elevation-south": {
+      "name": "South",
+      "kind": "elevation",
+      "scale": 100,
+      "regions": 46,
+      "lines": 1098,
+      "texts": 5,
+      "styles": {
+        "cut": 0,
+        "projection": 1139,
+        "hidden": 0,
+        "annotation": 5
+      },
+      "arcs": 0,
+      "pocheArea": 0.0,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 321.0212530911858,
+        "hidden": 0.0,
+        "annotation": 71.5
+      },
+      "notation": {},
+      "printed": []
+    },
+    "v-elevation-west": {
+      "name": "West",
+      "kind": "elevation",
+      "scale": 100,
+      "regions": 31,
+      "lines": 1862,
+      "texts": 5,
+      "styles": {
+        "cut": 0,
+        "projection": 1888,
+        "hidden": 0,
+        "annotation": 5
+      },
+      "arcs": 0,
+      "pocheArea": 0.0,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 199.35638489140487,
+        "hidden": 0.0,
+        "annotation": 51.5
+      },
+      "notation": {},
+      "printed": []
     }
   },
   "audit": {
     "sampledPocheArea": {
-      "st-roof": 0.0,
-      "st-first": 1.885,
-      "st-ground": 8.437667707,
-      "st-base": 0.0
+      "v-plan-st-roof": 0.0,
+      "v-plan-st-first": 0.025,
+      "v-plan-st-ground": 8.437667707,
+      "v-plan-st-base": 0.0,
+      "v-section-a": 11.957456,
+      "v-section-b": 7.70778806,
+      "v-elevation-east": 0.0,
+      "v-elevation-north": 0.0,
+      "v-elevation-south": 0.0,
+      "v-elevation-west": 0.0
     }
   }
 }

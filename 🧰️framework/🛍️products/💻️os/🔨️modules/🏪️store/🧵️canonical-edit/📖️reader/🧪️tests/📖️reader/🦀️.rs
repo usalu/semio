@@ -1,6 +1,6 @@
 //! 🧪️ Typed reader byte parity, exact Arc ownership, cancellation, and worker laws.
 
-use super::super::borrowed_tests::{MapLifetime, MapMutation, MapRetirementFactory, fixture};
+use super::super::borrowed_tests::{MapLifetime, MapMutation, MapRetirementFactory, byte_grant, fixture, quoted_close_grant};
 use super::*;
 use std::sync::atomic::Ordering;
 
@@ -38,6 +38,10 @@ fn finish(reader: &mut ArtifactCanonicalJsonReader<Edit<MapMutation>>, bytes: us
         }
     }
     panic!("canonical reader did not finish");
+}
+
+fn reader_close_grant(reader: &ArtifactCanonicalJsonReader<Edit<MapMutation>>) -> RetainedCloneGrant {
+    quoted_close_grant(reader.retirement_demands(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).unwrap(), ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)
 }
 
 fn close(reader: &mut ArtifactCanonicalJsonReader<Edit<MapMutation>>) {
@@ -274,6 +278,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
                     RetainedCloneStep::Complete(progress) => { assert!(progress.fits(*RETIREMENT_POLICY));physical_released+=progress.released_bytes;break; },
                 }
             }
+            let retired = STRING_RELEASED.with(std::cell::Cell::get) - scaffold;
             assert!(reader.terminal_is_empty());
             assert_eq!(failure.as_ref().map(|error|error.message.as_ref()), fixture["expectedError"].as_str());
             assert_eq!(actual, prefix);

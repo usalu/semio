@@ -43,7 +43,7 @@ pub fn default_node_height() -> f64 {
 pub const DAG_CHANNEL_ROW_HEIGHT: f64 = ui_styling::metrics::dag::CHANNEL_ROW_HEIGHT;
 
 /// 🔌️ Visual shape of a port handle cap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum PortShape {
     #[default]
@@ -52,7 +52,7 @@ pub enum PortShape {
 }
 
 /// 📐️ Edge routing style between port handles.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum EdgeRouteStyle {
     #[default]
@@ -168,7 +168,7 @@ pub struct DagMedia {
 }
 
 /// 🎬️ Screen media kind discriminator.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DagMediaKind {
     Image,

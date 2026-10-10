@@ -1,0 +1,20 @@
+# Original Read Return Custody
+
+UI exploration found that typed try_return_to_registry_witness reports Err(self) after the shared helper has already dropped the original read alias and taken its lease. Its rejection contract is false. Add a single typed/erased original return boundary that acquires the original registry lock, validates the exact slot, original payload pointer and generation before any ownership mutation, marks the exact return once, drops only the alias while the original slot is still protected, then transfers the original lease registry handle into the witness. Busy, stale, changed or already returned slots preserve every original field. Normal eager return/drop currently has a separate raw Arc strong-count race; do not adopt it as physical authority or claim it repaired by this narrow boundary. Native identity/zero allocation laws and neutral independent JSON Patch refusal expectations precede implementation.
+
+
+## Source Gate And Current Native Status
+
+The original source gate red completed 9 passed / 1 failed / 190 assertions at the absent original return boundary (`🗑️generated/read-red-owner.log`). After implementation and correction of a literal match selector, the gate completed exit 0: 10 passed / 194 assertions across 4 files, strict TypeScript included (`🗑️generated/read-green-owner.log`). The actual typed and erased public API now validates under the original registry lock, marks once, releases only the protected read alias, and transfers the original lease registry handle. A real native allocator law covers busy, stale, already-returned and changed payload refusals, exact read/lease pointers, no allocation or physical release, success handback and funded witness close. It is authored and added to the existing native owner selection, but has not executed. UI is adopting this seam into its original read retirement. Native read-return check 2 is running.
+
+Native production check 6 completed with Plugin 63 errors / 842 warnings and exit 1 after Kernel production compilation. The read helper edit happened during that check and does not yet have conclusive compilation attribution. Normal eager read Drop, bare lease return and raw Arc payload strong-count fast path remain separate open physical custody gaps.
+
+## Actual Native Gate Follow-up
+
+The returned-read native selection exited 1 before executing its laws: Kernel lib-test compilation produced 75 structured errors and 1,475 warnings. Diagnostics are frozen under `🗑️generated/read-native2-errors.json`. Root repaired the duplicate retained-clone FixtureSource fixture type and missing RetirementDemand import; the UI agent repaired the original-read fixture include. These repairs remain unverified natively. Concurrent Presence fixture migrations are preserved.
+
+Production native check 7 exited 1 before compilation: Draw Cargo.lock was stale under --locked after font oracle dev dependencies changed. The font lane is repairing the selected lock through repository preparation. Frozen evidence: `🗑️generated/native7-owner.log`. This is neither a compiled regression count nor a passed law.
+
+## Actual Native Read Boundary Pass
+
+Returned-read replay 3 exited 0. Kernel lib-test compilation succeeded and the exact runner executed all three selected laws: original returned registry alias physical custody, parallel aliases credit exactly one frame, and original read refusals preserve payload and lease. Actual heap DEBUG output records 35,072 original registry bytes, zero release for a shared-live alias, exactly 35,072 for sole/races-to-sole, one parallel frame winner, and zero terminal destructor release. The new locked return refusal law passed busy/stale/already-returned/changed-owner and success identity checks. Frozen `🗑️generated/read-native3-owner.log`, exact receipt `🗑️generated/returned-read/exact-cargo-laws-8iCbOt/00/receipt.json`. This native boundary pass supersedes the prior 75-error lib-test gate for this captured source snapshot. It does not establish the complete mounted editor or the newly authored export integration law.

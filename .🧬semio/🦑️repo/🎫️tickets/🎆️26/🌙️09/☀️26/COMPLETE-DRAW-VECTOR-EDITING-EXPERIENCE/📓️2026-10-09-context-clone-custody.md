@@ -1,0 +1,30 @@
+# Context Clone Custody
+
+The original ToolRun entity set is still raw `Arc<BTreeSet<u64>>`; positive whole-context closure is not accepted. Actual published set edits need owned paged maps and caller-funded original-source capture. Existing owning insertion/removal cursors now capture genuine sealed workspaces, return the same original map after comparison bindings close, and retain removed entries/pages until caller-funded close.
+
+Value source production now captures original typed authority in `SealedShared<A>`, with a separate sealed projection metadata lease. Constructor admission prices both headers, original payload scaffold and alias copy before allocation. Binding creation requires the actual clone grant and yields a separate physical receipt transition. Original recovery uses funded atomic `try_unwrap`, preserves the original on live aliases or denied grants, and returns the exact captured workspace after all aliases return. No raw Arc/Weak or reconstructed source API remains in this producer.
+
+Store snapshot clone now captures its actual original SnapshotRead through `admit_borrowed`; owned projection and canonical JSON tree producers propagate caller grants and physical receipts. Standalone Value read capsules preserve original lease identity and offer funded original handback; their raw public registry graph has no enforced issuer and is explicitly retained/refused for body retirement. They do not assert positive raw registry closure.
+
+The source neutral corpus is schema-validated and independently replayed with fast-json-patch. Native laws check original string pointers, denied constructor/binding/handback grants, live projection refusal, same-workspace recovery and allocator receipts. Current native checks are compiler-frontier evidence only: the first source gate stopped at22 old test-only consumers; the next gate had one read-fixture trait import, now being corrected by its owner. No new native source law pass is claimed.
+
+The actual Draw check completed EXIT1 at four DXF RetireOwned diagnostics after Kernel/Plugin production compiled. UI has authored the genuine DXF facets. Earlier accepted sealed-handle, Mutex, projection and ViewModel receipts remain in the context shared authority report. Whole mounted context still retains unsupported children/peers/ToolRun/gesture originals and needs actual producer integration plus positive physical/cancellation/fault laws.
+
+## Accepted Source Boundary
+
+Actual registered Source native gate 40897 completed EXIT0, artifact `semio-nextest-EdBcyF`, frozen `context-source-native-green.log`. Both native laws passed over all three shared cases. Same workspace recovery observed original33/28/31 + born27752 = released27785/27780/27783. Live projections prevent original recovery, denied item/copy/release/depth grants preserve the same source, and final original strings retain their original pointers. Alias closure observed original33/28/31 + born37008 = released37041/37036/37039. Its typed projection still reads the original payload after the source and another binding have closed. All terminal drops released0.
+
+Shared Source TS5/66 and strict types completed EXIT0, frozen `context-source-typescript-green.log`. The actual whole Value lib-test artifact compiled the current core APIs, although only the two selected native laws executed in this gate. UI separately refreshed nine map native laws and actual insertion/removal frame adapters; their evidence is owned by that lane.
+
+The source field/derive, original projection, canonical JSON tree, Store snapshot producer and old actual Value test consumers now use the original grant-bearing API. No raw compatibility constructor was restored. Standalone Value read handback fixtures are authored by UI, and their focused physical replay remains separate from this Source receipt.
+
+Next: actual ToolRun progress metadata has an original-leaf retirement test using the existing ticks corpus and independent TS conformance. It is running first as a missing-authority red gate before implementing genuine field facets. Actual entity/payload publishers and gesture/child/peer graphs remain retained and are not accepted as positive whole-context closure.## ToolRun Metadata And Current Context Capture
+
+Actual ToolRun original-progress route10927 completed EXIT0. Native1law passed: populated metadata original112 + born6048 = released6160; empty metadata0 + born5440 = released5440. Denied item/capacity/release grants preserve original leaves, every observed physical turn matches its receipt, and terminal Drop releases0. Relevant schema/tick third-party conformance passed4tests/25assertions. Frozen receipt: `toolrun-metadata-green.log`.
+
+The current context partition moves the actual ToolRun string, identity, state and progress metadata into supported owned fields; entity/payload shared originals remain retained separately. Current registered raw-source route97299 passed18tests/525assertions and strict source with EXIT0, frozen `context-source-current-green.log`. This proves current source contracts, not positive whole-context teardown. Published ToolRun entity/payload sources plus child/peer/gesture originals still need genuine producer integration and actual whole-context complete/cancel/fault laws.
+## Refreshed Original Source Birth
+
+The historical source birth corpus now declares one source alias copy, independent of platform byte width, and includes denied copy currency alongside items/capacity/depth. Its native issuer law now uses the actual strong-only SealedShared authority; raw Arc/SharedControlledRetirement has been removed from that law. Registered native93178 passed2laws, artifact `semio-nextest-9vNCwz`: original160+born27656=released27816, sealed original authority160+born36904=released37064. Frozen `source-owned-birth-green.log`. The independent fast-json-patch oracle70188 passed1test/20assertions, frozen `source-owned-birth-typescript-green.log`.
+
+This is actual source birth/authority evidence. It does not accept remaining raw ToolRun/child/peer producers or unrelated historical generic raw shared owners.

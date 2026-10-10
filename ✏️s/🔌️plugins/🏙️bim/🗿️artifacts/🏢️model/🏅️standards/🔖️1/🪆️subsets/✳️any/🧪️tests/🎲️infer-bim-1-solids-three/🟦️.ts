@@ -23,8 +23,8 @@ import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../
 // #endregion 🔌️Adapters
 
 // #region 🧫️Cases
-const CASES = ["straight-openings", "room-joins", "curtain-grid", "ceilings-meshes"] as const;
-const DIRECTORY = { "straight-openings": "🚪️straight-openings", "room-joins": "🧩️room-joins", "curtain-grid": "🏬️curtain-grid", "ceilings-meshes": "🪵️ceilings-meshes" } as const;
+const CASES = ["straight-openings", "room-joins", "curtain-grid", "ceilings-meshes", "frame-tilt-joins", "curtain-overrides", "components-mep"] as const;
+const DIRECTORY = { "straight-openings": "🚪️straight-openings", "room-joins": "🧩️room-joins", "curtain-grid": "🏬️curtain-grid", "ceilings-meshes": "🪵️ceilings-meshes", "frame-tilt-joins": "📐️frame-tilt-joins", "curtain-overrides": "🪟️curtain-overrides", "components-mep": "🪑️components-mep" } as const;
 const uriOf = (name: (typeof CASES)[number]) => `shared://💡️inferences/🧊️element-solids/${DIRECTORY[name]}/🔣️.json`;
 
 type Mesh = { positions: number[]; indices: number[] };

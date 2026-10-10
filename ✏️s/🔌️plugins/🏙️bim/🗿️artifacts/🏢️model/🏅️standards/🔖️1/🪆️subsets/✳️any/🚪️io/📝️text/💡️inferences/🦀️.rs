@@ -22,6 +22,8 @@ pub mod diagnostics;
 pub mod element_solids;
 #[path = "🛝️ramp-runs/🦀️.rs"]
 pub mod ramp_runs;
+#[path = "🪑️components/🦀️.rs"]
+pub mod components;
 #[path = "🖼️view-linework/🦀️.rs"]
 pub mod view_linework;
 #[path = "📋️schedules/🦀️.rs"]

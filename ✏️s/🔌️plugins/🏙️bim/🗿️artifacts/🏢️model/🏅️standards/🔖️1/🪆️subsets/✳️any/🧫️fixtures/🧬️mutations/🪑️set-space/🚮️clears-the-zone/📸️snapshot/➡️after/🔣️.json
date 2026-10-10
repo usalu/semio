@@ -1,1 +1,262 @@
-{}
+{
+  "beam_types": {},
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "classifications": {},
+  "column_types": {},
+  "columns": {},
+  "curtain_walls": {},
+  "door_types": {},
+  "grids": {},
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    },
+    "m-paint": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Paint",
+      "specific_heat": 900.0
+    },
+    "m-steel": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Steel",
+      "specific_heat": 900.0
+    },
+    "m-tile": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Tile",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {
+    "sp-1": {
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 2.0,
+            "y": 2.0
+          }
+        }
+      },
+      "name": "Kitchen",
+      "number": "0.01",
+      "phase": "New",
+      "storey": "st-ground",
+      "usage": "Kitchen"
+    },
+    "sp-2": {
+      "boundary": {
+        "Explicit": {
+          "outline": [
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 3.0,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 3.0,
+                "y": 2.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.0,
+                "y": 2.0
+              }
+            }
+          ]
+        }
+      },
+      "name": "Hall",
+      "number": "0.02",
+      "phase": "New",
+      "storey": "st-ground",
+      "usage": "Circulation"
+    },
+    "sp-3": {
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 5.0,
+            "y": 3.0
+          }
+        }
+      },
+      "name": "Bedroom",
+      "number": "1.01",
+      "phase": "New",
+      "storey": "st-first",
+      "usage": "Sleeping"
+    }
+  },
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    },
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  },
+  "window_types": {},
+  "zones": {
+    "z-day": {
+      "category": "Ventilation",
+      "name": "Day zone",
+      "occupancy_density": 0.05
+    },
+    "z-night": {
+      "category": "Ventilation",
+      "name": "Night zone",
+      "occupancy_density": 0.02
+    }
+  }
+}

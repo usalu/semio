@@ -37,8 +37,8 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn route_is_deterministic() {
-        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static AB: IoEntry = IoEntry { owned_serializer: None, from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BC: IoEntry = IoEntry { owned_serializer: None, from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
 
         let mut order1: EntryMap = BTreeMap::new();
         order1.insert(key(A, B).await, &AB);
@@ -55,10 +55,10 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn route_respects_max_hops() {
-        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static CD: IoEntry = IoEntry { from: C, into: D, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static DE: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static AB: IoEntry = IoEntry { owned_serializer: None, from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BC: IoEntry = IoEntry { owned_serializer: None, from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static CD: IoEntry = IoEntry { owned_serializer: None, from: C, into: D, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static DE: IoEntry = IoEntry { owned_serializer: None, from: D, into: E, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
         let mut registry: EntryMap = BTreeMap::new();
         registry.insert(key(A, B).await, &AB);
         registry.insert(key(B, C).await, &BC);
@@ -72,9 +72,9 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn route_never_cycles() {
-        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static BA: IoEntry = IoEntry { from: B, into: A, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static AB: IoEntry = IoEntry { owned_serializer: None, from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BA: IoEntry = IoEntry { owned_serializer: None, from: B, into: A, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BC: IoEntry = IoEntry { owned_serializer: None, from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
         let mut registry: EntryMap = BTreeMap::new();
         registry.insert(key(A, B).await, &AB);
         registry.insert(key(B, A).await, &BA);
@@ -86,9 +86,9 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn route_prefers_higher_minimum_fidelity() {
-        static DIRECT: IoEntry = IoEntry { from: A, into: C, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static DIRECT: IoEntry = IoEntry { owned_serializer: None, from: A, into: C, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static AB: IoEntry = IoEntry { owned_serializer: None, from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BC: IoEntry = IoEntry { owned_serializer: None, from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
         let mut registry: EntryMap = BTreeMap::new();
         registry.insert(key(A, C).await, &DIRECT);
         registry.insert(key(A, B).await, &AB);
@@ -105,8 +105,8 @@ mod laws {
         fn always_high(_: &IoPayload) -> Confidence {
             Confidence::High
         }
-        static CARRIER_ENTRY: IoEntry = IoEntry { from: CARRIER_TEXT, into: A, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: Some(always_high), run: passthrough };
-        static NON_CARRIER_ENTRY: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: Some(always_high), run: passthrough };
+        static CARRIER_ENTRY: IoEntry = IoEntry { owned_serializer: None, from: CARRIER_TEXT, into: A, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: Some(always_high), run: passthrough };
+        static NON_CARRIER_ENTRY: IoEntry = IoEntry { owned_serializer: None, from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: Some(always_high), run: passthrough };
         let mut registry: EntryMap = BTreeMap::new();
         registry.insert(key(CARRIER_TEXT, A).await, &CARRIER_ENTRY);
         registry.insert(key(B, C).await, &NON_CARRIER_ENTRY);
@@ -117,8 +117,8 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn duplicate_entry_is_a_typed_error() {
-        static ENTRY_A: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static ENTRY_B: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static ENTRY_A: IoEntry = IoEntry { owned_serializer: None, from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static ENTRY_B: IoEntry = IoEntry { owned_serializer: None, from: A, into: B, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
 
         let mut existing: EntryMap = BTreeMap::new();
         existing.insert(key(A, B).await, &ENTRY_A);
@@ -132,9 +132,9 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn registration_is_all_or_nothing() {
-        static ORIGINAL: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static CONFLICTING: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
-        static FRESH: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static ORIGINAL: IoEntry = IoEntry { owned_serializer: None, from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static CONFLICTING: IoEntry = IoEntry { owned_serializer: None, from: A, into: B, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static FRESH: IoEntry = IoEntry { owned_serializer: None, from: D, into: E, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
 
         let mut existing: EntryMap = BTreeMap::new();
         existing.insert(key(A, B).await, &ORIGINAL);
@@ -225,5 +225,23 @@ mod laws {
 
         let non_conforming = with_control(|control|(entry.run)(&IoPayload::Text("42".to_string()),control)).expect("deserialize still succeeds when conformance is unhappy");
         assert_eq!(non_conforming.diagnostics.len(), 1, "CONFORMANCE's diagnostics must reach the caller after a successful deserialize");
+    }
+
+    #[test]
+    fn owned_serializer_factory_identity_is_part_of_registration(){
+        use semio_framework_value::retained_clone::{RetainedCloneBirthDemand,RetainedCloneGrant};
+        fn demand_a(_: &OwnedSerializerRequest)->Result<RetainedCloneBirthDemand,ValueError>{Ok(RetainedCloneBirthDemand{capacity_bytes:128,depth:1})}
+        fn demand_b(_: &OwnedSerializerRequest)->Result<RetainedCloneBirthDemand,ValueError>{Ok(RetainedCloneBirthDemand{capacity_bytes:129,depth:1})}
+        fn admit_a(request:OwnedSerializerRequest,_:RetainedCloneGrant)->Result<OwnedSerializerAdmission,OwnedSerializerRefusal>{Err(OwnedSerializerRefusal{error:ValueError::literal(ValueRefusalKind::UnsupportedOwner,"identity A preserves original request"),request,progress:Default::default()})}
+        fn admit_b(request:OwnedSerializerRequest,_:RetainedCloneGrant)->Result<OwnedSerializerAdmission,OwnedSerializerRefusal>{Err(OwnedSerializerRefusal{error:ValueError::literal(ValueRefusalKind::UnsupportedOwner,"identity B preserves original request"),request,progress:Default::default()})}
+        static ORIGINAL:IoEntry=IoEntry{from:A,into:B,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:passthrough,owned_serializer:Some(OwnedSerializerFactory{demand:demand_a,admit:admit_a})};
+        static IDENTICAL:IoEntry=IoEntry{from:A,into:B,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:passthrough,owned_serializer:Some(OwnedSerializerFactory{demand:demand_a,admit:admit_a})};
+        static DIFFERENT_DEMAND:IoEntry=IoEntry{from:A,into:B,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:passthrough,owned_serializer:Some(OwnedSerializerFactory{demand:demand_b,admit:admit_a})};
+        static DIFFERENT_ADMISSION:IoEntry=IoEntry{from:A,into:B,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:passthrough,owned_serializer:Some(OwnedSerializerFactory{demand:demand_a,admit:admit_b})};
+        static MISSING:IoEntry=IoEntry{from:A,into:B,fidelity:IoFidelity::Exact,direction:IoEntryDirection::Export,sniff:None,run:passthrough,owned_serializer:None};
+        let expected:serde_json::Value=serde_json::from_str(include_str!("../../📤️serialization/📦️owned/🧫️fixtures/🔣️.json")).unwrap();assert_eq!(expected["cases"].as_array().unwrap().len(),21);
+        assert!(same_io_entry(&ORIGINAL,&IDENTICAL));assert_eq!(build_proposed(&[&ORIGINAL,&IDENTICAL]).unwrap().len(),1);
+        for changed in [&DIFFERENT_DEMAND,&DIFFERENT_ADMISSION,&MISSING]{assert!(!same_io_entry(&ORIGINAL,changed));assert!(matches!(build_proposed(&[&ORIGINAL,changed]),Err(IoRegistryError::Duplicate{..})));}
+        eprintln!("[DEBUG] Registered owned serializer identity retains demand/admission function custody; differing factories refused atomically");
     }
 }

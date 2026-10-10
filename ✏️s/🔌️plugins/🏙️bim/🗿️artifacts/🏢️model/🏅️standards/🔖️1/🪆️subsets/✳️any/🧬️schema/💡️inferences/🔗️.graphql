@@ -4,6 +4,9 @@ type ModelInference {
   element_solids: [ElementSolidRow!]! @derived
   stair_runs: [StairRunRow!]! @derived
   ramp_runs: [RampRunRow!]! @derived
+  families: [FamilyValueRow!]! @derived
+  components: [ComponentValueRow!]! @derived
+  mep: [MepValueRow!]! @derived
   spaces: [SpaceRoomRow!]! @derived
   quantities: ModelQuantities! @derived
   opening_frames: [OpeningFrameRow!]! @derived
@@ -15,11 +18,55 @@ type ModelInference {
   zone_totals: [ZoneTotalsRow!]! @derived
   scheme_totals: [SchemeTotalsRow!]! @derived
   diagnostic_index: DiagnosticIndex! @derived
+  effective_properties: [EffectivePropertiesRow!]! @derived
 }
 
 type CurtainLayoutRow {
   id: String!
   value: CurtainLayout!
+}
+
+enum PropertySource {
+  Own
+  Type
+  Default
+}
+
+enum PropertyIssue {
+  Missing
+  KindMismatch
+  BelowMinimum
+  AboveMaximum
+  NotAllowed
+}
+
+type PropertyFinding {
+  template: String!
+  set: String!
+  property: String!
+  issue: PropertyIssue!
+}
+
+type EffectivePropertyValue {
+  value: PropertyValue!
+  source: PropertySource!
+  template: String
+}
+
+type EffectivePropertyRow {
+  set: String!
+  name: String!
+  value: EffectivePropertyValue!
+}
+
+type EffectiveProperties {
+  values: [EffectivePropertyRow!]!
+  findings: [PropertyFinding!]!
+}
+
+type EffectivePropertiesRow {
+  id: String!
+  value: EffectiveProperties!
 }
 
 type ZoneTotalsRow {
@@ -400,6 +447,8 @@ enum QuantityKind {
   Ramp
   Space
   Ceiling
+  Component
+  Mep
 }
 
 enum FinishSurface {
@@ -427,6 +476,7 @@ type QuantityTotals {
   types: [TotalsRow!]!
   materials: [TotalsRow!]!
   finishes: [TotalsRow!]!
+  groups: [TotalsRow!]
 }
 
 type ZoneTotals {
@@ -479,6 +529,8 @@ enum SolidFamily {
   Ramp
   Railing
   Ceiling
+  Component
+  Mep
 }
 
 type SolidPoint {
@@ -575,6 +627,12 @@ enum PlanKind {
   RampLanding
   RampArrow
   RampTag
+  ComponentOutline
+  ComponentFront
+  ComponentConnector
+  MepAxis
+  MepBand
+  MepDrop
 }
 
 type PlanVertex {
@@ -722,6 +780,30 @@ enum DiagnosticCode {
   RampNoRun
   RefRailingHost
   RailingHostUnresolved
+  FamilySyntax
+  FamilyKind
+  FamilyCycle
+  FamilyUnknown
+  FamilyDivisionByZero
+  FamilyNegative
+  FamilyDependency
+  FamilyDomain
+  FamilyOutline
+  RefProfileFamily
+  PropertyRequiredMissing
+  PropertyKindMismatch
+  PropertyOutOfRange
+  PropertyNotAllowed
+  ClassificationUnknownCode
+  RefClassificationSystem
+  ComponentOutsideStorey
+  ComponentInWall
+  RefComponentFamily
+  RefComponentHost
+  ComponentOverride
+  MepDegenerate
+  MepClash
+  TerminalUnconnected
 }
 
 type SeverityCounts {
@@ -768,3 +850,277 @@ type Diagnostic {
   storey: String
   values: [DiagnosticValue!]!
 }
+
+enum FamilyCategory {
+  Furniture
+  Equipment
+  Casework
+  Plumbing
+  Lighting
+  Mechanical
+  Electrical
+  Generic
+  Profile
+}
+
+enum ParameterKind {
+  Length
+  Angle
+  Real
+  Integer
+  Boolean
+  Text
+  Material
+}
+
+enum IssueOwner {
+  Parameter
+  Solid
+  Family
+}
+
+enum FamilyIssueCode {
+  Syntax
+  Kind
+  Cycle
+  Unknown
+  DivisionByZero
+  Negative
+  Dependency
+  Domain
+  Outline
+}
+
+type FamilyIssue {
+  code: FamilyIssueCode!
+  owner: IssueOwner!
+  subject: String!
+  field: String!
+  path: [Int!]!
+  detail: String!
+  names: [String!]!
+}
+
+# externally tagged: exactly one member is present
+type ParameterValue {
+  Number: ParameterValueNumber
+  Length: ParameterValueLength
+  Angle: ParameterValueAngle
+  Boolean: ParameterValueBoolean
+  Text: ParameterValueText
+}
+
+type ParameterValueNumber {
+  value: Float!
+}
+
+type ParameterValueLength {
+  value: Float!
+}
+
+type ParameterValueAngle {
+  value: Float!
+}
+
+type ParameterValueBoolean {
+  value: Boolean!
+}
+
+type ParameterValueText {
+  value: String!
+}
+
+type ResolvedParameter {
+  kind: ParameterKind!
+  formula: String!
+  value: ParameterValue
+}
+
+type ResolvedParameterRow {
+  id: String!
+  value: ResolvedParameter!
+}
+
+type FamilySolidMesh {
+  name: String!
+  material: String!
+  visible: Boolean!
+  positions: [Float!]!
+  normals: [Float!]!
+  indices: [Int!]!
+  bounds: SolidBounds!
+  volume: Float!
+  area: Float!
+}
+
+type FamilySolidMeshRow {
+  id: String!
+  value: FamilySolidMesh!
+}
+
+type FamilyValue {
+  name: String!
+  category: FamilyCategory
+  order: [String!]!
+  parameters: [ResolvedParameterRow!]!
+  solids: [FamilySolidMeshRow!]!
+  outline: [Vertex!]!
+  issues: [FamilyIssue!]!
+}
+
+type FamilyValueRow {
+  id: String!
+  value: FamilyValue!
+}
+
+enum MepSystem {
+  Supply
+  Return
+  Exhaust
+  DomesticWater
+  Waste
+  Gas
+  Power
+  Data
+  Lighting
+}
+
+enum MepSectionKind {
+  Duct
+  Pipe
+  Tray
+}
+
+enum MepIssueCode {
+  NonFinite
+  SectionDegenerate
+  PathDegenerate
+}
+
+enum ComponentIssueCode {
+  FamilyMissing
+  FamilyProfile
+  HostMissing
+  HostOtherStorey
+  HostDegenerate
+  Override
+  NonFinite
+}
+
+type Point3 {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type HostFit {
+  wall: String!
+  station: Float!
+  side: Float!
+  face: Point2!
+  normal: Point2!
+}
+
+type ComponentPlacement {
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+  mirrored: Boolean!
+  host: HostFit
+}
+
+type Connector {
+  system: MepSystem!
+  colour: String!
+  position: Point3!
+}
+
+type ComponentIssue {
+  code: ComponentIssueCode!
+  subject: String!
+  detail: String!
+  family_issue: FamilyIssue
+}
+
+type ComponentValue {
+  storey: String!
+  family: String!
+  category: FamilyCategory
+  placement: ComponentPlacement!
+  footprint: [Point2!]!
+  footprint_area: Float!
+  bounds: SolidBounds!
+  volume: Float!
+  connector: Connector
+  overridden: [String!]!
+  parameters: [ResolvedParameterRow!]!
+  issues: [ComponentIssue!]!
+}
+
+type MepSection {
+  kind: MepSectionKind!
+  width: Float!
+  height: Float!
+  area: Float!
+  perimeter: Float!
+  label: String!
+}
+
+type MepSegment {
+  from: Point3!
+  to: Point3!
+  length: Float!
+}
+
+type MepIssue {
+  code: MepIssueCode!
+  detail: String!
+}
+
+type MepValue {
+  storey: String!
+  system: MepSystem!
+  colour: String!
+  section: MepSection!
+  path: [Point3!]!
+  segments: [MepSegment!]!
+  length: Float!
+  volume: Float!
+  surface_area: Float!
+  bounds: SolidBounds!
+  issues: [MepIssue!]!
+}
+
+type ComponentValueRow {
+  id: String!
+  value: ComponentValue!
+}
+
+type MepValueRow {
+  id: String!
+  value: MepValue!
+}
+
+# 🦴️ Authored structural analysis schema
+type StructuralLocation { Point: PointLocation, Line: LineLocation, Area: Boolean }
+type PointLocation { station: Float! }
+type LineLocation { start: Float!, end: Float! }
+type Restraints { x:Boolean!, y:Boolean!, z:Boolean!, rx:Boolean!, ry:Boolean!, rz:Boolean! }
+type StructuralSupport { name: String! member: String! location: StructuralLocation! offset: Point3! restraints: Restraints! }
+type StructuralSupportRow { id:String!, value:StructuralSupport! }
+type LoadCase { name: String! category: String! factor: Float! }
+type LoadCaseRow { id:String!, value:LoadCase! }
+type StructuralLoad { name: String! load_case: String! member: String! location: StructuralLocation! force: Point3! moment: Point3! }
+type StructuralLoadRow { id:String!, value:StructuralLoad! }
+type AnalyticalMember { element:String! storey:String! kind:String! path:[Point3!]! boundary:[Point3!]! holes:[[Point3!]!]! length:Float! area:Float! start_offset:Float! end_offset:Float! }
+type AnalyticalMemberRow {id:String!,value:AnalyticalMember!}
+type RigidLink { member:String! other:String! start:Point3! end:Point3! length:Float! }
+type RigidLinkRow {id:String!,value:RigidLink!}
+type ResolvedSupport { authored:StructuralSupport! points:[Point3!]! }
+type ResolvedSupportRow {id:String!,value:ResolvedSupport!}
+type ResolvedLoad { authored:StructuralLoad! points:[Point3!]! factor:Float! }
+type ResolvedLoadRow {id:String!,value:ResolvedLoad!}
+type StructuralAnalysis { members:[AnalyticalMemberRow!]! rigid_links:[RigidLinkRow!]! supports:[ResolvedSupportRow!]! loads:[ResolvedLoadRow!]! findings:[String!]! }
+type StructuralAnalysisRow {id:String!,value:StructuralAnalysis!}
+extend type ModelInference {analytical_members:[AnalyticalMemberRow!]! @derived,structural_analysis:StructuralAnalysis! @derived}

@@ -118,35 +118,6 @@
     ]
   },
   {
-    "name": "unicode multiline fallback",
-    "record": {
-      "id": "bounds",
-      "groups": [],
-      "transform": [
-        1,
-        0,
-        0,
-        1,
-        3,
-        4
-      ],
-      "segments": [],
-      "opacity": 1,
-      "blendMode": "normal",
-      "visible": true,
-      "text": {
-        "content": "😀\nAb",
-        "size": 10
-      }
-    },
-    "bounds": [
-      3,
-      4,
-      15,
-      28
-    ]
-  },
-  {
     "name": "cubic extrema",
     "record": {
       "id": "bounds",

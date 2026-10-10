@@ -84,7 +84,8 @@ fn a_window_beyond_the_frame_over_the_title_block_or_on_another_window_is_a_find
     model.viewports.insert("vp-out".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 350.0, y: 20.0 }));
     model.viewports.insert("vp-title".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 300.0, y: 200.0 }));
     model.viewports.insert("vp-over".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 100.0, y: 60.0 }));
-    let found = issues(&layout(&model, "sh-1"));
+    let sheet = layout(&model, "sh-1");
+    let found = issues(&sheet);
     assert!(found.contains(&(SheetIssue::ViewportOutside, vec!["vp-out"])), "{found:?}");
     assert!(found.contains(&(SheetIssue::ViewportOverTitleBlock, vec!["vp-title"])), "{found:?}");
     assert!(found.contains(&(SheetIssue::ViewportsOverlap, vec!["vp-1", "vp-over"])), "{found:?}");
@@ -97,7 +98,8 @@ fn the_revision_table_is_covered_too_and_touching_windows_are_fine() {
     model.sheet_revisions.insert("r-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: String::new(), description: "x".into(), author: String::new() });
     model.viewports.insert("vp-table".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 300.0, y: 165.0 }));
     model.viewports.insert("vp-next".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 120.0, y: 40.0 }));
-    let found = issues(&layout(&model, "sh-1"));
+    let sheet = layout(&model, "sh-1");
+    let found = issues(&sheet);
     assert!(found.contains(&(SheetIssue::ViewportOverTitleBlock, vec!["vp-table"])), "{found:?}");
     assert!(!found.iter().any(|(issue, _)| *issue == SheetIssue::ViewportsOverlap), "{found:?}");
 }
@@ -159,4 +161,30 @@ fn the_dependency_reads_the_sheet_its_viewports_its_revisions_and_the_names_of_i
         next.viewports.insert("vp-x".into(), Viewport::standard("sh-2", "v-ground", Point2 { x: 0.0, y: 0.0 }));
     }));
     assert_eq!(dependency(&base, "sh-9"), DslValue::Null);
+}
+
+#[test]
+fn the_metrics_table_lists_each_sheet_with_its_rectangles_windows_and_findings_by_slug() {
+    let mut model = model();
+    model.viewports.insert("vp-2".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 40.0, y: 50.0 }));
+    model.sheet_revisions.insert("rev-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: "2026-10-01".into(), description: "Issued".into(), author: "UG".into() });
+    let layouts: BTreeMap<String, SheetLayout> = ["sh-1", "sh-2"].into_iter().map(|id| (id.to_string(), layout(&model, id))).collect();
+    let table: serde_json::Value = serde_json::from_str(&metrics_json(&layouts)).expect("the table is JSON");
+    assert_eq!(table["sh-1"]["paper"], "A3");
+    assert_eq!(table["sh-1"]["size"], serde_json::json!([420.0, 297.0]));
+    assert_eq!(table["sh-1"]["frame"], serde_json::json!([20.0, 10.0, 390.0, 277.0]));
+    assert_eq!(table["sh-1"]["viewports"]["vp-1"]["window"], serde_json::json!([30.0, 40.0, 90.0, 70.0]));
+    assert_eq!(table["sh-1"]["viewports"]["vp-1"]["mm"], 10.0);
+    assert_eq!(table["sh-1"]["revision_rows"], serde_json::json!(["A|2026-10-01|Issued|UG"]));
+    assert_eq!(table["sh-1"]["title_text"]["number"], "A-101");
+    assert_eq!(table["sh-1"]["findings"], serde_json::json!(["viewports-overlap|vp-1,vp-2"]));
+    assert_eq!(table["sh-2"]["findings"], serde_json::json!([]));
+    assert_eq!(table["sh-2"]["viewports"], serde_json::json!({}));
+}
+
+#[test]
+fn every_issue_and_title_field_has_a_unique_slug() {
+    let issues = [SheetIssue::ViewportOutside, SheetIssue::ViewportsOverlap, SheetIssue::ViewportOverTitleBlock, SheetIssue::ViewportEmpty];
+    assert_eq!(issues.iter().map(|issue| issue.slug()).collect::<BTreeSet<_>>().len(), issues.len());
+    assert_eq!(TitleField::ALL.iter().map(|field| field.slug()).collect::<BTreeSet<_>>().len(), TitleField::ALL.len());
 }

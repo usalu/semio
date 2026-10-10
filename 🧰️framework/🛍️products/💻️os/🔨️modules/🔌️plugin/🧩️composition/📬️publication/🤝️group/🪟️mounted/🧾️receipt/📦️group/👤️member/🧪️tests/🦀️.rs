@@ -14,11 +14,12 @@ impl store::ErasedMemberStoreOneItemPublication for MemberReceiptPublication {
     fn prepared_operation_schema_parts(&self, index: usize) -> Option<(&str, &str)> { self.schemas.get(index).map(|(entity,kind)| (entity.as_str(),kind.as_str())) }
     fn prepared_operation_wire_source(&self, inverse: bool, index: usize) -> Option<store::ArtifactPreparedOperationSource<'_>> { (if inverse { &self.inverse } else { &self.forward }).get(index).map(|body| store::ArtifactPreparedOperationSource::CanonicalJson { header: &[1,7], body }) }
     fn next_group_byte_demand(&self) -> usize { 0 }
+    fn retirement_demands(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
     fn fault(&self) -> Option<&str> { None }
     fn retry(&mut self) -> bool { false }
     fn acknowledge(&mut self) -> bool { false }
     fn begin_close(&mut self) {}
-    fn close_step(&mut self, _: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, ValueError> { Ok(store::SnapshotRetirementStep::Blocked) }
+    fn close_step(&mut self, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
     fn terminal_is_empty(&self) -> bool { false }
 }
 pub(crate) fn member_receipt_fixture(fixture: &serde_json::Value, count: usize, inverse_count: usize) -> MemberReceiptPublication {

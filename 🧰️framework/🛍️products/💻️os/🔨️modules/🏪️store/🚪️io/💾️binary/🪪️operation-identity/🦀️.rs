@@ -44,6 +44,6 @@ impl ErasedSnapshotRetirement for OperationIdentityCursor{
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn next_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError>{Ok(0)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.cursor.next_close_byte_demand()}
-    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(ARTIFACT_CANONICAL_JSON_DEPTH)}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{self.cursor.retirement_demands().map(|demand|demand.depth)}
     fn terminal_is_empty(&self)->bool{self.terminal}
 }

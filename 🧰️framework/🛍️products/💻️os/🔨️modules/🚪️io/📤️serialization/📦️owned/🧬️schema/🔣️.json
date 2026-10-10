@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "terminalHandoffs"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "format",
+          "capability",
+          "direction",
+          "current",
+          "grant",
+          "demand",
+          "accepted",
+          "reason",
+          "sameOriginal",
+          "allocations",
+          "releases",
+          "factoryCalls"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "png",
+              "svg",
+              "pdf"
+            ]
+          },
+          "capability": {
+            "type": "boolean"
+          },
+          "direction": {
+            "enum": [
+              "export",
+              "import"
+            ]
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "grant": {
+            "$ref": "#/definitions/currencies"
+          },
+          "demand": {
+            "$ref": "#/definitions/currencies"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "reason": {
+            "enum": [
+              null,
+              "unsupported",
+              "stale",
+              "grant"
+            ]
+          },
+          "sameOriginal": {
+            "const": true
+          },
+          "allocations": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "releases": {
+            "const": 0
+          },
+          "factoryCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "terminalHandoffs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "finished",
+          "current",
+          "cancelled",
+          "available",
+          "grant",
+          "demand",
+          "accepted",
+          "transferredItems",
+          "sameOriginal",
+          "allocations",
+          "releases"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "output",
+              "fault"
+            ]
+          },
+          "finished": {
+            "type": "boolean"
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "grant": {
+            "$ref": "#/definitions/currencies"
+          },
+          "demand": {
+            "$ref": "#/definitions/currencies"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "transferredItems": {
+            "minimum": 0,
+            "type": "integer",
+            "maximum": 1
+          },
+          "sameOriginal": {
+            "const": true
+          },
+          "allocations": {
+            "const": 0
+          },
+          "releases": {
+            "const": 0
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "currencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copy": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

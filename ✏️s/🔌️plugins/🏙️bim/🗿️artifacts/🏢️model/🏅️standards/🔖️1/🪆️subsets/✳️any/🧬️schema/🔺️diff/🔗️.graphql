@@ -31,6 +31,7 @@ type ModelDiff {
   ceilings: [CeilingEntry!]
   zones: [ZoneEntry!]
   area_schemes: [AreaSchemeEntry!]
+  space_conditions: [SpaceConditionsEntry!]
   views: [ViewEntry!]
   sheets: [SheetEntry!]
   viewports: [ViewportEntry!]
@@ -43,6 +44,13 @@ type ModelDiff {
   families: [FamilyEntry!]
   family_parameters: [FamilyParameterEntry!]
   family_solids: [FamilySolidEntry!]
+  components: [ComponentEntry!]
+  component_overrides: [ComponentOverrideEntry!]
+  mep_elements: [MepElementEntry!]
+  clash_sets: [ClashSetEntry!]
+  rules: [RuleEntry!]
+  issues: [IssueEntry!]
+  issue_comments: [IssueCommentEntry!]
   wall_sweeps: [WallSweepEntry!]
   schedules: [ScheduleEntry!]
   property_templates: [PropertyTemplateEntry!]
@@ -66,6 +74,17 @@ type ClassificationSystemPatch {
   edition: String
   source: String
   entries: [ClassificationItem!]
+}
+
+type SpaceConditionsPatch {
+  occupancy: String
+  occupancy_density: Float
+  heating_setpoint: Float
+  cooling_setpoint: Float
+  ventilation_rate: Float
+  lighting_power_density: Float
+  equipment_power_density: Float
+  schedule: String
 }
 
 type DimensionPatch {
@@ -132,6 +151,69 @@ type FamilySolidPatch {
   material: String
   visible: String
   offset: ExprPoint3
+}
+
+type ComponentPatch {
+  storey: String
+  family: String
+  position: Point2
+  elevation: Float
+  rotation: Float
+  mirrored: Boolean
+  host: String
+  system: MepSystem
+  name: String
+}
+
+type ComponentOverridePatch {
+  component: String
+  name: String
+  value: String
+}
+
+type MepElementPatch {
+  storey: String
+  system: MepSystem
+  shape: MepShape
+  path: [Point3!]
+  name: String
+}
+
+type ClashSetPatch {
+  name: String
+  a: ElementSelector
+  b: ElementSelector
+  tolerance: Float
+  clearance: Float
+}
+
+type RulePatch {
+  name: String
+  kind: RuleKind
+  limit: Float
+  severity: RuleSeverity
+  scope: RuleScope
+}
+
+type IssuePatch {
+  title: String
+  description: String
+  status: IssueStatus
+  priority: IssuePriority
+  assignee: String
+  author: String
+  created: String
+  labels: [String!]
+  elements: [String!]
+  clash: ClashRef
+  viewpoint: IssueViewpoint
+}
+
+type IssueCommentPatch {
+  issue: String
+  author: String
+  date: String
+  text: String
 }
 
 type SheetPatch {
@@ -232,6 +314,9 @@ type WindowTypePatch {
   frame_depth: Float
   panes: Int
   material: String
+  u_value: Float
+  g_value: Float
+  frame_fraction: Float
 }
 
 type DoorTypePatch {
@@ -243,6 +328,7 @@ type DoorTypePatch {
   leaves: DoorLeaves
   swing: Swing
   material: String
+  u_value: Float
 }
 
 type SitePatch {
@@ -300,6 +386,9 @@ type CurtainWallTypePatch {
   panel: CurtainPanel
   panel_material: String
   mullion_material: String
+  u_value: Float
+  g_value: Float
+  frame_fraction: Float
 }
 
 type CurtainPanelOverridePatch {
@@ -712,6 +801,13 @@ type AreaSchemeEntry {
   patch: AreaSchemePatch
 }
 
+type SpaceConditionsEntry {
+  id: String!
+  entry: EntryKind!
+  created: SpaceConditions
+  patch: SpaceConditionsPatch
+}
+
 type ViewEntry {
   id: String!
   entry: EntryKind!
@@ -796,6 +892,55 @@ type FamilySolidEntry {
   patch: FamilySolidPatch
 }
 
+type ComponentEntry {
+  id: String!
+  entry: EntryKind!
+  created: Component
+  patch: ComponentPatch
+}
+
+type ComponentOverrideEntry {
+  id: String!
+  entry: EntryKind!
+  created: ComponentOverride
+  patch: ComponentOverridePatch
+}
+
+type MepElementEntry {
+  id: String!
+  entry: EntryKind!
+  created: MepElement
+  patch: MepElementPatch
+}
+
+type ClashSetEntry {
+  id: String!
+  entry: EntryKind!
+  created: ClashSet
+  patch: ClashSetPatch
+}
+
+type RuleEntry {
+  id: String!
+  entry: EntryKind!
+  created: Rule
+  patch: RulePatch
+}
+
+type IssueEntry {
+  id: String!
+  entry: EntryKind!
+  created: Issue
+  patch: IssuePatch
+}
+
+type IssueCommentEntry {
+  id: String!
+  entry: EntryKind!
+  created: IssueComment
+  patch: IssueCommentPatch
+}
+
 type WallSweepEntry {
   id: String!
   entry: EntryKind!
@@ -838,3 +983,22 @@ type ClassificationSetEntry {
   patch: ClassificationSetPatch
 }
 
+
+# 🦴️ Authored structural analysis schema
+type StructuralLocation { Point: PointLocation, Line: LineLocation, Area: Boolean }
+type PointLocation { station: Float! }
+type LineLocation { start: Float!, end: Float! }
+type Restraints { x:Boolean!, y:Boolean!, z:Boolean!, rx:Boolean!, ry:Boolean!, rz:Boolean! }
+type StructuralSupport { name: String! member: String! location: StructuralLocation! offset: Point3! restraints: Restraints! }
+type StructuralSupportRow { id:String!, value:StructuralSupport! }
+type LoadCase { name: String! category: String! factor: Float! }
+type LoadCaseRow { id:String!, value:LoadCase! }
+type StructuralLoad { name: String! load_case: String! member: String! location: StructuralLocation! force: Point3! moment: Point3! }
+type StructuralLoadRow { id:String!, value:StructuralLoad! }
+type StructuralSupportPatch { name: String member: String location: StructuralLocation offset: Point3 restraints: Restraints }
+type StructuralSupportEntry { id:String!, created:StructuralSupport, deleted:Boolean, replaced:StructuralSupport, patched:StructuralSupportPatch }
+type LoadCasePatch { name: String category: String factor: Float }
+type LoadCaseEntry { id:String!, created:LoadCase, deleted:Boolean, replaced:LoadCase, patched:LoadCasePatch }
+type StructuralLoadPatch { name: String load_case: String member: String location: StructuralLocation force: Point3 moment: Point3 }
+type StructuralLoadEntry { id:String!, created:StructuralLoad, deleted:Boolean, replaced:StructuralLoad, patched:StructuralLoadPatch }
+extend type ModelDiff { supports:[StructuralSupportEntry!], load_cases:[LoadCaseEntry!], loads:[StructuralLoadEntry!] }

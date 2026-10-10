@@ -1,1 +1,8 @@
-{}
+{
+  "slabs": {
+    "sl-1": {
+      "entry": "Patched",
+      "storey": "st-first"
+    }
+  }
+}

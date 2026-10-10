@@ -12,7 +12,7 @@ pub const READS: &[&str] = &["storeys", "walls", "curtain_walls", "columns", "be
 
 //#region 🔖️Values
 /// 🎭️ The phase filter of a view: every phase, or exactly one.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum ViewPhase {
     #[default]
     All,
@@ -75,7 +75,7 @@ impl ViewPhase {
 }
 
 /// 🎭️ The elements of one storey a view shows, per view phase: sorted element ids under the key of each [`ViewPhase`].
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PhaseVisibility {
     pub visible: BTreeMap<String, Vec<String>>,
 }
@@ -172,7 +172,7 @@ pub fn visibility_of(snapshot: &ModelSnapshot, storey: &str) -> PhaseVisibility 
 
 /// 📋️ The canonical JSON the phase oracle compares: `{storey id: {view phase key: [element ids]}}`.
 pub fn table_json(visibility: &BTreeMap<String, PhaseVisibility>) -> String {
-    let rows: BTreeMap<&String, &BTreeMap<String, Vec<String>>> = visibility.iter().map(|(storey, row)| (storey, &row.visible)).collect();
+    let rows: BTreeMap<String, BTreeMap<String, Vec<String>>> = visibility.iter().map(|(storey, row)| (storey.clone(), row.visible.clone())).collect();
     semio_framework_pack_json::to_json_string(&rows)
 }
 

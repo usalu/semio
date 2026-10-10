@@ -77,6 +77,17 @@ class BuildScript extends BundleScript {
   }
 }
 
+/** 🎟️ Verifies independent original Pack stack storage authority. */
+class OriginalStorageScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  const [kind]=segments;if(segments.length!==1||!['source','native'].includes(kind!))throw Error('test-original-storage source|native');
+  const test=resolve(this.root,'../../🌱️value/🎟️storage/🧪️tests/🟦️.ts');
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync('typescript/bin/tsc',this.root),'--noEmit','--strict','--skipLibCheck','--allowImportingTsExtensions','--resolveJsonModule','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',test],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,['test',test],{cwd:this.repoRoot,budgetMs:15000,throwOnFailure:true});
+  if(kind==='native')await runCargoTestsV1({manifestPath:resolve(this.root,'Cargo.toml'),packages:['semio-framework-pack'],cwd:this.root,extraArgs:['--lib','pack_original_value_stack_storage_','--','--nocapture']},readCargoTestPolicyV1(process.env));
+ }
+}
+
 /** 🎞️ Exercises bounded reconstruction and partial ownership of canonical intrinsic Body values. */
 class RetainedIntrinsicNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
@@ -125,4 +136,5 @@ router.register("test-retained-intrinsic-native",RetainedIntrinsicNativeScript);
 router.register("test-intrinsic-schema-native",IntrinsicSchemaNativeScript);
 router.register("test-retained-intrinsic-source",RetainedIntrinsicSourceScript);
 router.register("test-occurrence-order-source",OccurrenceOrderSourceScript);
+router.register("test-original-storage",OriginalStorageScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

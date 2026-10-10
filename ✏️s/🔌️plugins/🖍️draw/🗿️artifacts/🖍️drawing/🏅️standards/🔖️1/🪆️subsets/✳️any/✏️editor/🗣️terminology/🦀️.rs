@@ -134,6 +134,11 @@ semio_framework_ui_locale::app_labels! {
         stroke_join: native_en "Line Joins", native_de "Linienverbindungen", reuse_en "Line Joins", reuse_de "Linienverbindungen";
         text_content: native_en "Text Content", native_de "Textinhalt", reuse_en "Text Content", reuse_de "Textinhalt";
         text_size: native_en "Text Size", native_de "Schriftgröße", reuse_en "Text Size", reuse_de "Schriftgröße";
+        font_family: native_en "Font Family", native_de "Schriftfamilie", reuse_en "Font Family", reuse_de "Schriftfamilie";
+        font_anta: native_en "Anta", native_de "Anta", reuse_en "Anta", reuse_de "Anta";
+        font_kelly_slab: native_en "Kelly Slab", native_de "Kelly Slab", reuse_en "Kelly Slab", reuse_de "Kelly Slab";
+        font_share_tech_mono: native_en "Share Tech Mono", native_de "Share Tech Mono", reuse_en "Share Tech Mono", reuse_de "Share Tech Mono";
+        font_noto_emoji: native_en "Noto Emoji", native_de "Noto Emoji", reuse_en "Noto Emoji", reuse_de "Noto Emoji";
         stroke_dash: native_en "Dash Pattern (e.g. 8 4)", native_de "Strichmuster (z. B. 8 4)", reuse_en "Dash Pattern (e.g. 8 4)", reuse_de "Strichmuster (z. B. 8 4)";
         cap_butt: native_en "Flat", native_de "Flach", reuse_en "Flat", reuse_de "Flach";
         cap_square: native_en "Square", native_de "Quadratisch", reuse_en "Square", reuse_de "Quadratisch";

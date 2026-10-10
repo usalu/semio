@@ -118,7 +118,7 @@
         "artifact_kind": "s.stdio.pdf",
         "artifact_schema": "stdio.pdf.1.7",
         "extension": "pdf",
-        "pack_schema_hash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
+        "pack_schema_hash": "c233e3e6bdb24c76b0b81d2d8d3e73a220bd5ab137e869a00f4856923cddc7d3",
         "runtime_capability_id": "s.stdio.pdf.standard.1-7.codec.codec-stdio-pdf-1-7-extension-pdf.v1"
       }
     }

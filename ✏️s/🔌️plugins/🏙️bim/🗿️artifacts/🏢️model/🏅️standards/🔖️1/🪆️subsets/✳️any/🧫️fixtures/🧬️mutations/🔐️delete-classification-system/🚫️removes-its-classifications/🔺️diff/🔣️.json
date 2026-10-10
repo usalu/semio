@@ -1,0 +1,18 @@
+{
+  "classification_systems": {
+    "cs-din": {
+      "entry": "Deleted"
+    }
+  },
+  "classifications": {
+    "w-east": {
+      "assigned": {
+        "cs-din": null
+      },
+      "entry": "Patched"
+    },
+    "wt-300": {
+      "entry": "Deleted"
+    }
+  }
+}

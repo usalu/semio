@@ -1,0 +1,77 @@
+{
+  "schema": "IFC4",
+  "counts": {
+    "IfcProject": 1,
+    "IfcSite": 1,
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 2,
+    "IfcWallStandardCase": 0,
+    "IfcWall": 0,
+    "IfcOpeningElement": 0,
+    "IfcWindow": 0,
+    "IfcDoor": 0,
+    "IfcSlab": 0,
+    "IfcRoof": 0,
+    "IfcColumn": 0,
+    "IfcBeam": 0,
+    "IfcStair": 0,
+    "IfcStairFlight": 0,
+    "IfcRailing": 0,
+    "IfcCurtainWall": 0,
+    "IfcMember": 0,
+    "IfcPlate": 0,
+    "IfcSpace": 0,
+    "IfcGrid": 0,
+    "IfcRelVoidsElement": 0,
+    "IfcRelFillsElement": 0,
+    "IfcRelAggregates": 3,
+    "IfcRelContainedInSpatialStructure": 2,
+    "IfcRelDefinesByType": 2,
+    "IfcRelAssociatesMaterial": 6,
+    "IfcRelAssociatesClassification": 0,
+    "IfcMaterialLayerSet": 2,
+    "IfcMaterialLayerSetUsage": 4,
+    "IfcWallType": 0,
+    "IfcSlabType": 0,
+    "IfcRoofType": 0,
+    "IfcColumnType": 0,
+    "IfcBeamType": 0,
+    "IfcWindowType": 0,
+    "IfcDoorType": 0,
+    "IfcTriangulatedFaceSet": 2,
+    "IfcClassification": 0,
+    "IfcClassificationReference": 0,
+    "IfcAnnotation": 0,
+    "IfcTextLiteralWithExtent": 0,
+    "IfcPolyline": 5,
+    "IfcPlanarExtent": 0,
+    "IfcCovering": 4,
+    "IfcCoveringType": 3,
+    "IfcRamp": 0,
+    "IfcRampFlight": 0,
+    "IfcRelConnectsElements": 0,
+    "IfcProjectLibrary": 0,
+    "IfcPropertySetTemplate": 0,
+    "IfcRelDeclares": 0,
+    "IfcRelDefinesByTemplate": 0
+  },
+  "containment": {
+    "st-first": [
+      "c-curved",
+      "c-diagonal-slope"
+    ],
+    "st-ground": [
+      "c-holed",
+      "c-sloped"
+    ]
+  },
+  "volumes": {
+    "c-holed": 1.4375
+  },
+  "annotations": {},
+  "classifications": {
+    "systems": {},
+    "attached": {}
+  },
+  "type_properties": {}
+}

@@ -1,0 +1,7 @@
+{
+  "mutation": "setSpaceConditions",
+  "id": "sp-1",
+  "occupancy_density": {
+    "value": -0.1
+  }
+}

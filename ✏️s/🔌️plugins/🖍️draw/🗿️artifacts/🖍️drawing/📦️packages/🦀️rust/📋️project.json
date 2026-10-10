@@ -8,6 +8,7 @@
     "family:draw"
   ],
   "targets": {
+    "test-inspector-selection-actions":{"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-inspector-selection-actions","forwardAllArgs":true}},
     "build": {
       "executor": "nx:run-commands",
       "cache": true,

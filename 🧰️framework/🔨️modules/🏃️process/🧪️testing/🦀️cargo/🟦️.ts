@@ -130,7 +130,7 @@ export function cargoTestPlanV1(request:CargoTestRequestV1, input:CargoTestPolic
     return [step("build",["llvm-cov","test","--release","--no-report",...packages,...split.buildArgs,"--","--list"]),step("assert",["llvm-cov","test","--release","--no-report",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip]),report];
   }
   if(policy.nextest) return [step("build",["nextest","list","--list-type","binaries-only","--message-format","json",...profile,...packages,...split.buildArgs],true),step("assert",["nextest","run","--binaries-metadata",metadataPath,"--no-tests","fail",...["--status-level","--final-status-level"].flatMap(option=>split.executionArgs.some(arg=>arg.split("=",1)[0]===option)?[]:[option,"fail"]),...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip])];
-  return [step("build",["build","--tests",...packages,...split.buildArgs]),step("assert",["test",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip])];
+  return [step("build",["test","--no-run",...packages,...split.buildArgs]),step("assert",["test",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip])];
 }
 
 /** 🔌️ Supplies a caller-owned executable for the Cargo command grammar. */

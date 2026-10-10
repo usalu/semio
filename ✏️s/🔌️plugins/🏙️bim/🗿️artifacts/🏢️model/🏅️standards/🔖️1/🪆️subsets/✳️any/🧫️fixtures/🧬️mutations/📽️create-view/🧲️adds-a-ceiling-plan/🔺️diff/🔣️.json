@@ -1,1 +1,16 @@
-{}
+{
+  "views": {
+    "v-ceiling": {
+      "building": "bldg-1",
+      "cut_height": 2.4,
+      "depth": 100.0,
+      "detail": "Medium",
+      "entry": "Created",
+      "hidden": [],
+      "kind": "CeilingPlan",
+      "name": "Ground ceiling",
+      "scale": 100,
+      "storey": "st-ground"
+    }
+  }
+}

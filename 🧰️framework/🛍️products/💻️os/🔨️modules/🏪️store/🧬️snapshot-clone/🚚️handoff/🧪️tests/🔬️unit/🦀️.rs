@@ -3,7 +3,7 @@ use semio_framework_value::{
     list::PagedList,
     retained_clone::{RetainedClone, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep},
 };
-use std::sync::Arc;
+
 
 fn source(entries: usize) -> PagedList<String, 64> {
     let mut values = PagedList::default();
@@ -24,10 +24,10 @@ fn partial_paged_cursor_is_transferred_and_closed_under_driver_grants() {
     let entries = handoff["sourceEntries"].as_u64().expect("handoff source entries") as usize;
     let maximum_items = handoff["closeGrant"]["maximumItems"].as_u64().expect("handoff maximum items") as usize;
     let maximum_bytes = handoff["closeGrant"]["maximumBytes"].as_u64().expect("handoff maximum bytes") as usize;
-    let source = Arc::new(source(entries));
+    let source = source(entries);
     let capacity = RetainedCloneSource::<PagedList<String, 64>>::constructor_capacity_bytes::<()>();
-    let birth = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() };
-    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedCloneSource::admit(source, (), birth));
+    let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneSource::<PagedList<String, 64>>::constructor_copy_bytes(), maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() };
+    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedCloneSource::admit_owned(source, (), birth));
     let (mut retained, receipt) = result.unwrap_or_else(|_| panic!("handoff original source admission"));
     assert!(receipt.fits(birth));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (capacity, 0));

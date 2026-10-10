@@ -171,7 +171,8 @@
                 "size",
                 "fillRule",
                 "fill",
-                "stroke"
+                "stroke",
+                "fontFamily"
               ],
               "additionalProperties": false,
               "properties": {
@@ -201,6 +202,14 @@
                 },
                 "stroke": {
                   "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+                },
+                "fontFamily": {
+                  "enum": [
+                    "anta",
+                    "kellySlab",
+                    "shareTechMono",
+                    "notoEmoji"
+                  ]
                 }
               }
             },
@@ -291,6 +300,62 @@
                 },
                 "stroke": {
                   "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "content",
+                "x",
+                "y",
+                "size",
+                "segments",
+                "fillRule",
+                "fill",
+                "stroke",
+                "fontFamily"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "glyphs"
+                },
+                "content": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "x": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/definitions/coordinate"
+                },
+                "y": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/definitions/coordinate"
+                },
+                "size": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000
+                },
+                "segments": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/segments"
+                },
+                "fillRule": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fillRule"
+                },
+                "fill": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fill"
+                },
+                "stroke": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+                },
+                "fontFamily": {
+                  "enum": [
+                    "anta",
+                    "kellySlab",
+                    "shareTechMono",
+                    "notoEmoji"
+                  ]
                 }
               }
             }
@@ -417,7 +482,8 @@
             "algorithms",
             "resolving",
             "raster",
-            "complete"
+            "complete",
+            "text"
           ]
         },
         "preparation": {
@@ -509,7 +575,8 @@
                     "path",
                     "image",
                     "group",
-                    "text"
+                    "text",
+                    "glyphs"
                   ]
                 }
               }
@@ -555,7 +622,8 @@
             "preparing",
             "tracing",
             "algorithms",
-            "complete"
+            "complete",
+            "text"
           ]
         },
         "preparation": {

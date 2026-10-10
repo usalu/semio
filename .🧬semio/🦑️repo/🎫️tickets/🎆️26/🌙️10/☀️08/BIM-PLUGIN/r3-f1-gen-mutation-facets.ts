@@ -3,7 +3,11 @@
  * 🧬️ Regenerates the four facets of the mutation aggregate (`🔣️.json` oneOf, `🟦️.ts`, `🔗️.graphql`, `🛰️.proto`) from the payload schema
  * of every leaf directory. Idempotent; Wave M agents run it once after adding leaves instead of editing these files.
  */
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync, statSync, writeFileSync as writeRaw } from "node:fs";
+const writeFileSync = (path: string, data: string) => {
+  rmSync(path, { force: true });
+  writeRaw(path, data);
+};
 import { join } from "node:path";
 import { child, em, GQLF, JSONF, mutations, PROTOF, subset, TSF } from "./r3-f1-paths.ts";
 

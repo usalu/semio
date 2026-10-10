@@ -13,6 +13,37 @@
 pub mod spatial;
 //#endregion 🔖️Submodules
 
+//#region 🔖️Codec
+/// 📐️ The IFC4 (ADD2 TC1) `FILE_SCHEMA` name a conforming Part-21 file must declare.
+pub const IFC4_SCHEMA_NAME: &str = "IFC4";
+
+fn declares_ifc4(document: &semio_s_artifact_stdio_contract::part21::Part21Document) -> bool {
+    document.header.file_schema.iter().any(|value| value.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some(IFC4_SCHEMA_NAME))))
+}
+
+/// 📥️ Decodes IFC4 SPF bytes into their Part-21 document: standard-specific validation beyond generic Part-21 parsing, a file whose `FILE_SCHEMA` does not declare `IFC4` (an IFC2X3 or AP214 file) is refused.
+pub fn decode_ifc4_document(bytes: &[u8]) -> Result<semio_s_artifact_stdio_contract::part21::Part21Document, String> {
+    let text = std::str::from_utf8(bytes).map_err(|error| format!("ifc4: not valid utf-8: {error}"))?;
+    let document = semio_s_artifact_stdio_contract::part21::parse_part21(text).map_err(|error| format!("ifc4 parse: {error}"))?;
+    if !declares_ifc4(&document) {
+        return Err(format!("ifc4: FILE_SCHEMA does not declare {IFC4_SCHEMA_NAME}"));
+    }
+    Ok(document)
+}
+
+/// 📤️ Regenerates valid IFC4 SPF bytes from a document: the header must declare `IFC4` and every instance id must be unique (losslessness is `write_part21`'s job, shared with `step` and `2x3`).
+pub fn encode_ifc4_document(document: &semio_s_artifact_stdio_contract::part21::Part21Document) -> Result<Vec<u8>, String> {
+    if !declares_ifc4(document) {
+        return Err(format!("ifc4: FILE_SCHEMA does not declare {IFC4_SCHEMA_NAME}"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    if let Some(instance) = document.instances.iter().find(|instance| !ids.insert(instance.id)) {
+        return Err(format!("ifc4: the instance #{} is written twice", instance.id));
+    }
+    Ok(semio_s_artifact_stdio_contract::part21::write_part21(document).into_bytes())
+}
+//#endregion 🔖️Codec
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v4::subsets::any::io::IfcAnalyzer;

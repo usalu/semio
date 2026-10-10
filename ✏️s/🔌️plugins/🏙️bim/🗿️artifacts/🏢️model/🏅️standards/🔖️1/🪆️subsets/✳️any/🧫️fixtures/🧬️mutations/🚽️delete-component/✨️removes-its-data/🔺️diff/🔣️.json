@@ -1,0 +1,22 @@
+{
+  "classifications": {
+    "cmp-table": {
+      "entry": "Deleted"
+    }
+  },
+  "component_overrides": {
+    "cmp-table.width": {
+      "entry": "Deleted"
+    }
+  },
+  "components": {
+    "cmp-table": {
+      "entry": "Deleted"
+    }
+  },
+  "properties": {
+    "cmp-table": {
+      "entry": "Deleted"
+    }
+  }
+}

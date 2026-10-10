@@ -1,1 +1,62 @@
-{}
+{
+  "wall_sweeps": {
+    "ws-base-w-south-2": {
+      "entry": "Created",
+      "height": 0.0,
+      "host": "w-south-2",
+      "inset": 0.0,
+      "material": "m-paint",
+      "name": "Baseboard",
+      "profile": {
+        "Rectangle": {
+          "depth": 0.1,
+          "width": 0.02
+        }
+      },
+      "side": "Left"
+    }
+  },
+  "walls": {
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 4.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "entry": "Patched"
+    },
+    "w-south-2": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 4.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

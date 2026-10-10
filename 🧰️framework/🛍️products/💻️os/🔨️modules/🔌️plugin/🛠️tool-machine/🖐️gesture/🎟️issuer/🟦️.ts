@@ -1,0 +1,3 @@
+/** 🎟️ Logical admission mirrors the native original header and alias grants; heap ownership stays runtime-specific. */
+export type GestureIssuanceGrant={available:boolean,birthItems:number,birthHeaderUnits:number,birthDepth:number,aliasItems:number,aliasHandleUnits:number,aliasDepth:number};
+export function gestureIssuanceReady(grant:GestureIssuanceGrant):boolean{return grant.available&&[grant.birthItems,grant.birthHeaderUnits,grant.birthDepth,grant.aliasItems,grant.aliasHandleUnits,grant.aliasDepth].every(value=>Number.isInteger(value)&&value>=1)}

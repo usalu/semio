@@ -18,8 +18,8 @@ pub fn node_drag_transaction_rows(patch: &semio_framework::kernel::HistoryPatch)
 /// edit otherwise.
 pub async fn assert_node_drag_edits_replay_like_a_fresh_fold<P, Mu>(guest: &str, schema: &str, base: &P, log: &[Mu], edits: &[(usize, Mu)], fold: impl Fn(&mut P, &Mu))
 where
-    P: Clone + PartialEq + std::fmt::Debug + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
-    Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + PartialEq + std::fmt::Debug + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
     let fresh = |leaves: &[Mu]| {
         let mut state = base.clone();
@@ -30,9 +30,9 @@ where
     };
     for (index, edited) in edits {
         let mut store = ArtifactStore::<P, Mu>::new(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
-        store.install_document_store_owners_exact(bounded_document_store_owners::<P, Mu>());
+        store::install_unscheduled_catalog(&mut store, store::funded_bounded_artifact_store_owners::<P, Mu>()).unwrap_or_else(|error| panic!("{guest}: the drag history catalog installs: {error:?}"));
         for leaf in log {
-            store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], transaction: None }).await.unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));
+            crate::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], transaction: None }, &mut identity).await).unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().unwrap_or_else(|error| panic!("{guest}: the applied operations read: {error:?}")).into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids.get(*index).cloned().unwrap_or_else(|| panic!("{guest}: edit #{index} names no logged leaf of {}", ids.len()));
@@ -48,15 +48,9 @@ where
         let result = replay.finish().unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} finishes: {error:?}"));
         assert!(!store.replay_report(&result).unwrap_or_else(|error| panic!("{guest}: the report of edit #{index} reads: {error:?}")).blocks_finalize(), "{guest}: a re-offset or re-targeted drag never blocks finalizing");
         assert_eq!(result.state().unwrap_or_else(|| panic!("{guest}: the replay of edit #{index} reached no state")).as_ref(), &expected, "{guest}: the replay of edit #{index} equals the fresh fold of the edited log");
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.unwrap_or_else(|error| panic!("{guest}: the overwrite of edit #{index} commits: {error:?}"));
+        crate::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).unwrap_or_else(|error| panic!("{guest}: the overwrite of edit #{index} commits: {error:?}"));
         assert_eq!(store.snapshot_ref(), &expected, "{guest}: the overwritten history of edit #{index} folds to the edited state");
-        let mut disposer = bounded_document_store_disposer::<P, Mu>();
-        for _ in 0..65_536 {
-            if disposer.terminal_is_empty(&store) {
-                break;
-            }
-            disposer.close_step(&mut store, 1, 64 * 1024).unwrap_or_else(|error| panic!("{guest}: the drag history store retires: {error:?}"));
-        }
-        assert!(disposer.terminal_is_empty(&store), "{guest}: the drag history store retires to its terminal-empty shell");
+        store.close_owned_unscheduled().unwrap_or_else(|error| panic!("{guest}: the drag history store retires: {error:?}"));
+        assert!(store.close_owned_terminal_is_empty(), "{guest}: the drag history store retires to its terminal-empty shell");
     }
 }

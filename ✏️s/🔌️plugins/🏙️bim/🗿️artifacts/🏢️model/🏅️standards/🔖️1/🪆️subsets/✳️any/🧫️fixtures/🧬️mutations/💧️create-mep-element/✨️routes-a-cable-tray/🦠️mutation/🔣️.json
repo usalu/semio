@@ -1,0 +1,27 @@
+{
+  "mutation": "createMepElement",
+  "id": "mep-new",
+  "mep": {
+    "storey": "st-first",
+    "system": "Power",
+    "shape": {
+      "Tray": {
+        "width": 0.3,
+        "height": 0.06
+      }
+    },
+    "path": [
+      {
+        "x": 0,
+        "y": 0.5,
+        "z": 2.7
+      },
+      {
+        "x": 7,
+        "y": 0.5,
+        "z": 2.7
+      }
+    ],
+    "name": "Power tray"
+  }
+}

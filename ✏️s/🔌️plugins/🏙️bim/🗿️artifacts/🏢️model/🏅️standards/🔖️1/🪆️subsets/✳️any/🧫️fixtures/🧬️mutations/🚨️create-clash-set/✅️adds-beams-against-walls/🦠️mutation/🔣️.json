@@ -1,0 +1,25 @@
+{
+  "mutation": "createClashSet",
+  "id": "cs-1",
+  "clash_set": {
+    "name": "Beams against walls",
+    "a": {
+      "classes": [
+        "Beam"
+      ],
+      "storeys": [],
+      "phases": [],
+      "ids": []
+    },
+    "b": {
+      "classes": [
+        "Wall"
+      ],
+      "storeys": [],
+      "phases": [],
+      "ids": []
+    },
+    "tolerance": 0.001,
+    "clearance": 0
+  }
+}

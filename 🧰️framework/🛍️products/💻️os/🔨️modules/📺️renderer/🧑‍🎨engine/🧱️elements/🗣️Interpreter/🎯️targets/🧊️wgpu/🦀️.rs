@@ -1755,7 +1755,7 @@ fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce
             operation: allocate_operation_id(),
             generation: Generation(generation),
             cancel: root_cancel_token(),
-            config: BatchDriveConfig { site: "renderer_clipboard_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "renderer_clipboard_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US },
             now_us: semio_framework_job::default_now_us,
         };
         match semio_framework_job::WorkerJobSession::try_new(job.take().expect("clipboard job owner"), params) {

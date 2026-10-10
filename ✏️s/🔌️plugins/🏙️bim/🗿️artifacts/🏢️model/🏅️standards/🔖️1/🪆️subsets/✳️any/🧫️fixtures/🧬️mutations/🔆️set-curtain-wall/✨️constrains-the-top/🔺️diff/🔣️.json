@@ -1,1 +1,13 @@
-{}
+{
+  "curtain_walls": {
+    "cw-1": {
+      "entry": "Patched",
+      "top": {
+        "Storey": {
+          "offset": 0.5,
+          "storey": "st-first"
+        }
+      }
+    }
+  }
+}

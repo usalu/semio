@@ -1,1 +1,15 @@
-{}
+{
+  "text_notes": {
+    "note-2": {
+      "entry": "Created",
+      "position": {
+        "x": 8.5,
+        "y": 3.0
+      },
+      "rotation": 1.5707963267948966,
+      "storey": "st-ground",
+      "style": "as-plan",
+      "text": "Fire wall"
+    }
+  }
+}

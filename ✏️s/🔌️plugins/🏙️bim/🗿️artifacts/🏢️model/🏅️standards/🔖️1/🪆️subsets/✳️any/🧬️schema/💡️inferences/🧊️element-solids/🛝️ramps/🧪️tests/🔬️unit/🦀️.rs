@@ -52,7 +52,7 @@ fn a_straight_ramp_is_a_closed_slab_of_plan_area_times_thickness() {
 #[test]
 fn the_walking_surface_area_exceeds_the_plan_area_by_the_slope() {
     let straight = ramp(vec![vertex(0.0, 0.0, 0.0), vertex(10.0, 0.0, 0.0)], 0.5);
-    let slope = 0.5 / 7.0;
+    let slope: f64 = 0.5 / 7.0;
     let expected = 1.2 * (3.0 + 7.0 * (1.0 + slope * slope).sqrt());
     let solid = solid_of(&straight);
     let top: f64 = {

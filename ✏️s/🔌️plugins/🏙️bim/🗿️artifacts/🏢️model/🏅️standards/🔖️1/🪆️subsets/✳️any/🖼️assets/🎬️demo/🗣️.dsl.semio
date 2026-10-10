@@ -34,6 +34,8 @@ window-types={
 }
 door-types={
 }
+curtain-wall-types={
+}
 sites={
   site-1={ name=Plot latitude=47 longitude=8 elevation=100 true-north=0
   boundary [x:NUM y:NUM] {
@@ -109,6 +111,8 @@ walls={
 }
 curtain-walls={
 }
+curtain-panel-overrides={
+}
 columns={
 }
 beams={
@@ -123,7 +127,127 @@ stairs={
 }
 railings={
 }
+ramps={
+}
+ceiling-types={
+}
+ceilings={
+}
 spaces={
+}
+zones={
+}
+area-schemes={
+}
+space-conditions={
+}
+views={
+  v-3d={ building=bldg-1 name="3D view" kind=perspective depth=100 scale=100 detail=medium
+  camera {
+    target-height=2.9 azimuth=0.7853981633974483 pitch=0.5 distance=21.6
+    target {
+      x=4 y=3
+    }
+  }
+  hidden=[ ] } v-elevation-east={ building=bldg-1 name=East kind=elevation depth=11.3 scale=100 detail=medium
+  plane {
+    start {
+      x=10.15 y=-2.15
+    }
+    end {
+      x=10.15 y=8.15
+    }
+  }
+  hidden=[ ] } v-elevation-north={ building=bldg-1 name=North kind=elevation depth=9.3 scale=100 detail=medium
+  plane {
+    start {
+      x=10.15 y=8.15
+    }
+    end {
+      x=-2.15 y=8.15
+    }
+  }
+  hidden=[ ] } v-elevation-south={ building=bldg-1 name=South kind=elevation depth=9.3 scale=100 detail=medium
+  plane {
+    start {
+      x=-2.15 y=-2.15
+    }
+    end {
+      x=10.15 y=-2.15
+    }
+  }
+  hidden=[ ] } v-elevation-west={ building=bldg-1 name=West kind=elevation depth=11.3 scale=100 detail=medium
+  plane {
+    start {
+      x=-2.15 y=8.15
+    }
+    end {
+      x=-2.15 y=-2.15
+    }
+  }
+  hidden=[ ] } v-plan-st-first={ building=bldg-1 name="Plan First" kind=plan storey=st-first depth=100 scale=100 detail=medium hidden=[ ] } v-plan-st-ground={ building=bldg-1 name="Plan Ground" kind=plan storey=st-ground depth=100 scale=100 detail=medium hidden=[ ] } v-section-a={ building=bldg-1 name="Section A" kind=section depth=5.15 scale=100 detail=medium
+  plane {
+    start {
+      x=-2.15 y=3
+    }
+    end {
+      x=10.15 y=3
+    }
+  }
+  hidden=[ ] } v-section-b={ building=bldg-1 name="Section B" kind=section depth=6.15 scale=100 detail=medium
+  plane {
+    start {
+      x=4 y=-2.15
+    }
+    end {
+      x=4 y=8.15
+    }
+  }
+  hidden=[ ] }
+}
+sheets={
+}
+viewports={
+}
+sheet-revisions={
+}
+clash-sets={
+}
+rules={
+}
+issues={
+}
+issue-comments={
+}
+dimensions={
+}
+tags={
+}
+text-notes={
+}
+leaders={
+}
+annotation-styles={
+}
+wall-sweeps={
+}
+schedules={
+}
+families={
+}
+family-parameters={
+}
+family-solids={
+}
+components={
+}
+component-overrides={
+}
+mep-elements={
+}
+property-templates={
+}
+classification-systems={
 }
 properties={
 }

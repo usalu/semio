@@ -1,5 +1,5 @@
 {
-  "roof_types": {
+  "classifications": {
     "rf-spare": {
       "entry": "Deleted"
     }
@@ -9,7 +9,7 @@
       "entry": "Deleted"
     }
   },
-  "classifications": {
+  "roof_types": {
     "rf-spare": {
       "entry": "Deleted"
     }

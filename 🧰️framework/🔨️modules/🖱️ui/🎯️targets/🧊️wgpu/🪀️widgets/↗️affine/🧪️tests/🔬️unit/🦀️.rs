@@ -1,6 +1,24 @@
 use super::*;
 
 #[test]
+fn authored_glyph_family_selects_original_catalog_face() {
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📝️text/🧫️fixtures/🎨️catalog/🔣️.json")).unwrap();
+    let mut atlas=FontAtlas::shaped_default();
+    let size=law["size"].as_f64().unwrap()as f32;
+    for row in law["families"].as_array().unwrap(){
+        let name=row["name"].as_str().unwrap();let text=row["character"].as_str().unwrap();let character=text.chars().next().unwrap();
+        let face=TextFace::from_catalog_family(name).unwrap();assert_eq!(face.family(),name);
+        assert_eq!(serde_json::from_value::<TextFace>(serde_json::json!(name)).unwrap(),face);
+        let sources:Vec<&[u8]>=match face{TextFace::Sans=>vec![crate::wgpu::text::ANTA_LATIN],TextFace::Serif=>vec![crate::wgpu::text::KELLY_SLAB_LATIN],TextFace::Mono=>vec![crate::wgpu::text::SHARE_TECH_MONO_LATIN],TextFace::Emoji=>crate::wgpu::text::NOTO_EMOJI_BUCKETS.to_vec()};
+        let font=sources.iter().filter_map(|bytes|swash::FontRef::from_index(bytes,0)).find(|font|font.charmap().map(character)!=0).unwrap();
+        let oracle=font.glyph_metrics(&[]).advance_width(font.charmap().map(character))*size/f32::from(font.metrics(&[]).units_per_em);
+        let actual=atlas.measure_text_face(face,text,size).0;assert!((actual-oracle).abs()<0.01,"{name} {actual} != {oracle}");
+    }
+    for rejected in law["rejected"].as_array().unwrap(){let name=rejected.as_str().unwrap();assert!(TextFace::from_catalog_family(name).is_none());assert!(serde_json::from_value::<TextFace>(serde_json::json!(name)).is_err());}
+    eprintln!("[DEBUG] Explicit catalog family selected original glyph advances for all four families; Swash independent font metrics matched");
+}
+
+#[test]
 fn authored_glyph_runs_transform_the_actual_font_atlas_quads() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json")).unwrap();
     let mut atlas=FontAtlas::builtin();

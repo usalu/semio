@@ -1,0 +1,10 @@
+{
+  "mutation": "setSpaceConditions",
+  "id": "sp-1",
+  "heating_setpoint": {
+    "value": 20
+  },
+  "ventilation_rate": {
+    "value": 0.5
+  }
+}

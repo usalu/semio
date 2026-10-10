@@ -16,7 +16,7 @@ use std::collections::HashSet;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {
     pub ids: Vec<String>,
@@ -45,7 +45,7 @@ fn covered(snapshot: &ModelSnapshot, id: &str, ids: &HashSet<&str>) -> bool {
 
 /// 🌊️ Whether the cascade knows `id`: its record lives in a collection `delete-elements` removes.
 fn cascades(snapshot: &ModelSnapshot, id: &str) -> bool {
-    !matches!(closure(snapshot, std::slice::from_ref(id)), Err(refusal) if refusal.code == OutcomeCode::TargetMissing)
+    !matches!(closure(snapshot, &[id.to_string()]), Err(refusal) if refusal.code == OutcomeCode::TargetMissing)
 }
 
 /// 🔢️ How many rows restoring `ids` takes; a refused removal counts one row, the mutation reports its own refusal.
@@ -54,7 +54,7 @@ fn rows(snapshot: &ModelSnapshot, ids: &[String]) -> usize {
 }
 
 /// 🧩️ `ids` cut into parts whose removal restores at most [`INVERSE_ROWS`] rows each (halving a part until it fits). An id whose own removal is larger is replaced by its contents (everything
-/// the cascade takes except the id itself and the openings that leave with their hosts) and returned in `oversize`, to stay selected until its contents are gone.
+/// the cascade takes except the id itself and the openings and sweeps that leave with their hosts) and returned in `oversize`, to stay selected until its contents are gone.
 fn parts(snapshot: &ModelSnapshot, ids: &[String]) -> (Vec<Vec<String>>, Vec<String>) {
     let (mut parts, mut oversize) = (Vec::new(), Vec::new());
     let mut queue: Vec<Vec<String>> = vec![ids.to_vec()];
@@ -70,7 +70,7 @@ fn parts(snapshot: &ModelSnapshot, ids: &[String]) -> (Vec<Vec<String>>, Vec<Str
             queue.push(first.to_vec());
         } else {
             let id = &part[0];
-            let contents: Vec<String> = closure(snapshot, &part).map(|removal| removal.ids().into_iter().filter(|content| content != id && !snapshot.openings.contains_key(content)).collect()).unwrap_or_default();
+            let contents: Vec<String> = closure(snapshot, &part).map(|removal| removal.ids().into_iter().filter(|content| content != id && !snapshot.openings.contains_key(content) && !snapshot.wall_sweeps.contains_key(content)).collect()).unwrap_or_default();
             if contents.is_empty() {
                 parts.push(part);
             } else {
@@ -117,6 +117,11 @@ pub fn plan(snapshot: &ModelSnapshot, ids: &[String]) -> Plan {
 }
 
 pub fn handle(payload: &DeleteSelection, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
+    if payload.ids.is_empty() && ctx.gestures.is_some() {
+        if let Some(emit) = crate::editor::bim::gestures::run_key(ctx, doc, crate::editor::bim::gestures::session::GestureKey::Back)? {
+            return Ok(emit);
+        }
+    }
     let ids: Vec<String> = if payload.ids.is_empty() { ctx.selected.iter().chain(&ctx.library_selected).cloned().collect() } else { payload.ids.clone() };
     if ids.is_empty() {
         return Ok(Emit::default());

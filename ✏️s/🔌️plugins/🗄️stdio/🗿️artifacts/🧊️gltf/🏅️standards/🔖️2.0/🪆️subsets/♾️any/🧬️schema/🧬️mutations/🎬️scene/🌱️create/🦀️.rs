@@ -9,7 +9,7 @@ use crate::GltfSnapshot;
 
 pub const ID: &str = "s.stdio.gltf.mutation.create-scene.v1";
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfCreateScenePayload {
     pub position: u32,
@@ -46,7 +46,7 @@ pub fn inverse(p: &GltfCreateScenePayload, base: &GltfSnapshot) -> Vec<super::Gl
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateSceneMutation {

@@ -14,7 +14,7 @@ pub const BIM_EDIT_MODE_EDIT: &str = "edit";
 pub fn definition() -> ModeDefinition {
     ModeDefinition {
         id: BIM_EDIT_MODE_EDIT.into(),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.mode_edit.as_str(), BimLabels::NATIVE_DE.mode_edit.as_str()),
+        label: BimLabels::localized(|labels| labels.mode_edit),
         icon_id: "pencil".into(),
         tools: Vec::new(),
         layout_id: None,

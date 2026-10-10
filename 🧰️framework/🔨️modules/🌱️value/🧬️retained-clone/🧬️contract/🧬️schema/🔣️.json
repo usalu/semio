@@ -1,0 +1,11 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://semio.tech/framework/value/retained-clone-contract",
+ "title":"Retained Clone Currencies",
+ "$defs":{
+  "grant":{"type":"object","additionalProperties":false,"required":["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],"properties":{"maximumItems":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumCopyBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumCapacityBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumReleaseBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumDepth":{"type":"integer","minimum":0,"maximum":9007199254740991}}},
+  "receipt":{"type":"object","additionalProperties":false,"required":["copiedItems","copiedBytes","retainedCapacityBytes","releasedBytes"],"properties":{"copiedItems":{"type":"integer","minimum":0},"copiedBytes":{"type":"integer","minimum":0},"retainedCapacityBytes":{"type":"integer","minimum":0},"releasedBytes":{"type":"integer","minimum":0}}},
+  "demand":{"type":"object","additionalProperties":false,"required":["copyBytes","capacityBytes","releaseBytes","depth"],"properties":{"copyBytes":{"type":"integer","minimum":0},"capacityBytes":{"type":"integer","minimum":0},"releaseBytes":{"type":"integer","minimum":0},"depth":{"type":"integer","minimum":0}}}
+ },
+ "$ref":"#/$defs/grant"
+}

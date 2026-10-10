@@ -17,3 +17,19 @@ fn unused_ids_count_up_from_the_base() {
     assert_eq!(Import::unused("ct", |_| false), "ct");
     assert_eq!(Import::unused("ct", |candidate| candidate == "ct" || candidate == "ct-2"), "ct-3");
 }
+
+#[test]
+fn a_leaning_column_and_the_arc_inclined_and_joined_beams_come_back_exactly_from_their_records() {
+    use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
+    use crate::standards::v1::subsets::any::io::export::ifc::frame::tests::leaning;
+    use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
+    let model = leaning();
+    let (bytes, _) = export_ifc2x3(&model).expect("the model exports");
+    let (back, notes) = import_ifc2x3(&bytes).expect("the file imports");
+    assert!(notes.iter().all(|note| !note.contains("IFCBEAM") && !note.contains("IFCCOLUMN")), "{notes:?}");
+    assert_eq!(back.columns["c-lean"], model.columns["c-lean"], "the leaning column is restored from its record");
+    assert!(back.columns["c-west"].tilt.is_none() && (back.columns["c-west"].position.x - 40.0).abs() < 1e-9, "a plumb column is read from its swept body");
+    for id in ["b-arc", "b-incline", "b-joined"] {
+        assert_eq!(back.beams[id], model.beams[id], "{id}");
+    }
+}

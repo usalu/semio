@@ -867,7 +867,7 @@ fn an_independent_decoder_job_recovers_its_response_from_an_exact_rejected_sessi
             operation: allocate_operation_id(),
             generation: Generation(1),
             cancel: root_cancel_token(),
-            config: BatchDriveConfig { site: "decoder_admission_law", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: INTERACTIVE_LANE_WALL_US },
+            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "decoder_admission_law", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: INTERACTIVE_LANE_WALL_US },
             now_us: default_now_us,
         }
     }
@@ -2272,7 +2272,7 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
             semio_framework_job::default_now_us,
             &mut sequence,
         );
-        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state,terrain_grant,&mut context);
         assert!(terrain.ownership.fits(terrain_grant));
         assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
@@ -2345,7 +2345,7 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
             semio_framework_job::default_now_us,
             &mut sequence,
         );
-        let terrain_grant=semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
+        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state,terrain_grant,&mut context);
         assert!(terrain.ownership.fits(terrain_grant));
         assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));

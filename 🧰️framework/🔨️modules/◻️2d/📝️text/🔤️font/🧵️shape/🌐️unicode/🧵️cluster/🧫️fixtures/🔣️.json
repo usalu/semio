@@ -1,0 +1,18 @@
+[
+ {"name":"Empty","text":"","clusters":[]},
+ {"name":"Latin Marks","text":"a\u0308b","clusters":[[0,2],[2,3]]},
+ {"name":"Initial Marks","text":"\u0315\u0300a","clusters":[[0,2],[2,3]]},
+ {"name":"CRLF Controls","text":"a\r\nb\n","clusters":[[0,1],[1,3],[3,4],[4,5]]},
+ {"name":"Hangul Jamo","text":"\u1100\u1161\u11a8b","clusters":[[0,3],[3,4]]},
+ {"name":"Spacing Mark","text":"कःx","clusters":[[0,2],[2,3]]},
+ {"name":"Prepend","text":"\u0600a","clusters":[[0,2]]},
+ {"name":"Indic Conjunct","text":"क्ष","clusters":[[0,3]]},
+ {"name":"Indic Joined Conjunct","text":"क्‍ष","clusters":[[0,4]]},
+ {"name":"Emoji Profession","text":"👩‍💻","clusters":[[0,3]]},
+ {"name":"Emoji Family","text":"👨‍👩‍👧‍👦","clusters":[[0,7]]},
+ {"name":"Emoji Variation Join","text":"👩️‍💻","clusters":[[0,4]]},
+ {"name":"Regional Odd Run","text":"🇦🇧🇨","clusters":[[0,2],[2,3]]},
+ {"name":"Skin Modifier","text":"👍🏽","clusters":[[0,2]]},
+ {"name":"Non Emoji Join","text":"a‍b","clusters":[[0,2],[2,3]]},
+ {"name":"Initial Join","text":"‍👩","clusters":[[0,1],[1,2]]}
+]

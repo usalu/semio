@@ -192,7 +192,7 @@ use crate::standards::v1::subsets;
 //#region 🧹️SnapshotRetirement
 use std::{marker::PhantomData, sync::Arc};
 
-use semio_framework_value::retirement::{owned_retirement, shared_retirement, RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value::{artifact_retire_leaf as retire_leaf, artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
 
 use subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform, SemioUv};
@@ -246,24 +246,8 @@ retire_struct!(animation::AnimKeyframe { t, value });
 retire_struct!(animation::AnimChannel { target, interpolation, keyframes });
 retire_struct!(animation::AnimTimeline { name, channels });
 retire_struct!(animation::SemioAnimationSnapshot { schema, timelines });
-impl RetireOwned for animation::AnimTargetProperty {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Custom { name } => name.retirement(),
-            _ => seq![],
-        }
-    }
-}
-impl RetireOwned for animation::AnimValue {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Scalar { value } => value.retirement(),
-            Self::Vec3 { value } => value.retirement(),
-            Self::Quat { value } => value.retirement(),
-            Self::Weights { values } => values.retirement(),
-        }
-    }
-}
+
+
 
 retire_struct!(audio::SemioAudioChannel { samples });
 retire_struct!(audio::SemioAudioTag { key, value });
@@ -284,21 +268,7 @@ retire_struct!(cad::CadLayer { name, color_index, line_type, visible });
 retire_struct!(cad::CadEntityRecord { handle, layer, entity });
 retire_struct!(cad::CadBlock { name, base_point, entities });
 retire_struct!(cad::SemioCadSnapshot { schema, layers, blocks, entities });
-impl RetireOwned for cad::CadEntity {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Line { a, b } => seq![a, b],
-            Self::Arc { center, radius, start_angle, end_angle } => seq![center, radius, start_angle, end_angle],
-            Self::Circle { center, radius } => seq![center, radius],
-            Self::Ellipse { center, major_axis_end, ratio, start_param, end_param } => seq![center, major_axis_end, ratio, start_param, end_param],
-            Self::Polyline { vertices, closed } => seq![vertices, closed],
-            Self::Text { position, height, rotation, content } => seq![position, height, rotation, content],
-            Self::Insert { block_name, insertion_point, scale, rotation } => seq![block_name, insertion_point, scale, rotation],
-            Self::Solid { p1, p2, p3, p4 } => seq![p1, p2, p3, p4],
-            Self::Dimension { def_point, text_position, measurement, text } => seq![def_point, text_position, measurement, text],
-        }
-    }
-}
+
 
 retire_struct!(document::RunStyle { bold, italic, underline, size, font, color, link });
 retire_struct!(document::DocRun { text, style });
@@ -308,45 +278,11 @@ retire_struct!(document::DocListItem { blocks });
 retire_struct!(document::DocTableCell { blocks });
 retire_struct!(document::DocTableRow { cells });
 retire_struct!(document::SemioDocumentSnapshot { schema, styles, images, blocks });
-impl RetireOwned for document::DocBlock {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Paragraph { style_id, runs } | Self::Heading { style_id, runs, .. } => seq![style_id, runs],
-            Self::List { ordered, items } => seq![ordered, items],
-            Self::Table { rows } => rows.retirement(),
-            Self::Code { language, text } => seq![language, text],
-            Self::Quote { blocks } => blocks.retirement(),
-            Self::Image { image_id, alt, width, height } => seq![image_id, alt, width, height],
-            Self::PageBreak => seq![],
-        }
-    }
-}
+
 
 retire_struct!(drawing::DrawStyle { name, fill, stroke, stroke_width, opacity });
 retire_struct!(drawing::DrawLayer { id, name, visible, root });
 retire_struct!(drawing::SemioDrawingSnapshot { schema, canvas, styles, layers });
-impl RetireOwned for drawing::DrawNode {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Path { segments, style } => seq![segments, style],
-            Self::Text { value, at, style } => seq![value, at, style],
-            Self::Group { transform, children } => seq![transform, children],
-            Self::Image { at, width, height, mime, bytes } => seq![at, width, height, mime, bytes],
-        }
-    }
-}
-impl RetireOwned for drawing::PathSegment {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::MoveTo { to } | Self::LineTo { to } => to.retirement(),
-            Self::CubicTo { c1, c2, to } => seq![c1, c2, to],
-            Self::QuadTo { c, to } => seq![c, to],
-            Self::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => seq![rx, ry, x_rotation, large_arc, sweep, to],
-            Self::Close => seq![],
-        }
-    }
-}
-
 retire_struct!(flow::PortRef { node, port });
 retire_struct!(flow::FlowParam { key, value });
 retire_struct!(flow::FlowNode { id, kind, label, params, position });
@@ -357,21 +293,6 @@ retire_struct!(value::ValueId { value });
 retire_struct!(value::SemioValueEntry { key, value });
 retire_struct!(value::SemioValueNode { id, value });
 retire_struct!(value::SemioValueSnapshot { schema, root, nodes });
-impl RetireOwned for value::SemioValue {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Null => seq![],
-            Self::Bool { value } => value.retirement(),
-            Self::Int { lexeme } | Self::Float { lexeme } => lexeme.retirement(),
-            Self::Str { value } => value.retirement(),
-            Self::Bytes { value } => value.retirement(),
-            Self::List { items } => items.retirement(),
-            Self::Map { entries } => entries.retirement(),
-            Self::Ref { id } => id.retirement(),
-        }
-    }
-}
-
 retire_struct!(graph::GraphNodeId { value });
 retire_struct!(graph::GraphEdgeId { value });
 retire_struct!(graph::SemioGraphPort { name, kind, category, properties });
@@ -405,24 +326,8 @@ retire_struct!(presentation::SlideMaster { id, shapes });
 retire_struct!(presentation::SlideLayout { id, master_id, shapes });
 retire_struct!(presentation::Slide { id, layout_id, shapes, notes });
 retire_struct!(presentation::SemioPresentationSnapshot { schema, masters, layouts, slides });
-impl RetireOwned for presentation::PlaceholderKind {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Other { value } => value.retirement(),
-            _ => seq![],
-        }
-    }
-}
-impl RetireOwned for presentation::SlideShape {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::TextBox { frame, blocks } => seq![frame, blocks],
-            Self::Picture { frame, image } => seq![frame, image],
-            Self::Table { frame, rows } => seq![frame, rows],
-            Self::Placeholder { frame, kind } => seq![frame, kind],
-        }
-    }
-}
+
+
 retire_struct!(table::SemioTableColumn { name, kind });
 retire_struct!(table::SemioTableRow { cells });
 retire_struct!(table::SemioTableSnapshot { schema, columns, rows });
@@ -835,8 +740,9 @@ struct SemioSnapshotRetirementFactory<P>(PhantomData<fn() -> P>);
 struct SemioOwnedValueRetirementFactory<T>(PhantomData<fn() -> T>);
 
 impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioOwnedValueRetirementFactory<T> {
-    fn retire_owned(&self, value: T) -> Box<dyn dsl::ErasedSnapshotRetirement> {
-        owned_retirement(value)
+    fn retirement_birth_bytes(&self, _value: &T) -> usize { semio_framework_value::retirement::owned_retirement_birth_bytes::<T>() }
+    fn retire_owned(&self, value: T, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn dsl::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError,T)> {
+        semio_framework_value::retirement::admit_owned_retirement(value,grant)
     }
 }
 
@@ -844,8 +750,9 @@ impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioOwnedV
 struct SemioMutationRetirementFactory<T>(PhantomData<fn() -> T>);
 
 impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioMutationRetirementFactory<T> {
-    fn retire_owned(&self, value: T) -> Box<dyn dsl::ErasedSnapshotRetirement> {
-        owned_retirement(value)
+    fn retirement_birth_bytes(&self, _value: &T) -> usize { semio_framework_value::retirement::owned_retirement_birth_bytes::<T>() }
+    fn retire_owned(&self, value: T, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn dsl::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError,T)> {
+        semio_framework_value::retirement::admit_owned_retirement(value,grant)
     }
 }
 
@@ -855,14 +762,15 @@ macro_rules! member_owners {
             for SemioSnapshotRetirementFactory<subsets::$module::schema::snapshot::$snapshot>
         {
             fn retirement_birth_bytes(&self, _snapshot: &Arc<subsets::$module::schema::snapshot::$snapshot>) -> usize {
-                semio_framework_value::retirement::shared_retirement_birth_bytes::<subsets::$module::schema::snapshot::$snapshot>()
+                semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<subsets::$module::schema::snapshot::$snapshot>()
             }
 
             fn retire(
                 &self,
                 snapshot: Arc<subsets::$module::schema::snapshot::$snapshot>,
-            ) -> Box<dyn dsl::ErasedSnapshotRetirement> {
-                shared_retirement(snapshot)
+                grant: semio_framework_value::retained_clone::RetainedCloneGrant,
+            ) -> Result<(Box<dyn dsl::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Arc<subsets::$module::schema::snapshot::$snapshot>)> {
+                semio_framework_value::retirement::shared::admit_shared_retirement(snapshot,grant,true)
             }
         }
 
@@ -871,23 +779,12 @@ macro_rules! member_owners {
         {
             semio_snapshot_open!($module, subsets::$module::schema::snapshot::$snapshot);
 
-            fn member_store_owners_birth_bytes() -> usize {
-                dsl::document_store_owners_constructor_birth_bytes::<dsl::ArtifactStoreCursorDisposer<Self, subsets::$module::schema::mutations::$mutation>>([
-                    semio_framework_value::factory_constructor_birth_bytes::<SemioSnapshotRetirementFactory<Self>>(0),
-                    semio_framework_value::factory_constructor_birth_bytes::<SemioOwnedValueRetirementFactory<Self>>(0),
-                    semio_framework_value::factory_constructor_birth_bytes::<SemioMutationRetirementFactory<subsets::$module::schema::mutations::$mutation>>(0),
-                ])
+            fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError> {
+                dsl::bounded_artifact_store_owners_birth_demand::<Self,subsets::$module::schema::mutations::$mutation>()
             }
 
-            fn member_store_owners() -> dsl::DocumentStoreOwners<
-                Self,
-                subsets::$module::schema::mutations::$mutation,
-            > {
-                dsl::DocumentStoreOwners::new(Arc::new(
-                    SemioSnapshotRetirementFactory::<Self>(PhantomData),
-                ), Arc::new(SemioOwnedValueRetirementFactory::<Self>(PhantomData)), Arc::new(
-                    SemioMutationRetirementFactory::<subsets::$module::schema::mutations::$mutation>(PhantomData),
-                ), Box::new(dsl::ArtifactStoreCursorDisposer::<Self, subsets::$module::schema::mutations::$mutation>::new()))
+            fn member_store_owners(grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(dsl::DocumentStoreOwners<Self,subsets::$module::schema::mutations::$mutation>,semio_framework_value::retained_clone::RetainedCloneProgress),dsl::DocumentStoreOwnersAdmissionError<Self,subsets::$module::schema::mutations::$mutation>> {
+                dsl::bounded_artifact_store_owners::<Self,subsets::$module::schema::mutations::$mutation>(grant)
             }
         }
     )*};
@@ -5287,3 +5184,4 @@ pub use crate::standards::v1::subsets::graph::io::{SemioGraphBuilderConstruction
 pub use crate::standards::v1::subsets::video::io::{SemioVideoBuilderConstruction, SemioVideoParts, SemioVideoAnalyzerAnalysis, SemioVideoBuilderFacets, SemioVideoBuilder, SemioVideoAnalyzer, SemioVideoComposer};
 
 pub use crate::standards::v1::subsets::presentation::io::{SemioPresentationBuilderConstruction, SemioPresentationParts, SemioPresentationAnalyzerAnalysis, SemioPresentationBuilderFacets, SemioPresentationBuilder, SemioPresentationAnalyzer, SemioPresentationComposer};
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           

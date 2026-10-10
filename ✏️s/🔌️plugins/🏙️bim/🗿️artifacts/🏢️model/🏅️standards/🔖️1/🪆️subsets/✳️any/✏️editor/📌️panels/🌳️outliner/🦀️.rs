@@ -1,5 +1,5 @@
 //! 🌳️ BIM outliner: the model as one virtualised tree, bound to the framework `elements` interaction domain. Site, building and storey (by level) nest as the snapshot's references
-//! say, each storey holds one group per element kind, and openings sit under the wall that hosts them. Every container is a windowed node that stamps its full extent and builds only the
+//! say, each storey holds one group per element kind, and openings and wall sweeps sit under the wall that hosts them. Every container is a windowed node that stamps its full extent and builds only the
 //! slice the host scrolled to, so a model of thousands of elements costs the first paint one slice. Rows are the element ids, so a click selects the same element the plan and the world do.
 
 use crate::editor::bim::entities::{fields_of, kind_of, ordered_storeys, EntityKind, ENTITIES};
@@ -31,7 +31,7 @@ const SECTION: &str = "bim-outliner.model";
 /// 📂️ A group of at most this many elements opens on first paint; a larger one waits for the host to open it and then streams its slice.
 const OPEN_GROUP_LIMIT: usize = 12;
 /// 🏘️ The kinds that belong to the project, not to a storey: they are one group each under the sites.
-const PROJECT_KINDS: [&str; 2] = ["zone", "area-scheme"];
+const PROJECT_KINDS: [&str; 3] = ["zone", "area-scheme", "sheet"];
 /// 🖐️ The drag-data key of a movable element row; the storey row it is dropped on answers with a `setField` that carries it as the entity to move.
 pub const DRAG_ELEMENT_MIME: &str = "application/x-semio-bim-element";
 //#endregion 🔖️Constants
@@ -41,7 +41,7 @@ pub const DRAG_ELEMENT_MIME: &str = "application/x-semio-bim-element";
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.panel_outliner.as_str(), BimLabels::NATIVE_DE.panel_outliner.as_str()),
+        label: BimLabels::localized(|labels| labels.panel_outliner),
         group: PanelGroup::Workbench,
         body_key: Some(BODY_KEY.into()),
         children: Vec::new(),
@@ -138,18 +138,37 @@ fn movable_item(builder: semio_framework_ui_contract::TreeItemBuilder, labels: &
         .map_err(full)
 }
 
+/// 📄️ The rows below a sheet: its viewports, then its revision rows, each with its entity kind.
+fn sheet_children(snapshot: &ModelSnapshot, sheet: &str) -> Vec<(&'static EntityKind, String)> {
+    let (Some(viewport), Some(revision)) = (kind_of("viewport"), kind_of("sheet-revision")) else { return Vec::new() };
+    let viewports = snapshot.viewports.iter().filter(|(_, row)| row.sheet == sheet).map(|(id, _)| (viewport, id.clone()));
+    let revisions = crate::revisions_of(snapshot, sheet).into_iter().map(|(id, _)| (revision, id.clone()));
+    viewports.chain(revisions).collect()
+}
+
 fn element_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, row: &'static EntityKind, id: &str) -> UiAssemblyResult<BuiltNode> {
-    let length = inference.wall_layout.get(id).map(|layout| format!("{:.2} m", layout.length)).or_else(|| inference.zone_totals.get(id).map(|zone| format!("{} · {:.2} m²", zone.spaces, zone.net_area))).or_else(|| inference.scheme_totals.get(id).map(|scheme| format!("{} · {:.2} m²", scheme.spaces, scheme.area)));
+    let length = inference.wall_layout.get(id).map(|layout| format!("{:.2} m", layout.length)).or_else(|| inference.sheet_layouts.get(id).map(|layout| format!("{} · {}", layout.number, layout.paper))).or_else(|| inference.zone_totals.get(id).map(|zone| format!("{} · {:.2} m²", zone.spaces, zone.net_area))).or_else(|| inference.scheme_totals.get(id).map(|scheme| format!("{} · {:.2} m²", scheme.spaces, scheme.area)));
     let mut builder = entity_item(snapshot, row, id, length.as_deref())?;
     if movable(row) {
         builder = movable_item(builder, labels, id)?;
     }
-    let hosted: Vec<&String> = snapshot.openings.iter().filter(|(_, opening)| opening.host == id).map(|(opening, _)| opening).collect();
-    let opening = kind_of("opening").unwrap_or(row);
+    let (opening, sweep, panel, solid) = (kind_of("opening").unwrap_or(row), kind_of("wall-sweep").unwrap_or(row), kind_of("curtain-panel-override").unwrap_or(row), kind_of("family-solid").unwrap_or(row));
+    let hosted: Vec<(&'static EntityKind, &String)> = snapshot.openings.iter().filter(|(_, opening)| opening.host == id).map(|(hosted, _)| (opening, hosted)).chain(snapshot.wall_sweeps.iter().filter(|(_, sweep)| sweep.host == id).map(|(hosted, _)| (sweep, hosted))).chain(snapshot.curtain_panel_overrides.iter().filter(|(_, hosted)| hosted.curtain == id).map(|(hosted, _)| (panel, hosted))).chain(snapshot.family_solids.iter().filter(|(_, hosted)| hosted.family == id).map(|(hosted, _)| (solid, hosted))).collect();
+    if row.kind == "sheet" {
+        let nested = sheet_children(snapshot, id);
+        if nested.is_empty() {
+            return leaf(builder);
+        }
+        return semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, nested.len(), |index| leaf(entity_item(snapshot, nested[index].0, &nested[index].1, None)?));
+    }
+    if let (true, Some(conditions)) = (row.kind == "space", snapshot.space_conditions.get(id)) {
+        let summary = crate::editor::bim::entities::energy::summary(conditions);
+        return semio_framework_plugin::tree_window_indexed_item(windows, builder, id, false, 1, |_| leaf(item(&format!("{id}::conditions"), labels.env_conditions_row.as_str(), "thermometer", None, Some(&summary))?));
+    }
     if hosted.is_empty() {
         return leaf(builder);
     }
-    semio_framework_plugin::tree_window_indexed_item(windows, builder, id, false, hosted.len(), |index| leaf(entity_item(snapshot, opening, hosted[index], None)?))
+    semio_framework_plugin::tree_window_indexed_item(windows, builder, id, false, hosted.len(), |index| leaf(entity_item(snapshot, hosted[index].0, hosted[index].1, None)?))
 }
 
 fn group_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &ModelInference, labels: &BimLabels, storey: &str, row: &'static EntityKind, ids: &[String]) -> UiAssemblyResult<BuiltNode> {
@@ -165,7 +184,7 @@ fn storey_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &M
     let builder = drop_onto(entity_item(snapshot, storey, id, elevation.as_deref())?, id)?;
     let groups: Vec<(&'static EntityKind, Vec<String>)> = ENTITIES
         .iter()
-        .filter(|row| !row.library && !matches!(row.kind, "site" | "building" | "storey" | "grid" | "opening" | "view"))
+        .filter(|row| !row.library && !matches!(row.kind, "site" | "building" | "storey" | "grid" | "opening" | "wall-sweep" | "curtain-panel-override" | "view"))
         .map(|row| (row, (row.ids)(snapshot).into_iter().filter(|candidate| (row.parent)(snapshot, candidate).as_deref() == Some(id)).collect::<Vec<_>>()))
         .filter(|(_, ids)| !ids.is_empty())
         .collect();

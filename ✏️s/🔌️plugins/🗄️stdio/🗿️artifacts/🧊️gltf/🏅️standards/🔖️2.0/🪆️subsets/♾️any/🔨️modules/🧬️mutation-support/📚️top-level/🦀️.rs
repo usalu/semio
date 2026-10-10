@@ -1,5 +1,5 @@
 //! 🔒 Pure mechanics private to executable document-level glTF leaves.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfTopLevelMutationRejection {
     pub code: String,

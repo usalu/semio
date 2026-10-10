@@ -97,3 +97,45 @@ fn the_exported_house_is_a_valid_binary_container_with_a_json_chunk_the_spec_acc
     assert!(decoded.document.nodes.iter().all(|node| node.name.as_deref().is_some_and(|name| !name.is_empty())));
     assert_eq!(decoded.document, model_to_gltf(&house()).expect("the house infers").0.to_snapshot().document, "the container carries exactly the document that was built");
 }
+
+#[test]
+fn the_committed_components_file_is_the_current_export() {
+    use crate::standards::v1::subsets::any::io::export::gltf::testkit::{components, read_components, COMPONENTS_DIR};
+    let (bytes, notes) = export_glb(&components()).expect("exports");
+    assert!(notes.is_empty(), "{notes:?}");
+    if std::env::var("BIM_BLESS").is_ok() {
+        std::fs::create_dir_all(COMPONENTS_DIR).expect("the fixture directory");
+        std::fs::write(format!("{COMPONENTS_DIR}/🪑️components.glb"), &bytes).expect("the file is written");
+    }
+    assert_eq!(read_components("🪑️components.glb"), bytes, "the committed export drifted: rewrite it with BIM_BLESS=1");
+}
+
+#[test]
+fn the_components_and_runs_are_element_nodes_with_the_colour_of_their_service() {
+    use crate::standards::v1::subsets::any::io::export::gltf::testkit::components;
+    let (gltf, _) = model_to_gltf(&components()).expect("infers");
+    let report = projection::project(&gltf);
+    assert_eq!((report.kinds["component"], report.kinds["mep"]), (12, 7));
+    let names: Vec<&str> = gltf.materials.iter().map(|material| material.name.as_str()).collect();
+    for system in ["supply", "return", "domestic-water", "waste", "gas", "power", "lighting"] {
+        assert!(names.contains(&format!("MEP {system}").as_str()), "{names:?}");
+    }
+    let supply = gltf.materials.iter().find(|material| material.name == "MEP supply").expect("a supply material");
+    assert_eq!(supply.color.map(|channel| (channel * 255.0).round() as u8), [0x1f, 0x77, 0xd4, 255]);
+    let volume = report.volumes["mep-supply"];
+    assert!((volume - 0.1 * 5.3).abs() < 1e-5, "the mitred prisms of the duct add up to section times length: {volume}");
+}
+
+#[test]
+fn the_components_subject_report_equals_the_table_the_three_oracle_measured_from_the_committed_file() {
+    use crate::standards::v1::subsets::any::io::export::gltf::testkit::{components, read_components};
+    let oracle: serde_json::Value = serde_json::from_slice(&read_components("🔬️measure/🔣️.json")).expect("the oracle table");
+    let ours: serde_json::Value = serde_json::from_str(&projection::project(&model_to_gltf(&components()).expect("infers").0).to_json()).expect("the report parses");
+    for key in ["nodes", "meshes", "primitives", "triangles", "materials", "kinds", "storeys"] {
+        assert_eq!(oracle[key], ours[key], "{key}");
+    }
+    for (id, volume) in oracle["volumes"].as_object().expect("volumes") {
+        let found = ours["volumes"][id].as_f64().unwrap_or_else(|| panic!("{id}: no volume"));
+        assert!((volume.as_f64().unwrap() - found).abs() <= 1e-9 * found.abs().max(1.0), "{id}: three {volume}, written {found}");
+    }
+}

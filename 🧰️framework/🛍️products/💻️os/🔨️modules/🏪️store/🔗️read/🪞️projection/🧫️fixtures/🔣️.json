@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"id":"original-draft","owner":"original draft","expected":{"projectionHeapRelease":0,"originalPreserved":true,"returnedToOriginalIssuer":true}},{"id":"original-transient","owner":"Originalität 🧬","expected":{"projectionHeapRelease":0,"originalPreserved":true,"returnedToOriginalIssuer":true}}]}

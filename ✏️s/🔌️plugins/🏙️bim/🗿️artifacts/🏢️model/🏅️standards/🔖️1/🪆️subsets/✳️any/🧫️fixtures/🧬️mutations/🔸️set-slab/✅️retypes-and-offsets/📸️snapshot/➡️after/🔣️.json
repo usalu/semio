@@ -165,9 +165,9 @@
           }
         ]
       ],
-      "phase": "New",
       "name": "Ground slab",
       "offset": -0.3,
+      "phase": "New",
       "slab_type": "stt-30",
       "storey": "st-ground"
     }

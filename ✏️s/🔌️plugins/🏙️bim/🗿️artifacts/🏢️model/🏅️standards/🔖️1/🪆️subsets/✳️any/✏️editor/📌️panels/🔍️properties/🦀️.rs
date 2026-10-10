@@ -6,6 +6,8 @@
 //! add row that takes `Set.Property = value`), a place-at row that puts it where the author types, and a wall has its flip and split rows. With nothing selected the panel edits the
 //! project record next to the per-kind summary. Every one of these is reachable from the keyboard: they are labelled inputs and rows, not gestures.
 
+use crate::editor::bim::commands::attach_walls;
+use crate::editor::bim::entities::wall_sweeps::top_attach_text;
 use crate::editor::bim::entities::{fields_of, kind_holding, property_text, EntityKind, FieldRow, PROJECT_FIELDS, PROJECT_ID};
 use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::bim::terminology::BimLabels;
@@ -29,6 +31,9 @@ use semio_framework_ui_locale::LocalizedLabel;
 #[path = "🏷️data/🦀️.rs"]
 mod data;
 
+#[path = "🎚️overrides/🦀️.rs"]
+pub mod overrides;
+
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "bim.edit.properties";
 const ROOT: &str = "bim-properties";
@@ -41,7 +46,7 @@ const SELECT_ITEMS: usize = 31;
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.panel_properties.as_str(), BimLabels::NATIVE_DE.panel_properties.as_str()),
+        label: BimLabels::localized(|labels| labels.panel_properties),
         group: PanelGroup::Details,
         body_key: Some(BODY_KEY.into()),
         children: Vec::new(),
@@ -144,15 +149,24 @@ pub fn input_row(id: &str, label: &str, value: &str, placeholder: Option<&str>, 
     control_row(id, label, control)
 }
 
-/// 🧱️ The flip and split rows of a wall selection.
-fn wall_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -> Vec<UiAssemblyResult<BuiltNode>> {
+/// 🧱️ The flip and split rows of a wall selection, the attach row when the selection also holds a roof, slab or ceiling, and the row that frees an attached top.
+fn wall_rows(snapshot: &ModelSnapshot, ids: &[&str], selected: &[String], labels: &BimLabels) -> Vec<UiAssemblyResult<BuiltNode>> {
     if !ids.iter().all(|id| snapshot.walls.contains_key(*id)) {
         return Vec::new();
     }
-    vec![
+    let mut rows = vec![
         ids_args(ids).and_then(|args| tree_item_with_icon(format!("{ROOT}.action.flip"), Label::data(labels.action_flip_wall.as_str().to_string()), "flip-horizontal", bim_action("flipWalls", Some(args)))),
         ids_args(ids).and_then(|args| input_row(&format!("{ROOT}.action.split"), labels.action_split_wall_at.as_str(), "0.5", Some("0.5"), bim_action("splitWall", Some(args)))),
-    ]
+    ];
+    if let Some(target) = attach_walls::target_of(snapshot, "", &[], selected) {
+        let args = || ui_value_map([("ids", ui_value_list(ids.iter().map(|id| ui_value_text(id)).collect::<UiAssemblyResult<Vec<_>>>()?)?), ("target", ui_value_text(target)?)]);
+        rows.push(args().and_then(|args| tree_item_with_icon(format!("{ROOT}.action.attach"), Label::data(labels.action_attach_walls.as_str().to_string()), "arrow-up-to-line", bim_action("attachWalls", Some(args)))));
+    }
+    if ids.iter().any(|id| top_attach_text(snapshot, id).is_some_and(|attached| !attached.is_empty())) {
+        let args = || ui_value_map([("field", ui_value_text("top_attach")?), ("value", ui_value_text("")?), ("ids", ui_value_list(ids.iter().map(|id| ui_value_text(id)).collect::<UiAssemblyResult<Vec<_>>>()?)?)]);
+        rows.push(args().and_then(|args| tree_item_with_icon(format!("{ROOT}.action.free-top"), Label::data(labels.action_free_top.as_str().to_string()), "unlink", bim_action("setField", Some(args)))));
+    }
+    rows
 }
 
 /// 📍️ The place-at row of a placed selection: the reference point of the first element, to be typed over.
@@ -160,6 +174,17 @@ fn place_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -> Vec
     let reference = ids.first().and_then(|id| crate::mutations::elements::placement(snapshot, id)).and_then(|placement| crate::editor::bim::commands::place_elements::reference_of(&placement));
     let Some(reference) = reference else { return Vec::new() };
     vec![ids_args(ids).and_then(|args| input_row(&format!("{ROOT}.action.place"), labels.action_place_at.as_str(), &format!("{}, {}", reference.x, reference.y), Some("0, 0"), bim_action("placeElements", Some(args))))]
+}
+/// 🌡️ The rows of a selection of spaces that state conditions: remove them, and with several spaces selected copy the first one's conditions to the others.
+fn conditions_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -> Vec<UiAssemblyResult<BuiltNode>> {
+    if ids.is_empty() || !ids.iter().all(|id| snapshot.spaces.contains_key(*id)) || !ids.iter().any(|id| snapshot.space_conditions.contains_key(*id)) {
+        return Vec::new();
+    }
+    let mut rows = vec![ids_args(ids).and_then(|args| tree_item_with_icon(format!("{ROOT}.action.clear-conditions"), Label::data(labels.action_clear_conditions.as_str().to_string()), "trash", bim_action("clearConditions", Some(args))))];
+    if ids.len() > 1 {
+        rows.push(ids_args(ids).and_then(|args| tree_item_with_icon(format!("{ROOT}.action.copy-conditions"), Label::data(labels.action_copy_conditions.as_str().to_string()), "copy", bim_action("applyConditions", Some(args)))));
+    }
+    rows
 }
 //#endregion 🔖️Actions
 
@@ -209,13 +234,17 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[
         builder = builder.section(format!("{ROOT}.inferred"), Some(ui_label(labels.section_inferred.as_str())?), true, ui_node_list(inferred)?)?;
     }
     if !row.library {
-        let mut actions = wall_rows(snapshot, &ids, labels);
+        let mut actions = wall_rows(snapshot, &ids, elements, labels);
         actions.extend(place_rows(snapshot, &ids, labels));
+        actions.extend(conditions_rows(snapshot, &ids, labels));
         if !actions.is_empty() {
             builder = builder.section(format!("{ROOT}.actions"), Some(ui_label(labels.section_actions.as_str())?), true, ui_node_list(actions)?)?;
         }
     }
     if let [only] = ids.as_slice() {
+        if snapshot.components.contains_key(*only) {
+            builder = builder.section(format!("{ROOT}.overrides"), Some(ui_label(labels.section_overrides.as_str())?), true, ui_node_list(overrides::render_rows(snapshot, ROOT, only, labels))?)?;
+        }
         if crate::mutations::elements::holds_data(snapshot, only) {
             builder = builder.section(format!("{ROOT}.properties"), Some(ui_label(labels.section_property_sets.as_str())?), true, ui_node_list(property_rows(snapshot, only, labels))?)?;
             let effective = data::effective_rows(snapshot, inference, only, labels);

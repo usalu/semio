@@ -244,7 +244,7 @@ macro_rules! window_config {
         type $Config:ident, $Diff:ident, $Mutation:ident, $Owner:ident;
         $( $(#[$attr:meta])* $field:ident : $ty:ty = $default:expr; )+
     ) => {
-        #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+        #[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
         #[value(rename_all = "camelCase", deny_unknown_fields)]
         #[dsl(layout = "lines")]
         #[artifact(id = $envelope, extension = $extension)]

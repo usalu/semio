@@ -54,6 +54,7 @@ const TRANSACTION: &str = "tx-hot-path";
 
 /// 🧹️ Retires every displaced owner a step left behind, as the runtime's maintenance turns do between steps.
 fn settle(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
+    let mut stalled = 0;
     while store.maintenance_retirements_under_pressure() {
         let grant=physical_test_close_grant();
         let step=store.maintenance_retirements_step(grant).expect("original displaced owners retire");
@@ -61,8 +62,8 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
     }
 }
 
-async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, n: i32, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }, identity).await.expect("a plain edit applies");
+async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, n: i32, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    test_support::dispatch_test_command(store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("a plain edit applies");
     settle(store);
 }
 
@@ -86,10 +87,10 @@ async fn local_steps_cost_o_change_however_long_the_history() {
                 next += 1;
                 match step.kind {
                     StepKind::Apply => apply(&mut store, next, &mut identity).await,
-                    StepKind::Append => drop(store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::AddN(AddN { delta: 1 })], transaction: transaction.clone() }, &mut identity).await.expect("a tick appends")),
-                    StepKind::Commit => drop(store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: TRANSACTION.into() }, &mut identity).await.expect("the transaction commits")),
-                    StepKind::Undo => drop(store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("the applied tail undoes")),
-                    StepKind::Redo => drop(store.dispatch(ArtifactCommand::Redo, &mut identity).await.expect("the redo top redoes")),
+                    StepKind::Append => drop(test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::AddN(AddN { delta: 1 })], transaction: transaction.clone() }).await.expect("a tick appends")),
+                    StepKind::Commit => drop(test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitTransaction { transaction_id: TRANSACTION.into() }).await.expect("the transaction commits")),
+                    StepKind::Undo => drop(test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("the applied tail undoes")),
+                    StepKind::Redo => drop(test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("the redo top redoes")),
                 }
                 settle(&mut store);
             }

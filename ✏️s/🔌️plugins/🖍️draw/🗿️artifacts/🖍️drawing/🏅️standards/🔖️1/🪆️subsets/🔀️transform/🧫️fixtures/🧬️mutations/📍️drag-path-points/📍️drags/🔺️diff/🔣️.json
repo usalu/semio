@@ -47,7 +47,8 @@
           "fill": null,
           "stroke": null,
           "traceParams": null,
-          "layer": null
+          "layer": null,
+          "fontFamily": "anta"
         }
       }
     ]

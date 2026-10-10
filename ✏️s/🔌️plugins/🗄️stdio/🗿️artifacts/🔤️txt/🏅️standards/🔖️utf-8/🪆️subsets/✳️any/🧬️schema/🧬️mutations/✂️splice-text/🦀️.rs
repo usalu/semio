@@ -6,7 +6,7 @@ use crate::TxtSnapshot;
 
 /// ✂️ One range of the edited body: `delete` scalars at `offset` (Unicode scalar values of the body as the line ending joins it)
 /// are replaced by `insert`.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TextSplice {
     pub offset: u32,
@@ -15,7 +15,7 @@ pub struct TextSplice {
 }
 
 /// ✂️ The ranges of one edit, ascending and disjoint, all in the coordinates of the body they were taken from.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SpliceTextMutation {
@@ -179,7 +179,7 @@ impl SpliceTextMutation {
 }
 
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SpliceTextMutation {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "splice", entity: "text", kind: "splice-text", record: "SpliceText" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "text", kind: "splice-text", record: "EditedText" };
 
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
         match self.plan(base) {

@@ -1,5 +1,9 @@
 //! 🧩 Shared, catalog-independent contracts for one stdio artifact package.
 
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_OWNER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+
 pub use pack;
 pub use semio_framework_os_kernel as kernel;
 pub use semio_framework_value as value;

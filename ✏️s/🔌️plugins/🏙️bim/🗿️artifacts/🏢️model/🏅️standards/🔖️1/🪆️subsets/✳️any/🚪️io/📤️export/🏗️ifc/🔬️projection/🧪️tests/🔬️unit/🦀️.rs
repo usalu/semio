@@ -166,3 +166,65 @@ fn the_ceilings_subject_report_equals_the_table_the_ifcopenshell_oracle_measured
         assert!((measured - written).abs() < 1e-9 * written.abs().max(1.0), "{tag}: kernel {measured}, written {written}");
     }
 }
+
+const PSETS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏷️psets");
+
+fn read_psets(name: &str) -> Vec<u8> {
+    std::fs::read(format!("{PSETS_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))
+}
+
+#[test]
+fn the_report_lists_the_systems_with_their_parents_the_attached_codes_and_the_typed_type_properties() {
+    use crate::standards::v1::subsets::any::io::export::ifc::testkit::psets;
+    let report = projection(&psets());
+    let din = &report.classifications.systems["DIN 276|2018-12"];
+    assert_eq!(din.source, "https://www.din.de");
+    assert_eq!(din.entries, ["300|Building construction|", "330|Exterior walls|300", "331|Load-bearing exterior walls|330", "340|Interior walls|300"]);
+    assert_eq!(report.classifications.systems["Uniclass 2015|"].entries[2], "EF_25_10|Walls|EF_25");
+    assert_eq!(report.classifications.attached["w-south"], ["DIN 276|2018-12|331", "Uniclass 2015||EF_25_10"]);
+    assert_eq!(report.classifications.attached["wt-300"], ["DIN 276|2018-12|330", "Uniclass 2015||EF_25"]);
+    assert_eq!(report.classifications.attached["st-ground"], ["DIN 276|2018-12|300"]);
+    assert_eq!(report.type_properties["wt-300"]["Pset_WallCommon"]["FireRating"], ("IFCLABEL".to_string(), "\"EI90\"".to_string()));
+    assert_eq!(report.type_properties["dr-180"]["Pset_DoorCommon"]["Width"], ("IFCLENGTHMEASURE".to_string(), "1.8".to_string()));
+    assert_eq!(report.type_properties["dr-180"]["Pset_DoorCommon"]["Leaves"], ("IFCINTEGER".to_string(), "2".to_string()));
+    assert_eq!(report.type_properties["ct-rect"]["Pset_ColumnCommon"]["LoadBearing"], ("IFCBOOLEAN".to_string(), "true".to_string()));
+    assert!(!report.type_properties.contains_key("st-floor"), "a type without authored sets has no row");
+    let house = projection(&house());
+    assert!(house.type_properties.is_empty());
+    assert_eq!(house.classifications.attached["w-south"], ["Uniclass 2015||EF_25_10"]);
+}
+
+#[test]
+fn the_json_form_of_the_classification_and_type_property_tables_parses() {
+    use crate::standards::v1::subsets::any::io::export::ifc::testkit::psets;
+    let parsed: serde_json::Value = serde_json::from_str(&projection(&psets()).to_json()).expect("valid JSON");
+    assert_eq!(parsed["classifications"]["systems"]["DIN 276|2018-12"]["entries"][1], "330|Exterior walls|300");
+    assert_eq!(parsed["classifications"]["attached"]["dr-180"][0], "DIN 276|2018-12|300");
+    assert_eq!(parsed["type_properties"]["wt-300"]["Pset_WallCommon"]["IsExternal"], serde_json::json!(["IFCBOOLEAN", true]));
+    assert_eq!(parsed["type_properties"]["wt-300"]["Custom"]["Reference"], serde_json::json!(["IFCLABEL", "WT-300"]));
+    assert_eq!(parsed["type_properties"]["wnd-120"]["Pset_WindowCommon"]["ThermalTransmittance"], serde_json::json!(["IFCREAL", 1.1]));
+}
+
+#[test]
+fn the_committed_psets_file_is_the_current_export() {
+    use crate::standards::v1::subsets::any::io::export::ifc::testkit::psets;
+    let (bytes, notes) = export_ifc2x3(&psets()).expect("the psets model exports");
+    assert!(notes.is_empty(), "{notes:?}");
+    if std::env::var("BIM_BLESS").is_ok() {
+        std::fs::create_dir_all(PSETS_DIR).expect("the fixture directory");
+        std::fs::write(format!("{PSETS_DIR}/🏷️psets.ifc"), &bytes).expect("the file is written");
+    }
+    assert_eq!(read_psets("🏷️psets.ifc"), bytes, "the committed export drifted: rewrite it with BIM_BLESS=1");
+}
+
+#[test]
+fn the_psets_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the_committed_file() {
+    use crate::standards::v1::subsets::any::io::export::ifc::testkit::psets;
+    let oracle: serde_json::Value = serde_json::from_slice(&read_psets("🔬️measure/🔣️.json")).expect("the oracle table");
+    let ours: serde_json::Value = serde_json::from_str(&projection(&psets()).to_json()).expect("the report parses");
+    assert_eq!(oracle["schema"], ours["schema"]);
+    assert_eq!(oracle["counts"], ours["counts"]);
+    assert_eq!(oracle["containment"], ours["containment"]);
+    assert_eq!(oracle["classifications"], ours["classifications"]);
+    assert_eq!(oracle["type_properties"], ours["type_properties"]);
+}

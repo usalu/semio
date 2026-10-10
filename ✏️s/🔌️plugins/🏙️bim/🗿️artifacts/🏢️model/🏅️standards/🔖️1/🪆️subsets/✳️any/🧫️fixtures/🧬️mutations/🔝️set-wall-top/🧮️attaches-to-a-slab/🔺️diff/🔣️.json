@@ -1,1 +1,13 @@
-{}
+{
+  "walls": {
+    "w-east": {
+      "entry": "Patched",
+      "top": {
+        "Slab": {
+          "offset": 0.1,
+          "slab": "sl-ground"
+        }
+      }
+    }
+  }
+}

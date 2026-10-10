@@ -89,6 +89,7 @@ impl PagedUtf8AppendCursor {
     pub fn begin_close(&mut self) -> bool { if self.closing { return false; } self.closing = true; true }
     /// 🧮️ Reads the next pending chunk's payload work without releasing its backing.
     pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        if self.controlled_close.is_empty()&&self.pending.is_none()&&(self.source.is_some()||self.destination.is_some()){return Ok(2*size_of::<Option<(usize,usize)>>());}
         self.controlled_close.next_copy_byte_demand()
     }
     /// 📐️ Reads the next native retirement birth while retaining the pending chunk.
@@ -106,9 +107,11 @@ impl PagedUtf8AppendCursor {
         if !self.controlled_close.is_empty() { return self.controlled_close.step_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress())); }
         if let Some(step) = self.controlled_close.begin_granted(&mut self.pending, grant)? { return Ok(step); }
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        let copy=2*size_of::<Option<(usize,usize)>>();
+        if grant.maximum_depth==0||grant.maximum_copy_bytes<copy{return Ok(RetainedCloneStep::Progress(Default::default()));}
         self.source = None;
         self.destination = None;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes:copy, ..Default::default() }))
     }
     
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.source.is_none() && self.destination.is_none() && self.pending.is_none() && self.controlled_close.is_empty() }

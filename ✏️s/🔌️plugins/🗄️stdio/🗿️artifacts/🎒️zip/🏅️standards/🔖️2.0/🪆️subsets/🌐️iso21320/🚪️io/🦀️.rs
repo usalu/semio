@@ -10,7 +10,7 @@ pub mod derived_composition {
     use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_conformance;
     use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_wire_conformance;
     use semio_framework_diagnostic::Diagnostic;
-use crate::apply_mutation;
+
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
@@ -118,6 +118,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
+    use crate::apply_mutation;
     use crate::standards::v2_0::subsets::base::schema::diff::ZipDiff;
     use crate::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipSnapshot};
     use crate::standards::v2_0::subsets::iso21320::io::check_iso21320_conformance;

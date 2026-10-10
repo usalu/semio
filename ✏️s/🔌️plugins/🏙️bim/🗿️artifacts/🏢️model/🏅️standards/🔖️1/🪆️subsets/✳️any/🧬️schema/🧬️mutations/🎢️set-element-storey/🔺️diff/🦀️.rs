@@ -1,11 +1,12 @@
 //! 🔺️ Diff constructor for `SetElementStorey`: a one-field patch of the storey slot in whichever collection holds the element. The target storey must exist and belong to the building the element stands in. Nothing derived is written:
-//! hosted openings follow their host by reference, and the heights, layouts, solids and quantities of the element follow by inference. The move is refused when the resolved top of the element would no longer lie above its base, or when
+//! hosted openings follow their host by reference, the components mounted on a wall move to its new storey with it (a mounted component itself cannot change its storey), and the heights, layouts, solids and quantities of the element follow by inference. The move is refused when the resolved top of the element would no longer lie above its base, or when
 //! an opening that fits its host today would rise above the host at its new height.
 
-use super::super::{elements, placement};
+use super::super::{component_rules, elements, placement};
 use super::SetElementStorey;
-use crate::{ModelDiff, ModelSnapshot};
+use crate::{Component, ComponentPatch, Entry, KeyedDelta, ModelDiff, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
+use std::collections::BTreeMap;
 
 fn resolved(base: &ModelSnapshot, storey: &str, id: &str) -> Option<f64> {
     elements::vertical_of(base, id).and_then(|(base_offset, top)| placement::rise(base, storey, base_offset, top))
@@ -22,6 +23,9 @@ pub fn diff(payload: &SetElementStorey, base: &ModelSnapshot) -> MutationOutcome
             MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Element \"{id}\" does not exist."), [id.clone()])
         };
     };
+    if let Some(wall) = base.components.get(id).and_then(|row| row.host.as_ref()) {
+        return MutationOutcome::refuse(OutcomeCode::Invariant, format!("Component \"{id}\" is mounted on wall \"{wall}\" and stands on its storey; move the wall."), [id.clone()]);
+    }
     let Some(target) = base.storeys.get(&payload.storey) else {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Storey \"{}\" does not exist.", payload.storey), ["storey"]);
     };
@@ -42,13 +46,18 @@ pub fn diff(payload: &SetElementStorey, base: &ModelSnapshot) -> MutationOutcome
             }
         }
     }
-    let Some(diff) = elements::restorey(base, id, &payload.storey) else {
+    let Some(mut diff) = elements::restorey(base, id, &payload.storey) else {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Element \"{id}\" does not exist."), [id.clone()]);
     };
+    let along: BTreeMap<String, Entry<Component, ComponentPatch>> = component_rules::mounted_on(base, id).map(|component| (component.clone(), Entry::Patched(ComponentPatch { storey: Some(payload.storey.clone()), ..Default::default() }))).collect();
+    let carried = hosted + along.len();
+    if !along.is_empty() {
+        diff.components = Some(KeyedDelta(along));
+    }
     let outcome = MutationOutcome::new(diff);
-    if hosted == 0 {
+    if carried == 0 {
         outcome
     } else {
-        outcome.info(OutcomeCode::Cascade, format!("Element \"{id}\" took {hosted} hosted opening(s) along."))
+        outcome.info(OutcomeCode::Cascade, format!("Element \"{id}\" took {carried} hosted opening(s) and component(s) along."))
     }
 }

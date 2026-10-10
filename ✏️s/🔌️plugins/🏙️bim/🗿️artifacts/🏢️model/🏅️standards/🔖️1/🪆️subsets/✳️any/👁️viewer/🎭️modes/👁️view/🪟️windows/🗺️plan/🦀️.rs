@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
-        label: LocalizedLabel::native(BimViewerLabels::NATIVE_EN.window_plan.as_str(), BimViewerLabels::NATIVE_DE.window_plan.as_str()),
+        label: BimViewerLabels::localized(|labels| labels.window_plan),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "bim-plan".into(),

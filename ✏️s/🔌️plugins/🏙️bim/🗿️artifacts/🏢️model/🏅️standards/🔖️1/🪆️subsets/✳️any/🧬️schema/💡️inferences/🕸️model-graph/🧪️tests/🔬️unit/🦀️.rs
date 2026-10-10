@@ -72,7 +72,7 @@ fn the_plan_is_topological_for_every_selection_and_names_only_planned_parents() 
 #[test]
 fn a_selection_plans_only_its_kinds_and_their_ancestors() {
     let snapshot = full();
-    let kinds_of = |wanted: u32| plan::build(&snapshot, kinds::closure(wanted)).iter().map(|step| step.key.kind()).collect::<std::collections::BTreeSet<_>>();
+    let kinds_of = |wanted: u64| plan::build(&snapshot, kinds::closure(wanted)).iter().map(|step| step.key.kind()).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(kinds_of(kinds::LEVELS), [NodeKind::Storey].into());
     assert_eq!(kinds_of(kinds::LAYOUTS), [NodeKind::Storey, NodeKind::Band, NodeKind::WallLayout].into());
     assert!(!kinds_of(kinds::SOLIDS).contains(&NodeKind::Plan) && kinds_of(kinds::SOLIDS).contains(&NodeKind::OpeningFrame));

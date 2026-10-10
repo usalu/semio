@@ -31,7 +31,7 @@ use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 /// 17th/18th. Wrapped by `SemioSnapshot` below (a struct, not the enum
 /// directly — keeps `#[derive(ArtifactSchema)]` on a proven struct shape; see the W1b manifest for
 /// why).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "subset", rename_all = "camelCase")]
 pub enum SemioSubsetSnapshot {
     Brep(SemioBrepSnapshot),
@@ -158,11 +158,7 @@ mod tests;
 
 
 semio_framework_value::artifact_retire_struct!(SemioSnapshot{schema,subset});
-impl semio_framework_value::retirement::RetireOwned for SemioSubsetSnapshot{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self{
- Self::Brep(v)=>v.retirement(),Self::Mesh(v)=>v.retirement(),Self::Model(v)=>v.retirement(),Self::Value(v)=>v.retirement(),Self::Document(v)=>v.retirement(),Self::Cad(v)=>v.retirement(),Self::Drawing(v)=>v.retirement(),Self::Image(v)=>v.retirement(),Self::Video(v)=>v.retirement(),Self::Audio(v)=>v.retirement(),Self::Animation(v)=>v.retirement(),Self::Presentation(v)=>v.retirement(),Self::Flow(v)=>v.retirement(),Self::Text(v)=>v.retirement(),Self::Table(v)=>v.retirement(),Self::Graph(v)=>v.retirement(),Self::Object(v)=>v.retirement(),Self::Kit(v)=>v.retirement()
- }}
-}
+
 
 #[cfg(test)]
 #[path="🧪️tests/🛫️native/🦀️.rs"]
@@ -222,3 +218,4 @@ pub(crate) fn subset_ordinal(s: &SemioSubsetSnapshot) -> u8 {
         SemioSubsetSnapshot::Kit(_) => 17,
     }
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 

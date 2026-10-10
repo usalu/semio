@@ -1,1 +1,12 @@
-{}
+{
+  "walls": {
+    "w-east": {
+      "entry": "Patched",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      }
+    }
+  }
+}

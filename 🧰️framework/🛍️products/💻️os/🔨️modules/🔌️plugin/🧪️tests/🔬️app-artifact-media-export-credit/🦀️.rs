@@ -106,17 +106,21 @@ mod artifact_media_export_credit_tests {
         }
         struct SnapshotDisposer;
         impl ArtifactSnapshotDisposer<Vec<DropItem>> for SnapshotDisposer {
-            fn close_step(&mut self, snapshot: &mut Option<std::sync::Arc<Vec<DropItem>>>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-                if maximum_items == 0 {
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            fn retirement_demands(&self, _snapshot: &Option<std::sync::Arc<Vec<DropItem>>>, _body: usize) -> Result<RetirementDemand, ValueError> {
+                Ok(RetirementDemand { depth: 1, ..Default::default() })
+            }
+
+            fn close_step(&mut self, snapshot: &mut Option<std::sync::Arc<Vec<DropItem>>>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+                if grant.maximum_items == 0 {
+                    return Ok(PluginLifecycleStep::Progress(Default::default()));
                 }
-                let Some(owner) = snapshot.as_mut() else { return Ok(PluginCloseStep::Complete) };
-                let Some(items) = std::sync::Arc::get_mut(owner) else { return Ok(PluginCloseStep::Blocked { reason: "snapshot remains externally owned" }) };
+                let Some(owner) = snapshot.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
+                let Some(items) = std::sync::Arc::get_mut(owner) else { return Ok(PluginLifecycleStep::Blocked { reason: "snapshot remains externally owned" }) };
                 if items.pop().is_some() {
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
                 drop(snapshot.take());
-                Ok(PluginCloseStep::Complete)
+                Ok(PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
             }
 
             fn terminal_is_empty(&self, snapshot: &Option<std::sync::Arc<Vec<DropItem>>>) -> bool {
@@ -134,11 +138,16 @@ mod artifact_media_export_credit_tests {
         drop(job_a);
         drop(lease);
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0, "job and lease release must not become final for snapshot A");
-        assert_eq!(retirement_a.close_step(1, 0).expect("first bounded A disposal"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 4 };
+        let one_item = PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() });
+        assert_eq!(retirement_a.close_step(grant).expect("first bounded A disposal"), one_item);
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        assert_eq!(retirement_a.close_step(1, 0).expect("second bounded A disposal"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        assert_eq!(retirement_a.close_step(1, 0).expect("terminal A disposal"), PluginCloseStep::Complete);
+        assert_eq!(retirement_a.close_step(grant).expect("second bounded A disposal"), one_item);
+        assert_eq!(retirement_a.close_step(grant).expect("final A snapshot disposal"), one_item);
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 2);
+        let shell = retirement_a.retirement_demands(0).expect("terminal shell quote");
+        assert_eq!(retirement_a.close_step(RetainedCloneGrant { maximum_release_bytes: shell.release_bytes - 1, ..grant }).expect("under-granted shell release yields"), PluginLifecycleStep::Progress(Default::default()));
+        assert_eq!(retirement_a.close_step(grant).expect("terminal A shell release"), PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: shell.release_bytes, ..Default::default() }));
         assert!(std::sync::Arc::strong_count(&cache_b) == 1, "cache B is independent of retired A authority");
     }
 }

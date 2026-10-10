@@ -1,1 +1,9 @@
-{}
+{
+  "area_schemes": {
+    "as-nsa": {
+      "entry": "Patched",
+      "usages": [],
+      "zones": []
+    }
+  }
+}

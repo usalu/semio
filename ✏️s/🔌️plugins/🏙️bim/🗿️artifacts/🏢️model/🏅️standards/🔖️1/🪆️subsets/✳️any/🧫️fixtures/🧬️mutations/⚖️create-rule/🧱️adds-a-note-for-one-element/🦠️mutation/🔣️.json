@@ -1,0 +1,18 @@
+{
+  "mutation": "createRule",
+  "id": "r-1",
+  "rule": {
+    "name": "Clear height",
+    "kind": "MinClearHeight",
+    "limit": 2.4,
+    "severity": "Note",
+    "scope": {
+      "storeys": [],
+      "phases": [
+        "New"
+      ],
+      "ids": [],
+      "filter": ""
+    }
+  }
+}

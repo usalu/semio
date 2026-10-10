@@ -1,6 +1,7 @@
 {
   "schema": "framework.value.read-ownership",
   "capacity": 1024,
+  "sourceHandbackRefusals": ["items", "copy", "depth"],
   "workBytes": [
     1,
     3,

@@ -60,6 +60,8 @@ export interface BimWorldWindowConfig {
   sectionAxis: string;
   sectionOffset: number;
   framed: boolean;
+  energyOverlay: boolean;
+  energyMode: string;
 }
 /** 🧬️ The one `replace` mutation of BimWorldWindowConfig: its payload is the window's whole configuration; its diff names only the fields that differ from the base. */
 export type BimWorldWindowConfigMutation = { kind: "replace"; config: BimWorldWindowConfig };
@@ -67,7 +69,7 @@ export type BimWorldWindowConfigMutation = { kind: "replace"; config: BimWorldWi
 export type BimWorldWindowConfigDiff = Partial<BimWorldWindowConfig>;
 /** 🚪️ Parses one exact BimWorldWindowConfig. */
 export function parseBimWorldWindowConfig(value: unknown): BimWorldWindowConfig {
-  const row = exact(value, "$", ["camera", "projection", "isolatedStorey", "hiddenStoreys", "viewPhase", "sectionEnabled", "sectionAxis", "sectionOffset", "framed"]);
+  const row = exact(value, "$", ["camera", "projection", "isolatedStorey", "hiddenStoreys", "viewPhase", "sectionEnabled", "sectionAxis", "sectionOffset", "framed", "energyOverlay", "energyMode"]);
   return {
     camera: parseViewport3dOrbit(row.camera),
     projection: parseBimWorldProjection(row.projection, "$.projection"),
@@ -78,6 +80,8 @@ export function parseBimWorldWindowConfig(value: unknown): BimWorldWindowConfig 
     sectionAxis: text(row.sectionAxis, "$.sectionAxis"),
     sectionOffset: num(row.sectionOffset, "$.sectionOffset"),
     framed: flag(row.framed, "$.framed"),
+    energyOverlay: flag(row.energyOverlay, "$.energyOverlay"),
+    energyMode: text(row.energyMode, "$.energyMode"),
   };
 }
 /** 🔺️ The sparse diff one exact BimWorldWindowConfig mutation produces over `base`. */

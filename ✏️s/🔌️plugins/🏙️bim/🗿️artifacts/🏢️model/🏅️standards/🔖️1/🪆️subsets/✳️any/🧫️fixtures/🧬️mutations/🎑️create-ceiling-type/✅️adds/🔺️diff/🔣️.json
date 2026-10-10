@@ -1,1 +1,20 @@
-{}
+{
+  "ceiling_types": {
+    "ct-mineral": {
+      "entry": "Created",
+      "layers": [
+        {
+          "function": "Finish",
+          "material": "m-board",
+          "thickness": 0.015
+        },
+        {
+          "function": "Insulation",
+          "material": "m-brick",
+          "thickness": 0.05
+        }
+      ],
+      "name": "Mineral fibre"
+    }
+  }
+}

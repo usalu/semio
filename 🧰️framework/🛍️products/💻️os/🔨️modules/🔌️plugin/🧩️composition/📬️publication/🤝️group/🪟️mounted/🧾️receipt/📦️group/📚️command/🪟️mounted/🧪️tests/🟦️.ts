@@ -17,8 +17,9 @@ test("mounted command history uses original paged append and whole physical reti
   expect(source.includes("command_log: PagedCommandLog::new()")).toBe(true);
   expect(source.includes("self.command_log.prepare_append()")).toBe(true);
   expect(source.includes("self.command_log.commit_append(")).toBe(true);
-  expect(source.includes("self.command_log.close_step(")).toBe(true);
-  expect(source.includes("self.command_log.next_close_byte_demand()")).toBe(true);
+  const ladder = await Bun.file(new URL("../../../../../../../../../🪜️close-ladder/🦀️.rs", import.meta.url)).text();
+  expect(ladder.includes("self.command_log.close_step(")).toBe(true);
+  expect(ladder.includes("self.command_log.retirement_demands()")).toBe(true);
   expect(source.includes("self.command_log.pop()")).toBe(false);
   expect(source.includes("self.command_log[")).toBe(false);
   expect(source.includes("self.command_log.partition_point(")).toBe(false);

@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "r-1": {
+      "entry": "Patched",
+      "scope": {
+        "filter": "",
+        "ids": [],
+        "phases": [
+          "New"
+        ],
+        "storeys": [
+          "st-ground"
+        ]
+      }
+    }
+  }
+}

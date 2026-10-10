@@ -1,4 +1,4 @@
-use super::{build_codes, distance_symbol, fixed_dist_lengths, fixed_lit_lengths, length_symbol, BitWriter, MAX_MATCH, MIN_MATCH};
+use super::{build_codes, distance_symbol, fixed_dist_lengths, fixed_lit_lengths, length_symbol, next_backing_bytes, release_next_backing, BitWriter, MAX_MATCH, MIN_MATCH};
 
 const BL_ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
 const HEAP_SIZE: usize = 573;
@@ -639,14 +639,19 @@ impl Job {
         }
     }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> (bool, usize, usize) {
-        let step = match self {
-            Self::Classic(state) => retire_encoder_step(state, maximum_items, maximum_bytes),
-            Self::Miniz(state) => retire_miniz_step(state, maximum_items, maximum_bytes),
-        };
-        match step {
-            Some((released_items, released_bytes)) => (false, released_items, released_bytes),
-            None => (true, 0, 0),
+    /// ♻️ The physical bytes the next close turn releases: the first backing the engine still holds, `0` once it holds none.
+    pub(super) fn next_close_release_bytes(&self) -> usize {
+        match self {
+            Self::Classic(state) => next_backing_bytes(&[&state.input, &state.writer.out, &state.head, &state.previous, &state.tokens]),
+            Self::Miniz(state) => next_backing_bytes(&[&state.input, &state.writer.out, &state.head, &state.previous, &state.tokens]),
+        }
+    }
+
+    /// ♻️ Releases the first backing the engine still holds whole and returns its bytes, `None` once it holds none.
+    pub(super) fn close_step(&mut self) -> Option<usize> {
+        match self {
+            Self::Classic(state) => release_next_backing(&mut [&mut state.input, &mut state.writer.out, &mut state.head, &mut state.previous, &mut state.tokens]),
+            Self::Miniz(state) => release_next_backing(&mut [&mut state.input, &mut state.writer.out, &mut state.head, &mut state.previous, &mut state.tokens]),
         }
     }
 
@@ -656,42 +661,6 @@ impl Job {
             Self::Miniz(state) => miniz_terminal_is_empty(state),
         }
     }
-}
-
-fn retire_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-    let item_bytes = size_of::<T>();
-    if !values.is_empty() {
-        if maximum_items == 0 || maximum_bytes < item_bytes {
-            return Some((0, 0));
-        }
-        drop(values.pop());
-        return Some((1, item_bytes));
-    }
-    if values.capacity() == 0 {
-        return None;
-    }
-    let backing_bytes = values.capacity().saturating_mul(item_bytes);
-    if maximum_items == 0 || maximum_bytes < backing_bytes {
-        return Some((0, 0));
-    }
-    drop(std::mem::take(values));
-    Some((1, backing_bytes))
-}
-
-fn retire_encoder_step(state: &mut Encoder, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-    retire_vec_step(&mut state.input, maximum_items, maximum_bytes)
-        .or_else(|| retire_vec_step(&mut state.writer.out, maximum_items, maximum_bytes))
-        .or_else(|| retire_vec_step(&mut state.head, maximum_items, maximum_bytes))
-        .or_else(|| retire_vec_step(&mut state.previous, maximum_items, maximum_bytes))
-        .or_else(|| retire_vec_step(&mut state.tokens, maximum_items, maximum_bytes))
-}
-
-fn retire_miniz_step(state: &mut MinizEncoder, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-    retire_vec_step(&mut state.input, maximum_items, maximum_bytes)
-        .or_else(|| retire_vec_step(&mut state.writer.out, maximum_items, maximum_bytes))
-        .or_else(|| retire_vec_step(&mut state.head, maximum_items, maximum_bytes))
-        .or_else(|| retire_vec_step(&mut state.previous, maximum_items, maximum_bytes))
-        .or_else(|| retire_vec_step(&mut state.tokens, maximum_items, maximum_bytes))
 }
 
 fn encoder_terminal_is_empty(state: &Encoder) -> bool {

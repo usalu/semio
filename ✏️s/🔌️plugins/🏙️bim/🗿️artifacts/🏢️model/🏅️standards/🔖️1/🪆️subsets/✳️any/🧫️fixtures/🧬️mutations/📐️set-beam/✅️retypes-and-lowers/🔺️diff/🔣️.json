@@ -1,1 +1,9 @@
-{}
+{
+  "beams": {
+    "b-a": {
+      "beam_type": "bt-40x60",
+      "entry": "Patched",
+      "top_offset": -0.3
+    }
+  }
+}

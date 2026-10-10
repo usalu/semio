@@ -16,7 +16,7 @@ pub const NODES_PER_STEP: usize = 256;
 /// 🗣️ The progress text of a step, English and German.
 pub const PREVIEW: &[u8] = br#"{"en":"Analysing the model","de":"Modell wird analysiert"}"#;
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "analyse-model")]
 pub struct AnalyseModel {
     /// The state a toggle that triggers the analysis reports; the analysis ignores it.
@@ -31,13 +31,14 @@ fn ended(error: protocol::InferenceError) -> Fault {
 /// 🧵️ The retained-command shell of an [`Analysis`]: one step per call, the framework yields between steps and tells the work when the user cancelled.
 pub struct AnalyseWork {
     tool_id: &'static str,
+    owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     analysis: Option<Analysis>,
 }
 
 impl AnalyseWork {
     /// 🏗️ The work of tool `tool_id`.
-    pub fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, analysis: None }
+    pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, owner, analysis: None }
     }
 }
 
@@ -54,7 +55,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for AnalyseWork {
         if !matches!(input.command, BimCommand::AnalyseModel(_)) {
             return Err(Fault::from("bim-analyse-work-mismatch"));
         }
-        let analysis = self.analysis.get_or_insert_with(|| Analysis::new(Some(input.operation.app_instance_id), NODES_PER_STEP));
+        let analysis = self.analysis.get_or_insert_with(|| Analysis::new(Some(&self.owner), NODES_PER_STEP));
         if cx.is_cancelled() {
             analysis.cancel(input.snapshot);
             return Err(fault("bim.analyse.cancelled", "the analysis was cancelled"));
@@ -69,8 +70,8 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for AnalyseWork {
 }
 
 /// 🔎️ The synchronous path: the session settled at the document in one go.
-pub fn handle(_payload: &AnalyseModel, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
-    let mut analysis = Analysis::new(doc.operation_optional().map(|operation| operation.app_instance_id), usize::MAX);
+pub fn handle(_payload: &AnalyseModel, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
+    let mut analysis = Analysis::new(ctx.gestures.as_ref(), usize::MAX);
     while !analysis.is_done() {
         analysis.advance(doc.snapshot).map_err(ended)?;
     }

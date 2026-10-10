@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema",
+    "policy",
+    "stops",
+    "workGrants",
+    "denials",
+    "terminal"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "semio.flow.original-close/v1"
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ]
+    },
+    "stops": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "workGrants": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "denials": {
+      "minItems": 5,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "enum": [
+              "progress",
+              "error"
+            ]
+          },
+          "axis": {
+            "enum": [
+              "items",
+              "copy",
+              "capacity",
+              "release",
+              "depth"
+            ]
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "axis",
+          "refusal"
+        ]
+      }
+    },
+    "terminal": {
+      "type": "object",
+      "properties": {
+        "dropReleasedBytes": {
+          "const": 0
+        },
+        "dropRequestedBytes": {
+          "const": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "dropRequestedBytes",
+        "dropReleasedBytes"
+      ]
+    }
+  }
+}

@@ -52,3 +52,6 @@ type PathCubic { ctrl1: PathPoint! ctrl2: PathPoint! to: PathPoint! }
 type PathArc { rx: Float! ry: Float! rotation: Float! largeArc: Boolean! sweep: Boolean! to: PathPoint! }
 type PathClose { kind: String! }
 union PathSegment = PathMove | PathLine | PathQuad | PathCubic | PathArc | PathClose
+
+enum DrawingFontFamily { anta kellySlab shareTechMono notoEmoji }
+type DrawingText { kind: String! fontFamily: DrawingFontFamily! x: Float! y: Float! content: String! size: Float! }

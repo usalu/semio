@@ -56,7 +56,7 @@ pub struct SemioValueEntry {
 /// internally-tagged (`tag = "kind"`) representation can only merge the tag into map-shaped
 /// content; a tuple variant wrapping a non-map payload compiles but fails at RUNTIME serialization
 /// (identical citation in `json`'s own `JsonValue` doc comment).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[derive(Default)]
 pub enum SemioValue {

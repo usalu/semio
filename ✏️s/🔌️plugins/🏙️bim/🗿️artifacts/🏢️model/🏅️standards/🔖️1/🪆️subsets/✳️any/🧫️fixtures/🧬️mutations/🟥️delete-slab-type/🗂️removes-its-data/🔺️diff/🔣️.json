@@ -1,5 +1,5 @@
 {
-  "slab_types": {
+  "classifications": {
     "sl-spare": {
       "entry": "Deleted"
     }
@@ -9,7 +9,7 @@
       "entry": "Deleted"
     }
   },
-  "classifications": {
+  "slab_types": {
     "sl-spare": {
       "entry": "Deleted"
     }

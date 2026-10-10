@@ -23,6 +23,13 @@ semio_framework_ui_locale::app_labels! {
     }
 }
 
+impl BimViewerLabels {
+    /// 🌐️ The English and German text of one label field, read through borrowed constants (`NATIVE_EN.field` would copy the whole label set into the caller's frame at `opt-level = 0`).
+    pub fn localized(pick: fn(&Self) -> semio_framework_ui_locale::LabelText) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(pick(&Self::NATIVE_EN).as_str(), pick(&Self::NATIVE_DE).as_str())
+    }
+}
+
 /// 🗣️ The label set of the viewing user's locale and terminology.
 pub fn bim_viewer_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static BimViewerLabels {
     semio_framework_plugin::resolve_labels::<BimViewerLabels>(view_state)

@@ -1,0 +1,215 @@
+{
+  "schema": "IFC4",
+  "counts": {
+    "IfcProject": 1,
+    "IfcSite": 1,
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 4,
+    "IfcWallStandardCase": 2,
+    "IfcWall": 5,
+    "IfcOpeningElement": 6,
+    "IfcWindow": 3,
+    "IfcDoor": 2,
+    "IfcSlab": 5,
+    "IfcRoof": 1,
+    "IfcColumn": 2,
+    "IfcBeam": 2,
+    "IfcStair": 2,
+    "IfcStairFlight": 3,
+    "IfcRailing": 1,
+    "IfcCurtainWall": 1,
+    "IfcMember": 1,
+    "IfcPlate": 1,
+    "IfcSpace": 2,
+    "IfcGrid": 1,
+    "IfcRelVoidsElement": 6,
+    "IfcRelFillsElement": 5,
+    "IfcRelAggregates": 9,
+    "IfcRelContainedInSpatialStructure": 4,
+    "IfcRelDefinesByType": 11,
+    "IfcRelAssociatesMaterial": 18,
+    "IfcRelAssociatesClassification": 9,
+    "IfcMaterialLayerSet": 4,
+    "IfcMaterialLayerSetUsage": 10,
+    "IfcWallType": 2,
+    "IfcSlabType": 1,
+    "IfcRoofType": 1,
+    "IfcColumnType": 2,
+    "IfcBeamType": 2,
+    "IfcWindowType": 1,
+    "IfcDoorType": 2,
+    "IfcTriangulatedFaceSet": 11,
+    "IfcClassification": 3,
+    "IfcClassificationReference": 9,
+    "IfcAnnotation": 0,
+    "IfcTextLiteralWithExtent": 0,
+    "IfcPolyline": 34,
+    "IfcPlanarExtent": 0,
+    "IfcCovering": 0,
+    "IfcCoveringType": 0,
+    "IfcRamp": 0,
+    "IfcRampFlight": 0,
+    "IfcRelConnectsElements": 0,
+    "IfcProjectLibrary": 1,
+    "IfcPropertySetTemplate": 4,
+    "IfcRelDeclares": 2,
+    "IfcRelDefinesByTemplate": 2
+  },
+  "containment": {
+    "st-base": [],
+    "st-first": [
+      "cw-1",
+      "o-door-2",
+      "rl-1",
+      "s-2",
+      "sl-balcony",
+      "sl-first",
+      "w-first-south"
+    ],
+    "st-ground": [
+      "b-1",
+      "b-2",
+      "c-1",
+      "c-2",
+      "o-door-1",
+      "o-win-1",
+      "o-win-2",
+      "o-win-arc",
+      "s-1",
+      "sl-ground",
+      "w-arc",
+      "w-east",
+      "w-free",
+      "w-north",
+      "w-south",
+      "w-west"
+    ],
+    "st-roof": [
+      "r-1"
+    ]
+  },
+  "volumes": {
+    "w-first-south": 5.586,
+    "w-free": 1.08,
+    "w-east": 5.256,
+    "w-north": 6.84,
+    "w-south": 6.201,
+    "w-west": 5.4,
+    "c-1": 0.27,
+    "b-1": 0.009561528484,
+    "b-2": 0.384298726,
+    "sl-first": 12.0,
+    "sl-ground": 11.75
+  },
+  "annotations": {},
+  "classifications": {
+    "systems": {
+      "DIN 276|2018-12": {
+        "source": "https://www.din.de",
+        "entries": [
+          "300|Building construction|",
+          "330|Exterior walls|300",
+          "331|Load-bearing exterior walls|330",
+          "340|Interior walls|300"
+        ]
+      },
+      "Omniclass|": {
+        "source": "",
+        "entries": [
+          "21-02 10 10|Columns|"
+        ]
+      },
+      "Uniclass 2015|": {
+        "source": "",
+        "entries": [
+          "EF|Elements and functions|",
+          "EF_25|Wall and barrier elements|EF",
+          "EF_25_10|Walls|EF_25",
+          "EF_30|Roof, floor and paving elements|EF"
+        ]
+      }
+    },
+    "attached": {
+      "c-1": [
+        "Omniclass||21-02 10 10"
+      ],
+      "dr-180": [
+        "DIN 276|2018-12|300"
+      ],
+      "st-ground": [
+        "DIN 276|2018-12|300"
+      ],
+      "w-east": [
+        "Uniclass 2015||EF_25_10"
+      ],
+      "w-south": [
+        "DIN 276|2018-12|331",
+        "Uniclass 2015||EF_25_10"
+      ],
+      "wt-300": [
+        "DIN 276|2018-12|330",
+        "Uniclass 2015||EF_25"
+      ]
+    }
+  },
+  "type_properties": {
+    "ct-rect": {
+      "Pset_ColumnCommon": {
+        "LoadBearing": [
+          "IFCBOOLEAN",
+          true
+        ]
+      }
+    },
+    "dr-180": {
+      "Pset_DoorCommon": {
+        "FireExit": [
+          "IFCBOOLEAN",
+          false
+        ],
+        "Leaves": [
+          "IFCINTEGER",
+          2
+        ],
+        "Width": [
+          "IFCLENGTHMEASURE",
+          1.8
+        ]
+      }
+    },
+    "wnd-120": {
+      "Pset_WindowCommon": {
+        "Reference": [
+          "IFCLABEL",
+          "W-120"
+        ],
+        "ThermalTransmittance": [
+          "IFCREAL",
+          1.1
+        ]
+      }
+    },
+    "wt-300": {
+      "Custom": {
+        "Reference": [
+          "IFCLABEL",
+          "WT-300"
+        ]
+      },
+      "Pset_WallCommon": {
+        "FireRating": [
+          "IFCLABEL",
+          "EI90"
+        ],
+        "IsExternal": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "ThermalTransmittance": [
+          "IFCREAL",
+          0.2
+        ]
+      }
+    }
+  }
+}

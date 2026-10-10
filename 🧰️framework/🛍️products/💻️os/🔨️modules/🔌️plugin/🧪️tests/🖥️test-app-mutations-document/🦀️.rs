@@ -122,16 +122,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// ♻️ The fixture child is an openable member, so its snapshot needs the same bounded owned-value
 /// retirement a real member's does — `store::PackMemberSnapshotOpen` retires the decoded snapshot
 /// through it when an open is cancelled or rejected mid-flight.
-impl semio_framework_value::retirement::RetireOwned for TestSnapshot {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let Self { count, label, slot } = self;
-        semio_framework_value::retirement::sequence(vec![
-            semio_framework_value::retirement::RetireOwned::retirement(count),
-            semio_framework_value::retirement::RetireOwned::retirement(label),
-            semio_framework_value::retirement::RetireOwned::retirement(slot),
-        ])
-    }
-}
+semio_framework_value::artifact_retire_struct!(TestSnapshot { count, label, slot });
 
 impl semio_framework_schema_composition::ArtifactCompositionFields for TestSnapshot {
     fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {

@@ -19,7 +19,9 @@
 //!   (its volume over its thickness), `balusters` the number of balusters.
 //! * space: `gross_area` the room, `net_area` without columns, `height` the clear height, `net_volume` the room volume, `finishes` the floor, wall and ceiling finish areas of the room (`finishes`).
 
+use super::super::components::ComponentValue;
 use super::super::curtain_layout::CurtainLayout;
+use super::super::mep::{self, MepValue};
 use super::super::element_solids::columns::profile_loop;
 use super::super::element_solids::plan_kit::seg;
 use super::super::element_solids::railings::baluster_count;
@@ -33,18 +35,18 @@ use super::super::stair_runs::StairRun;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
 use super::super::wall_layout::WallLayout;
 use super::super::ModelInference;
-use crate::{Beam, Ceiling, Column, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
+use crate::{Beam, Ceiling, Column, Component, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🗺️ The snapshot collections the take-off reads, directly or through the fields it is computed from.
-pub const READS: &[&str] = &["walls", "wall_types", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "roof_types", "columns", "column_types", "beams", "beam_types", "openings", "window_types", "door_types", "stairs", "ramps", "railings", "spaces", "materials", "storeys", "buildings", "sites"];
+pub const READS: &[&str] = &["components", "component_overrides", "mep_elements", "families", "family_parameters", "family_solids", "walls","wall_sweeps", "wall_types", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "slabs", "slab_types", "ceilings", "ceiling_types", "roofs", "roof_types", "columns", "column_types", "beams", "beam_types", "openings", "window_types", "door_types", "stairs", "ramps", "railings", "spaces", "materials", "storeys", "buildings", "sites"];
 
 //#region 🔖️Values
 /// 🗂️ Which kind of element a quantity row measures.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
 pub enum QuantityKind {
     #[default]
     Wall,
@@ -62,6 +64,8 @@ pub enum QuantityKind {
     Space,
     Ceiling,
     WallSweep,
+    Component,
+    Mep,
 }
 
 impl QuantityKind {
@@ -83,12 +87,14 @@ impl QuantityKind {
             Self::Space => "space",
             Self::Ceiling => "ceiling",
             Self::WallSweep => "wall-sweep",
+            Self::Component => "component",
+            Self::Mep => "mep",
         }
     }
 }
 
 /// 🍰️ One material row of an element: a layer of a layered type, or a material run of a solid. `thickness` is 0 for solid runs.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct LayerQuantity {
     pub material: String,
     pub thickness: f64,
@@ -98,7 +104,7 @@ pub struct LayerQuantity {
 }
 
 /// 🪟️ The panels of one kind of a curtain wall: how many cells hold one and the clear area they cover (`glass`, `solid`, `door`, `window`, `empty`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PanelQuantity {
     pub kind: String,
     pub count: u32,
@@ -106,7 +112,7 @@ pub struct PanelQuantity {
 }
 
 /// 🪛️ The mullion pieces of one section of a curtain wall: how many pieces and their total length (`interior` and `border`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct MullionQuantity {
     pub kind: String,
     pub count: u32,
@@ -114,7 +120,7 @@ pub struct MullionQuantity {
 }
 
 /// 🧮️ The quantities of one element; measures that do not apply to its kind are 0.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct ElementQuantity {
     pub kind: QuantityKind,
     pub storey: String,
@@ -143,6 +149,8 @@ pub struct ElementQuantity {
     pub panels: Vec<PanelQuantity>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub mullions: Vec<MullionQuantity>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub groups: Vec<String>,
 }
 
 fn no_balusters(count: &u32) -> bool {
@@ -160,7 +168,7 @@ impl ElementQuantity {
 }
 
 /// ➕️ Sums of element quantities: `area` is [`ElementQuantity::area`], `volume` the net volume; material totals sum the layer rows.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Totals {
     pub count: u32,
     pub length: f64,
@@ -170,7 +178,7 @@ pub struct Totals {
 }
 
 /// ➕️ Totals per kind (`wall`, `slab`, …), per type (`wall:wt-300`), per material id, per finish (`wall:m-paint`: the area of one surface finished with one material) and per construction phase (`new`; `phase_kinds` splits each phase by kind, `demolished:wall`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct QuantityTotals {
     pub kinds: BTreeMap<String, Totals>,
     pub types: BTreeMap<String, Totals>,
@@ -178,10 +186,12 @@ pub struct QuantityTotals {
     pub finishes: BTreeMap<String, Totals>,
     pub phases: BTreeMap<String, Totals>,
     pub phase_kinds: BTreeMap<String, Totals>,
+    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub groups: BTreeMap<String, Totals>,
 }
 
 /// 🧮️ The whole take-off: elements by id, totals per storey, per building and for the project.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct ModelQuantities {
     pub elements: BTreeMap<String, ElementQuantity>,
     pub storeys: BTreeMap<String, QuantityTotals>,
@@ -362,12 +372,12 @@ pub fn sweep_quantity(snapshot: &ModelSnapshot, sweep: &WallSweep, wall: &Wall, 
 }
 
 /// 🪞️ The quantities of a curtain wall from its layout, the frames of its hosted openings and its solid (mullions and panels).
-pub fn curtain_quantity(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout: &CurtainLayout, frames: &[&OpeningFrame], solid: Option<&ElementSolid>) -> ElementQuantity {
+pub fn curtain_quantity(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout: &CurtainLayout, frames: &[&OpeningFrame], solid: Option<&ElementSolid>, profiles: &FamilyProfiles<'_>) -> ElementQuantity {
     let opening_area = cut_area(frames.iter().copied());
     let rows = solid.map(|solid| solid_rows(snapshot, solid)).unwrap_or_default();
     let volume = solid.map_or(0.0, |solid| solid.volume);
     let cuts: Vec<OpeningCut> = frames.iter().filter(|frame| frame.valid).map(|frame| frame.cut).collect();
-    let (panels, mullions) = curtain_walls::takeoff(snapshot, curtain, layout, &cuts);
+    let (panels, mullions) = curtain_walls::takeoff(snapshot, curtain, layout, &cuts, profiles);
     ElementQuantity {
         kind: QuantityKind::CurtainWall,
         type_id: curtain.curtain_wall_type.clone(),
@@ -560,6 +570,78 @@ pub fn ramp_quantity(snapshot: &ModelSnapshot, ramp: &Ramp, run: &RampRun, solid
     }
 }
 
+fn category_key(category: crate::FamilyCategory) -> &'static str {
+    match category {
+        crate::FamilyCategory::Furniture => "furniture",
+        crate::FamilyCategory::Equipment => "equipment",
+        crate::FamilyCategory::Casework => "casework",
+        crate::FamilyCategory::Plumbing => "plumbing",
+        crate::FamilyCategory::Lighting => "lighting",
+        crate::FamilyCategory::Mechanical => "mechanical",
+        crate::FamilyCategory::Electrical => "electrical",
+        crate::FamilyCategory::Generic => "generic",
+        crate::FamilyCategory::Profile => "profile",
+    }
+}
+
+/// 🪑️ The quantities of a component: `type_id` is its family, `width` and `length` the extents of the footprint across and along the family frame (`x` and `y`), `height` the height of its solids, `gross_area` and `net_area` the area of the footprint, `gross_volume` the sum of the volumes of the visible family solids and `net_volume` the volume of its solid; the groups
+/// `component-category:<category>` and, for a terminal, `component-system:<system>` sum it per category and per system.
+pub fn component_quantity(snapshot: &ModelSnapshot, component: &Component, value: &ComponentValue, solid: Option<&ElementSolid>) -> ElementQuantity {
+    let rows = solid.map(|solid| solid_rows(snapshot, solid)).unwrap_or_default();
+    let volume = solid.map_or(value.volume, |solid| solid.volume);
+    let (across, along) = (value.placement.rotate([1.0, 0.0, 0.0]), value.placement.rotate([0.0, 1.0, 0.0]));
+    let extent = |axis: [f64; 3]| {
+        let projected = value.footprint.iter().map(|corner| corner.x * axis[0] + corner.y * axis[1]);
+        projected.clone().fold(f64::NEG_INFINITY, f64::max) - projected.fold(f64::INFINITY, f64::min)
+    };
+    let (width, length) = if value.solid() { (extent(across), extent(along)) } else { (0.0, 0.0) };
+    let mut groups: Vec<String> = value.category.map(|category| format!("component-category:{}", category_key(category))).into_iter().collect();
+    groups.extend(value.connector.as_ref().map(|connector| format!("component-system:{}", mep::key(connector.system))));
+    ElementQuantity {
+        kind: QuantityKind::Component,
+        storey: value.storey.clone(),
+        phase: Phase::New,
+        type_id: component.family.clone(),
+        count: 1,
+        length,
+        width,
+        height: (value.bounds.max.z - value.bounds.min.z).max(0.0),
+        perimeter: 2.0 * (width + length),
+        gross_area: value.footprint_area,
+        net_area: value.footprint_area,
+        gross_volume: value.volume,
+        net_volume: volume,
+        mass: mass_of(&rows),
+        layers: rows,
+        groups,
+        ..ElementQuantity::default()
+    }
+}
+
+/// 🌀️ The quantities of a MEP element: `type_id` is its system key, `length` the centre line, `width` and `height` the section, `perimeter` its perimeter, `gross_area` the cross-section, `net_area` and `surface_area` the lateral surface, `gross_volume` the closed form
+/// (section times length) and `net_volume` the volume of the tessellated solid; the groups `mep-system:<system>` and `mep-size:<label>` sum it per system and per size.
+pub fn mep_quantity(_snapshot: &ModelSnapshot, _id: &str, value: &MepValue, solid: Option<&ElementSolid>) -> ElementQuantity {
+    let volume = solid.filter(|solid| !solid.is_empty()).map_or(value.volume, |solid| solid.volume);
+    ElementQuantity {
+        kind: QuantityKind::Mep,
+        storey: value.storey.clone(),
+        phase: Phase::New,
+        type_id: mep::key(value.system).to_string(),
+        count: 1,
+        length: value.length,
+        width: value.section.width,
+        height: value.section.height,
+        perimeter: value.section.perimeter,
+        gross_area: value.section.area,
+        net_area: value.surface_area,
+        surface_area: value.surface_area,
+        gross_volume: value.volume,
+        net_volume: volume,
+        groups: vec![format!("mep-system:{}", mep::key(value.system)), format!("mep-size:{}", value.section.label)],
+        ..ElementQuantity::default()
+    }
+}
+
 /// 🪟️ The area of one side of the infill of a railing: the volume of the infill part of its solid over the thickness of the infill.
 fn infill_area(railing: &Railing, solid: &ElementSolid) -> f64 {
     let (Infill::Glass { thickness } | Infill::Panel { thickness }) = railing.infill else { return 0.0 };
@@ -642,6 +724,10 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
         (dep_object([("railing", dep_value(&Railing { name: String::new(), ..railing.clone() })), ("host", rail_hosts::dependency(snapshot, railing))]), DslValue::Null, BTreeSet::from([railing.material.clone()]))
     } else if let Some(ramp) = snapshot.ramps.get(id) {
         (dep_value(&Ramp { name: String::new(), ..ramp.clone() }), DslValue::Null, BTreeSet::from([ramp.material.clone()]))
+    } else if snapshot.components.contains_key(id) {
+        (DslValue::Null, DslValue::Null, snapshot.materials.keys().cloned().collect())
+    } else if snapshot.mep_elements.contains_key(id) {
+        (DslValue::Null, DslValue::Null, BTreeSet::new())
     } else if let Some(space) = snapshot.spaces.get(id) {
         (dep_object([("storey", dep_value(&space.storey)), ("phase", dep_value(&space.phase)), ("finishes", finishes::dependency(snapshot, space))]), DslValue::Null, BTreeSet::new())
     } else {
@@ -689,6 +775,9 @@ impl QuantityTotals {
         }
         self.phases.entry(element.phase.key().to_string()).or_default().add_element(element);
         self.phase_kinds.entry(format!("{}:{}", element.phase.key(), element.kind.key())).or_default().add_element(element);
+        for group in &element.groups {
+            self.groups.entry(group.clone()).or_default().add_element(element);
+        }
     }
 }
 

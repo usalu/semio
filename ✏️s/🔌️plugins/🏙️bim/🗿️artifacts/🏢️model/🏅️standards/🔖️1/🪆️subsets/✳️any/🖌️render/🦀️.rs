@@ -12,6 +12,10 @@ pub mod window_config;
 pub mod world;
 #[path = "🗺️plan/🦀️.rs"]
 pub mod plan;
+#[path = "🌡️envelope/🦀️.rs"]
+pub mod envelope;
+#[path = "🦴️structure/🦀️.rs"]
+pub mod structure;
 
 //#region 🔖️Storeys
 /// 🏢️ One storey in stacking order for pickers, plan selection and visibility toggles.

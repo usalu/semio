@@ -16,8 +16,8 @@ mod controlled;
 
 //#region 🔖️Value
 /// 🔢️ Exact logical STEP real: decimal coefficient/scale plus an optional base-10 exponent.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields, retire_with = "controlled::retire_decimal")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Decimal {
     pub negative: bool,
     pub coefficient: String,
@@ -90,7 +90,7 @@ impl fmt::Display for Part21Decimal {
 }
 
 /// 🔤️ A single typed value in Part-21 argument-list syntax.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
 pub enum Part21Value {
     Ref(u64),
     Str(String),
@@ -191,8 +191,8 @@ impl Part21Instance {
 //#region 🔖️Header
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`),
 /// each a parenthesized tuple of typed values — kept verbatim, not schema-interpreted.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields, retire_with = "controlled::retire_header")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Header {
     pub file_description: Vec<Part21Value>,
     pub file_name: Vec<Part21Value>,
@@ -257,8 +257,8 @@ impl Default for Part21Header {
 
 //#region 🔖️Document
 /// 📦️ The full, lossless generic Part-21 graph: header + every `DATA;` instance.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
-#[value(deny_unknown_fields, retire_with = "controlled::retire_document")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue)]
+#[value(deny_unknown_fields )]
 pub struct Part21Document {
     pub header: Part21Header,
     pub instances: Vec<Part21Instance>,
@@ -1024,6 +1024,23 @@ fn escape_part21_string(s: &str) -> String {
 
 //#region 🔖️ValueCodec
 /// 🔎️ Takes one member out of a Part-21 JSON record, naming the record and the member when it is missing.
+
+impl FromValue for Part21Decimal{
+ fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_decimal(value,control)}
+ fn from_value(value:DslValue)->Result<Self,ValueError>{let mut entries=value.into_object()?;let negative=bool::from_value(part21_member(&mut entries,"decimal","negative")?)?;let scale=u32::from_value(part21_member(&mut entries,"decimal","scale")?)?;let exponent=entries.iter().position(|(key,_)|key=="exponent").map(|index|Option::<i32>::from_value(entries.swap_remove(index).1)).transpose()?.flatten();let coefficient=String::from_value(part21_member(&mut entries,"decimal","coefficient")?)?;part21_exhausted(&entries,"decimal")?;Ok(Self{negative,coefficient,scale,exponent})}
+ fn edit_value_at_path(&mut self,path:&[&str],edit:ValueEdit)->Result<(),ValueError>{edit_through_value(self,path,edit)}
+}
+impl FromValue for Part21Header{
+ fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_header(value,control)}
+ fn from_value(value:DslValue)->Result<Self,ValueError>{let mut entries=value.into_object()?;let file_description=Vec::from_value(part21_member(&mut entries,"header","fileDescription")?)?;let file_name=Vec::from_value(part21_member(&mut entries,"header","fileName")?)?;let file_schema=Vec::from_value(part21_member(&mut entries,"header","fileSchema")?)?;part21_exhausted(&entries,"header")?;Ok(Self{file_description,file_name,file_schema})}
+ fn edit_value_at_path(&mut self,path:&[&str],edit:ValueEdit)->Result<(),ValueError>{edit_through_value(self,path,edit)}
+}
+impl FromValue for Part21Document{
+ fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_document(value,control)}
+ fn from_value(value:DslValue)->Result<Self,ValueError>{let mut entries=value.into_object()?;let header=Part21Header::from_value(part21_member(&mut entries,"document","header")?)?;let instances=Vec::from_value(part21_member(&mut entries,"document","instances")?)?;part21_exhausted(&entries,"document")?;Ok(Self{header,instances})}
+ fn edit_value_at_path(&mut self,path:&[&str],edit:ValueEdit)->Result<(),ValueError>{edit_through_value(self,path,edit)}
+}
+
 fn part21_member(entries: &mut Vec<(String, DslValue)>, record: &str, key: &str) -> Result<DslValue, ValueError> {
     let index = entries.iter().position(|(candidate, _)| candidate == key).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("a Part-21 {record} carries `{key}`")))?;
     Ok(entries.remove(index).1)
@@ -1063,9 +1080,6 @@ impl FromValue for Part21Value {
         controlled::input::decode_value(value, control)
     }
 
-    fn retire_decoded(self) {
-        controlled::retire_value(self);
-    }
 
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut entries = value.into_object()?;
@@ -1111,9 +1125,6 @@ impl FromValue for Part21Instance {
         controlled::input::decode_instance(value, control)
     }
 
-    fn retire_decoded(self) {
-        controlled::retire_instance(self);
-    }
 
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut entries = value.into_object()?;

@@ -48,7 +48,7 @@ const PROJECT_UNITS_INDEX: usize = 8;
 const PRODUCT_PLACEMENT_INDEX: usize = 5;
 
 /// 🏗️ One structural-analysis entity Coordination View 2.0 excludes, as this vocabulary names it.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Cv20StructuralEntity {
     pub type_name: String,
@@ -70,7 +70,7 @@ pub mod set_view_definition;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3Cv20Mutation")]
 pub enum Ifc2x3Cv20Mutation {
     SetViewDefinition(set_view_definition::SetViewDefinition),

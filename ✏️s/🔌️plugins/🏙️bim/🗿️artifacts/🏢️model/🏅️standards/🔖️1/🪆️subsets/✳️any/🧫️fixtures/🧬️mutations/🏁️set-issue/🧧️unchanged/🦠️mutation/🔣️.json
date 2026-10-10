@@ -1,0 +1,6 @@
+{
+  "mutation": "setIssue",
+  "id": "i-1",
+  "status": "Open",
+  "assignee": ""
+}

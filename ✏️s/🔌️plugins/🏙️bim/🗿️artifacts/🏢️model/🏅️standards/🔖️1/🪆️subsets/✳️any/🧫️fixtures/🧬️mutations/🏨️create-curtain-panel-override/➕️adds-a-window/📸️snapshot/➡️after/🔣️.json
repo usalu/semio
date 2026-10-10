@@ -1,1 +1,369 @@
-{}
+{
+  "beam_types": {
+    "bt-30x50": {
+      "material": "m-brick",
+      "name": "Concrete 30x50",
+      "profile": {
+        "Rectangle": {
+          "depth": 0.5,
+          "width": 0.3
+        }
+      }
+    },
+    "bt-40x60": {
+      "material": "m-brick",
+      "name": "Concrete 40x60",
+      "profile": {
+        "Rectangle": {
+          "depth": 0.6,
+          "width": 0.4
+        }
+      }
+    }
+  },
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "classifications": {},
+  "column_types": {
+    "ct-400": {
+      "material": "m-brick",
+      "name": "Concrete 40x40",
+      "profile": {
+        "Rectangle": {
+          "depth": 0.4,
+          "width": 0.4
+        }
+      }
+    },
+    "ct-500": {
+      "material": "m-brick",
+      "name": "Concrete 50x50",
+      "profile": {
+        "Rectangle": {
+          "depth": 0.5,
+          "width": 0.5
+        }
+      }
+    }
+  },
+  "columns": {},
+  "curtain_panel_overrides": {
+    "ov-1": {
+      "curtain": "cw-1",
+      "panel": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "u": 1,
+      "v": 1
+    }
+  },
+  "curtain_wall_types": {
+    "cwt-1": {
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.08
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.05
+        }
+      },
+      "mullion_material": "m-steel",
+      "name": "Facade 1.5 x 1.5",
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.5
+        }
+      }
+    },
+    "cwt-2": {
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.08
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.05
+        }
+      },
+      "mullion_material": "m-steel",
+      "name": "Facade 2 x 3",
+      "panel": "Glass",
+      "panel_material": "m-glass",
+      "u_grid": {
+        "Spacing": {
+          "spacing": 2.0
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 3.0
+        }
+      }
+    }
+  },
+  "curtain_walls": {
+    "cw-1": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 6.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "curtain_wall_type": "cwt-1",
+      "name": "South facade",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      }
+    }
+  },
+  "door_types": {
+    "door-1": {
+      "frame_depth": 0.12,
+      "frame_width": 0.06,
+      "height": 2.1,
+      "leaves": "Single",
+      "material": "m-wood",
+      "name": "Door",
+      "swing": "Left",
+      "width": 0.9
+    },
+    "door-2": {
+      "frame_depth": 0.12,
+      "frame_width": 0.06,
+      "height": 2.1,
+      "leaves": "Single",
+      "material": "m-wood",
+      "name": "Spare door",
+      "swing": "Left",
+      "width": 1.0
+    }
+  },
+  "grids": {},
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    },
+    "m-glass": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Glass",
+      "specific_heat": 900.0
+    },
+    "m-spare": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Spare",
+      "specific_heat": 900.0
+    },
+    "m-steel": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Steel",
+      "specific_heat": 900.0
+    },
+    "m-wood": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Wood",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {},
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    },
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  },
+  "window_types": {
+    "win-1": {
+      "frame_depth": 0.12,
+      "frame_width": 0.07,
+      "height": 1.2,
+      "material": "m-wood",
+      "name": "Window",
+      "panes": 2,
+      "sill": 0.9,
+      "width": 1.2
+    },
+    "win-2": {
+      "frame_depth": 0.12,
+      "frame_width": 0.07,
+      "height": 1.0,
+      "material": "m-wood",
+      "name": "Spare window",
+      "panes": 1,
+      "sill": 0.9,
+      "width": 1.0
+    }
+  }
+}

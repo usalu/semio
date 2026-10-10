@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://semio.tech/framework/pixels/image-decoding",
   "title": "ImageDecodeInput",
   "type": "object",
@@ -65,8 +65,13 @@
             "header",
             "validate",
             "decode",
+            "source-handoff",
+            "decoder",
             "png",
-            "complete"
+            "jpeg",
+            "image-handoff",
+            "complete",
+            "transferred"
           ]
         },
         "sourceCompleted": {
@@ -108,6 +113,12 @@
           "type": "boolean"
         }
       }
+    },
+    "grant": {
+      "$ref": "https://semio.tech/framework/value/retained-clone-contract#/$defs/grant"
+    },
+    "receipt": {
+      "$ref": "https://semio.tech/framework/value/retained-clone-contract#/$defs/receipt"
     }
   }
 }

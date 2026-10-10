@@ -1,0 +1,28 @@
+{
+  "mutation": "setSpaceConditions",
+  "id": "sp-1",
+  "occupancy": {
+    "value": "Residential"
+  },
+  "occupancy_density": {
+    "value": 0.04
+  },
+  "heating_setpoint": {
+    "value": 20
+  },
+  "cooling_setpoint": {
+    "value": 26
+  },
+  "ventilation_rate": {
+    "value": 0.3
+  },
+  "lighting_power_density": {
+    "value": 5
+  },
+  "equipment_power_density": {
+    "value": 3
+  },
+  "schedule": {
+    "value": "Residential day"
+  }
+}

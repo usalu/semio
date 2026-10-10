@@ -14,7 +14,7 @@ pub trait Armed {
 macro_rules! armed {
     ($($payload:ident => $keyword:literal, $utility:literal;)+) => {
         $(
-            #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+            #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
             #[dsl(keyword = $keyword)]
             pub struct $payload {}
 
@@ -29,12 +29,20 @@ macro_rules! armed {
 }
 
 armed! {
+    ArmSupport => "arm-support", "support";
+    ArmLoadPoint => "arm-load-point", "load-point";
+    ArmLoadLine => "arm-load-line", "load-line";
+    ArmLoadArea => "arm-load-area", "load-area";
     ArmSelect => "arm-select", "select";
     ArmWall => "arm-wall", "wall";
     ArmWallArc => "arm-wall-arc", "wall-arc";
     ArmCurtainWall => "arm-curtain-wall", "curtain-wall";
     ArmColumn => "arm-column", "column";
     ArmBeam => "arm-beam", "beam";
+    ArmBeamArc => "arm-beam-arc", "beam-arc";
+    ArmColumnTilt => "arm-column-tilt", "column-tilt";
+    ArmCurtainGrid => "arm-curtain-grid", "curtain-grid";
+    ArmCurtainCell => "arm-curtain-cell", "curtain-cell";
     ArmSlab => "arm-slab", "slab";
     ArmRoof => "arm-roof", "roof";
     ArmWindow => "arm-window", "window";
@@ -43,6 +51,8 @@ armed! {
     ArmStair => "arm-stair", "stair";
     ArmRailing => "arm-railing", "railing";
     ArmRamp => "arm-ramp", "ramp";
+    ArmComponent => "arm-component", "component";
+    ArmRoute => "arm-route", "route";
     ArmSpace => "arm-space", "space";
     ArmGrid => "arm-grid", "grid";
     ArmMeasure => "arm-measure", "measure";
@@ -65,6 +75,7 @@ armed! {
     ArmTag => "arm-tag", "tag";
     ArmTextNote => "arm-text-note", "text-note";
     ArmLeader => "arm-leader", "leader";
+    ArmSweep => "arm-sweep", "sweep";
     ArmViewport => "arm-viewport", "viewport";
 }
 

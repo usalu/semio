@@ -3,7 +3,7 @@ use super::hidden_lines::{bodies, faces, feature_edges, pieces};
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, SolidFamily};
 use crate::{Building, Layer, LayerFunction, Material, MaterialCategory, Phase, Point2, Rgb, Site, Storey, ViewCategory, ViewCrop, ViewPlane, Wall, WallType};
-use crate::{Axis, LocationLine, TopConstraint};
+use crate::{Axis, LocationLine, ModelInference, TopConstraint};
 use protocol::Inference;
 use semio_framework_geometry::mesh::TriMesh;
 
@@ -21,7 +21,7 @@ fn room() -> ModelSnapshot {
     let corners = [(0.0, 0.0), (6.0, 0.0), (6.0, 4.0), (0.0, 4.0)];
     for (index, start) in corners.iter().enumerate() {
         let end = corners[(index + 1) % 4];
-        snapshot.walls.insert(format!("w{index}"), Wall { storey: "g".into(), wall_type: "wt".into(), axis: Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: if index == 3 { Phase::Existing } else { Phase::New }, name: format!("Wall {index}") });
+        snapshot.walls.insert(format!("w{index}"), Wall { storey: "g".into(), wall_type: "wt".into(), axis: Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: if index == 3 { Phase::Existing } else { Phase::New }, start_join: None, end_join: None, name: format!("Wall {index}"), base_slab: None });
     }
     snapshot
 }
@@ -186,7 +186,7 @@ async fn a_nearer_element_hides_the_edges_behind_it() {
 
 #[semio_framework_async_macros::async_test]
 async fn editing_one_view_computes_that_view_only() {
-    use super::super::model_graph::ModelInferenceSession;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
     let first = with(room(), "v-south", south());
     let second = with(first.clone(), "v-plan", View::of_storey("b", "Ground plan", ViewKind::Plan, "g"));
     let mut session = ModelInferenceSession::new();
@@ -206,7 +206,7 @@ async fn editing_one_view_computes_that_view_only() {
 
 #[semio_framework_async_macros::async_test]
 async fn renaming_a_view_recomputes_nothing_and_moving_a_wall_redraws_the_views_that_see_it() {
-    use super::super::model_graph::ModelInferenceSession;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
     let first = with(room(), "v-south", south());
     let mut session = ModelInferenceSession::new();
     session.refresh(&first);

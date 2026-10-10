@@ -30,6 +30,7 @@ pub(super) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<
             PREFIX,
             recognizes,
             preflight,
+            || semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes:size_of::<BrepStructuralCopy>(),depth:1 },
             || Box::<BrepStructuralCopy>::default(),
             Arc::new(SemioMutationRetirementFactory::<SemioBrepMutation>(PhantomData)),
             Arc::new(SemioSnapshotRetirementFactory::<SemioBrepSnapshot>(PhantomData)),

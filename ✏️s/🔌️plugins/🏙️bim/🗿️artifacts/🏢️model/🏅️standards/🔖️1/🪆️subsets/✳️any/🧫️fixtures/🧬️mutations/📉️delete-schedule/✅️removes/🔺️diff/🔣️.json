@@ -1,1 +1,7 @@
-{}
+{
+  "schedules": {
+    "sch-doors": {
+      "entry": "Deleted"
+    }
+  }
+}

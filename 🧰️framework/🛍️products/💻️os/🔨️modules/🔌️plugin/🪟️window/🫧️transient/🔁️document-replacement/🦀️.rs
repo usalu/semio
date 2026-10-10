@@ -30,6 +30,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 }
 
+fn document_window_registry_demands(registries: &ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: usize, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    let Some((_, generation)) = registries.next_id_from(cursor) else { return Ok(Default::default()) };
+    let mut demand = registries.get(generation).expect("selected window transient retirement remains owned").retirement_demands(body)?;
+    demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "document window retirement depth overflow"))?;
+    Ok(demand)
+}
+
 /// ♻️ Advances one displaced document's windows fairly even while another owner is blocked.
 fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
     let demand=retire_document_window_registry_demands(registries,*cursor,grant.maximum_copy_bytes,closing).map_err(|error|plugin_sdk_fault(error.into_message()))?;

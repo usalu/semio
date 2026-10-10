@@ -1,1 +1,10 @@
-{}
+{
+  "walls": {
+    "w-south": {
+      "end_join": {
+        "value": null
+      },
+      "entry": "Patched"
+    }
+  }
+}

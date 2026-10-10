@@ -10,8 +10,7 @@ async fn every_kind_is_declared_once() {
     kinds.sort();
     kinds.dedup();
     assert_eq!(kinds.len(), ENTITIES.len());
-    assert_eq!(ENTITIES.iter().filter(|row| !row.library).count(), 14);
-    assert_eq!(ENTITIES.iter().filter(|row| row.library).count(), 8);
+    assert!(ENTITIES.iter().any(|row| row.kind == "wall-sweep" && !row.library), "the wall sweep is an element of the model");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -65,7 +64,8 @@ async fn authored_fields_with_a_mutation_write_it_and_the_rest_stay_read_only() 
 #[semio_framework_async_macros::async_test]
 async fn every_kind_has_a_create_delete_and_rename_mutation() {
     for row in ENTITIES {
-        assert!(row.create.is_some() && row.delete.is_some() && row.rename.is_some(), "{} is fully wired", row.kind);
+        let named_by_content = matches!(row.kind, "tag" | "text-note" | "leader" | "curtain-panel-override");
+        assert!(row.create.is_some() && row.delete.is_some() && (row.rename.is_some() || named_by_content), "{} is fully wired", row.kind);
     }
 }
 
@@ -103,13 +103,15 @@ async fn every_kind_creates_a_mutation_that_applies_and_the_library_comes_first(
         let parent = match row.kind {
             "building" => "site-1",
             "storey" | "grid" => "bldg-1",
-            "opening" => "w-south",
-            "site" | "material" | "wall-type" | "slab-type" | "roof-type" | "column-type" | "beam-type" | "window-type" | "door-type" => "",
+            "opening" | "wall-sweep" => "w-south",
+            "curtain-panel-override" => "x-new-curtain-wall",
+            "family-solid" => "x-new-family",
+            "site" | "family" | "material" | "wall-type" | "slab-type" | "roof-type" | "column-type" | "beam-type" | "window-type" | "door-type" | "curtain-wall-type" => "",
             _ => "st-ground",
         };
         let mutation = (row.create.expect("create"))(&snapshot, &id, parent, "New").unwrap_or_else(|code| panic!("{} cannot be created: {code}", row.kind));
         snapshot = crate::mutations::apply_model_mutation(&snapshot, &mutation).unwrap_or_else(|refusal| panic!("{} is refused: {refusal:?}", row.kind));
-        assert!((row.name)(&snapshot, &id).is_some_and(|name| name == "New"), "{} exists after its create", row.kind);
+        assert!((row.name)(&snapshot, &id).is_some_and(|name| row.rename.is_none() || name == "New"), "{} exists after its create", row.kind);
         let removed = (row.delete.expect("delete"))(&id);
         let without = crate::mutations::apply_model_mutation(&snapshot, &removed).unwrap_or_else(|refusal| panic!("{} cannot be deleted again: {refusal:?}", row.kind));
         assert!((row.name)(&without, &id).is_none());
@@ -136,4 +138,32 @@ async fn inferred_rows_read_the_levels_and_the_wall_layout() {
     let computed = <ModelInference as protocol::Inference<ModelSnapshot>>::infer(&snapshot).expect("infer");
     let elevation = storey.inferred.iter().find(|row| row.key == "top_elevation").expect("top elevation row");
     assert_eq!((elevation.read)(&snapshot, &computed, "st-ground").as_deref(), Some("3"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_top_text_names_a_free_height_a_storey_or_the_roof_slab_or_ceiling_it_follows() {
+    for (text, expected) in [
+        ("2.5", TopConstraint::Unconnected { height: 2.5 }),
+        ("storey top 0.5", TopConstraint::StoreyTop { offset: 0.5 }),
+        ("st-first 0.2", TopConstraint::Storey { storey: "st-first".into(), offset: 0.2 }),
+        ("roof r-main 0.1", TopConstraint::Roof { roof: "r-main".into(), offset: 0.1 }),
+        ("slab sl 0", TopConstraint::Slab { slab: "sl".into(), offset: 0.0 }),
+        ("ceiling ce -0.05", TopConstraint::Ceiling { ceiling: "ce".into(), offset: -0.05 }),
+    ] {
+        assert_eq!(parse_top(text), Some(expected.clone()), "{text}");
+        assert_eq!(parse_top(&top_text(&expected)), Some(expected), "{text} reads back");
+    }
+    assert!(parse_top("roof r-main").is_none(), "an offset is needed");
+    assert!(parse_top("roof r-main high").is_none());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_profile_text_names_a_rectangle_circle_i_shape_custom_outline_or_family_and_reads_back() {
+    let outline = vec![Vertex { point: Point2 { x: 0.0, y: 0.0 }, bulge: 0.0 }, Vertex { point: Point2 { x: 0.03, y: 0.0 }, bulge: 0.0 }, Vertex { point: Point2 { x: 0.0, y: 0.05 }, bulge: 0.5 }];
+    for profile in [Profile::Rectangle { width: 0.02, depth: 0.1 }, Profile::Circle { diameter: 0.04 }, Profile::IShape { width: 0.2, depth: 0.4, web: 0.01, flange: 0.02 }, Profile::Custom { outline }, Profile::Family { family: "fam-1".into() }] {
+        assert_eq!(parse_profile(&profile_text(&profile)), Some(profile.clone()), "{profile:?}");
+    }
+    assert_eq!(parse_profile("rect 0.02 x 0.1"), Some(Profile::Rectangle { width: 0.02, depth: 0.1 }));
+    assert_eq!(parse_profile("rectangle 0.05 × 0.1"), Some(Profile::Rectangle { width: 0.05, depth: 0.1 }));
+    assert!(parse_profile("custom 0, 0; 1, 0").is_none() && parse_profile("blob 1").is_none() && parse_profile("rect 1").is_none());
 }

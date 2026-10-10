@@ -1,6 +1,7 @@
 #[path = "../../🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
+crate::app::mutation_fixture::wire::fixture_operation_text!(SurfaceMutation);
 
 #[path = "../🎞️media-owner-context/🦀️.rs"]
 mod media_owner_context;
@@ -11,7 +12,7 @@ use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, asse
 use crate::app::{
     built_text_to_component_tree, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry,
     ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ArtifactViewer, ChildContentView, ConfigView, DraftView, EditorApp, Emit, HistoryView, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig,
-    NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, PluginCloseStep, UiAssemblyResult, ViewEmit, ViewModel, NATURAL_FILE_PORT, REVERT_TO_COMMAND_ACTION_ID,
+    NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, UiAssemblyResult, ViewEmit, ViewModel, NATURAL_FILE_PORT, REVERT_TO_COMMAND_ACTION_ID,
 };
 use protocol::MutationDiff;
 use {semio_framework::action_bus,semio_framework::ActionKind,semio_framework_artifact_reference::Dialect,semio_framework::Fault,semio_framework::FaultOrigin,semio_framework::IconName,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework::ToolExecutionContract,semio_framework::ToolFactoryKey,semio_framework::ToolJobFactory,semio_framework::ToolOperationSpec};
@@ -22,7 +23,7 @@ use serde::{Deserialize, Serialize};
 
 const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[artifact(extension = "testkit-surface")]
 pub(crate) struct SurfaceSnapshot {
     count: i32,
@@ -94,10 +95,12 @@ fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_or
                 for _ in 0..100000 {
                     let request = parts.request.as_mut().unwrap();
                     if request.terminal_is_empty() { break; }
-                    let demand = request.next_close_byte_demand().max(1);
+                    let demand = request.next_release_byte_demand().unwrap();
                     assert!(demand <= grant.maximum_release_bytes);
-                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, demand).unwrap());
-                    let bytes = match step { store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => 0 };
+                    let turn = RetainedCloneGrant { maximum_release_bytes: demand, ..grant };
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(turn).unwrap());
+                    assert!(step.progress().fits(turn));
+                    let bytes = step.progress().released_bytes;
                     assert_eq!(heap.requested_bytes, 0);
                     assert_eq!(heap.released_bytes, bytes);
                 }
@@ -120,8 +123,8 @@ fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_or
             } else {
                 for _ in 0..100000 {
                     if input.terminal_is_empty() { break; }
-                    let demand = input.next_close_byte_demand().unwrap();
-                    assert!(demand <= grant.maximum_release_bytes);
+                    let demand = input.retirement_demands(grant.maximum_copy_bytes).unwrap();
+                    assert!(demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
                     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| input.close_granted(grant).unwrap());
                     assert!(step.progress().fits(grant));
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
@@ -217,7 +220,7 @@ impl MutationDiff<SurfaceSnapshot> for SurfaceDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 enum SurfaceEditorCommand {
     #[dsl(key = "increment")]
     Increment,
@@ -260,7 +263,7 @@ impl ::protocol::OpBinary for SurfaceEditorCommand {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 enum SurfaceViewerCommand {
     #[default]
     Noop,
@@ -292,12 +295,9 @@ const SURFACE_TOOL_CONTRACT: ToolExecutionContract = ToolExecutionContract::resu
 /// substitute: it resolves to `interactive-job.missing-owned-reducer` at dispatch, so an editor
 /// surface with no owned factory can only ever prove what the runtime FORBIDS.
 struct SurfaceFixtureJob {
-    command: Option<Box<SurfaceEditorCommand>>,
-    completion: Option<ArtifactToolCompletion<EditorApp<SurfaceEditorFixture>>>,
+    owners: crate::app::mutation_fixture::job_close::FixtureJobOwners<EditorApp<SurfaceEditorFixture>>,
     count: i32,
-    raw: Option<action_bus::RetainedToolWireInput>,
     page: usize,
-    closing: bool,
 }
 
 impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
@@ -308,14 +308,15 @@ impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
         if cx.should_yield() {
             return semio_framework_job::StepOutcome::Yield;
         }
-        if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
+        if self.owners.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
             self.page += 1;
             return semio_framework_job::StepOutcome::Yield;
         }
-        let Some(SurfaceEditorCommand::Increment) = self.command.as_deref() else {
+        let Some(SurfaceEditorCommand::Increment) = self.owners.command.as_deref() else {
             return semio_framework_job::StepOutcome::Cancelled;
         };
-        self.completion
+        self.owners
+            .completion
             .as_ref()
             .expect("surface fixture completion")
             .complete(Ok(Emit { artifact_mutations: vec![SetSurfaceCount { value: self.count + 1 }.into()], ..Default::default() }), crate::app::EphemeralEmit::default())
@@ -327,28 +328,31 @@ impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(raw) = self.raw.as_mut() {
-            if raw.terminal_is_empty() {
-                self.raw = None;
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-            return raw.close_step(1, maximum_bytes);
-        }
-        if self.command.take().is_some() || self.completion.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.owners.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(body)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.raw.is_none() && self.command.is_none() && self.completion.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 
@@ -384,7 +388,7 @@ impl ToolJobFactory for SurfaceFixtureFactory {
         if checkpoint.is_some() {
             return Err((semio_framework::ToolJobFactoryError::new("surface fixture resume starts a fresh command owner"), input, checkpoint));
         }
-        payload.raw = Some(input);
+        payload.owners.raw = Some(input);
         Ok(payload)
     }
 }
@@ -425,7 +429,7 @@ struct SurfaceEditorFixture;
 
 struct SurfaceNaturalDecodeCursor {
     bytes: Option<Vec<u8>>,
-    retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<u8>>>,
     offset: usize,
     decoded_items: usize,
     word: [u8; 4],
@@ -567,22 +571,16 @@ impl ArtifactEditor for SurfaceEditorFixture {
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = SurfaceFixtureJob { command: Some(request.command), completion: Some(request.completion), count: request.snapshot.count, raw: None, page: 0, closing: false };
+        let job = SurfaceFixtureJob { owners: crate::app::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::app::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained", 4_096))
+        Some(crate::app::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained"))
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>().with_one_item_preparation(Self::build_artifact_store_one_item_preparation_factory().expect("surface exact typed preparation authority")))
-    }
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
+    fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
+        Some(crate::app::mutation_fixture::wire::funded_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained"))
     }
     fn build_document_store_disposer() -> crate::app::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
         Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
@@ -666,18 +664,26 @@ impl ArtifactViewer for SurfaceViewerFixture {
         }
     }
 
-    fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        if instance_id == u32::MAX {
-            return Ok(PluginCloseStep::Pending { released_items: maximum_items.min(1), released_bytes: maximum_bytes.min(7) });
-        }
-        Ok(PluginCloseStep::Complete)
+    fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<crate::app::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(if instance_id == u32::MAX { crate::app::RetirementDemand { release_bytes: 7, depth: 1, ..Default::default() } } else { Default::default() })
     }
 
-    fn mounted_job_close_step(instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        if instance_id == u32::MAX {
-            return Ok(PluginCloseStep::Blocked { reason: "surface viewer lifecycle witness" });
+    fn mounted_job_maintenance_step(instance_id: u32, grant: crate::app::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+        if instance_id != u32::MAX {
+            return Ok(crate::app::PluginLifecycleStep::Complete(Default::default()));
         }
-        Ok(PluginCloseStep::Complete)
+        let demand = Self::mounted_job_maintenance_demands(instance_id, grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
+        if !crate::app::plugin_turn_admitted(demand, grant)? {
+            return Ok(crate::app::PluginLifecycleStep::Progress(Default::default()));
+        }
+        Ok(crate::app::PluginLifecycleStep::Progress(crate::app::RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }))
+    }
+
+    fn mounted_job_close_step(instance_id: u32, _grant: crate::app::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+        if instance_id == u32::MAX {
+            return Ok(crate::app::PluginLifecycleStep::Blocked { reason: "surface viewer lifecycle witness" });
+        }
+        Ok(crate::app::PluginLifecycleStep::Complete(Default::default()))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
@@ -692,12 +698,6 @@ impl ArtifactViewer for SurfaceViewerFixture {
         "surface-viewer-noop"
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
     fn build_document_store_disposer() -> crate::app::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
         Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
@@ -747,8 +747,13 @@ async fn viewer_never_mutates_the_document_or_draft_store() {
 #[semio_framework_async_macros::async_test]
 async fn bounded_viewer_fixture_preserves_declared_lifecycle_hooks() {
     type Fixture = crate::app::artifact_app_laws::BoundedViewerFixture<SurfaceViewerFixture>;
-    assert!(matches!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, 3, 11).expect("maintenance hook"), PluginCloseStep::Pending { released_items: 1, released_bytes: 7 }));
-    assert!(matches!(<Fixture as ArtifactViewer>::mounted_job_close_step(u32::MAX, 3, 11).expect("close hook"), PluginCloseStep::Blocked { reason: "surface viewer lifecycle witness" }));
+    let demand = <Fixture as ArtifactViewer>::mounted_job_maintenance_demands(u32::MAX, 0).expect("maintenance quote");
+    assert_eq!((demand.release_bytes, demand.depth), (7, 1));
+    let grant = crate::app::plugin_demand_grant(demand);
+    let short = crate::app::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, short).expect("maintenance hook"), crate::app::PluginLifecycleStep::Progress(Default::default()), "a grant below the quoted release axis yields");
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, grant).expect("maintenance hook"), crate::app::PluginLifecycleStep::Progress(crate::app::RetainedCloneProgress { copied_items: 1, released_bytes: 7, ..Default::default() }));
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_close_step(u32::MAX, grant).expect("close hook"), crate::app::PluginLifecycleStep::Blocked { reason: "surface viewer lifecycle witness" });
     assert!(!<Fixture as ArtifactViewer>::mounted_jobs_terminal_is_empty(u32::MAX));
     assert_eq!(<Fixture as ArtifactViewer>::config_schema(), "semio.testkit-surface.viewer-config/v1");
     assert_eq!(<Fixture as ArtifactViewer>::command_id(&SurfaceViewerCommand::Noop), "surface-viewer-noop");
@@ -818,6 +823,7 @@ async fn registered_editor_consumes_intrinsic_natural_bytes_through_the_real_med
 }
 
 fn surface_natural_file_reserved_job(
+    snapshot_read: store::SnapshotRead<SurfaceSnapshot>,
     data: Vec<u8>,
     maximum_work_units_per_step: u64,
 ) -> (
@@ -840,6 +846,7 @@ fn surface_natural_file_reserved_job(
         canonical_base_revision: [0; 32],
         authoring_seed: "surface-natural-file-fixture-admission".into(),
         snapshot: snapshot.clone(),
+        snapshot_read,
         config: std::sync::Arc::new(NoConfig::default()),
         history: history.clone(),
         children: ChildContentView::EMPTY,
@@ -880,8 +887,9 @@ fn close_surface_natural_file_job(job:&mut ArtifactReservedToolJob){
 /// 🧵️ A mounted natural-file importer accounts owned input bytes across turns, observes
 /// cancellation before decode, and refuses a monolithic decoder whose input exceeds its exact
 /// per-turn grant. Both exits retire every retained owner with bounded positive progress.
-#[test]
-fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
+#[semio_framework_async_macros::async_test]
+async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️natural-file-lifecycle/🔣️.json")).expect("natural-file lifecycle fixture");
     let row = &fixture["registeredEditor"];
     let data = row["octets"].as_array().expect("registered editor octets").iter().map(|octet| octet.as_u64().expect("octet") as u8).collect::<Vec<_>>();
@@ -889,7 +897,7 @@ fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
     let cancel_after = row["cancelAfterAccountedBytes"].as_u64().expect("cancelled accounted bytes");
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
-    let (mut cancelled, cancelled_completion, cancelled_snapshot, cancelled_history) = surface_natural_file_reserved_job(data, 4_096);
+    let (mut cancelled, cancelled_completion, cancelled_snapshot, cancelled_history) = surface_natural_file_reserved_job(app.store.snapshot_read().expect("surface store read"), data, 4_096);
     let mut sequence = 0;
     let mut actual=semio_framework_job::RetainedCloneProgress::default();
     match surface_natural_file_step(&mut cancelled, operation, cancel.clone(), turn, &mut sequence,&mut actual) {
@@ -905,12 +913,13 @@ fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
         surface_natural_file_step(&mut cancelled, operation, cancel, turn, &mut sequence,&mut actual),
         semio_framework_job::StepOutcome::Cancelled
     ));
-    drop((cancelled_completion, cancelled_snapshot, cancelled_history));
+    drop((cancelled_snapshot, cancelled_history));
     close_surface_natural_file_job(&mut cancelled);
+    crate::app::mutation_fixture::job_close::retire_completion(cancelled_completion);
 
     let oversized = usize::try_from(row["oversizedOctetCount"].as_u64().expect("oversized octet count")).expect("usize octet count");
     let maximum = u64::try_from(oversized - 1).expect("bounded maximum work");
-    let (mut refused, refused_completion, refused_snapshot, refused_history) = surface_natural_file_reserved_job(vec![0; oversized], maximum);
+    let (mut refused, refused_completion, refused_snapshot, refused_history) = surface_natural_file_reserved_job(app.store.snapshot_read().expect("surface store read"), vec![0; oversized], maximum);
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
@@ -937,13 +946,16 @@ fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
     close_surface_natural_file_job(&mut refused);
     assert!(refused_completion.take_emit().expect("refused completion cell").is_none());
     drop((refused_snapshot, refused_history));
+    crate::app::mutation_fixture::job_close::retire_completion(refused_completion);
+    close_registered_fixture_app(&mut app);
 }
 
 /// 🧭️ A format-owned decoder consumes a source larger than one scheduler grant over
 /// monotonic checkpoints, publishes the independently computed value once, then retires its sole
 /// source owner under the ordinary reserved-job close contract.
-#[test]
-fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
+#[semio_framework_async_macros::async_test]
+async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️natural-file-lifecycle/🔣️.json")).expect("natural-file lifecycle fixture");
     let row = &fixture["controlledEditor"];
     let word_count = usize::try_from(row["wordCount"].as_u64().expect("controlled word count")).expect("usize word count");
@@ -959,7 +971,7 @@ fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
     let oracle = data.chunks_exact(4).map(|word| i32::from_be_bytes(word.try_into().expect("four-byte word"))).try_fold(0_i32, i32::checked_add).expect("independent checked sum");
     assert_eq!(oracle, last_word);
 
-    let (mut job, completion, snapshot, history) = surface_natural_file_reserved_job(data, work);
+    let (mut job, completion, snapshot, history) = surface_natural_file_reserved_job(app.store.snapshot_read().expect("surface store read"), data, work);
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
@@ -992,9 +1004,15 @@ fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
     }
     assert!(checkpoints >= expected_minimum_turns, "fixture must cross many scheduler turns");
     let (emit, _) = completion.take_emit().expect("controlled completion cell").expect("controlled completion value");
-    assert_eq!(emit.expect("controlled import emit").artifact_mutations, vec![SurfaceMutation::from(SetSurfaceCount { value: oracle })]);
+    let emit = emit.expect("controlled import emit");
+    assert!(emit.artifact_mutations.is_empty(), "natural-file Open is a document load: it emits no mutation");
+    let loads = emit.effects.iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(pack), _ => None }).collect::<Vec<_>>();
+    assert_eq!(loads.len(), 1, "the controlled decoder publishes exactly one document load");
+    assert_eq!(<SurfaceSnapshot as store::ArtifactPack>::decode_pack(loads[0]).expect("loaded surface pack"), SurfaceSnapshot { count: oracle });
     drop((snapshot, history));
     close_surface_natural_file_job(&mut job);
+    crate::app::mutation_fixture::job_close::retire_completion(completion);
+    close_registered_fixture_app(&mut app);
 }
 
 /// 🪟️ The controller literal every proof row, tool key and manifest id in this fixture is stated
@@ -1171,6 +1189,7 @@ fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
         }
         assert!(job.terminal_is_empty());
         assert!(consumer.take_emit().unwrap().is_none());
+        crate::app::mutation_fixture::job_close::retire_completion(consumer);
         assert_eq!(observed.load(std::sync::atomic::Ordering::SeqCst), row["domainObserves"].as_u64().unwrap());
         println!("[DEBUG] Retained command one-unit work authority case={} observed=1 remaining=0", row["id"]);
     }
@@ -1199,10 +1218,9 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
         assert_eq!(owner.mutations::<SurfaceMutation>().unwrap().as_ptr(), pointer);
         let mut released = 0;
         for _ in 0..count * 8 + 32 {
-            let (capacity_bytes, release_bytes) = owner.next_demands().unwrap();
-            let copy_bytes = owner.next_copy_byte_demand();
-            assert!(copy_bytes <= 64);
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy_bytes, maximum_capacity_bytes: capacity_bytes, maximum_release_bytes: release_bytes, maximum_depth: 8 };
+            let demand = owner.next_demands(64).unwrap();
+            assert!(demand.copy_bytes <= 64 && demand.depth <= 8);
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: 8 };
             let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_granted(grant).unwrap());
             let progress = match step { RetainedCloneStep::Progress(progress) => progress, RetainedCloneStep::Complete(progress) => progress };
             assert!(progress.fits(grant));
@@ -1222,20 +1240,6 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
     }
 }
 
-struct SurfaceMutationRetirement { value: Option<SurfaceMutation> }
-impl semio_framework_value::retirement::RetirementCursor for SurfaceMutationRetirement {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep { if grant.maximum_items==0{return semio_framework_value::retirement::RetirementStep::BudgetExhausted;}self.value.take(); semio_framework_value::retirement::RetirementStep::Complete }
-    fn terminal_is_empty(&self) -> bool { self.value.is_none() }
-    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
-    fn next_birth_bytes(&self, _maximum_bytes: usize) -> Option<usize> { Some(0) }
-    fn terminal_release_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<Self>()) }
-}
-impl semio_framework_value::retirement::RetireOwned for SurfaceMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { Box::new(SurfaceMutationRetirement { value: Some(self) }) }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<SurfaceMutationRetirement>()) }
-    fn controlled_retirement_supported() -> bool { true }
-}
-
 #[semio_framework_async_macros::async_test]
 async fn child_emission_private_typed_lanes_stage_three_original_batches_and_retire_all_cancelled_sources() {
     use crate::app::{ArtifactApp, PrivateOwnedPublicationLane};
@@ -1249,6 +1253,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
         let mut lanes = Vec::new();
         let mut owner = semio_framework_os_kernel::os_vcs::ArtifactGroupVisibilityOwner::new();
         let visibility = owner.view();
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 262_144, maximum_capacity_bytes: 262_144, maximum_release_bytes: 262_144, maximum_depth: 64 };
         for _ in 0..3 {
             let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
             let (generation, revision) = app.store.one_item_publication_identity();
@@ -1260,7 +1265,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             let mut lane = PrivateOwnedPublicationLane::new(request);
             let admitted = lane.next_capacity_byte_demand(&app.store).unwrap();
             for (items, bytes) in [(0, admitted), (1, admitted - 1)] {
-                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane.advance(&mut app.store, &visibility, store::ArtifactStoreOneItemGrant { maximum_items: items, maximum_bytes: bytes }).unwrap());
+                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane.advance(&mut app.store, &visibility, store::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant }).unwrap());
                 assert_eq!(step, store::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(events.requested_bytes, 0);
                 assert_eq!(events.released_bytes, 0);
@@ -1269,7 +1274,6 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             apps.push(app);
             lanes.push(lane);
         }
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 262_144 };
         let mut turns = 0;
         let mut index = 0;
         while index < lanes.len() && stop.is_none_or(|stop| turns < stop) {
@@ -1289,7 +1293,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
                 let (same_pointer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lanes[index].prepared_edit_id().unwrap().as_ptr());
                 assert_eq!(same_pointer, pointer);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-                let paused = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: grant.maximum_bytes };
+                let paused = store::ArtifactStoreOneItemGrant { maximum_items: 0, ..grant };
                 assert_eq!(lanes[index].advance(&mut apps[index].store, &visibility, paused).unwrap(), store::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(lanes[index].prepared_edit_id().unwrap().as_ptr(), pointer);
             }
@@ -1313,10 +1317,12 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
         } else { assert!(owner.abort()); }
         for index in 0..3 {
             for _ in 0..4096 {
-                let demand = lanes[index].next_close_byte_demand().unwrap().max(1);
-                assert!(demand <= grant.maximum_bytes);
-                let step = lanes[index].close_step(&mut apps[index].store, store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: demand }).unwrap();
-                if step == PluginCloseStep::Complete { break; }
+                let demand = lanes[index].retirement_demands(grant.maximum_copy_bytes).unwrap();
+                assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
+                let exact = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+                let step = lanes[index].close_step(&mut apps[index].store, exact).unwrap();
+                assert!(step.progress().fits(exact));
+                if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; }
             }
             assert!(lanes[index].terminal_is_empty());
             assert_eq!(apps[index].store.snapshot_ref().count, i32::from(stop.is_none()));
@@ -1368,9 +1374,9 @@ async fn child_emission_private_group_row_frames_preserve_original_sources_on_ev
         let mut graph = app.composition.graph_mut().await;
         for _ in 0..100_000 {
             if group.terminal_is_empty() { break; }
-            let bytes = group.next_close_byte_demand().unwrap().max(1);
-            assert!(bytes <= 262_144);
-            let exact = RetainedCloneGrant { maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, ..grant };
+            let demand = group.retirement_demands(grant.maximum_copy_bytes).unwrap();
+            assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
+            let exact = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.close_step(&mut app.store, &mut app.children, &mut graph, &app.child_content_root, exact).unwrap());
             assert!(step.progress().fits(exact));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));

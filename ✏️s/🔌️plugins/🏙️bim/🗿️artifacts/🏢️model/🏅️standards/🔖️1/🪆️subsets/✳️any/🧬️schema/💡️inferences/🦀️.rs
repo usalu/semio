@@ -22,15 +22,26 @@ use super::diagnostics::{Diagnostic, DiagnosticIndex};
 use super::plan_linework::PlanLinework;
 use super::view_linework::ViewLinework;
 use super::annotation_layout::StoreyAnnotations;
+use super::components::ComponentValue;
 use super::families::FamilyValue;
+use super::mep::MepValue;
 use super::effective_properties::EffectiveProperties;
+use super::energy_envelope::{EnergyTotals, EnvelopeSpace};
 use super::sheet_layout::SheetLayout;
+use super::clash_sets::ClashSetResult;
+use super::rule_results::RuleResult;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a model snapshot, keyed by element id.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[artifact_schema(id = "s.bim.model.inference")]
 pub struct ModelInference {
+    #[derived]
+    pub analytical_members: BTreeMap<String, super::analytical_members::AnalyticalMember>,
+    #[derived]
+    pub structural_analysis: super::analytical_members::StructuralAnalysis,
+    #[derived]
+    pub option_scope: super::option_scope::OptionScope,
     #[derived]
     pub storey_levels: BTreeMap<String, StoreyLevel>,
     #[derived]
@@ -43,6 +54,10 @@ pub struct ModelInference {
     pub ramp_runs: BTreeMap<String, RampRun>,
     #[derived]
     pub families: BTreeMap<String, FamilyValue>,
+    #[derived]
+    pub components: BTreeMap<String, ComponentValue>,
+    #[derived]
+    pub mep: BTreeMap<String, MepValue>,
     #[derived]
     pub spaces: BTreeMap<String, SpaceRoom>,
     #[derived]
@@ -73,6 +88,14 @@ pub struct ModelInference {
     pub annotations: BTreeMap<String, StoreyAnnotations>,
     #[derived]
     pub effective_properties: BTreeMap<String, EffectiveProperties>,
+    #[derived]
+    pub clash_sets: BTreeMap<String, ClashSetResult>,
+    #[derived]
+    pub rule_results: BTreeMap<String, RuleResult>,
+    #[derived]
+    pub energy_envelopes: BTreeMap<String, EnvelopeSpace>,
+    #[derived]
+    pub energy_totals: BTreeMap<String, EnergyTotals>,
 }
 
 impl protocol::Inference<ModelSnapshot> for ModelInference {
@@ -90,12 +113,16 @@ impl protocol::InferenceSpec<ModelSnapshot> for ModelInference {
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.analytical-members", reads: super::analytical_members::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.option-scope", reads: super::option_scope::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.storey-levels", reads: &["storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.wall-layout", reads: &["walls", "wall_types", "storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.curtain-layout", reads: &["curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.stair-runs", reads: &["stairs", "storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.ramp-runs", reads: &["ramps", "storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.families", reads: super::families::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.components", reads: super::components::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.mep", reads: super::mep::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.quantities", reads: super::quantities::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.phase-visibility", reads: super::phase_visibility::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.spaces", reads: &["spaces", "walls", "wall_types", "curtain_walls", "curtain_wall_types", "columns", "column_types", "slabs", "slab_types", "storeys", "buildings", "sites"] },
@@ -104,12 +131,15 @@ impl protocol::InferenceSpec<ModelSnapshot> for ModelInference {
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.plan-linework", reads: super::plan_linework::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.view-linework", reads: super::view_linework::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.sheet-layout", reads: super::sheet_layout::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.clash-sets", reads: super::clash_sets::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.rule-results", reads: super::rule_results::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.diagnostics", reads: super::diagnostics::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.diagnostic-index", reads: super::diagnostics::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.annotation-layout", reads: super::annotation_layout::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.schedules", reads: super::schedules::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.effective-properties", reads: super::effective_properties::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.zones", reads: super::zones::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.energy-envelope", reads: super::energy_envelope::READS },
         ]
     }
 }

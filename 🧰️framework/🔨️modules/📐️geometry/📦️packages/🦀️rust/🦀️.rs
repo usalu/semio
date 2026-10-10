@@ -35,3 +35,6 @@ pub mod skeleton;
 
 #[path = "../../🏠️roof/🦀️.rs"]
 pub mod roof;
+
+#[path = "../../💥️collision/🦀️.rs"]
+pub mod collision;

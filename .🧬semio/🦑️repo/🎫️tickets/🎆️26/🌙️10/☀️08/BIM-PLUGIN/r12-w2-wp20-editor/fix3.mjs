@@ -1,0 +1,11 @@
+import fs from "node:fs";
+const p = "entities-energy.rs";
+let s = fs.readFileSync(p, "utf8");
+const a = s.indexOf("/// 💡️ The thermal totals of a zone.");
+const b = s.indexOf("/// 💡️ The thermal totals of a building.");
+s = s.slice(0, a) + s.slice(b);
+s = s.replace("fn scope_total(", "/// 📊️ One total of a scope with two decimals, `None` while the scope has no totals.\npub fn scope_total(");
+fs.writeFileSync(p, s);
+const t = "entities-energy-tests.rs";
+let u = fs.readFileSync(t, "utf8");
+fs.writeFileSync(t, u);

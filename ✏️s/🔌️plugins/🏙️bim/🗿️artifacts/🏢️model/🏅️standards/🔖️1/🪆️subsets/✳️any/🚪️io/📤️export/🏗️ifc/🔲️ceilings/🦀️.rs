@@ -6,7 +6,7 @@
 use super::brep::{brep_definition, mesh_where};
 use super::data::label;
 use super::frames::{ccw, cw};
-use super::writer::{en, real, rf};
+use super::writer::{en, real, rf, unset};
 use super::{Export, Quantity};
 use crate::Ceiling;
 
@@ -15,18 +15,18 @@ pub const RECORD_ROW: &str = "Ceiling";
 
 fn covering(x: &mut Export<'_>, id: &str, row: &Ceiling) {
     let model = x.model;
-    let (Some(storey), Some(kind), Some(level)) = (x.storeys.get(&row.storey).copied(), model.ceiling_types.get(&row.ceiling_type), x.inferred.storey_levels.get(&row.storey)) else {
-        x.skip("ceiling", id, "its storey or type is missing");
+    let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.ceiling_types.get(&row.ceiling_type), x.solid(id).map(|solid| solid.bounds)) else {
+        x.skip("ceiling", id, "its storey, type or inferred solid is missing");
         return;
     };
-    let thickness: f64 = kind.layers.iter().map(|layer| layer.thickness).sum();
-    if thickness <= 0.0 || row.boundary.len() < 3 {
+    let layers: f64 = kind.layers.iter().map(|layer| layer.thickness).sum();
+    if layers <= 0.0 || row.boundary.len() < 3 {
         x.skip("ceiling", id, "it has no thickness or boundary");
         return;
     }
-    let top = level.top_elevation - row.offset;
     let sloped = row.slope.is_some_and(|slope| slope.angle.abs() > 1e-12);
-    let origin = x.ifc.axis3([0.0, 0.0, if sloped { 0.0 } else { top - thickness - storey.elevation }], None, None);
+    let thickness = if sloped { layers } else { bounds.max.z - bounds.min.z };
+    let origin = x.ifc.axis3([0.0, 0.0, if sloped { 0.0 } else { bounds.min.z - storey.elevation }], None, None);
     let placement = x.ifc.place(Some(storey.placement), origin);
     let shape = if sloped {
         let Some(solid) = x.solid(id) else {
@@ -48,7 +48,7 @@ fn covering(x: &mut Export<'_>, id: &str, row: &Ceiling) {
         x.links.typed.entry(object).or_default().push(element);
     }
     if let Some(set) = x.links.layer_sets.get(&("ceiling", row.ceiling_type.clone())).copied() {
-        let usage = x.ifc.add("IFCMATERIALLAYERSETUSAGE", vec![rf(set), en("AXIS3"), en("NEGATIVE"), real(thickness)]);
+        let usage = x.ifc.add("IFCMATERIALLAYERSETUSAGE", x.by(vec![rf(set), en("AXIS3"), en("NEGATIVE"), real(layers)], vec![rf(set), en("AXIS3"), en("NEGATIVE"), real(layers), unset()]));
         x.links.materials.entry(usage).or_default().push(element);
     }
     x.quantify(element, "Qto_CoveringBaseQuantities", id, |row| vec![Quantity::Length("Width", row.width), Quantity::Area("GrossArea", row.gross_area), Quantity::Area("NetArea", row.net_area)]);

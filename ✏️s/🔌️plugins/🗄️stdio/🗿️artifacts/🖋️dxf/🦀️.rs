@@ -418,3 +418,13 @@ pub mod viewer {
 }
 
 pub use crate::standards::v_r12::subsets::any::io::{DxfBuilderConstruction, DxfParts, DxfAnalyzerAnalysis, DxfBuilderFacets, DxfBuilder, DxfAnalyzer, DxfComposer};
+
+#[cfg(test)]
+#[path="../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+#[cfg(test)]
+#[path="🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/♻️retirement/🧪️tests/🦀️.rs"]
+mod original_owner_tests;

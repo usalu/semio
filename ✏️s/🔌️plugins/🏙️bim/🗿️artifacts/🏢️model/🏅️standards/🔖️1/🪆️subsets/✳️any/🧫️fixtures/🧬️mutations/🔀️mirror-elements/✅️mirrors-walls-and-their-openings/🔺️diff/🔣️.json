@@ -1,1 +1,40 @@
-{}
+{
+  "openings": {
+    "o-door": {
+      "entry": "Patched",
+      "flip_hand": true,
+      "offset": 6.5
+    },
+    "o-window": {
+      "entry": "Patched",
+      "flip_hand": true,
+      "offset": 2.5
+    }
+  },
+  "walls": {
+    "w-east": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      },
+      "entry": "Patched"
+    },
+    "w-south": {
+      "end_join": {
+        "value": "Butt"
+      },
+      "entry": "Patched",
+      "start_join": {
+        "value": "Miter"
+      }
+    }
+  }
+}

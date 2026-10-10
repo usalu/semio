@@ -674,9 +674,10 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if !self.parent_issuer.terminal_is_empty() { return self.parent_issuer.close_granted(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| plugin_sdk_fault(error.to_string())); }
         if let Some(metadata) = self.original_metadata.as_mut() { let step = metadata.close_granted(child).map_err(|error| plugin_sdk_fault(error.to_string()))?; if metadata.terminal_is_empty() { self.original_metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
         if let Some(visibility) = self.visibility.as_ref() {
-            if Arc::strong_count(visibility) != 2 || Arc::weak_count(visibility) != 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+            if Arc::strong_count(visibility) != 2 { return Ok(RetainedCloneStep::Progress(empty)); }
+            let released_bytes = if Arc::weak_count(visibility) == 0 { Self::visibility_birth_bytes() } else { 0 };
             self.visibility_owner.take(); self.visibility.take();
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: Self::visibility_birth_bytes(), ..empty }));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }));
         }
         self.complete = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))

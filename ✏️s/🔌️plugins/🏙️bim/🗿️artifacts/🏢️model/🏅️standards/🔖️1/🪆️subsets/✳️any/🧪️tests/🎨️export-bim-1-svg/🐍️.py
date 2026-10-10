@@ -48,8 +48,10 @@ VIEW = "svg:g[contains(concat(' ', normalize-space(@class), ' '), ' view ')]"
 NOTATION = ["dimension-line", "dimension-extension", "dimension-mark", "dimension-text", "tag-text", "note-text", "leader-line", "leader-mark", "leader-text"]
 """🪧️ The kinds of the annotation layer."""
 LAYERS = ["layer regions", "layer lines", "layer texts"]
-CASES = {"🏠️house": "🏠️house.svg", "🪧️notated": "🪧️notated.svg"}
-SNAPSHOTS = {"🏠️house": ("🏗️ifc", "🏠️house", "📸️snapshot"), "🪧️notated": ("💡️inferences", "🪧️annotation-layout", "🏠️room", "📸️snapshot")}
+ELEMENTS = ["component-outline", "component-front", "component-connector", "mep-axis", "mep-band", "mep-drop"]
+"""🪑️ The kinds of the components and routed MEP elements: the outline of a component with its front tick and connector cross, the centre line, band and drops of a run."""
+CASES = {"🏠️house": "🏠️house.svg", "🪧️notated": "🪧️notated.svg", "🪑️components": "🪑️components.svg"}
+SNAPSHOTS = {"🏠️house": ("🏗️ifc", "🏠️house", "📸️snapshot"), "🪧️notated": ("💡️inferences", "🪧️annotation-layout", "🏠️room", "📸️snapshot"), "🪑️components": ("🏗️ifc", "🪑️components", "📸️snapshot")}
 CHORDS = 2048
 """🌀️ Chords per full circle when an arc is sampled."""
 
@@ -155,6 +157,27 @@ def kind_of(element):
     return next((token for token in classes(element) if token in NOTATION), None)
 
 
+def element_rows(paths, scale):
+    """🪑️ The components and routed elements of a view by model id: the length of a centre line and the area of an outline or band in model units, the paths per kind and the stroke colours the writer gave them (the colour of the service)."""
+    rows = {}
+    for path in paths:
+        names = classes(path)
+        kind = next((token for token in ELEMENTS if token in names), None)
+        if kind is None:
+            continue
+        row = rows.setdefault(path.get("data-id"), {"axis": 0.0, "area": 0.0, "count": {}, "stroke": []})
+        row["count"][kind] = row["count"].get(kind, 0) + 1
+        d = path.get("d")
+        if kind == "mep-axis" and "A" not in d:
+            row["axis"] += line_length(d) / scale
+        if kind in ("mep-band", "component-outline") and "A" not in d:
+            row["area"] += region_area(d, False) / (scale * scale)
+        for colour in re.findall(r"(?:stroke|fill):(#[0-9a-fA-F]{6})", path.get("style") or ""):
+            if colour not in row["stroke"]:
+                row["stroke"].append(colour)
+    return {identity: {**row, "count": dict(sorted(row["count"].items())), "stroke": sorted(row["stroke"])} for identity, row in sorted(rows.items())}
+
+
 def measure(document):
     """🎨️ The oracle table of an SVG document plus the audit values that are not compared at 1e-9."""
     root = etree.fromstring(document)
@@ -190,6 +213,9 @@ def measure(document):
                 if element.tag.endswith("path") and "A" not in element.get("d"):
                     found["length"] += line_length(element.get("d")) / scale
         row["notation"] = dict(sorted(row["notation"].items()))
+        elements = element_rows(paths, scale)
+        if elements:
+            row["elements"] = elements
         for path in regions:
             if "cut" in classes(path) and "A" not in path.get("d"):
                 row["pocheArea"] += region_area(path.get("d"), False) / (scale * scale)
@@ -285,7 +311,7 @@ def adapter():
     """🧭️ Registration in the ORACLE role only, by the feature's scenario id."""
     from semio_repo_test import Adapter
 
-    return Adapter("python").oracle("export-svg-house", export_handler).oracle("export-svg-notated", export_handler)
+    return Adapter("python").oracle("export-svg-house", export_handler).oracle("export-svg-notated", export_handler).oracle("export-svg-components", export_handler)
 
 
 # endregion 🔖️Handlers

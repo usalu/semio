@@ -3341,7 +3341,7 @@ export function createExtensionSource(catalog: PluginCatalog, watch: PluginSourc
  * incremental runtime can treat as a single source. */
 export function multiplexPluginSources(...sources: readonly PluginSource[]): PluginSource {
   if (sources.length === 0) throw new Error("multiplexPluginSources requires at least one source");
-  if (sources.length === 1) return sources[0]!;
+  if (sources.length === 1) { const source = sources[0]; if (!source) throw new Error("multiplexPluginSources requires an occupied source"); return source; }
   return {
     id: sources.map((source) => source.id).join("+"),
     async list() {

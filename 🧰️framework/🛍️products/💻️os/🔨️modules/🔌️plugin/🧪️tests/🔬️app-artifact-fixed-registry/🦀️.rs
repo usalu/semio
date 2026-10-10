@@ -130,10 +130,18 @@ mod artifact_fixed_registry_tests {
     }
 
     fn close_ingress(mut ingress: ActiveArtifactEnvelopeIngress) {
-        assert_eq!(ingress.close_step(0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        assert_eq!(ingress.close_step(1, 0), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        assert_eq!(ingress.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), PluginCloseStep::Pending { released_items: 1, released_bytes: 1 });
-        assert_eq!(ingress.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), PluginCloseStep::Complete);
+        let empty = RetainedCloneProgress::default();
+        let copy = ingress.retirement_demands();
+        assert!(copy.copy_bytes > 0 && copy.release_bytes == 0);
+        assert_eq!(ingress.close_step(RetainedCloneGrant { maximum_items: 0, ..plugin_demand_grant(copy) }).unwrap(), RetainedCloneStep::Progress(empty));
+        assert_eq!(ingress.close_step(RetainedCloneGrant { maximum_copy_bytes: copy.copy_bytes - 1, ..plugin_demand_grant(copy) }).unwrap(), RetainedCloneStep::Progress(empty));
+        assert_eq!(ingress.close_step(plugin_demand_grant(copy)).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 1, ..empty }));
+        let release = ingress.retirement_demands();
+        assert!(release.release_bytes > 0 && release.copy_bytes == 0);
+        assert_eq!(ingress.close_step(RetainedCloneGrant { maximum_release_bytes: release.release_bytes - 1, ..plugin_demand_grant(release) }).unwrap(), RetainedCloneStep::Progress(empty));
+        assert!(!ingress.terminal_is_empty());
+        assert_eq!(ingress.close_step(plugin_demand_grant(release)).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: release.release_bytes, ..empty }));
+        assert_eq!(ingress.close_step(plugin_demand_grant(ingress.retirement_demands())).unwrap(), RetainedCloneStep::Complete(empty));
         assert!(ingress.terminal_is_empty());
         drop(ingress);
     }

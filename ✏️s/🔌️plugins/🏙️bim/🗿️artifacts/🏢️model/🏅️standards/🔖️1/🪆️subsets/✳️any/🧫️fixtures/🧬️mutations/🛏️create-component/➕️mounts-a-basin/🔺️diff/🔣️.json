@@ -1,0 +1,18 @@
+{
+  "components": {
+    "cmp-new": {
+      "elevation": 0.85,
+      "entry": "Created",
+      "family": "fam-basin",
+      "host": "w-south",
+      "mirrored": false,
+      "name": "Basin 2",
+      "position": {
+        "x": 6.0,
+        "y": 0.3
+      },
+      "rotation": 0.0,
+      "storey": "st-ground"
+    }
+  }
+}

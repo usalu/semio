@@ -1,1 +1,19 @@
-{}
+{
+  "openings": {
+    "o-1": {
+      "entry": "Created",
+      "flip_facing": false,
+      "flip_hand": false,
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "name": "Window",
+      "offset": 4.0,
+      "reveal_depth": 0.1,
+      "reveal_material": "m-paint"
+    }
+  }
+}

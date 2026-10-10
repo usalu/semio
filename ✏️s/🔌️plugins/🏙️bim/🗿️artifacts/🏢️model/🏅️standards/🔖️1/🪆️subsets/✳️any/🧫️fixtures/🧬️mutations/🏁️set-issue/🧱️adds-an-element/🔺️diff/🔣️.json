@@ -1,0 +1,11 @@
+{
+  "issues": {
+    "i-2": {
+      "elements": [
+        "w-east",
+        "w-south"
+      ],
+      "entry": "Patched"
+    }
+  }
+}

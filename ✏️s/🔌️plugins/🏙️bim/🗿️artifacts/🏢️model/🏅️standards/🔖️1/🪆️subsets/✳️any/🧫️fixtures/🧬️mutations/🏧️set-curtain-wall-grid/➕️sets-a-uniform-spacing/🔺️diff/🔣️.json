@@ -1,1 +1,14 @@
-{}
+{
+  "curtain_walls": {
+    "cw-1": {
+      "entry": "Patched",
+      "v_grid": {
+        "value": {
+          "Spacing": {
+            "spacing": 1.0
+          }
+        }
+      }
+    }
+  }
+}

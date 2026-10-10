@@ -1,0 +1,27 @@
+{
+  "mutation": "createMepElement",
+  "id": "mep-new",
+  "mep": {
+    "storey": "st-attic",
+    "system": "Return",
+    "shape": {
+      "Duct": {
+        "width": 0.4,
+        "height": 0.2
+      }
+    },
+    "path": [
+      {
+        "x": 0,
+        "y": 4,
+        "z": 2.6
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "z": 2.6
+      }
+    ],
+    "name": "Lost"
+  }
+}

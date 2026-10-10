@@ -1,0 +1,6 @@
+{
+  "mutation": "setClashSet",
+  "id": "cs-1",
+  "name": "Beams against walls",
+  "tolerance": 0.002
+}

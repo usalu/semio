@@ -4,6 +4,7 @@ use semio_framework_value::{FactoryAuthority, RetirementDemand, ValueRefusalKind
 
 impl<P, M: Mutation<P>> EditReplay<P, M> {
     pub fn begin_retirement(&mut self) { self.retiring = true; }
+    pub fn cold_authority(&self) -> bool { self.original.operation_preparation_factory.is_none() && self.original.replay_retirement_factory.is_none() }
     pub fn cancel(&mut self) { self.begin_retirement(); }
     fn originals_empty(&self) -> bool {
         let s = &*self.original;
@@ -23,7 +24,7 @@ fn admit_typed<T: semio_framework_value::retirement::RetireOwned + Default + Sen
     }
 }
 
-impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> EditReplay<P, M> {
+impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
     pub fn retirement_demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(owner) = self.raw_retirement.as_ref() { return nested(artifact_retirement_box_demands(owner, copy)?); }
         if let Some(owner) = self.raw_factory.as_ref() { return nested(owner.demands(copy)?); }
@@ -37,8 +38,8 @@ impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> EditReplay<P, M>
         if let Some(owner) = s.operation_message_settlement.as_ref() { return nested(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(copy)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }); }
         if !s.edit_messages.terminal_is_empty() { return nested(RetirementDemand { copy_bytes: s.edit_messages.next_close_copy_byte_demand(), release_bytes: s.edit_messages.next_close_release_byte_demand()?, depth: 1, ..Default::default() }); }
         if let Some(owner) = s.prepared_operation.as_ref() { return if prepared::terminal(owner) { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { nested(prepared::demands(owner, s.replay_retirement_factory.as_deref())?) }; }
-        if s.state.is_some() || s.candidate.is_some() || !s.recorded.is_empty() || s.convergence.as_ref().is_some_and(|owner| !owner.checkpoints.is_empty()) { return Ok(RetirementDemand { capacity_bytes: s.replay_retirement_factory.as_ref().ok_or_else(|| unsupported("raw replay snapshot retains its original without an installed issuer"))?.snapshot_birth_bytes(), depth: 2, ..Default::default() }); }
-        if !s.edit_inverse.terminal_is_empty() { return Ok(RetirementDemand { capacity_bytes: s.replay_retirement_factory.as_ref().ok_or_else(|| unsupported("raw replay inverse retains its original without an installed issuer"))?.mutations_birth_bytes(), depth: 2, ..Default::default() }); }
+        if s.state.is_some() || s.candidate.is_some() || !s.recorded.is_empty() || s.convergence.as_ref().is_some_and(|owner| !owner.checkpoints.is_empty()) { return Ok(RetirementDemand { capacity_bytes: s.replay_retirement_factory.as_ref().map_or(0, |factory| factory.snapshot_birth_bytes()), depth: 2, ..Default::default() }); }
+        if !s.edit_inverse.terminal_is_empty() { return Ok(RetirementDemand { capacity_bytes: s.replay_retirement_factory.as_ref().map_or(0, |factory| factory.mutations_birth_bytes()), depth: 2, ..Default::default() }); }
         if s.schema.capacity() != 0 { return typed_birth::<String>(); }
         if !s.rebased_inverse.is_empty() || !s.outcomes.is_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if s.committed.capacity() != 0 || s.quarantined.capacity() != 0 { return typed_birth::<Vec<String>>(); }
@@ -82,13 +83,15 @@ impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> EditReplay<P, M>
         }
         let snapshot = if let Some(owner) = s.state.take() { Some((0, 0, owner)) } else if let Some(owner) = s.candidate.take() { Some((1, 0, owner)) } else if let Some((position, owner)) = s.recorded.pop() { Some((2, position, owner)) } else { s.convergence.as_mut().and_then(|owner| owner.checkpoints.pop()).map(|(position, owner)| (3, position, owner)) };
         if let Some((lane, position, owner)) = snapshot {
-            match s.replay_retirement_factory.as_ref().expect("quoted original snapshot issuer").snapshot(owner, child) {
+            let Some(factory) = s.replay_retirement_factory.as_ref() else { retire_shared_projection::<P, M>(owner); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..idle })); };
+            match factory.snapshot(owner, child) {
                 Ok((owner, progress)) => { *self.raw_retirement = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, owner)) => { match lane { 0 => s.state = Some(owner), 1 => s.candidate = Some(owner), 2 => s.recorded.push((position, owner)), _ => s.convergence.as_mut().unwrap().checkpoints.push((position, owner)) }; return Err(error); }
             }
         }
         if !s.edit_inverse.terminal_is_empty() {
-            match s.replay_retirement_factory.as_ref().expect("quoted original mutation issuer").mutations(std::mem::take(&mut s.edit_inverse), child) {
+            let Some(factory) = s.replay_retirement_factory.as_ref() else { retire_scratch_operations::<P, M>(std::mem::take(&mut s.edit_inverse)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..idle })); };
+            match factory.mutations(std::mem::take(&mut s.edit_inverse), child) {
                 Ok((owner, progress)) => { *self.raw_retirement = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, original)) => { s.edit_inverse = original; return Err(error); }
             }
@@ -145,10 +148,11 @@ impl<P, M: Mutation<P>> EditReplayResult<P, M> {
             && s.replayed.capacity() == 0 && s.recorded.capacity() == 0 && s.report.outcomes.capacity() == 0 && s.unit_flags.terminal_is_empty()
     }
     pub fn begin_retirement(&mut self) { if let Some(owner) = self.residual.as_mut() { owner.begin_retirement(); } }
+    pub fn cold_authority(&self) -> bool { self.residual.as_ref().is_none_or(|owner| owner.cold_authority()) }
     pub fn terminal_is_empty(&self) -> bool { self.outputs_empty() && self.residual.is_none() }
 }
 
-impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> EditReplayResult<P, M> {
+impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
     pub fn retirement_demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
         if !self.outputs_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         self.residual.as_ref().map_or(Ok(Default::default()), |owner| if owner.originals_empty() { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { nested(owner.retirement_demands(copy)?) })
@@ -204,6 +208,39 @@ impl<P, M: Mutation<P>> Drop for EditReplayResult<P, M> {
         let empty = self.terminal_is_empty();
         assert!(empty || std::thread::panicking(), "finished replay reached Drop while untaken outputs or original residual custody remain");
         if empty { unsafe { std::mem::ManuallyDrop::drop(&mut self.original); std::mem::ManuallyDrop::drop(&mut self.residual); } }
+    }
+}
+
+/// 🧹️ Drives a replay owner no scheduler holds to its terminal-empty witness, granting each axis exactly its quoted demand; a refusal leaks the owner instead of dropping it.
+fn retire_unscheduled<T>(mut owner: T, empty: impl Fn(&T) -> bool, demands: impl Fn(&T, usize) -> Result<RetirementDemand, ValueError>, step: impl Fn(&mut T, RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>) -> Result<(), ValueError> {
+    let outcome = (|| {
+        for _ in 0..ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS {
+            if empty(&owner) { return Ok(()); }
+            let copy = demands(&owner, 0)?.copy_bytes.max(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+            let demand = demands(&owner, copy)?;
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            let receipt = step(&mut owner, grant)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(grant, receipt, empty(&owner), "unscheduled replay retirement")?;
+        }
+        Err(ValueError::literal(ValueRefusalKind::WorkLimit, "unscheduled replay retirement did not reach its terminal-empty witness"))
+    })();
+    if outcome.is_err() { std::mem::forget(owner); }
+    outcome
+}
+
+impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
+    /// 🧹️ Retires a raw replay no scheduler owns from its own quoted demands.
+    pub fn retire_unscheduled(mut self) -> Result<(), ValueError> {
+        self.begin_retirement();
+        retire_unscheduled(self, Self::originals_empty, Self::retirement_demands, Self::close_original_step)
+    }
+}
+
+impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
+    /// 🧹️ Retires a finished replay's untaken outputs and original residual no scheduler owns from its own quoted demands.
+    pub fn retire_unscheduled(mut self) -> Result<(), ValueError> {
+        self.begin_retirement();
+        retire_unscheduled(self, Self::terminal_is_empty, Self::retirement_demands, Self::close_original_step)
     }
 }
 

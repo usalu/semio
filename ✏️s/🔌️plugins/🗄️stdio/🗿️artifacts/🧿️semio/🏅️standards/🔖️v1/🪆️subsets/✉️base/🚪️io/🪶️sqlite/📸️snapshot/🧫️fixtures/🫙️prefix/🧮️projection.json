@@ -1,0 +1,1 @@
+{"contract":"stdio.semio.original-projection/v1","domains":["brep","mesh","text","image","video","audio","animation","object"],"schema":"stdio.semio.text","language":"de-CH","content":"Original projection 雪\u0000é","kind":"link","href":"original-target-雪\u0000é","expectedRows":{"semio_text_document":1,"semio_text_run":1,"semio_text_mark":1}}

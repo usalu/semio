@@ -1,1 +1,9 @@
-{}
+{
+  "curtain_wall_types": {
+    "cwt-1": {
+      "entry": "Patched",
+      "mullion_material": "m-brick",
+      "panel_material": "m-spare"
+    }
+  }
+}

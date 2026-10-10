@@ -9,6 +9,11 @@
     "family:os-kernel"
   ],
   "targets": {
+    "test-original-registry-alias-custody": {
+      "executor":"nx:run-commands",
+      "cache":false,
+      "options":{"cwd":"{projectRoot}","command":"bun ./📜️script.ts test-original-registry-alias-custody"}
+    },
     "test-returned-read-custody": {
       "executor": "nx:run-commands",
       "cache": false,

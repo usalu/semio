@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "r-1": {
+      "entry": "Created",
+      "kind": "MinCorridorWidth",
+      "limit": 1.2,
+      "name": "Corridor width",
+      "scope": {
+        "filter": "Corridor",
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "severity": "Warning"
+    }
+  }
+}

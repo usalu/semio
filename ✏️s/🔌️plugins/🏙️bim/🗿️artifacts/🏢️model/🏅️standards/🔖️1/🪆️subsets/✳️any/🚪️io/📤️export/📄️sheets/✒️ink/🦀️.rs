@@ -39,6 +39,12 @@ pub struct TitleLabels {
 }
 
 impl TitleLabels {
+    /// 🇬🇧 The English headings, the language of the serializer of the io mechanism, which has no locale to ask.
+    pub fn english() -> Self {
+        let text = |value: &str| value.to_string();
+        Self { project: text("Project"), number: text("Sheet no."), title: text("Title"), scale: text("Scale"), drawn_by: text("Drawn by"), checked_by: text("Checked by"), date: text("Date"), revision: text("Revision"), revision_mark: text("Mark"), revision_date: text("Date"), revision_description: text("Description"), revision_author: text("By") }
+    }
+
     /// 🏷️ The heading of a title block cell.
     pub fn field(&self, field: TitleField) -> &str {
         match field {

@@ -1,0 +1,11 @@
+{
+  "components": {
+    "cmp-table": {
+      "entry": "Patched",
+      "position": {
+        "x": 2.5,
+        "y": 3.5
+      }
+    }
+  }
+}

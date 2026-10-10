@@ -4620,7 +4620,7 @@ pub fn run_layout_export_headless_batch(operation: Operation, request: LayoutExp
         operation: operation.operation,
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
-        config: BatchDriveConfig { site: "layout.export.batch", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "layout.export.batch", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {

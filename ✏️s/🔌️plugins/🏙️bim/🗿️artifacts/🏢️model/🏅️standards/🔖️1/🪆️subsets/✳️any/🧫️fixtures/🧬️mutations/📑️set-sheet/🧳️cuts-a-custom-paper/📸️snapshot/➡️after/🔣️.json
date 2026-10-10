@@ -1,1 +1,290 @@
-{}
+{
+  "beam_types": {},
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "classifications": {},
+  "column_types": {},
+  "columns": {},
+  "curtain_walls": {},
+  "door_types": {},
+  "grids": {},
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sheet_revisions": {
+    "rev-1": {
+      "author": "UG",
+      "date": "2026-10-01",
+      "description": "Issued for permit",
+      "number": "A",
+      "sheet": "sh-1"
+    },
+    "rev-2": {
+      "author": "AB",
+      "date": "2026-10-05",
+      "description": "Window sizes",
+      "number": "B",
+      "sheet": "sh-1"
+    },
+    "rev-3": {
+      "author": "UG",
+      "date": "2026-10-01",
+      "description": "Issued for permit",
+      "number": "A",
+      "sheet": "sh-2"
+    }
+  },
+  "sheets": {
+    "sh-1": {
+      "checked_by": "",
+      "date": "",
+      "drawn_by": "",
+      "name": "Ground floor",
+      "number": "A-101",
+      "orientation": "Landscape",
+      "paper": {
+        "Custom": {
+          "height": 400.0,
+          "width": 600.0
+        }
+      },
+      "project": "",
+      "revision": "",
+      "scale_label": ""
+    },
+    "sh-2": {
+      "checked_by": "",
+      "date": "",
+      "drawn_by": "",
+      "name": "Sections",
+      "number": "A-102",
+      "orientation": "Portrait",
+      "paper": {
+        "Iso": {
+          "size": "A3"
+        }
+      },
+      "project": "",
+      "revision": "",
+      "scale_label": ""
+    }
+  },
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {},
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
+    }
+  },
+  "viewports": {
+    "vp-1": {
+      "position": {
+        "x": 20.0,
+        "y": 20.0
+      },
+      "scale": 100,
+      "sheet": "sh-1",
+      "view": "v-ground"
+    },
+    "vp-2": {
+      "crop": {
+        "max": {
+          "x": 6.0,
+          "y": 4.0
+        },
+        "min": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      "label": "Section through the hall",
+      "position": {
+        "x": 220.0,
+        "y": 20.0
+      },
+      "scale": 50,
+      "sheet": "sh-1",
+      "view": "v-section"
+    },
+    "vp-3": {
+      "position": {
+        "x": 10.0,
+        "y": 10.0
+      },
+      "scale": 100,
+      "sheet": "sh-2",
+      "view": "v-section"
+    }
+  },
+  "views": {
+    "v-ground": {
+      "building": "bldg-1",
+      "depth": 100.0,
+      "detail": "Medium",
+      "hidden": [],
+      "kind": "Plan",
+      "name": "Ground plan",
+      "scale": 100,
+      "storey": "st-ground"
+    },
+    "v-orbit": {
+      "building": "bldg-1",
+      "camera": {
+        "azimuth": 0.8,
+        "distance": 25.0,
+        "pitch": 0.5,
+        "target": {
+          "x": 4.0,
+          "y": 3.0
+        },
+        "target_height": 1.5
+      },
+      "depth": 100.0,
+      "detail": "Medium",
+      "hidden": [],
+      "kind": "Orthographic",
+      "name": "Iso",
+      "scale": 100
+    },
+    "v-section": {
+      "building": "bldg-1",
+      "depth": 100.0,
+      "detail": "Medium",
+      "hidden": [],
+      "kind": "Section",
+      "name": "Section A",
+      "plane": {
+        "end": {
+          "x": 8.0,
+          "y": 3.0
+        },
+        "start": {
+          "x": 0.0,
+          "y": 3.0
+        }
+      },
+      "scale": 100
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    },
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  },
+  "window_types": {}
+}

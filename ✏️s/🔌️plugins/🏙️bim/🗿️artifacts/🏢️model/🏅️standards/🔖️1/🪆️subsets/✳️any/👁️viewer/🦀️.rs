@@ -46,7 +46,7 @@ const HOVER_CHANNEL: &str = "pointer";
 //#region 🔖️Command
 /// 👁️ The viewer's typed command channel: five window-configuration verbs. Row order is the binary variant ordinal: appending is safe,
 /// reordering is a wire break.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
 pub enum BimViewCommand {
     /// 🎥️ The camera of the addressed window as canonical JSON: `{position,target,zoom,up?}` for a world window, `{x,y,zoom}` for a plan window.
     #[dsl(key = "setCamera")]
@@ -317,12 +317,7 @@ fn marks_of(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> w
     world::Marks { selected: interaction.selection(ELEMENT_DOMAIN).ids.clone(), hovered: interaction.hover(ELEMENT_DOMAIN, HOVER_CHANNEL).ids.clone() }
 }
 
-/// 🪪️ The mounted instance a render belongs to, the key of its inference session.
-fn instance_of(doc: &ArtifactView<'_, ModelSnapshot>) -> Option<u32> {
-    doc.render_operation().map(|operation| operation.app_instance_id)
-}
-
-fn render_body(body_key: &str, instance: Option<u32>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &world::Marks, labels: &terminology::BimViewerLabels) -> UiAssemblyResult<ComponentTree> {
+fn render_body(body_key: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Instance<'_>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &world::Marks, labels: &terminology::BimViewerLabels) -> UiAssemblyResult<ComponentTree> {
     let node = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| match body_key {
         world::BODY_KEY => world::render(snapshot, inference, &world::config::current(cfg), marks),
         plan::BODY_KEY => plan::render(snapshot, inference, &plan::config::current(cfg), &marks.selected),
@@ -357,17 +352,8 @@ impl ArtifactViewer for BimModelViewer {
         crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
-    /// 🛂️ A viewer declares every nontrivial store owner explicitly (the trait defaults fail closed): the document store is the bounded pair
-    /// the editor also uses, every other lane is `No*`. Without them the retained window-config sessions never retire at close.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+    /// 🛂️ The document store keeps the framework's funded bounded owners and disposer; every other lane of this viewer is `No*`.
+    fn build_config_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, semio_framework_value::ValueError>> {
         Some(semio_framework_plugin::no_config_store_owners())
     }
 
@@ -395,13 +381,8 @@ impl ArtifactViewer for BimModelViewer {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn mounted_job_close_step(instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::close(instance_id);
-        Ok(semio_framework_plugin::PluginCloseStep::Complete)
-    }
-
-    fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
-        crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::terminal_is_empty(instance_id)
+    fn mounted_job_close_demands(_instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand::default())
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -490,11 +471,11 @@ impl ArtifactViewer for BimModelViewer {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        render_body(body_key, instance_of(doc), doc.snapshot, cfg, &world::Marks::default(), terminology::bim_viewer_labels(view_state))
+        render_body(body_key, None, doc.snapshot, cfg, &world::Marks::default(), terminology::bim_viewer_labels(view_state))
     }
 
     fn render_with_request_context(
-        _owner: &ArtifactInstanceOperationOwnerHandle,
+        owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
@@ -502,7 +483,7 @@ impl ArtifactViewer for BimModelViewer {
         _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> UiAssemblyResult<ComponentTree> {
-        render_body(body_key, instance_of(doc), doc.snapshot, cfg, &marks_of(interaction), terminology::bim_viewer_labels(view_state))
+        render_body(body_key, Some(owner), doc.snapshot, cfg, &marks_of(interaction), terminology::bim_viewer_labels(view_state))
     }
 
     /// 🎚️ The chrome of the addressed window: the projection tree and storey toggles of a world window, the storey picker of a plan window.
@@ -528,7 +509,7 @@ pub fn viewer_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 //#region 🔖️Manifest
 /// 🗣️ A label of the viewer's one `app_labels!` block in both languages.
 fn localized(pick: fn(&terminology::BimViewerLabels) -> semio_framework_ui_locale::LabelText) -> LocalizedLabel {
-    LocalizedLabel::native(pick(&terminology::BimViewerLabels::NATIVE_EN).as_str(), pick(&terminology::BimViewerLabels::NATIVE_DE).as_str())
+    terminology::BimViewerLabels::localized(pick)
 }
 
 fn view_action(id: &str, label: LocalizedLabel, args: Vec<ActionArgDef>) -> ActionDefinition {

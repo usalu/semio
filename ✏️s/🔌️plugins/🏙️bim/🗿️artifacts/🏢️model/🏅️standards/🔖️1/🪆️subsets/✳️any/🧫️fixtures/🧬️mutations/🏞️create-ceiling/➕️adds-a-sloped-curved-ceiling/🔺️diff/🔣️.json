@@ -1,1 +1,46 @@
-{}
+{
+  "ceilings": {
+    "ce-attic": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.4,
+          "point": {
+            "x": 6.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 6.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      ],
+      "ceiling_type": "ct-tile",
+      "entry": "Created",
+      "holes": [],
+      "name": "Attic ceiling",
+      "offset": 0.1,
+      "slope": {
+        "angle": 0.05,
+        "direction": 0.0
+      },
+      "storey": "st-first"
+    }
+  }
+}

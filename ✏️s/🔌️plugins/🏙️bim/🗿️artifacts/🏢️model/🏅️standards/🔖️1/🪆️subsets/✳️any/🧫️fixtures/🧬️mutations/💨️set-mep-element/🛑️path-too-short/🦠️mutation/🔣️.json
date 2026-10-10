@@ -1,0 +1,11 @@
+{
+  "mutation": "setMepElement",
+  "id": "mep-duct",
+  "path": [
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  ]
+}

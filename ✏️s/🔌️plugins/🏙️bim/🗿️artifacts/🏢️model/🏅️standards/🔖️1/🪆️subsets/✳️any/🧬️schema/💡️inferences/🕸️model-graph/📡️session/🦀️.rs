@@ -268,7 +268,7 @@ impl ModelInferenceSession {
     }
 
     /// 🔭️ The kinds `WANT` selects of a model that is not the document (a probe), over this session's cache; the held state is untouched.
-    pub fn probe<const WANT: u32>(&mut self, snapshot: &ModelSnapshot) -> Result<ModelInference, InferenceError> {
+    pub fn probe<const WANT: u64>(&mut self, snapshot: &ModelSnapshot) -> Result<ModelInference, InferenceError> {
         protocol::try_infer_field::<ModelSnapshot, ModelGraph<WANT>>(snapshot, Some(&mut self.cache)).map(project)
     }
 

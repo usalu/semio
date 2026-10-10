@@ -172,6 +172,7 @@ pub struct DrawingLayerPatch {
     pub path_segments: Option<PagedList<crate::PathSegment, {usize::MAX}>>,
     pub text_content: Option<String>,
     pub text_size: Option<f64>,
+    pub font_family: Option<crate::DrawingFontFamily>,
     pub image_key: Option<String>,
     pub image_width: Option<f64>,
     pub image_height: Option<f64>,
@@ -400,13 +401,14 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         if let Some(width)=patch.image_width{image.width=width;}
         if let Some(height)=patch.image_height{image.height=height;}
     }
-    if patch.text_content.is_some() || patch.text_size.is_some() {
+    if patch.text_content.is_some() || patch.text_size.is_some() || patch.font_family.is_some() {
         let DrawingLayerNode::Text(text) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Text target has another kind")); };
         if let Some(size) = patch.text_size {
             if !size.is_finite() || size <= 0.0 { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Invalid text size")); }
             text.size = size;
         }
         if let Some(content) = &patch.text_content { text.content = content.clone().into(); }
+        if let Some(family)=patch.font_family{text.font_family=family;}
     }
     if let Some(isolation)=patch.isolation {
         let DrawingLayerNode::Group(group)=layer else {return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target","Isolation needs a group"));};
@@ -535,6 +537,7 @@ impl DrawingLayerPatch {
                 if self.text_content.is_some() {
                     inverse.text_content = Some(text.content.to_string_owner());
                 }
+                if self.font_family.is_some(){inverse.font_family=Some(text.font_family);}
                 if self.text_size.is_some() {
                     inverse.text_size = Some(text.size);
                 }
@@ -580,6 +583,7 @@ impl DrawingLayerPatch {
         take!(path_segments);
         take!(text_content);
         take!(text_size);
+        take!(font_family);
         take!(image_key);
         take!(image_width);
         take!(image_height);
@@ -1020,10 +1024,6 @@ pub fn diff_set_path_geometry(layer_id: &(impl std::fmt::Display + ?Sized), segm
     layer_base_patch(layer_id, DrawingLayerPatch { path_segments: Some(segments.path_segments().cloned().collect()), ..Default::default() })
 }
 
-/// 📝️ Replaces the editable text facet without touching its layer base.
-pub fn diff_set_text(layer_id: &(impl std::fmt::Display + ?Sized), content: &(impl std::fmt::Display + ?Sized), size: f64) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { text_content: Some(content.to_string()), text_size: Some(size), ..Default::default() })
-}
 
 /// 🌀️ Sparse authored fill-rule delta.
 pub fn diff_set_layer_fill_rule(layer_id:&(impl std::fmt::Display + ?Sized),fill_rule:crate::FillRule)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {fill_rule:Some(fill_rule),..Default::default()})}
@@ -1056,7 +1056,7 @@ pub fn diff_set_trace_params(layer_id: &(impl std::fmt::Display + ?Sized), param
     layer_base_patch(layer_id, DrawingLayerPatch { trace_params: Some(params.clone()), ..Default::default() })
 }
 
-pub(crate) pub(crate) fn layer_base_patch(layer_id: &(impl std::fmt::Display + ?Sized), patch: DrawingLayerPatch) -> DrawingDiff {
+pub(crate) fn layer_base_patch(layer_id: &(impl std::fmt::Display + ?Sized), patch: DrawingLayerPatch) -> DrawingDiff {
     DrawingDiff { layers: Some(DrawingLayersDelta { modified: vec![DrawingLayerModification { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
 

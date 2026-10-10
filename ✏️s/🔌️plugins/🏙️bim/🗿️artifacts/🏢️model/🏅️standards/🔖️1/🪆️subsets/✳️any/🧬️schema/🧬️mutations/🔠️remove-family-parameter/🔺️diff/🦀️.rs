@@ -3,7 +3,7 @@
 
 use super::super::family_rules;
 use super::RemoveFamilyParameter;
-use crate::standards::v1::subsets::any::schema::inferences::families::formula;
+use crate::standards::v1::subsets::any::schema::authored::formula;
 use crate::{Entry, ModelDiff, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

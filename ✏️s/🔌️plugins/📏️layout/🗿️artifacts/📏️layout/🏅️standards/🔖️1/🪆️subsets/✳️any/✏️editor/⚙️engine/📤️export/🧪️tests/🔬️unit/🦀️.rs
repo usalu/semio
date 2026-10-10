@@ -285,7 +285,7 @@ fn drive_dispatched_worker(kind: LayoutExportKind, worker_count: usize, generati
         operation: operation.operation,
         generation,
         cancel,
-        config: BatchDriveConfig { site: "layout.export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "layout.export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
     let _ = worker_count;
@@ -347,7 +347,7 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
         operation: operation().operation,
         generation: operation().generation,
         cancel,
-        config: BatchDriveConfig { site: "layout.retained-wire.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "layout.retained-wire.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
     assert!(matches!(drive(dispatch("exportSvg", LayoutExportKind::Svg), params(semio_framework_job::root_cancel_token())), StepOutcome::Complete(_)));
@@ -372,7 +372,7 @@ fn exact_layout_out_media_factory_dispatches_a_real_reserved_job() {
         operation: operation.operation,
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
-        config: BatchDriveConfig { site: "layout.media-export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "layout.media-export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
     assert!(matches!(drive_test_job(dispatch.job, params), StepOutcome::Complete(_)));
@@ -651,7 +651,7 @@ fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
         operation: operation.operation,
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
-        config: BatchDriveConfig { site: "layout.export.segment-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "layout.export.segment-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
     let (outcome, drained) = drive_test_job_then(job, params.clone(), || {
@@ -723,7 +723,7 @@ fn checkpoint_is_lossless_bounded_and_authority_qualified() {
         operation: operation.operation,
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
-        config: BatchDriveConfig { site: "layout.export.restore-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "layout.export.restore-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
     let (outcome, resumed) = drive_test_job_then(restored, params.clone(), || LayoutExportCommit::from_chunks(LayoutExportKind::Package, "layout", &output_chunks).expect("drained resumed output").data.into_bytes());

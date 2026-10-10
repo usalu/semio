@@ -1,1 +1,12 @@
-{}
+{
+  "viewports": {
+    "vp-1": {
+      "entry": "Patched",
+      "position": {
+        "x": 15.0,
+        "y": 150.0
+      },
+      "sheet": "sh-2"
+    }
+  }
+}

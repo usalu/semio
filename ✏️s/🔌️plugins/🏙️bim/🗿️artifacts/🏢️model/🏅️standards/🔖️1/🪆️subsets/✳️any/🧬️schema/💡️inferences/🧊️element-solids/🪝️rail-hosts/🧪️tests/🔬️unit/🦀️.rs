@@ -24,6 +24,7 @@ fn stair(flight: StairFlight) -> Stair {
         tread_thickness: 0.04,
         riser: crate::STANDARD_RISER,
         landing_depth: 1.0,
+        phase: crate::Phase::New,
         name: String::new(),
     }
 }
@@ -41,6 +42,7 @@ fn railing(host: Option<RailingHost>) -> Railing {
         material: "m".into(),
         base_offset: 0.0,
         host,
+        phase: crate::Phase::New,
         name: String::new(),
     }
 }
@@ -168,7 +170,7 @@ fn a_rail_on_a_ramp_follows_the_walking_surface_inside_its_edge() {
 
 fn slab() -> Slab {
     let corner = |x: f64, y: f64| Vertex { point: Point2 { x, y }, bulge: 0.0 };
-    Slab { storey: "st".into(), slab_type: "t".into(), boundary: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)], holes: Vec::new(), offset: 0.1, slope: None, name: String::new() }
+    Slab { storey: "st".into(), slab_type: "t".into(), boundary: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)], holes: Vec::new(), offset: 0.1, slope: None, phase: crate::Phase::New, name: String::new() }
 }
 
 #[test]

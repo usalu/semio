@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-component-override/schema.json",
+  "title": "SetComponentOverride",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "component",
+    "name",
+    "value"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setComponentOverride"
+    },
+    "component": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Component",
+          "de": "Komponente"
+        },
+        "ref": {
+          "kind": "component"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Parameter name",
+          "de": "Parametername"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "value": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Formula",
+          "de": "Formel"
+        },
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

@@ -182,7 +182,7 @@ async fn the_editor_starts_from_the_demo_model() {
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_window_panel_domain_and_command() {
     let json = serde_json::to_string(&create_bim_app()).expect("app definition json");
-    for window in [plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID, section::WINDOW_KIND_ID, schedule::WINDOW_KIND_ID] {
+    for window in [plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID, section::WINDOW_KIND_ID, schedule::WINDOW_KIND_ID, family::WINDOW_KIND_ID, family::VIEW_KIND_ID] {
         assert!(json.contains(window), "window kind {window} missing from the manifest");
     }
     for body in [outliner_panel::BODY_KEY, properties_panel::BODY_KEY, library_panel::BODY_KEY, diagnostics_panel::BODY_KEY] {
@@ -232,6 +232,10 @@ pub(super) fn every_command() -> Vec<BimCommand> {
         BimCommand::ArmCurtainWall(arm_utility::ArmCurtainWall {}),
         BimCommand::ArmColumn(arm_utility::ArmColumn {}),
         BimCommand::ArmBeam(arm_utility::ArmBeam {}),
+        BimCommand::ArmBeamArc(arm_utility::ArmBeamArc {}),
+        BimCommand::ArmColumnTilt(arm_utility::ArmColumnTilt {}),
+        BimCommand::ArmCurtainGrid(arm_utility::ArmCurtainGrid {}),
+        BimCommand::ArmCurtainCell(arm_utility::ArmCurtainCell {}),
         BimCommand::ArmSlab(arm_utility::ArmSlab {}),
         BimCommand::ArmRoof(arm_utility::ArmRoof {}),
         BimCommand::ArmWindow(arm_utility::ArmWindow {}),
@@ -255,17 +259,22 @@ pub(super) fn every_command() -> Vec<BimCommand> {
         BimCommand::ArmExtend(arm_utility::ArmExtend {}),
         BimCommand::ArmAlign(arm_utility::ArmAlign {}),
         BimCommand::ArmSplit(arm_utility::ArmSplit {}),
+        BimCommand::ArmSweep(arm_utility::ArmSweep {}),
         BimCommand::FlipWalls(flip_walls::FlipWalls { ids: vec!["w-south".into()] }),
+        BimCommand::AttachWalls(attach_walls::AttachWalls { ids: vec!["w-south".into()], target: "roof-1".into() }),
         BimCommand::SplitWallAt(split_wall::SplitWallAt { ids: vec!["w-south".into()], at: "0.25".into() }),
         BimCommand::SetProperty(set_property::SetProperty { ids: vec!["w-south".into()], pset: "Pset".into(), property: "Load".into(), value: "2.5".into() }),
         BimCommand::RemoveProperty(remove_property::RemoveProperty { ids: vec!["w-south".into()], pset: "Pset".into(), property: "Load".into() }),
         BimCommand::PlaceAt(place_elements::PlaceAt { ids: vec!["w-south".into()], at: "1, 2".into() }),
+        BimCommand::PlaceGridColumns(place_grid_columns::PlaceGridColumns { storey: "st-ground".into(), ids: vec![] }),
         BimCommand::SelectFindings(select_findings::SelectFindings { ids: vec!["w-south".into(), "st-ground".into()] }),
         BimCommand::AnalyseModel(analyse_model::AnalyseModel { pressed: None }),
-        BimCommand::ExportModel(export_model::ExportModel { format: "ifc".into(), pressed: None }),
+        BimCommand::ExportModel(export_model::ExportModel { format: "ifc2x3".into(), pressed: None }),
         BimCommand::SetClassification(set_classification::SetClassification { ids: vec!["w-south".into()], system: "cs-uni".into(), code: "Ss_25".into() }),
         BimCommand::RemoveClassification(remove_classification::RemoveClassification { ids: vec!["w-south".into()], system: "cs-uni".into() }),
         BimCommand::ApplyTemplate(apply_template::ApplyTemplate { ids: vec!["w-south".into()], template: "pt-wall".into() }),
+        BimCommand::ApplyConditions(conditions::ApplyConditions { source: "sp-a".into(), ids: vec!["sp-b".into()] }),
+        BimCommand::ClearConditions(conditions::ClearConditions { ids: vec!["sp-b".into()] }),
         BimCommand::EditTemplate(edit_template::EditTemplate { id: "pt-wall".into(), op: "set".into(), index: "0".into(), field: "unit".into(), value: "m".into() }),
         BimCommand::EditClassification(edit_classification::EditClassification { id: "cs-uni".into(), op: "add".into(), code: "Ss_25".into(), title: "Walls".into(), parent: String::new() }),
         BimCommand::SearchClassification(search_classification::SearchClassification { system: "cs-uni".into(), query: "wall".into() }),
@@ -338,6 +347,9 @@ fn the_bridge_folds_host_arguments_into_typed_commands() {
     let BimCommand::CanvasPointerDown(press) = bridge("canvasPointerDown", json!({ "x": 5, "y": 6, "width": 800, "height": 600, "shift": true, "worldX": 1.5, "button": 0 })) else { panic!("a press bridges to canvasPointerDown") };
     assert_eq!((press.x, press.y, press.width, press.shift, press.ctrl), (5.0, 6.0, 800.0, true, false));
     assert_eq!(bridge("flipWalls", json!({ "id": "w-south" })), BimCommand::FlipWalls(flip_walls::FlipWalls { ids: vec!["w-south".into()] }));
+    assert_eq!(bridge("attachWalls", json!({ "id": "w-south", "value": "roof-1" })), BimCommand::AttachWalls(attach_walls::AttachWalls { ids: vec!["w-south".into()], target: "roof-1".into() }));
+    assert_eq!(bridge("attachWalls", json!({})), BimCommand::AttachWalls(attach_walls::AttachWalls { ids: Vec::new(), target: String::new() }));
+    assert_eq!(bridge("armSweep", json!({})), BimCommand::ArmSweep(arm_utility::ArmSweep {}));
     assert_eq!(bridge("splitWall", json!({ "ids": ["w-south"], "value": 0.25 })), BimCommand::SplitWallAt(split_wall::SplitWallAt { ids: vec!["w-south".into()], at: "0.25".into() }));
     assert_eq!(bridge("splitWall", json!({})), BimCommand::SplitWallAt(split_wall::SplitWallAt { ids: Vec::new(), at: String::new() }));
     assert_eq!(
@@ -354,7 +366,7 @@ fn the_bridge_folds_host_arguments_into_typed_commands() {
     assert_eq!(bridge("armSlabWalls", json!({})), BimCommand::ArmSlabWalls(arm_utility::ArmSlabWalls {}));
     assert_eq!(bridge("selectFindings", json!({ "id": "w-south" })), BimCommand::SelectFindings(select_findings::SelectFindings { ids: vec!["w-south".into()] }));
     assert_eq!(bridge("exportModel", json!({ "format": "glb", "pressed": true })), BimCommand::ExportModel(export_model::ExportModel { format: "glb".into(), pressed: Some(true) }));
-    assert_eq!(bridge("exportModel", json!({})), BimCommand::ExportModel(export_model::ExportModel { format: "ifc".into(), pressed: None }));
+    assert_eq!(bridge("exportModel", json!({})), BimCommand::ExportModel(export_model::ExportModel { format: "ifc2x3".into(), pressed: None }));
     assert_eq!(bridge("analyseModel", json!({ "pressed": false })), BimCommand::AnalyseModel(analyse_model::AnalyseModel { pressed: Some(false) }));
     assert_eq!(bridge("setClassification", json!({ "ids": ["w-south"], "system": "cs-uni", "code": "Ss_25" })), BimCommand::SetClassification(set_classification::SetClassification { ids: vec!["w-south".into()], system: "cs-uni".into(), code: "Ss_25".into() }));
     assert_eq!(bridge("setClassification", json!({ "id": "w-south", "system": "cs-uni", "value": "Ss_25" })), BimCommand::SetClassification(set_classification::SetClassification { ids: vec!["w-south".into()], system: "cs-uni".into(), code: "Ss_25".into() }));

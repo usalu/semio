@@ -1,0 +1,581 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Attic",
+    "description": "Walls under roofs, on a sloped slab, with sweeps and reveals",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.6,
+        "b": 0.5
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-paint": {
+      "name": "Paint",
+      "category": "Finish",
+      "color": {
+        "r": 0.7,
+        "g": 0.6,
+        "b": 0.5
+      },
+      "density": 1200,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-tile": {
+      "name": "Tile",
+      "category": "Other",
+      "color": {
+        "r": 0.7,
+        "g": 0.6,
+        "b": 0.5
+      },
+      "density": 2000,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-conc": {
+      "name": "Concrete",
+      "category": "Concrete",
+      "color": {
+        "r": 0.7,
+        "g": 0.6,
+        "b": 0.5
+      },
+      "density": 2400,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {
+    "slt-200": {
+      "name": "Concrete 200",
+      "layers": [
+        {
+          "material": "m-conc",
+          "thickness": 0.2,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "roof_types": {
+    "rt-tile": {
+      "name": "Tile",
+      "layers": [
+        {
+          "material": "m-tile",
+          "thickness": 0.1,
+          "function": "Finish"
+        }
+      ]
+    }
+  },
+  "window_types": {
+    "win-1": {
+      "name": "Window",
+      "width": 1.2,
+      "height": 1.2,
+      "sill": 0.9,
+      "frame_width": 0.06,
+      "frame_depth": 0.08,
+      "panes": 1,
+      "material": "m-paint"
+    }
+  },
+  "door_types": {
+    "door-1": {
+      "name": "Door",
+      "width": 0.9,
+      "height": 2.1,
+      "frame_width": 0.05,
+      "frame_depth": 0.1,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m-paint"
+    }
+  },
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-0": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-1": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "walls": {
+    "w-east": {
+      "storey": "st-1",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Roof": {
+          "roof": "r-gable",
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Gable end east"
+    },
+    "w-north": {
+      "storey": "st-1",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Roof": {
+          "roof": "r-gable",
+          "offset": 0.05
+        }
+      },
+      "phase": "New",
+      "name": "Eave north"
+    },
+    "w-west": {
+      "storey": "st-1",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Roof": {
+          "roof": "r-gable",
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Gable end west"
+    },
+    "w-south": {
+      "storey": "st-1",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Roof": {
+          "roof": "r-gable",
+          "offset": 0.05
+        }
+      },
+      "phase": "New",
+      "name": "Eave south"
+    },
+    "w-hip": {
+      "storey": "st-1",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 21,
+            "y": 4
+          },
+          "end": {
+            "x": 29,
+            "y": 4
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Roof": {
+          "roof": "r-hip",
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Under the hip"
+    },
+    "w-rail": {
+      "storey": "st-1",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 21,
+            "y": 2
+          },
+          "end": {
+            "x": 29,
+            "y": 2
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Rail wall"
+    },
+    "w-base": {
+      "storey": "st-0",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 41,
+            "y": 0
+          },
+          "end": {
+            "x": 49,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "On the slope",
+      "base_slab": "sl-slope"
+    },
+    "w-door": {
+      "storey": "st-0",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 60,
+            "y": 0
+          },
+          "end": {
+            "x": 68,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Door and windows"
+    }
+  },
+  "roofs": {
+    "r-gable": {
+      "storey": "st-1",
+      "roof_type": "rt-tile",
+      "footprint": [
+        {
+          "point": {
+            "x": 0,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 6
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0,
+            "y": 6
+          },
+          "bulge": 0
+        }
+      ],
+      "shape": {
+        "Gable": {
+          "pitch": 0.6,
+          "ridge_direction": 0
+        }
+      },
+      "overhang": 0,
+      "base_offset": 0,
+      "phase": "New",
+      "name": "Gable roof"
+    },
+    "r-hip": {
+      "storey": "st-1",
+      "roof_type": "rt-tile",
+      "footprint": [
+        {
+          "point": {
+            "x": 20,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 30,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 30,
+            "y": 8
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 20,
+            "y": 8
+          },
+          "bulge": 0
+        }
+      ],
+      "shape": {
+        "Hip": {
+          "pitch": 0.4
+        }
+      },
+      "overhang": 0,
+      "base_offset": 0,
+      "phase": "New",
+      "name": "Hip roof"
+    }
+  },
+  "slabs": {
+    "sl-slope": {
+      "storey": "st-0",
+      "slab_type": "slt-200",
+      "boundary": [
+        {
+          "point": {
+            "x": 40,
+            "y": -5
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 50,
+            "y": -5
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 50,
+            "y": 5
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 40,
+            "y": 5
+          },
+          "bulge": 0
+        }
+      ],
+      "holes": [],
+      "offset": 0,
+      "slope": {
+        "direction": 0,
+        "angle": 0.1
+      },
+      "phase": "New",
+      "name": "Sloped slab"
+    }
+  },
+  "openings": {
+    "o-door": {
+      "host": "w-door",
+      "kind": {
+        "Door": {
+          "door_type": "door-1"
+        }
+      },
+      "offset": 2,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Door"
+    },
+    "o-reveal": {
+      "host": "w-door",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "offset": 5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "reveal_depth": 0.1,
+      "reveal_material": "m-paint",
+      "name": "Window with a reveal"
+    },
+    "o-plain": {
+      "host": "w-door",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "offset": 7,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Plain window"
+    }
+  },
+  "wall_sweeps": {
+    "ws-door": {
+      "host": "w-door",
+      "side": "Left",
+      "profile": {
+        "Rectangle": {
+          "width": 0.02,
+          "depth": 0.1
+        }
+      },
+      "height": 0,
+      "inset": 0,
+      "material": "m-paint",
+      "name": "Baseboard"
+    },
+    "ws-slope": {
+      "host": "w-base",
+      "side": "Left",
+      "profile": {
+        "Rectangle": {
+          "width": 0.02,
+          "depth": 0.1
+        }
+      },
+      "height": 0,
+      "inset": 0,
+      "material": "m-paint",
+      "name": "Baseboard on the slope"
+    },
+    "ws-rail": {
+      "host": "w-rail",
+      "side": "Right",
+      "profile": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.04
+        }
+      },
+      "height": 0.9,
+      "inset": 0.01,
+      "material": "m-paint",
+      "name": "Hand rail"
+    }
+  }
+}

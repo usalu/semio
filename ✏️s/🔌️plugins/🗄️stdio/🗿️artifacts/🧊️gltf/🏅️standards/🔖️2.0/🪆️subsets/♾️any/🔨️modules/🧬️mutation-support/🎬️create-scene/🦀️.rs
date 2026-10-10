@@ -4,7 +4,7 @@ use crate::schema::snapshot::GltfScene;
 use crate::GltfSnapshot;
 
 //#region 🔖️Rejection
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfCreateSceneRejection {
     pub code: String,

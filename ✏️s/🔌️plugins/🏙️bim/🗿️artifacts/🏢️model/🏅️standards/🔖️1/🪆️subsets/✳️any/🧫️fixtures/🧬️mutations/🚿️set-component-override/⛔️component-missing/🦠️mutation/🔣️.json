@@ -1,0 +1,6 @@
+{
+  "mutation": "setComponentOverride",
+  "component": "cmp-ghost",
+  "name": "width",
+  "value": "2 m"
+}

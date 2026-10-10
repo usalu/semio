@@ -1,7 +1,7 @@
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
 /// 🌐️ Orbit navigation pose; projection and authored scene cameras have separate owners.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, serde::Serialize)]
 pub struct Viewport3dOrbit {
     pub position: [f64; 3],
     pub target: [f64; 3],

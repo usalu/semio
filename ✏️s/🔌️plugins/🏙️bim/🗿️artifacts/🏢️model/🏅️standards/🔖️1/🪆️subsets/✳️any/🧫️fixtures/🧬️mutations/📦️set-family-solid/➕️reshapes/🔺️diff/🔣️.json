@@ -1,1 +1,17 @@
-{}
+{
+  "family_solids": {
+    "s-top": {
+      "entry": "Patched",
+      "shape": {
+        "Cuboid": {
+          "depth": "depth",
+          "height": "60 mm",
+          "width": "width",
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0.7 m"
+        }
+      }
+    }
+  }
+}

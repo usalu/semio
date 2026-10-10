@@ -1,0 +1,20 @@
+{
+ "maximumDepth":64,
+ "textPageBytes":65536,
+ "maximumOwnedBytes":1048576,
+ "retirement":{"items":1,"copy":4096,"capacity":65536,"release":65536,"depth":512},
+ "cases":[
+  {"name":"path-all-segments","node":{"kind":"path","segments":[{"kind":"moveTo","to":{"x":1,"y":2}},{"kind":"lineTo","to":{"x":3,"y":4}},{"kind":"cubicTo","c1":{"x":1,"y":2},"c2":{"x":3,"y":4},"to":{"x":5,"y":6}},{"kind":"quadTo","c":{"x":1,"y":2},"to":{"x":3,"y":4}},{"kind":"arcTo","rx":2,"ry":3,"xRotation":45,"largeArc":true,"sweep":false,"to":{"x":8,"y":9}},{"kind":"close"}],"style":"outline 雪"}},
+  {"name":"text-unicode","node":{"kind":"text","value":"Draw Grüße 雪","at":{"x":1.25,"y":2.5}}},
+  {"name":"raster-bytes","node":{"kind":"image","at":{"x":0,"y":0},"width":2,"height":1,"mime":"image/png","bytes":[0,1,127,128,254,255]}},
+  {"name":"group-with-original-siblings","node":{"kind":"group","transform":{"translation":{"x":0,"y":0,"z":0},"rotation":{"x":0,"y":0,"z":0,"w":1},"scale":{"x":1,"y":1,"z":1}},"children":[{"kind":"text","value":"first original","at":{"x":0,"y":0}},{"kind":"path","segments":[{"kind":"close"}]}]}}
+ ],
+ "malformed":[
+  {"kind":"image","at":{"x":0,"y":0},"width":1,"height":1,"mime":"original prefix","bytes":[1,-1]},
+  {"kind":"text","value":"original prefix","at":{"x":0,"y":"bad"}},
+  {"kind":"path","segments":[{"kind":"lineTo","to":{"x":1,"y":2}},{"kind":"unknown"}]},
+  {"kind":"group","transform":{"translation":{"x":0,"y":0,"z":0},"rotation":{"x":0,"y":0,"z":0,"w":1},"scale":{"x":1,"y":1,"z":1}},"children":[{"kind":"text","value":"original sibling","at":{"x":0,"y":0}},{"kind":"unknown"}]}
+ ],
+ "cancelAfter":[0,1,2,3,5,8,13,21,34,55],
+ "deniedAxes":["items","copy","capacity","release","depth"]
+}

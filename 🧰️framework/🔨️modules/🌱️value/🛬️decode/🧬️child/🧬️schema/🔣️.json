@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"semio.value.native-decode.original-child-loan","type":"object","additionalProperties":false,"required":["parentBytes","childBytes","cases"],"properties":{"parentBytes":{"const":11},"childBytes":{"const":16},"cases":{"const":["complete","rejected","canceled","limit","nested"]}}}

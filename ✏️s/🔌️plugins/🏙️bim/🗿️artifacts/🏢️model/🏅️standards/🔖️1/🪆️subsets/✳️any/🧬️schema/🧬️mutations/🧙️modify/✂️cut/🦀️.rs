@@ -5,7 +5,7 @@
 
 use crate::mutations::wall_geometry::snap;
 use super::WallEnd;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::segment_of;
+use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use crate::{Axis, Point2, Vertex};
 use semio_framework_geometry::bulge::{bulge_from_sweep, intersect, nearest_intersection, BulgeSeg, Extent};
 use semio_framework_geometry::loops;

@@ -17,7 +17,7 @@ pub struct ArtifactLink {
 /// 📌️ What an `ArtifactLink` is frozen to: nothing (`Head`, always the target's live tip),
 /// a specific `Checkpoint`, or a content-addressed `Snapshot` blob (survives even the target
 /// document's own history being pruned/GC'd, since the bytes are escrowed independently).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields))]

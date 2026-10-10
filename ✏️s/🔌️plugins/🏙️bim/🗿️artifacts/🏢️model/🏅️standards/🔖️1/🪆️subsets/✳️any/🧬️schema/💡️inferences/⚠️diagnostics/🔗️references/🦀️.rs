@@ -3,7 +3,7 @@
 //! orphaned properties and ids used twice.
 
 use super::{Diagnostic, DiagnosticCode};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach;
+use crate::standards::v1::subsets::any::schema::authored::references;
 use crate::{ModelSnapshot, OpeningKind, TopConstraint};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -137,6 +137,11 @@ pub struct PanelUse {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue)]
 pub struct ReferenceView {
     pub sites: Vec<String>,
+    pub sheets: Vec<String>,
+    pub views: Vec<String>,
+    pub viewport_sheets: BTreeMap<String, String>,
+    pub viewport_views: BTreeMap<String, String>,
+    pub revision_sheets: BTreeMap<String, String>,
     pub building_sites: BTreeMap<String, String>,
     pub storey_buildings: BTreeMap<String, String>,
     pub grid_buildings: BTreeMap<String, String>,
@@ -173,6 +178,8 @@ impl ReferenceView {
         stray.extend(placed(snapshot.stairs.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.railings.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.ramps.iter().map(|(id, row)| (id, &row.storey)).collect()));
+        stray.extend(placed(snapshot.components.iter().map(|(id, row)| (id, &row.storey)).collect()));
+        stray.extend(placed(snapshot.mep_elements.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.spaces.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.dimensions.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.tags.iter().map(|(id, row)| (id, &row.storey)).collect()));
@@ -206,11 +213,16 @@ impl ReferenceView {
         named.extend(snapshot.openings.iter().filter_map(|(id, row)| row.reveal_material.as_ref().map(|material| use_of(id, material))));
         let mut counts: BTreeMap<String, u32> = BTreeMap::new();
         let ids = snapshot.sites.keys().chain(snapshot.buildings.keys()).chain(snapshot.storeys.keys()).chain(snapshot.grids.keys()).chain(snapshot.walls.keys()).chain(snapshot.curtain_walls.keys()).chain(snapshot.columns.keys()).chain(snapshot.beams.keys()).chain(snapshot.slabs.keys()).chain(snapshot.ceilings.keys());
-        ids.chain(snapshot.roofs.keys()).chain(snapshot.openings.keys()).chain(snapshot.stairs.keys()).chain(snapshot.railings.keys()).chain(snapshot.ramps.keys()).chain(snapshot.spaces.keys()).chain(snapshot.wall_sweeps.keys()).for_each(|id| *counts.entry(id.clone()).or_insert(0) += 1);
+        ids.chain(snapshot.roofs.keys()).chain(snapshot.openings.keys()).chain(snapshot.stairs.keys()).chain(snapshot.railings.keys()).chain(snapshot.ramps.keys()).chain(snapshot.spaces.keys()).chain(snapshot.wall_sweeps.keys()).chain(snapshot.components.keys()).chain(snapshot.mep_elements.keys()).for_each(|id| *counts.entry(id.clone()).or_insert(0) += 1);
         snapshot.curtain_panel_overrides.keys().for_each(|id| *counts.entry(id.clone()).or_insert(0) += 1);
-        snapshot.dimensions.keys().chain(snapshot.tags.keys()).chain(snapshot.text_notes.keys()).chain(snapshot.leaders.keys()).chain(snapshot.annotation_styles.keys()).chain(snapshot.zones.keys()).chain(snapshot.area_schemes.keys()).chain(snapshot.views.keys()).for_each(|id| *counts.entry(id.clone()).or_insert(0) += 1);
+        snapshot.dimensions.keys().chain(snapshot.tags.keys()).chain(snapshot.text_notes.keys()).chain(snapshot.leaders.keys()).chain(snapshot.annotation_styles.keys()).chain(snapshot.sheets.keys()).chain(snapshot.viewports.keys()).chain(snapshot.sheet_revisions.keys()).chain(snapshot.zones.keys()).chain(snapshot.area_schemes.keys()).chain(snapshot.views.keys()).for_each(|id| *counts.entry(id.clone()).or_insert(0) += 1);
         Self {
             sites: snapshot.sites.keys().cloned().collect(),
+            sheets: snapshot.sheets.keys().cloned().collect(),
+            views: snapshot.views.keys().cloned().collect(),
+            viewport_sheets: snapshot.viewports.iter().map(|(id, row)| (id.clone(), row.sheet.clone())).collect(),
+            viewport_views: snapshot.viewports.iter().map(|(id, row)| (id.clone(), row.view.clone())).collect(),
+            revision_sheets: snapshot.sheet_revisions.iter().map(|(id, row)| (id.clone(), row.sheet.clone())).collect(),
             building_sites: snapshot.buildings.iter().map(|(id, row)| (id.clone(), row.site.clone())).collect(),
             storey_buildings: snapshot.storeys.iter().map(|(id, row)| (id.clone(), row.building.clone())).collect(),
             grid_buildings: snapshot.grids.iter().map(|(id, row)| (id.clone(), row.building.clone())).collect(),
@@ -229,7 +241,7 @@ impl ReferenceView {
             panels,
             counts,
             sweep_hosts: snapshot.wall_sweeps.iter().map(|(id, row)| (id.clone(), row.host.clone())).collect(),
-            attaches: snapshot.walls.iter().flat_map(|(id, wall)| attach::targets_of(wall).into_iter().map(move |target| Attach { wall: id.clone(), target: target.to_string() })).collect(),
+            attaches: snapshot.walls.iter().flat_map(|(id, wall)| references::targets_of(wall).into_iter().map(move |target| Attach { wall: id.clone(), target: target.to_string() })).collect(),
             attachable: snapshot.roofs.keys().chain(snapshot.slabs.keys()).chain(snapshot.ceilings.keys()).cloned().collect(),
         }
     }
@@ -276,6 +288,10 @@ pub fn model(view: &ReferenceView) -> Vec<Diagnostic> {
         }
     }
     found.extend(view.overrides.iter().filter(|(_, curtain)| !curtains.contains(curtain)).map(|(id, curtain)| Diagnostic::new(RefCurtainOverrideHost, &[id]).lacking(curtain)));
+    let (sheets, views): (BTreeSet<&String>, BTreeSet<&String>) = (view.sheets.iter().collect(), view.views.iter().collect());
+    found.extend(view.viewport_sheets.iter().filter(|(_, sheet)| !sheets.contains(sheet)).map(|(id, sheet)| Diagnostic::new(RefViewportSheet, &[id]).lacking(sheet)));
+    found.extend(view.viewport_views.iter().filter(|(_, shown)| !views.contains(shown)).map(|(id, shown)| Diagnostic::new(RefViewportView, &[id]).lacking(shown)));
+    found.extend(view.revision_sheets.iter().filter(|(_, sheet)| !sheets.contains(sheet)).map(|(id, sheet)| Diagnostic::new(RefRevisionSheet, &[id]).lacking(sheet)));
     found.extend(view.counts.iter().filter(|(_, count)| **count > 1).map(|(id, _)| Diagnostic::new(DuplicateId, &[id])));
     let known = |id: &String| view.counts.contains_key(id) || materials.contains(id) || view.types.contains(id);
     found.extend(view.attached.iter().filter(|id| !known(id)).collect::<BTreeSet<_>>().into_iter().map(|id| Diagnostic::new(RefPropertyElement, &[id])));

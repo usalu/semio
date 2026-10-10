@@ -3,7 +3,7 @@
 
 use super::super::remove_family_parameter::RemoveFamilyParameter;
 use super::SetFamilyParameter;
-use crate::standards::v1::subsets::any::schema::inferences::families::formula;
+use crate::standards::v1::subsets::any::schema::authored::formula;
 use crate::{ModelMutation, ModelSnapshot, Patch};
 
 pub fn inverse(payload: &SetFamilyParameter, base: &ModelSnapshot) -> Vec<ModelMutation> {

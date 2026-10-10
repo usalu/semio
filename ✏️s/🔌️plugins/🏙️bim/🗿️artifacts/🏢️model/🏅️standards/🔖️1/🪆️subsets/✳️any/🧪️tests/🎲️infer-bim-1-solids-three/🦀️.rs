@@ -8,7 +8,7 @@ use semio_repo_test_host::Adapter;
 
 /// 📸️ The committed cases, in the order of the scenario.
 /// 📁️ (projection key, fixture directory) of the committed cases, in the order of the scenario.
-const CASES: [(&str, &str); 4] = [("straight-openings", "🚪️straight-openings"), ("room-joins", "🧩️room-joins"), ("curtain-grid", "🏬️curtain-grid"), ("ceilings-meshes", "🪵️ceilings-meshes")];
+const CASES: [(&str, &str); 7] = [("straight-openings", "🚪️straight-openings"), ("room-joins", "🧩️room-joins"), ("curtain-grid", "🏬️curtain-grid"), ("ceilings-meshes", "🪵️ceilings-meshes"), ("frame-tilt-joins", "📐️frame-tilt-joins"), ("curtain-overrides", "🪟️curtain-overrides"), ("components-mep", "🪑️components-mep")];
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]

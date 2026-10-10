@@ -9,10 +9,6 @@ fn square() -> Vec<Vertex> {
     vec![corner(0.0, 0.0), corner(2.0, 0.0), corner(2.0, 2.0), corner(0.0, 2.0)]
 }
 
-fn level(elevation: f64, height: f64) -> StoreyLevel {
-    StoreyLevel { elevation, top_elevation: elevation + height, absolute_elevation: elevation, absolute_top_elevation: elevation + height }
-}
-
 #[test]
 fn loops_are_normalised_to_the_requested_orientation() {
     let clockwise: Vec<Vertex> = square().into_iter().rev().collect();
@@ -30,16 +26,6 @@ fn area_and_perimeter_are_exact_for_arcs() {
     let half_disc = vec![Vertex { point: Point2 { x: -1.0, y: 0.0 }, bulge: 1.0 }, corner(1.0, 0.0)];
     assert!((area(&half_disc) - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
     assert!((perimeter(&half_disc) - (std::f64::consts::PI + 2.0)).abs() < 1e-12);
-}
-
-#[test]
-fn a_top_constraint_resolves_against_the_levels() {
-    let levels = BTreeMap::from([("a".to_string(), level(0.0, 3.0)), ("b".to_string(), level(3.0, 2.8))]);
-    assert_eq!(vertical(&levels, "a", 0.1, &TopConstraint::StoreyTop { offset: -0.2 }), Some((0.1, 2.8)));
-    assert_eq!(vertical(&levels, "a", 0.0, &TopConstraint::Unconnected { height: 2.0 }), Some((0.0, 2.0)));
-    assert_eq!(vertical(&levels, "a", 0.0, &TopConstraint::Storey { storey: "b".into(), offset: 0.5 }), Some((0.0, 3.5)));
-    assert_eq!(vertical(&levels, "a", 0.0, &TopConstraint::Storey { storey: "missing".into(), offset: 0.5 }), Some((0.0, 0.5)), "a missing target falls back to the own storey");
-    assert_eq!(vertical(&levels, "missing", 0.0, &TopConstraint::StoreyTop { offset: 0.0 }), None);
 }
 
 #[test]

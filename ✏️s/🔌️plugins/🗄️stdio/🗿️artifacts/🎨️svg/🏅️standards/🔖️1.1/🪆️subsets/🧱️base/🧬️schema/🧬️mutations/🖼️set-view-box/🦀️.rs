@@ -4,7 +4,7 @@ use crate::schema::mutation_support::{attribute_diff_at_path, prior_attribute};
 use crate::schema::snapshot::{NodePath, SvgAttributeValue, ViewBox};
 use crate::SvgSnapshot;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetViewBoxPayload {

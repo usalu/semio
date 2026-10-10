@@ -5,7 +5,7 @@ use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.move-image.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/images"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfMoveImagePayload {
     pub index: usize,
@@ -39,7 +39,7 @@ pub fn inverse(p: &GltfMoveImagePayload, base: &GltfSnapshot) -> Vec<super::Gltf
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveImageMutation {

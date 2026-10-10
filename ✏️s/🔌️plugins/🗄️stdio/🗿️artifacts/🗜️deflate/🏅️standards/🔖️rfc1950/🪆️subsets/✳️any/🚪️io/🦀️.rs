@@ -57,6 +57,7 @@ pub use derived_composition::*;
 // container<->typed-snapshot pair `DeflateSnapshot`'s `ArtifactDsl`/`ArtifactPack` impls call.
 use crate::schema::snapshot::{DeflateLevelHint, DeflateSnapshot};
 use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
 //#region Adler32
 /// 🧮 Adler-32 (RFC1950).
@@ -697,19 +698,32 @@ impl RetainedZlibDecoder {
         self.closing = true;
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    /// ♻️ The physical bytes the next close turn releases: the output, the input, then the inflater's history allocation.
+    pub fn next_close_release_bytes(&self) -> usize {
+        match next_backing_bytes(&[&self.output, &self.input]) {
+            0 => self.inflater.next_retained_release_allocation_bytes().unwrap_or(0),
+            bytes => bytes,
+        }
+    }
+
+    /// ♻️ The flat frontier depth the next close turn needs: `1` until the decoder is terminal-empty.
+    pub fn next_close_depth_demand(&self) -> usize {
+        usize::from(!self.terminal_is_empty())
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         if !self.closing {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.output, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if !deflate_close_admits(grant, self.next_close_release_bytes(), self.terminal_is_empty()) {
+            return deflate_close_idle();
         }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.input, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if let Some(released_bytes) = release_next_backing(&mut [&mut self.output, &mut self.input]) {
+            return deflate_close_receipt(1, released_bytes);
         }
-        match self.inflater.close_retained_step(maximum_items, maximum_bytes) {
-            semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-            semio_framework_deflate::RetainedInflateCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Complete,
+        match self.inflater.close_retained_step(grant.maximum_items, grant.maximum_release_bytes) {
+            semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items, released_bytes } => deflate_close_receipt(released_items, released_bytes),
+            semio_framework_deflate::RetainedInflateCloseStep::Complete => deflate_close_complete(),
         }
     }
 
@@ -874,23 +888,33 @@ impl RetainedZlibEncoder {
         semio_framework_job::InteractiveJob::begin_close(&mut self.job);
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    /// ♻️ The physical bytes the next close turn releases: the encoder's own backings, then the raw job's frontier.
+    pub fn next_close_release_bytes(&self) -> usize {
+        match next_backing_bytes(&[&self.raw, &self.frame, &self.literal_codes, &self.distance_codes]) {
+            0 => self.job.close_release_bytes(),
+            bytes => bytes,
+        }
+    }
+
+    /// ♻️ The flat frontier depth the next close turn needs: `1` until the encoder is terminal-empty.
+    pub fn next_close_depth_demand(&self) -> usize {
+        usize::from(!self.terminal_is_empty())
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         if !self.closing {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.raw, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if next_backing_bytes(&[&self.raw, &self.frame, &self.literal_codes, &self.distance_codes]) == 0 {
+            return semio_framework_job::InteractiveJob::close_step(&mut self.job, grant);
         }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.frame, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if !deflate_close_admits(grant, self.next_close_release_bytes(), false) {
+            return deflate_close_idle();
         }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.literal_codes, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        match release_next_backing(&mut [&mut self.raw, &mut self.frame, &mut self.literal_codes, &mut self.distance_codes]) {
+            Some(released_bytes) => deflate_close_receipt(1, released_bytes),
+            None => deflate_close_idle(),
         }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.distance_codes, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        semio_framework_job::InteractiveJob::close_step(&mut self.job, maximum_items, maximum_bytes)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -937,7 +961,16 @@ impl PagedPayload {
         }
     }
 
-    /// 🧹️ Releases the admitted pages, then the frozen bytes; `None` once terminal-empty.
+    fn begin_close(&mut self) {
+        self.writer.begin_close();
+    }
+
+    /// ♻️ The physical bytes the next close turn releases: one admitted page, else the frozen bytes.
+    fn next_close_release_bytes(&self) -> usize {
+        if self.writer.terminal_is_empty() { self.bytes.backing_bytes() } else { self.writer.next_close_byte_demand() }
+    }
+
+    /// 🧹️ Releases the admitted pages, then the frozen bytes whole; `None` once terminal-empty.
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
         if !self.writer.terminal_is_empty() {
             return match self.writer.close_step(maximum_items, maximum_bytes) {
@@ -945,7 +978,7 @@ impl PagedPayload {
                 semio_framework_job::JobPayloadCloseStep::Complete => Some((0, 0)),
             };
         }
-        retire_deflate_vec_step(&mut self.bytes, maximum_items, maximum_bytes)
+        release_next_backing(&mut [&mut self.bytes]).map(|released_bytes| (1, released_bytes))
     }
 }
 
@@ -980,6 +1013,26 @@ impl DeflatePublication {
         }
     }
 
+    fn begin_close(&mut self) {
+        match self {
+            Self::Checkpoint { state, .. } => state.begin_close(),
+            Self::Commit { state, output } => {
+                state.begin_close();
+                output.begin_close();
+            }
+        }
+    }
+
+    /// ♻️ The physical bytes the next close turn releases: the state stream first, then the output stream.
+    fn next_close_release_bytes(&self) -> usize {
+        match self {
+            Self::Checkpoint { state, .. } => state.next_close_release_bytes(),
+            Self::Commit { state, output } => {
+                if state.writer.terminal_is_empty() && state.bytes.capacity() == 0 { output.next_close_release_bytes() } else { state.next_close_release_bytes() }
+            }
+        }
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
         match self {
             Self::Checkpoint { state, .. } => state.close_step(maximum_items, maximum_bytes),
@@ -1003,14 +1056,14 @@ fn advance_publication(publication: &mut Option<DeflatePublication>, context: &m
     }
 }
 
-/// 🧹️ Retires an in-flight publication; `None` once there is none left.
-fn close_publication_step(publication: &mut Option<DeflatePublication>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
+/// 🧹️ Retires an in-flight publication one frontier per turn and hands the emptied publication off last; `None` once there is none left.
+fn close_publication_step(publication: &mut Option<DeflatePublication>, grant: RetainedCloneGrant) -> Option<(usize, usize)> {
     let active = publication.as_mut()?;
-    if let Some(step) = active.close_step(maximum_items, maximum_bytes) {
+    if let Some(step) = active.close_step(grant.maximum_items, grant.maximum_release_bytes) {
         return Some(step);
     }
     *publication = None;
-    Some((0, 0))
+    Some((1, 0))
 }
 //#endregion 📄️PagedPublication
 
@@ -1050,26 +1103,41 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
         }
     }
 
-    fn begin_close(&mut self) {}
+    fn begin_close(&mut self) {
+        if let Some(publication) = self.publication.as_mut() {
+            publication.begin_close();
+        }
+    }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if let Some((released_items, released_bytes)) = close_publication_step(&mut self.publication, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        semio_framework_job::InteractiveJob::begin_close(self);
+        if !deflate_close_admits(grant, self.close_release_bytes(), semio_framework_job::InteractiveJob::terminal_is_empty(self)) {
+            return deflate_close_idle();
         }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.input, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if let Some((copied_items, released_bytes)) = close_publication_step(&mut self.publication, grant) {
+            return deflate_close_receipt(copied_items, released_bytes);
         }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.writer.out, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.head, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.previous, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if let Some(released_bytes) = release_next_backing(&mut [&mut self.input, &mut self.writer.out, &mut self.head, &mut self.previous]) {
+            return deflate_close_receipt(1, released_bytes);
         }
         self.pending = None;
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        deflate_close_complete()
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_release_bytes())
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(usize::from(!semio_framework_job::InteractiveJob::terminal_is_empty(self)))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1077,27 +1145,66 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
     }
 }
 
-fn retire_deflate_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-    let item_bytes = size_of::<T>();
-    if !values.is_empty() {
-        let byte_items = if item_bytes == 0 { maximum_items } else { maximum_bytes / item_bytes };
-        let released_items = values.len().min(maximum_items).min(byte_items);
-        if released_items == 0 {
-            return Some((0, 0));
-        }
-        values.truncate(values.len() - released_items);
-        return Some((released_items, released_items * item_bytes));
+impl DeflateEncodeJob {
+    /// ♻️ The physical bytes the next close turn releases: the publication frontier, then the first backing still held.
+    fn close_release_bytes(&self) -> usize {
+        self.publication.as_ref().map_or_else(|| next_backing_bytes(&[&self.input, &self.writer.out, &self.head, &self.previous]), DeflatePublication::next_close_release_bytes)
     }
-    if values.capacity() == 0 {
-        return None;
-    }
-    let backing_bytes = values.capacity().checked_mul(item_bytes).unwrap_or(usize::MAX);
-    if maximum_items == 0 || maximum_bytes < backing_bytes {
-        return Some((0, 0));
-    }
-    drop(std::mem::take(values));
-    Some((1, backing_bytes))
 }
+
+//#region ♻️FlatClose
+/// ♻️ Whether one close turn's grant covers its single owner, its exact release and its flat frontier depth.
+fn deflate_close_admits(grant: RetainedCloneGrant, release_bytes: usize, terminal_is_empty: bool) -> bool {
+    grant.maximum_items != 0 && grant.maximum_release_bytes >= release_bytes && grant.maximum_depth >= usize::from(!terminal_is_empty)
+}
+
+/// ♻️ The yield of a close turn whose grant is below a demand axis: no mutation and an empty receipt.
+fn deflate_close_idle() -> semio_framework_job::InteractiveJobCloseStep {
+    semio_framework_job::InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }
+}
+
+/// ♻️ The exact receipt of one close turn that handed off `copied_items` owners and released `released_bytes`.
+fn deflate_close_receipt(copied_items: usize, released_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    semio_framework_job::InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items, released_bytes, ..RetainedCloneProgress::default() } }
+}
+
+/// ♻️ The terminal close turn: nothing is left to hand off or release, which the owner's terminal-empty witness proves.
+fn deflate_close_complete() -> semio_framework_job::InteractiveJobCloseStep {
+    semio_framework_job::InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+}
+
+/// ♻️ A flat owner whose whole physical backing one close turn releases.
+trait FlatBacking {
+    fn backing_bytes(&self) -> usize;
+    fn release_backing(&mut self);
+}
+
+impl<T> FlatBacking for Vec<T> {
+    fn backing_bytes(&self) -> usize {
+        self.capacity().saturating_mul(size_of::<T>())
+    }
+
+    fn release_backing(&mut self) {
+        drop(std::mem::take(self));
+    }
+}
+
+/// ♻️ The physical bytes of the first owner that still holds a backing, `0` once every owner is released.
+fn next_backing_bytes(backings: &[&dyn FlatBacking]) -> usize {
+    backings.iter().map(|backing| backing.backing_bytes()).find(|bytes| *bytes != 0).unwrap_or(0)
+}
+
+/// ♻️ Releases the first owner that still holds a backing whole and returns its bytes, `None` once every owner is released.
+fn release_next_backing(backings: &mut [&mut dyn FlatBacking]) -> Option<usize> {
+    backings.iter_mut().find_map(|backing| {
+        let bytes = backing.backing_bytes();
+        (bytes != 0).then(|| {
+            backing.release_backing();
+            bytes
+        })
+    })
+}
+//#endregion ♻️FlatClose
 
 fn write_usize(bytes: &mut Vec<u8>, value: usize) {
     bytes.extend_from_slice(&(value as u64).to_le_bytes());
@@ -1247,6 +1354,11 @@ impl TunedDeflateEncodeJob {
         while !self.engine.step() {}
         self.output()
     }
+
+    /// ♻️ The physical bytes the next close turn releases: the publication frontier, then the engine's first backing.
+    fn close_release_bytes(&self) -> usize {
+        self.publication.as_ref().map_or_else(|| self.engine.next_close_release_bytes(), DeflatePublication::next_close_release_bytes)
+    }
 }
 
 impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
@@ -1276,18 +1388,40 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
         }
     }
 
-    fn begin_close(&mut self) {}
+    fn begin_close(&mut self) {
+        if let Some(publication) = self.publication.as_mut() {
+            publication.begin_close();
+        }
+    }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if let Some((released_items, released_bytes)) = close_publication_step(&mut self.publication, maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        semio_framework_job::InteractiveJob::begin_close(self);
+        if !deflate_close_admits(grant, self.close_release_bytes(), semio_framework_job::InteractiveJob::terminal_is_empty(self)) {
+            return deflate_close_idle();
         }
-        let (complete, released_items, released_bytes) = self.engine.close_step(maximum_items, maximum_bytes);
-        if complete {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        if let Some((copied_items, released_bytes)) = close_publication_step(&mut self.publication, grant) {
+            return deflate_close_receipt(copied_items, released_bytes);
         }
+        match self.engine.close_step() {
+            Some(released_bytes) => deflate_close_receipt(1, released_bytes),
+            None => deflate_close_complete(),
+        }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_release_bytes())
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(usize::from(!semio_framework_job::InteractiveJob::terminal_is_empty(self)))
     }
 
     fn terminal_is_empty(&self) -> bool {

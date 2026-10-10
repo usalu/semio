@@ -99,7 +99,7 @@ impl store::ArtifactPack for RetainedLoadCameraConfig {
 impl store::ConfigRecord for RetainedLoadCameraConfig {}
 
 /// 🔺️ Sparse diff of [`RetainedLoadCameraConfig`]: the absolute new value of each field the mutation moves.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub(super) struct RetainedLoadCameraConfigDiff {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -250,7 +250,6 @@ pub(super) fn close_retained_load_registry(registry: &mut WindowConfigOwnerRegis
     }
     panic!("retained-load registry did not reach terminal emptiness");
 }
-
 fn keyed_packs(packs: Vec<WindowConfigPack>) -> BTreeMap<(String, String), store::ArtifactPackFiles> {
     packs.into_iter().map(|pack| ((pack.window_kind_id, pack.window_id), pack.files)).collect()
 }

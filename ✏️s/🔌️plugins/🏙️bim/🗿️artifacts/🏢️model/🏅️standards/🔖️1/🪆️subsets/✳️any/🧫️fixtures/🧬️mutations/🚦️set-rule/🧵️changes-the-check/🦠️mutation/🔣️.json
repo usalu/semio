@@ -1,0 +1,6 @@
+{
+  "mutation": "setRule",
+  "id": "r-1",
+  "kind": "MinTread",
+  "limit": 0.26
+}

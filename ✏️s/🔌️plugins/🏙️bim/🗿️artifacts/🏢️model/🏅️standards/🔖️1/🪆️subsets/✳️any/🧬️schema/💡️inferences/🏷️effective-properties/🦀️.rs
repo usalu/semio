@@ -10,8 +10,8 @@
 //!
 //! Related: IFC property set templates, <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifckernel/lexical/ifcpropertysettemplate.htm>.
 
-use super::diagnostics::{Diagnostic, DiagnosticCode};
-use super::element_solids::{dep_object, dep_value};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
 use crate::{ModelSnapshot, OpeningKind, PropertyTemplate, PropertyValue, TemplateTarget, Violation};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
@@ -23,7 +23,7 @@ pub const READS: &[&str] = &[
 
 //#region 🔖️Values
 /// 🧭️ Where an effective value comes from.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum Source {
     Own,
     Type,
@@ -31,7 +31,7 @@ pub enum Source {
 }
 
 /// 🏷️ One effective value: the value, where it comes from and the template (id) that defines its property, when one does.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct EffectiveValue {
     pub value: PropertyValue,
     pub source: Source,
@@ -40,7 +40,7 @@ pub struct EffectiveValue {
 }
 
 /// 🚫️ What is wrong with one property: no value although required, or a value that breaks its definition.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum Issue {
     Missing,
     KindMismatch,
@@ -61,7 +61,7 @@ impl From<Violation> for Issue {
 }
 
 /// 🚫️ One finding about one property of one holder.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Finding {
     pub template: String,
     pub set: String,
@@ -70,7 +70,7 @@ pub struct Finding {
 }
 
 /// 🏷️ The effective properties of one holder: property set → property → value, and the findings against the templates that apply.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct EffectiveProperties {
     #[value(default)]
     pub values: BTreeMap<String, BTreeMap<String, EffectiveValue>>,
@@ -244,7 +244,8 @@ pub fn effective_of(snapshot: &ModelSnapshot, id: &str, inherited: Option<&Effec
     let mut values: BTreeMap<String, BTreeMap<String, EffectiveValue>> = BTreeMap::new();
     for (set, properties) in inherited.into_iter().flat_map(|inherited| &inherited.values) {
         for (name, effective) in properties {
-            values.entry(set.clone()).or_default().insert(name.clone(), EffectiveValue { value: effective.value.clone(), source: Source::Type, template: effective.template.clone() });
+            let source = if effective.source == Source::Default { Source::Default } else { Source::Type };
+            values.entry(set.clone()).or_default().insert(name.clone(), EffectiveValue { value: effective.value.clone(), source, template: effective.template.clone() });
         }
     }
     let own = snapshot.properties.get(id);
@@ -276,8 +277,8 @@ pub fn effective_of(snapshot: &ModelSnapshot, id: &str, inherited: Option<&Effec
             }
         }
     }
-    if let Some(served) = target.and_then(TemplateTarget::served) {
-        for (template_id, template) in templates_for(snapshot, served) {
+    if let Some((own, served)) = target.and_then(|target| target.served().map(|served| (target, served))) {
+        for (template_id, template) in templates_for(snapshot, served).filter(|(_, template)| !template.applies_to.contains(&own)) {
             for definition in &template.properties {
                 let Some(effective) = values.get_mut(&template.name).and_then(|set| set.get_mut(&definition.name)).filter(|effective| effective.source == Source::Own) else { continue };
                 effective.template.get_or_insert_with(|| template_id.clone());
@@ -347,6 +348,69 @@ pub fn findings_dependency(snapshot: &ModelSnapshot) -> DslValue {
     dep_object([("classifications", dep_value(&snapshot.classifications)), ("systems", dep_value(&snapshot.classification_systems))])
 }
 //#endregion 🔖️Findings
+
+//#region 🔖️Projection
+/// 🧾️ One effective value as the third-party oracle reads it: the kind, the value in the field of its kind, where it comes from.
+#[derive(value_derive::ToValue)]
+struct ValueRow {
+    set: String,
+    name: String,
+    kind: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    number: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    text: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    flag: Option<bool>,
+    source: String,
+}
+
+/// 🧾️ One finding as the third-party oracle reads it.
+#[derive(value_derive::ToValue)]
+struct FindingRow {
+    set: String,
+    property: String,
+    issue: String,
+}
+
+/// 🧾️ The effective properties of one holder as the third-party oracle reads them.
+#[derive(value_derive::ToValue)]
+struct HolderRow {
+    values: Vec<ValueRow>,
+    findings: Vec<FindingRow>,
+}
+
+fn holder_row(row: &EffectiveProperties) -> HolderRow {
+    let values = row
+        .values
+        .iter()
+        .flat_map(|(set, properties)| {
+            properties.iter().map(move |(name, effective)| ValueRow {
+                set: set.clone(),
+                name: name.clone(),
+                kind: effective.value.kind().name().to_string(),
+                number: effective.value.number(),
+                text: match &effective.value {
+                    PropertyValue::Text { value } => Some(value.clone()),
+                    _ => None,
+                },
+                flag: match &effective.value {
+                    PropertyValue::Boolean { value } => Some(*value),
+                    _ => None,
+                },
+                source: format!("{:?}", effective.source),
+            })
+        })
+        .collect();
+    let findings = row.findings.iter().map(|finding| FindingRow { set: finding.set.clone(), property: finding.property.clone(), issue: format!("{:?}", finding.issue) }).collect();
+    HolderRow { values, findings }
+}
+
+/// 🧾️ The table the third-party oracle reproduces: the effective values and the findings of every holder.
+pub fn table_json(rows: &BTreeMap<String, EffectiveProperties>) -> String {
+    semio_framework_pack_json::to_json_string(&rows.iter().map(|(id, row)| (id.clone(), holder_row(row))).collect::<BTreeMap<String, HolderRow>>())
+}
+//#endregion 🔖️Projection
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

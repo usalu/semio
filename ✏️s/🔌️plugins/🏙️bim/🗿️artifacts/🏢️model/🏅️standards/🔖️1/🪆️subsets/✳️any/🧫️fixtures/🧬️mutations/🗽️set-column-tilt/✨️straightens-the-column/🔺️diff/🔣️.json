@@ -1,1 +1,10 @@
-{}
+{
+  "columns": {
+    "c-a1": {
+      "entry": "Patched",
+      "tilt": {
+        "value": null
+      }
+    }
+  }
+}

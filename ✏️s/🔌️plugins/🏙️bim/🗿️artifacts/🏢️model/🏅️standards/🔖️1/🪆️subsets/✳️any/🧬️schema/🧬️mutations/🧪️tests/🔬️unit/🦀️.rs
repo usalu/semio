@@ -76,16 +76,16 @@ async fn the_pure_storey_elevation_equals_the_inference_engine() {
     let levels = crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels(&base);
     assert!(base.storeys.values().any(|storey| storey.level < 0), "the house stacks downward too");
     for id in base.storeys.keys() {
-        assert_eq!(placement::storey_elevation(&base, id), Some(levels[id].elevation), "{id}");
+        assert_eq!(crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, id), Some(levels[id].elevation), "{id}");
     }
-    assert_eq!(placement::storey_elevation(&base, "st-nowhere"), None);
+    assert_eq!(crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-nowhere"), None);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_rise_to_another_storey_is_the_elevation_gap() {
     use crate::TopConstraint;
     let base = house();
-    let gap = placement::storey_elevation(&base, "st-upper").unwrap() - placement::storey_elevation(&base, "st-ground").unwrap();
+    let gap = crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-upper").unwrap() - crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-ground").unwrap();
     let rise = placement::rise(&base, "st-ground", 0.1, &TopConstraint::Storey { storey: "st-upper".into(), offset: -0.2 }).expect("both storeys exist");
     assert!((rise - (gap - 0.2 - 0.1)).abs() < 1e-12);
     assert_eq!(placement::rise(&base, "st-ground", 0.0, &TopConstraint::Storey { storey: "st-nowhere".into(), offset: 0.0 }), None);

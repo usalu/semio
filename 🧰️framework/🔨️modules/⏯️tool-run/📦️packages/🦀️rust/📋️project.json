@@ -20,6 +20,8 @@
         "command": "bun ./📜️script.ts test"
       }
     },
+    "test-original-entities": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-entities"}},
+    "test-original-progress": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-progress"}},
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
@@ -50,3 +52,4 @@
     }
   }
 }
+                                       

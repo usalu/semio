@@ -1,11 +1,12 @@
 //! 🧱️ Walls and their openings. A wall is read from its `Axis` representation, its swept `Body` (height and base level), and its layer set (type and location line); an opening from its void,
 //! its filling window or door, and the position of its placement projected onto the host axis.
 
-use super::data::label;
+use super::data::{label, number};
 use super::frames::Rigid;
 use super::reader::{real, text, Section};
-use super::spatial::{authoring_of, phase_of};
+use super::spatial::{authoring_of, phase_of, set_of};
 use super::Import;
+use crate::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::offsets_of;
 use crate::{Axis, DoorLeaves, DoorType, Layer, LayerFunction, LocationLine, Opening, OpeningKind, Point2, Swing, TopConstraint, Wall, WallType, WindowType};
 use semio_framework_geometry::bulge::BulgeSeg;
@@ -61,35 +62,36 @@ fn wall(i: &mut Import<'_>, instance_id: u64, args: &[semio_s_artifact_stdio_ifc
         Some(Section::Rectangle { width, .. }) => Some(super::reader::Edge { start: [0.0, 0.0], end: [*width, 0.0], bulge: 0.0 }),
         _ => None,
     });
-    let (Some(edge), Some(body)) = (edge, body) else {
-        i.skip(entity, &label_text, "it has no axis and no swept body");
+    let attach = set_of(&i.doc, instance_id, ATTACH_SET);
+    let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
+    let swept = body.as_ref().map(|body| (body.depth * body.direction[2].abs(), to_building.point(body.position.origin)[2] - elevation));
+    let (Some(edge), Some((height, base_offset))) = (edge, swept.or(number(&attach, "Height").zip(number(&attach, "BaseLevel")))) else {
+        i.skip(entity, &label_text, "it has no axis and neither a swept body nor an attach record");
         return;
     };
+    let section = body.as_ref().map(|body| &body.section);
     let map = |point: [f64; 2]| {
         let world = to_building.point([point[0], point[1], 0.0]);
         Point2 { x: world[0], y: world[1] }
     };
     let (start, end) = (map(edge.start), map(edge.end));
     let axis = if edge.bulge.abs() < 1e-12 { Axis::Line { start, end } } else { Axis::Arc { start, end, bulge: edge.bulge } };
-    let height = body.depth * body.direction[2].abs();
-    let base_z = to_building.point(body.position.origin)[2];
     let found = layers_of(i, instance_id);
     let (layers, usage, set_name) = found.unwrap_or_else(|| {
-        let thickness = match &body.section {
-            Section::Rectangle { depth, .. } => *depth,
+        let thickness = match section {
+            Some(Section::Rectangle { depth, .. }) => *depth,
             _ => 0.0,
         };
         (vec![Layer { material: String::new(), thickness, function: LayerFunction::Structure }], None, String::new())
     });
     let thickness: f64 = layers.iter().map(|layer| layer.thickness).sum();
     let wall_type = wall_type_for(i, instance_id, layers, &set_name);
-    let left = match (usage, &body.section) {
+    let left = match (usage, section) {
         (Some((negative, offset)), _) => if negative { offset } else { offset + thickness },
-        (None, Section::Rectangle { centre, .. }) => centre[1] + thickness / 2.0,
+        (None, Some(Section::Rectangle { centre, .. })) => centre[1] + thickness / 2.0,
         _ => thickness / 2.0,
     };
-    let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
-    let mut row = Wall { storey, wall_type, axis, location: LocationLine::Center, base_offset: base_z - elevation, top: TopConstraint::Unconnected { height }, phase: phase_of(&i.doc, instance_id), start_join: None, end_join: None, base_slab: None, name: if label_text == id { String::new() } else { label_text } };
+    let mut row = Wall { storey, wall_type, axis, location: LocationLine::Center, base_offset, top: TopConstraint::Unconnected { height }, phase: phase_of(&i.doc, instance_id), start_join: None, end_join: None, base_slab: None, name: if label_text == id { String::new() } else { label_text } };
     row.location = location_for(i, &row, left);
     i.model.walls.insert(id.clone(), row);
     i.ids.insert(instance_id, id);
@@ -99,7 +101,8 @@ fn window_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio
     if let Some(known) = i.doc.index.types.get(&fill_ifc).and_then(|kind| i.type_ids.get(kind)).filter(|id| i.model.window_types.contains_key(*id)) {
         return known.clone();
     }
-    let row = WindowType { name: text(fill, 2), width, height, sill, frame_width: 0.05, frame_depth: 0.08, panes: 1, material: String::new() };
+    let thermal = super::energy::occurrence_thermal(&i.doc, fill_ifc, true);
+    let row = WindowType { name: text(fill, 2), width, height, sill, frame_width: 0.05, frame_depth: 0.08, panes: 1, material: String::new(), u_value: thermal.u_value, g_value: thermal.g_value, frame_fraction: thermal.frame_fraction };
     if let Some((id, _)) = i.model.window_types.iter().find(|(_, known)| **known == row) {
         return id.clone();
     }
@@ -112,7 +115,8 @@ fn door_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio_i
     if let Some(known) = i.doc.index.types.get(&fill_ifc).and_then(|kind| i.type_ids.get(kind)).filter(|id| i.model.door_types.contains_key(*id)) {
         return known.clone();
     }
-    let row = DoorType { name: text(fill, 2), width, height, frame_width: 0.05, frame_depth: 0.1, leaves: DoorLeaves::Single, swing: Swing::Left, material: String::new() };
+    let thermal = super::energy::occurrence_thermal(&i.doc, fill_ifc, false);
+    let row = DoorType { name: text(fill, 2), width, height, frame_width: 0.05, frame_depth: 0.1, leaves: DoorLeaves::Single, swing: Swing::Left, material: String::new(), u_value: thermal.u_value };
     if let Some((id, _)) = i.model.door_types.iter().find(|(_, known)| **known == row) {
         return id.clone();
     }
@@ -145,8 +149,8 @@ fn opening(i: &mut Import<'_>, host_ifc: u64, opening_ifc: u64) {
     };
     let offset = super::frames::snap(segment.closest(Point::new(origin[0], origin[1])).t * segment.length());
     let base_z = i.levels.get(&wall_row.storey).map_or(0.0, |level| level.elevation) + wall_row.base_offset;
-    let sill = origin[2] - base_z;
     let filler = i.doc.index.filling.get(&opening_ifc).copied();
+    let sill = number(&authoring_of(&i.doc, filler.unwrap_or(opening_ifc)), "Sill").unwrap_or(origin[2] - base_z);
     let window = filler.and_then(|fill| i.doc.args(fill, "IFCWINDOW").map(|args| (fill, args)));
     let door = filler.and_then(|fill| i.doc.args(fill, "IFCDOOR").map(|args| (fill, args)));
     let (kind, kind_sill, kind_size) = if let Some((fill, fill_args)) = window {
@@ -167,9 +171,11 @@ fn opening(i: &mut Import<'_>, host_ifc: u64, opening_ifc: u64) {
     let flip_facing = filler.and_then(|fill| i.doc.args(fill, if window.is_some() { "IFCWINDOW" } else { "IFCDOOR" })).and_then(|fill| i.doc.follow_args(&fill[5], "IFCLOCALPLACEMENT")).map(|placement| i.doc.axis_placement(&placement[1])).is_some_and(|placement: Rigid| placement.z[1] > 0.0);
     let flip_hand = filler.map(|fill| authoring_of(&i.doc, fill)).is_some_and(|rows| label(&rows, "FlipHand").as_deref() == Some("true"));
     let name = filler.and_then(|fill| i.doc.get(fill)).and_then(|instance| instance.primary()).map(|(_, fill_args)| text(fill_args, 2)).unwrap_or_else(|| text(args, 2));
+    let reveal = set_of(&i.doc, opening_ifc, REVEAL_SET);
+    let reveal_material = label(&reveal, "RevealMaterial").filter(|material| i.model.materials.contains_key(material));
     i.model.openings.insert(
         id.clone(),
-        Opening { host, kind, offset, sill_override, width: differs(width, kind_size.map(|size| size.0)), height: differs(height, kind_size.map(|size| size.1)), flip_hand, flip_facing, reveal_depth: None, reveal_material: None, name: if name == id { String::new() } else { name } },
+        Opening { host, kind, offset, sill_override, width: differs(width, kind_size.map(|size| size.0)), height: differs(height, kind_size.map(|size| size.1)), flip_hand, flip_facing, reveal_depth: number(&reveal, "RevealDepth"), reveal_material, name: if name == id { String::new() } else { name } },
     );
     i.ids.insert(opening_ifc, id.clone());
     if let Some(fill) = filler {

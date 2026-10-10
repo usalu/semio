@@ -4,7 +4,7 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveElement {
     pub(crate) parent: NodePath,
@@ -25,7 +25,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for RemoveElement {
         Ok(match node_at(&base.doc, parent) {
             Ok(SvgNode::Element { children, .. }) => match children.get(*index) {
                 Some(node) if subtree_profile_violation(node).is_some() => {
-                    vec![SvgTinyMutation::ReinstateNonTiny(restore_non_tiny::ReinstateNonTiny { elements: vec![restore_non_tiny::ReinstatedElement { parent: parent.clone(), index: *index, node: node.clone() }], attributes: Vec::new() })]
+                    vec![SvgTinyMutation::RestoreNonTiny(restore_non_tiny::RestoreNonTiny { elements: vec![restore_non_tiny::RestoredElement { parent: parent.clone(), index: *index, node: node.clone() }], attributes: Vec::new() })]
                 }
                 Some(node) => vec![SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent: parent.clone(), index: *index, node: node.clone() })],
                 None => Vec::new(),

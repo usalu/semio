@@ -8,7 +8,8 @@
 use super::super::super::wall_layout::{face_ends, WallLayout};
 use super::super::plan_kit::seg;
 use super::super::walls::Cut;
-use super::super::{dep_object, dep_value, parts, profile_polygon, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
+use super::super::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::{ModelSnapshot, Wall, WallSide, WallSweep};
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_geometry::triangulation::triangulate;

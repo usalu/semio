@@ -252,6 +252,478 @@
       }
     ]
   },
+  "frames": [
+    {
+      "kind": "translate",
+      "vector": [
+        3,
+        -2
+      ],
+      "instances": [
+        {
+          "position": [
+            1.5,
+            2.0
+          ],
+          "rotation": 0.0,
+          "mirrored": false
+        },
+        {
+          "position": [
+            -2.0,
+            0.5
+          ],
+          "rotation": 0.3,
+          "mirrored": false
+        },
+        {
+          "position": [
+            4.0,
+            -1.0
+          ],
+          "rotation": 1.2,
+          "mirrored": true
+        },
+        {
+          "position": [
+            0.0,
+            3.0
+          ],
+          "rotation": -2.5,
+          "mirrored": true
+        }
+      ],
+      "images": [
+        {
+          "position": [
+            4.5,
+            0.0
+          ],
+          "rotation": 0.0,
+          "mirrored": false
+        },
+        {
+          "position": [
+            1.0,
+            -1.5
+          ],
+          "rotation": 0.29999999999999977,
+          "mirrored": false
+        },
+        {
+          "position": [
+            7.0,
+            -3.0
+          ],
+          "rotation": 1.2000000000000002,
+          "mirrored": true
+        },
+        {
+          "position": [
+            3.0,
+            1.0
+          ],
+          "rotation": -2.5,
+          "mirrored": true
+        }
+      ]
+    },
+    {
+      "kind": "rotate",
+      "pivot": [
+        4,
+        3
+      ],
+      "angle": 1.5707963267948966,
+      "instances": [
+        {
+          "position": [
+            1.5,
+            2.0
+          ],
+          "rotation": 0.0,
+          "mirrored": false
+        },
+        {
+          "position": [
+            -2.0,
+            0.5
+          ],
+          "rotation": 0.3,
+          "mirrored": false
+        },
+        {
+          "position": [
+            4.0,
+            -1.0
+          ],
+          "rotation": 1.2,
+          "mirrored": true
+        },
+        {
+          "position": [
+            0.0,
+            3.0
+          ],
+          "rotation": -2.5,
+          "mirrored": true
+        }
+      ],
+      "images": [
+        {
+          "position": [
+            5.0,
+            0.5
+          ],
+          "rotation": 1.5707963267948966,
+          "mirrored": false
+        },
+        {
+          "position": [
+            6.5,
+            -3.0
+          ],
+          "rotation": 1.8707963267948966,
+          "mirrored": false
+        },
+        {
+          "position": [
+            8.0,
+            3.0
+          ],
+          "rotation": 2.770796326794897,
+          "mirrored": true
+        },
+        {
+          "position": [
+            4.0,
+            -1.0
+          ],
+          "rotation": -0.9292036732051036,
+          "mirrored": true
+        }
+      ]
+    },
+    {
+      "kind": "rotate",
+      "pivot": [
+        0,
+        0
+      ],
+      "angle": 0.5235987755982988,
+      "instances": [
+        {
+          "position": [
+            1.5,
+            2.0
+          ],
+          "rotation": 0.0,
+          "mirrored": false
+        },
+        {
+          "position": [
+            -2.0,
+            0.5
+          ],
+          "rotation": 0.3,
+          "mirrored": false
+        },
+        {
+          "position": [
+            4.0,
+            -1.0
+          ],
+          "rotation": 1.2,
+          "mirrored": true
+        },
+        {
+          "position": [
+            0.0,
+            3.0
+          ],
+          "rotation": -2.5,
+          "mirrored": true
+        }
+      ],
+      "images": [
+        {
+          "position": [
+            0.2990381056766581,
+            2.482050807568877
+          ],
+          "rotation": 0.5235987755982987,
+          "mirrored": false
+        },
+        {
+          "position": [
+            -1.9820508075688774,
+            -0.5669872981077806
+          ],
+          "rotation": 0.823598775598299,
+          "mirrored": false
+        },
+        {
+          "position": [
+            3.964101615137755,
+            1.1339745962155612
+          ],
+          "rotation": 1.7235987755982987,
+          "mirrored": true
+        },
+        {
+          "position": [
+            -1.4999999999999998,
+            2.598076211353316
+          ],
+          "rotation": -1.9764012244017013,
+          "mirrored": true
+        }
+      ]
+    },
+    {
+      "kind": "mirror",
+      "line": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "instances": [
+        {
+          "position": [
+            1.5,
+            2.0
+          ],
+          "rotation": 0.0,
+          "mirrored": false
+        },
+        {
+          "position": [
+            -2.0,
+            0.5
+          ],
+          "rotation": 0.3,
+          "mirrored": false
+        },
+        {
+          "position": [
+            4.0,
+            -1.0
+          ],
+          "rotation": 1.2,
+          "mirrored": true
+        },
+        {
+          "position": [
+            0.0,
+            3.0
+          ],
+          "rotation": -2.5,
+          "mirrored": true
+        }
+      ],
+      "images": [
+        {
+          "position": [
+            2.5,
+            1.9999999999999998
+          ],
+          "rotation": 0.0,
+          "mirrored": true
+        },
+        {
+          "position": [
+            6.0,
+            0.49999999999999956
+          ],
+          "rotation": -0.29999999999999977,
+          "mirrored": true
+        },
+        {
+          "position": [
+            0.0,
+            -0.9999999999999998
+          ],
+          "rotation": -1.1999999999999997,
+          "mirrored": false
+        },
+        {
+          "position": [
+            4.0,
+            2.9999999999999996
+          ],
+          "rotation": 2.5,
+          "mirrored": false
+        }
+      ]
+    },
+    {
+      "kind": "mirror",
+      "line": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "instances": [
+        {
+          "position": [
+            1.5,
+            2.0
+          ],
+          "rotation": 0.0,
+          "mirrored": false
+        },
+        {
+          "position": [
+            -2.0,
+            0.5
+          ],
+          "rotation": 0.3,
+          "mirrored": false
+        },
+        {
+          "position": [
+            4.0,
+            -1.0
+          ],
+          "rotation": 1.2,
+          "mirrored": true
+        },
+        {
+          "position": [
+            0.0,
+            3.0
+          ],
+          "rotation": -2.5,
+          "mirrored": true
+        }
+      ],
+      "images": [
+        {
+          "position": [
+            2.0,
+            1.4999999999999998
+          ],
+          "rotation": -1.5707963267948966,
+          "mirrored": true
+        },
+        {
+          "position": [
+            0.4999999999999999,
+            -2.0
+          ],
+          "rotation": -1.8707963267948966,
+          "mirrored": true
+        },
+        {
+          "position": [
+            -0.9999999999999998,
+            4.0
+          ],
+          "rotation": -2.7707963267948967,
+          "mirrored": false
+        },
+        {
+          "position": [
+            3.0,
+            -1.8369701987210297e-16
+          ],
+          "rotation": 0.9292036732051034,
+          "mirrored": false
+        }
+      ]
+    },
+    {
+      "kind": "mirror",
+      "line": [
+        [
+          0,
+          1
+        ],
+        [
+          3,
+          1
+        ]
+      ],
+      "instances": [
+        {
+          "position": [
+            1.5,
+            2.0
+          ],
+          "rotation": 0.0,
+          "mirrored": false
+        },
+        {
+          "position": [
+            -2.0,
+            0.5
+          ],
+          "rotation": 0.3,
+          "mirrored": false
+        },
+        {
+          "position": [
+            4.0,
+            -1.0
+          ],
+          "rotation": 1.2,
+          "mirrored": true
+        },
+        {
+          "position": [
+            0.0,
+            3.0
+          ],
+          "rotation": -2.5,
+          "mirrored": true
+        }
+      ],
+      "images": [
+        {
+          "position": [
+            1.5,
+            0.0
+          ],
+          "rotation": -3.141592653589793,
+          "mirrored": true
+        },
+        {
+          "position": [
+            -2.0,
+            1.5
+          ],
+          "rotation": 2.8415926535897937,
+          "mirrored": true
+        },
+        {
+          "position": [
+            4.0,
+            3.0
+          ],
+          "rotation": 1.9415926535897932,
+          "mirrored": false
+        },
+        {
+          "position": [
+            0.0,
+            -1.0
+          ],
+          "rotation": -0.6415926535897932,
+          "mirrored": false
+        }
+      ]
+    }
+  ],
   "loops": [
     {
       "line": [

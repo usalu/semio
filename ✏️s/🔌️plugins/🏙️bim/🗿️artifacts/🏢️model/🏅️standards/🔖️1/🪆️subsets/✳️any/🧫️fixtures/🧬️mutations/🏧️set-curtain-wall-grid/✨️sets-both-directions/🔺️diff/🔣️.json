@@ -1,1 +1,26 @@
-{}
+{
+  "curtain_walls": {
+    "cw-1": {
+      "entry": "Patched",
+      "u_grid": {
+        "value": {
+          "Lines": {
+            "positions": [
+              3.0
+            ]
+          }
+        }
+      },
+      "v_grid": {
+        "value": {
+          "Lines": {
+            "positions": [
+              1.0,
+              2.0
+            ]
+          }
+        }
+      }
+    }
+  }
+}

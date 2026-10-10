@@ -1,0 +1,16 @@
+{
+  "mutation": "createComponent",
+  "id": "cmp-new",
+  "component": {
+    "storey": "st-attic",
+    "family": "fam-table",
+    "position": {
+      "x": 5,
+      "y": 2
+    },
+    "elevation": 0,
+    "rotation": 0,
+    "mirrored": false,
+    "name": "Lost"
+  }
+}

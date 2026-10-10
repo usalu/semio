@@ -8,7 +8,7 @@ use semio_repo_test_host::Adapter;
 
 /// 🗂️ The fixture cases of these families.
 #[allow(dead_code)]
-const CASES: [&str; 8] = ["columns-profiles", "beams-profiles", "slabs-holes-slope", "ceilings-holes-slope", "ceilings-meshes", "roofs-shapes", "stairs-flights", "railings-posts"];
+const CASES: [&str; 9] = ["columns-profiles", "beams-profiles", "frame-tilt-joins", "slabs-holes-slope", "ceilings-holes-slope", "ceilings-meshes", "roofs-shapes", "stairs-flights", "railings-posts"];
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]

@@ -51,6 +51,19 @@ use invocation_publication::FlowInvocationEntry;
 pub enum FlowEvaluationStep{Working,Complete}
 
 
+//// 🪪️ Admits one caller-owned identity authority over the plugin observer and runs `operation` under it; the receipt returns only after the call finished.
+macro_rules! history_identity {
+    (|$identity:ident| $operation:expr) => {{
+        let mut observer = semio_framework_plugin::authoring_identity::identity_observer();
+        let mut $identity = crate::os_store::EntityIdentityAuthority::new(semio_framework_plugin::authoring_identity::ARTIFACT_IDENTITY_CEILING_BYTES, &mut observer).unwrap_or_else(|_| unreachable!("plugin identity ceiling is a declared nonzero constant"));
+        let result = $operation;
+        drop($identity.pause().unwrap_or_else(|_| unreachable!("identity authority retains its receipt through one authoring call")));
+        result
+    }};
+}
+#[cfg(test)]
+pub(crate) use history_identity;
+
 // #region ⚠️ Errors
 /// 🧯️ `FlowHost`'s error type — wraps JSON codec failures, the `dag` crate's own `DagError`, and
 /// this crate's own graph-editing validation failures. Every variant's Display text is byte-for-byte
@@ -528,7 +541,6 @@ impl FlowHost {
         if let Some(store) = self.history_store.as_mut() {
             let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.host_snapshot.clone(), None);
             ::semio_framework_async::poll::resolve_ready(store.reset(envelope)).expect("failed to reset flow history store");
-            store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
         }
         if let Some(stale) = self.pending_history_baseline.take() {
             stale.retire_cold();
@@ -1056,7 +1068,7 @@ impl FlowHost {
         let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &self.kind_infos, widget_node_size(&widget, &[], &self.kind_infos));
         widget.retire_cold();
         let mut retirement = crate::retained::FlowRetirement::default();
-        retirement.push(crate::retained::FlowOwner::Layouts(layout));
+        retirement.push_cold(crate::retained::FlowOwner::Layouts(layout));
         retirement.retire_cold();
         fit_node_size(&mut node);
         self.ghost_node = Some(node.clone());
@@ -1450,7 +1462,7 @@ impl FlowHost {
             self.host_snapshot.layout.insert(widget_id.clone(), layout);
         }
         let mut retirement = crate::retained::FlowRetirement::default();
-        retirement.push(crate::retained::FlowOwner::Layouts(previous));
+        retirement.push_cold(crate::retained::FlowOwner::Layouts(previous));
         retirement.retire_cold();
         let moved = self.layout_leaf(shifted.iter().map(String::as_str));
         self.note_leaves(moved);
@@ -1740,6 +1752,13 @@ impl FlowHost {
         let Some(operator_info) = self.host_snapshot.widgets.iter().find(|widget| widget_id_for(widget) == widget_id).and_then(|widget| widget_operator_info(widget, &self.kind_infos)) else {
             return Vec::new();
         };
+        let missing = self.blocked_input_ports(widget_id, &operator_info);
+        neural::ColdRetire::retire_cold(operator_info);
+        missing
+    }
+
+    /// 🚧️ The declared inputs of `operator_info` that are wired from a source with no published output yet.
+    fn blocked_input_ports(&self, widget_id: &str, operator_info: &OperatorInfo) -> Vec<String> {
         if operator_info.variadic_input.is_some() {
             return Vec::new();
         }
@@ -1956,7 +1975,9 @@ impl FlowHost {
 
     pub fn export_payload_json(&self, widget_id: &str) -> Result<String, FlowCoreError> {
         let payload = self.export_payloads.get(widget_id).cloned().unwrap_or_default();
-        Ok(semio_framework_pack_json::to_json_string(&payload))
+        let json = semio_framework_pack_json::to_json_string(&payload);
+        payload.retire_cold();
+        Ok(json)
     }
 
     /// 📤️ Returns and clears a pending export control click from the last pointer hit.
@@ -2383,7 +2404,11 @@ impl FlowHost {
     }
 
     pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FlowCoreError> {
-        Ok(self.dag.set_canvas_theme_from_json(json)?)
+        let mut accepted = |_| true;
+        let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024, &mut accepted);
+        let overlay = crate::infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(|error| FlowCoreError::Json(error.into_message()))?;
+        self.dag.set_canvas_palette(&overlay);
+        Ok(())
     }
 
     pub fn set_canvas_theme_dark(&mut self, dark: bool) {
@@ -2711,12 +2736,12 @@ impl FlowHost {
     fn history_store_from_baseline(&mut self, baseline: FlowHostSnapshot) -> Option<&mut FlowStore> {
         if self.history_store.is_some() {
             let mut retirement = crate::retained::FlowRetirement::default();
-            retirement.push(crate::retained::FlowOwner::HostSnapshot(baseline));
+            retirement.push_cold(crate::retained::FlowOwner::HostSnapshot(baseline));
             retirement.retire_cold();
             return self.history_store.as_mut();
         }
         let mut store = ::semio_framework_async::poll::resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None), crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()))).ok()?;
-        store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
+        crate::os_store::install_funded_member_store_owners(&mut store).ok()?;
         self.history_store = Some(store);
         self.history_store.as_mut()
     }
@@ -2788,7 +2813,7 @@ impl FlowHost {
         }
         let recorded = !operations.is_empty();
         let refusal = match self.history_store_from_baseline(baseline) {
-            Some(store) if recorded => ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None })).err().map(|error| format!("{error:?}")),
+            Some(store) if recorded => history_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, &mut identity))).err().map(|error| format!("{error:?}")),
             _ => {
                 operations.into_iter().for_each(retire_flow_mutation);
                 None
@@ -2930,7 +2955,7 @@ impl FlowHost {
         let Some(store) = self.history_store.as_mut() else {
             return false;
         };
-        if ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Undo)).is_err() {
+        if history_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Undo, &mut identity))).is_err() {
             return false;
         }
         let Ok(mut restored) = store.snapshot() else {
@@ -2948,7 +2973,7 @@ impl FlowHost {
         let Some(store) = self.history_store.as_mut() else {
             return false;
         };
-        if ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Redo)).is_err() {
+        if history_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Redo, &mut identity))).is_err() {
             return false;
         }
         let Ok(mut restored) = store.snapshot() else {
@@ -3048,7 +3073,7 @@ impl FlowHost {
     /// 🧊️ Explicit cold-only disposal of a detached host — the twin of [`FlowHostSnapshot::retire_cold`].
     /// A `FlowHost` owns a `FlowHostSnapshot`, whose `layout: OrderedMap<WidgetLayout>` panics on a bare
     /// drop (`ordered-map root must be explicitly retired before drop`), so a host is CLOSED, never
-    /// dropped. Retained callers drive [`FlowHostRetirement::close_step`] under their own grant
+    /// dropped. Retained callers drive [`FlowHostRetirement::retire_step`] under their own grant
     /// instead; this drains the same ladder in one uninterrupted cold pass.
     pub fn retire_cold(self) {
         let mut retirement=FlowHostRetirement::new(self);

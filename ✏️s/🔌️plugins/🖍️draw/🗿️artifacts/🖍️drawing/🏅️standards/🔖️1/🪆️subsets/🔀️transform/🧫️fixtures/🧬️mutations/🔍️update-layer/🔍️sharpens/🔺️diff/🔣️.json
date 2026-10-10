@@ -27,7 +27,8 @@
             "threshold": 0.8,
             "simplifyEpsilon": 0.25
           },
-          "layer": null
+          "layer": null,
+          "fontFamily": "anta"
         }
       }
     ]

@@ -1,1 +1,10 @@
-{}
+{
+  "beams": {
+    "b-a": {
+      "end_top_offset": {
+        "value": null
+      },
+      "entry": "Patched"
+    }
+  }
+}

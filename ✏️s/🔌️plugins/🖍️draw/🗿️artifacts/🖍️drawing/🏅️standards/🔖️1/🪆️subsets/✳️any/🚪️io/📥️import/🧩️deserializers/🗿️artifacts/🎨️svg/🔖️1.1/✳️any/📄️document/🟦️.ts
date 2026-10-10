@@ -1,3 +1,4 @@
+import {drawingFontFamilyFromCatalog} from "../../../../../../../../🧬️schema/📝️text/🔤️family/🟦️.ts";
 /** 📄️ Incrementally construct an editable SVG hierarchy with explicit unsupported-feature failures. */
 import type {DrawingSnapshot} from "../../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {DrawingLayerNode,PathGeometrySegment} from "../../../../../../../../🧬️schema/🟦️.ts";
@@ -10,8 +11,8 @@ type Style=Record<string,string>;
 type Layer=DrawingLayerNode&{id:string;children?:Layer[]};
 type Pending={element:Element;style:Style;id:string;parent:Layer[]};
 export interface SvgImportProgress {readonly completed:number;readonly pending:number;readonly done:boolean}
-const inherited=["fill","fill-rule","fill-opacity","stroke","stroke-width","stroke-opacity","stroke-linecap","stroke-linejoin","stroke-dasharray","visibility","font-size","color"];
-const unsupported=["clip-path","mask","filter","vector-effect","stroke-dashoffset","font-family","font-weight","font-style","text-anchor"];
+const inherited=["fill","fill-rule","fill-opacity","stroke","stroke-width","stroke-opacity","stroke-linecap","stroke-linejoin","stroke-dasharray","visibility","font-size","font-family","color"];
+const unsupported=["clip-path","mask","filter","vector-effect","stroke-dashoffset","font-weight","font-style","text-anchor"];
 function scalar(value:string):number {if(!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim())||!Number.isFinite(+value))throw new Error(`Invalid SVG number: ${value}`);return +value;}
 function length(value:string|undefined,fallback=0):number {if(value===undefined)return fallback;const match=/^(.*?)(px|pt|pc|mm|cm|in)?$/.exec(value.trim())!;return scalar(match[1]!)*({px:1,pt:96/72,pc:16,mm:96/25.4,cm:96/2.54,in:96}[match[2] as "px"]??1);}
 function nonnegative(value:number):number {if(!Number.isFinite(value)||value<0)throw new Error("Invalid SVG dimension");return value;}
@@ -168,7 +169,7 @@ export class SvgImportJob {
       for(let i=children.length-1;i>=0;i--)this.pending.push({element:children[i]!,style,id:`${id}.${i}`,parent:layer.children!});
     }else if(tag==="text"){
       if(Array.from(element.childNodes).some(n=>n.nodeType===1))throw new Error("Positioned SVG text spans are not supported yet");
-      const size=nonnegative(length(style["font-size"],16));layer={kind:"text",...base,x:length(element.hasAttribute("x")?element.getAttribute("x")!:undefined),y:length(element.hasAttribute("y")?element.getAttribute("y")!:undefined)-size,content:element.textContent??"",size};
+      const size=nonnegative(length(style["font-size"],16));layer={kind:"text",fontFamily:style["font-family"]===undefined?"anta":drawingFontFamilyFromCatalog(style["font-family"]!),...base,x:length(element.hasAttribute("x")?element.getAttribute("x")!:undefined),y:length(element.hasAttribute("y")?element.getAttribute("y")!:undefined)-size,content:element.textContent??"",size};
     }else layer={kind:"path",...base,segments:geometry(element)};
     if(style.fill?.startsWith("url(")&&layer.kind!=="group"){
       if(layer.kind!=="path")throw new Error("SVG text gradients need exact text bounds");

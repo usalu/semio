@@ -23,53 +23,60 @@ impl MountedCommandPrune {
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     fn command_prune_requested(&self) -> bool { self.command_prune_generation != self.command_prune_processed }
-    fn command_prune_next_release_byte_demand(&self) -> usize {
-        if self.pending_command_prune.is_some() { 0 } else if !self.command_log.pruned_terminal_is_empty() { self.command_log.next_pruned_close_byte_demand().unwrap_or(1) } else { 0 }
+    /// 📏️ Quotes the next prune turn: a cancellation or begin hand-off, a funded hidden owner release, or one bounded comparison.
+    fn command_prune_demands(&self, closing: bool, _body: usize) -> Result<RetirementDemand, ValueError> {
+        let item = RetirementDemand { depth: 1, ..Default::default() };
+        if closing && (self.pending_command_prune.is_some() || self.command_prune_requested()) { return Ok(item); }
+        if self.pending_command_prune.is_none() && !self.command_log.pruned_terminal_is_empty() {
+            return Ok(RetirementDemand { release_bytes: self.command_log.next_pruned_close_byte_demand()?, depth: 1, ..Default::default() });
+        }
+        if self.pending_command_prune.is_none() { return Ok(if self.command_prune_requested() { item } else { RetirementDemand::default() }); }
+        Ok(RetirementDemand { copy_bytes: 64, depth: 1, ..Default::default() })
     }
     /// 🧹️ Advances one original metadata comparison, checked visibility decision or funded hidden owner.
-    fn advance_command_prune_step(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
-        let pending = PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        if maximum_items == 0 { return Ok(pending); }
+    fn advance_command_prune_step(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+        let pending = PluginLifecycleStep::Progress(RetainedCloneProgress::default());
+        if grant.maximum_items == 0 { return Ok(pending); }
+        let demand = self.command_prune_demands(closing, grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
+        if !plugin_turn_admitted(demand, grant)? { return Ok(pending); }
         if closing {
             if let Some(mut owner) = self.pending_command_prune.take() {
                 self.command_log.cancel_prune(&mut owner.cursor, 1).map_err(|_| plugin_sdk_fault("mounted command visibility lost its original cancellation lease"))?;
                 self.command_prune_processed = self.command_prune_generation;
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
             if self.command_prune_requested() {
                 self.command_prune_processed = self.command_prune_generation;
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
         }
         if self.pending_command_prune.is_none() && !self.command_log.pruned_terminal_is_empty() {
-            let demand = self.command_log.next_pruned_close_byte_demand().map_err(|error| plugin_sdk_fault(error.into_message()))?;
-            if maximum_bytes < demand { return Ok(pending); }
             if let Some(record) = self.command_log.next_pruned_record() {
                 self.shell_undone.remove(&record.seq);
                 self.history_dirty_sequences.remove(&record.seq);
             }
-            let step = self.command_log.close_pruned_step(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: 0, maximum_copy_bytes: 0, maximum_release_bytes: maximum_bytes, maximum_depth: 64 }).map_err(|error| plugin_sdk_fault(error.into_message()))?;
-            return Ok(PluginCloseStep::Pending { released_items: step.progress().copied_items, released_bytes: step.progress().released_bytes });
+            let step = self.command_log.close_pruned_step(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: 0, maximum_copy_bytes: 0, maximum_release_bytes: grant.maximum_release_bytes, maximum_depth: grant.maximum_depth }).map_err(|error| plugin_sdk_fault(error.into_message()))?;
+            return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if self.pending_command_prune.is_none() {
-            if !self.command_prune_requested() { return Ok(PluginCloseStep::Complete); }
+            if !self.command_prune_requested() { return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default())); }
             self.refresh_supersede_ledger();
             let cursor = self.command_log.begin_prune().map_err(|_| plugin_sdk_fault("mounted command visibility requires its original idle history owner"))?;
             self.pending_command_prune = Some(MountedCommandPrune { cursor, requested: self.command_prune_generation, revision: self.store.content_revision_now(), generation: self.store.generation_now(), edits: self.store.envelope().vcs.edits.len(), transitions: self.supersedes.records.len(), field: 0, index: 0, offset: 0, keep: true });
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         let mut owner = self.pending_command_prune.take().unwrap();
         let stale = owner.requested != self.command_prune_generation || owner.revision != self.store.content_revision_now() || owner.generation != self.store.generation_now() || owner.edits != self.store.envelope().vcs.edits.len() || owner.transitions != self.supersedes.records.len();
         let record = if stale { None } else { self.command_log.prune_current(&owner.cursor).ok() };
         let Some(record) = record else {
             self.command_log.cancel_prune(&mut owner.cursor, 1).map_err(|_| plugin_sdk_fault("stale command visibility requires its exact retained cancellation"))?;
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         };
         let Some(record) = record else {
             let removed = self.command_log.commit_prune(&mut owner.cursor).map_err(|_| plugin_sdk_fault("mounted command visibility changed before its constant decision"))?;
             self.command_prune_processed = owner.requested;
             if removed != 0 { self.history_backfill = None; self.log_generation += 1; }
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         };
         match owner.field {
             0 => match record.edit_id.as_deref() {
@@ -100,6 +107,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             },
         }
         self.pending_command_prune = Some(owner);
-        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 }

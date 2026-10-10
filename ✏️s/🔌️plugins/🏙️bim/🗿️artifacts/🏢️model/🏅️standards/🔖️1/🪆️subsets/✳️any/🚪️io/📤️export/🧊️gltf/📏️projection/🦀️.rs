@@ -21,6 +21,7 @@ pub struct Projection {
     pub materials: usize,
     pub kinds: BTreeMap<String, usize>,
     pub storeys: BTreeMap<String, StoreyCount>,
+    pub volumes: BTreeMap<String, f64>,
     pub min: [f64; 3],
     pub max: [f64; 3],
 }
@@ -39,6 +40,22 @@ pub fn through(node: &GltfNode, v: [f64; 3]) -> [f64; 3] {
     let v = node.rotation.map_or(v, |q| rotate(q, v));
     let t = node.translation.unwrap_or_default();
     [v[0] + t[0], v[1] + t[1], v[2] + t[2]]
+}
+
+/// 🧊️ The volume a primitive encloses: the sum of the signed tetrahedra over the origin of each triangle, from the 32-bit vertices as stored.
+fn volume_of(primitive: &super::document::GltfPrimitive) -> f64 {
+    let corner = |index: u32| {
+        let at = index as usize * 3;
+        [f64::from(primitive.positions[at]), f64::from(primitive.positions[at + 1]), f64::from(primitive.positions[at + 2])]
+    };
+    primitive
+        .indices
+        .chunks_exact(3)
+        .map(|triangle| {
+            let (a, b, c) = (corner(triangle[0]), corner(triangle[1]), corner(triangle[2]));
+            (a[0] * (b[1] * c[2] - b[2] * c[1]) + a[1] * (b[2] * c[0] - b[0] * c[2]) + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
+        })
+        .sum()
 }
 
 struct Walk<'a> {
@@ -62,6 +79,9 @@ impl Walk<'_> {
             self.report.meshes += 1;
             self.report.primitives += mesh.primitives.len();
             self.report.triangles += triangles;
+            if let Some(id) = node.extras.get("id").and_then(|id| id.as_str()) {
+                self.report.volumes.insert(id.to_string(), mesh.primitives.iter().map(volume_of).sum());
+            }
             for primitive in &mesh.primitives {
                 for point in primitive.positions.chunks_exact(3) {
                     let world = chain.iter().rev().fold([f64::from(point[0]), f64::from(point[1]), f64::from(point[2])], |at, node| through(&self.model.nodes[*node], at));
@@ -81,7 +101,7 @@ impl Walk<'_> {
 
 /// 📊️ The report of a document.
 pub fn project(model: &GltfModel) -> Projection {
-    let report = Projection { nodes: model.nodes.len(), meshes: 0, primitives: 0, triangles: 0, materials: model.materials.len(), kinds: BTreeMap::new(), storeys: BTreeMap::new(), min: [f64::INFINITY; 3], max: [f64::NEG_INFINITY; 3] };
+    let report = Projection { nodes: model.nodes.len(), meshes: 0, primitives: 0, triangles: 0, materials: model.materials.len(), kinds: BTreeMap::new(), storeys: BTreeMap::new(), volumes: BTreeMap::new(), min: [f64::INFINITY; 3], max: [f64::NEG_INFINITY; 3] };
     let mut walk = Walk { model, report };
     for root in &model.roots {
         walk.visit(*root, &mut Vec::new());
@@ -103,9 +123,10 @@ impl Projection {
     pub fn to_json(&self) -> String {
         let kinds = self.kinds.iter().map(|(kind, count)| format!("{}:{count}", quote(kind))).collect::<Vec<_>>().join(",");
         let storeys = self.storeys.iter().map(|(storey, count)| format!("{}:{{\"elements\":{},\"triangles\":{}}}", quote(storey), count.elements, count.triangles)).collect::<Vec<_>>().join(",");
+        let volumes = self.volumes.iter().map(|(id, volume)| format!("{}:{volume:?}", quote(id))).collect::<Vec<_>>().join(",");
         let point = |p: [f64; 3]| format!("[{:?},{:?},{:?}]", p[0], p[1], p[2]);
         format!(
-            "{{\"nodes\":{},\"meshes\":{},\"primitives\":{},\"triangles\":{},\"materials\":{},\"kinds\":{{{kinds}}},\"storeys\":{{{storeys}}},\"bounds\":{{\"min\":{},\"max\":{}}}}}",
+            "{{\"nodes\":{},\"meshes\":{},\"primitives\":{},\"triangles\":{},\"materials\":{},\"kinds\":{{{kinds}}},\"storeys\":{{{storeys}}},\"volumes\":{{{volumes}}},\"bounds\":{{\"min\":{},\"max\":{}}}}}",
             self.nodes,
             self.meshes,
             self.primitives,

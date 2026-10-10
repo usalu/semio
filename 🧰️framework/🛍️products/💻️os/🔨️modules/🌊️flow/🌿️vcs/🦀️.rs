@@ -2035,4 +2035,8 @@ pub mod forms_bridge {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️flow-vcs/🦀️.rs"]
 mod flow_vcs_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️flow-canonical/🦀️.rs"]
+mod flow_canonical_tests;
 // #endregion 🔖️ArtifactVcs

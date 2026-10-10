@@ -714,7 +714,7 @@ pub fn solve_with_clock(snapshot: &Wfc2dSnapshot, now_us: fn() -> Option<u64>) -
         operation: operation.operation,
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
-        config: semio_framework_job::BatchDriveConfig { site: "wfc2d.wfc.inference.headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000 },
+        config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "wfc2d.wfc.inference.headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000 },
         now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {

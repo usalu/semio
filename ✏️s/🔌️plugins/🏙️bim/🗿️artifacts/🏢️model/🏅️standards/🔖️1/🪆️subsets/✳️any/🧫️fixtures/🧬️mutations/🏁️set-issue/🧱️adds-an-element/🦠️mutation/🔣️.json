@@ -1,0 +1,8 @@
+{
+  "mutation": "setIssue",
+  "id": "i-2",
+  "elements": [
+    "w-east",
+    "w-south"
+  ]
+}

@@ -1,0 +1,11 @@
+[
+ {"name":"Authored Latin","family":"Anta","text":"A","alternates":["A"],"refuses":false},
+ {"name":"Authored Extended","family":"Anta","text":"Ā","alternates":["Ā"],"refuses":false},
+ {"name":"Actual Latin Marks","family":"Anta","text":"Ä","alternates":["A","̈"],"refuses":false},
+ {"name":"Canonical Available Components","family":"Anta","text":"ẍ","alternates":["ẍ"],"refuses":false},
+ {"name":"Authored Slab","family":"Kelly Slab","text":"K","alternates":["K"],"refuses":false},
+ {"name":"Authored Mono","family":"Share Tech Mono","text":"M","alternates":["M"],"refuses":false},
+ {"name":"Whole Emoji Profession","family":"Noto Emoji","text":"👩‍💻","alternates":["👩","‍","💻"],"refuses":false},
+ {"name":"Emoji Symbol Variation","family":"Anta","text":"❤️","alternates":["❤","️"],"refuses":false},
+ {"name":"Unicode Missing","family":"Anta","text":"􏿿","alternates":["􏿿"],"refuses":true}
+]

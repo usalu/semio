@@ -13,6 +13,18 @@
   },
   "beams": {},
   "buildings": {},
+  "classification_systems": {
+    "cs-uniclass": {
+      "edition": "",
+      "entries": [
+        {
+          "code": "EF_25_10",
+          "title": "Walls"
+        }
+      ],
+      "name": "Uniclass"
+    }
+  },
   "classifications": {},
   "column_types": {
     "ct-400": {
@@ -27,11 +39,24 @@
     }
   },
   "columns": {},
-  "curtain_walls": {},
-  "door_types": {},
   "curtain_wall_types": {
     "cwt-1": {
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.1,
+          "width": 0.06
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.1,
+          "width": 0.06
+        }
+      },
+      "mullion_material": "m-steel",
       "name": "Curtain wall 1.5 x 1.2",
+      "panel": "Glass",
+      "panel_material": "m-glass",
       "u_grid": {
         "Spacing": {
           "spacing": 1.5
@@ -41,24 +66,11 @@
         "Spacing": {
           "spacing": 1.2
         }
-      },
-      "interior_mullion": {
-        "Rectangle": {
-          "width": 0.06,
-          "depth": 0.1
-        }
-      },
-      "border_mullion": {
-        "Rectangle": {
-          "width": 0.06,
-          "depth": 0.1
-        }
-      },
-      "panel": "Glass",
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel"
+      }
     }
   },
+  "curtain_walls": {},
+  "door_types": {},
   "grids": {},
   "materials": {
     "m-brick": {
@@ -69,9 +81,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800,
+      "density": 1800.0,
       "name": "Brick",
-      "specific_heat": 900
+      "specific_heat": 900.0
     },
     "m-glass": {
       "category": "Masonry",
@@ -81,9 +93,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800,
+      "density": 1800.0,
       "name": "Glass",
-      "specific_heat": 900
+      "specific_heat": 900.0
     },
     "m-steel": {
       "category": "Masonry",
@@ -93,9 +105,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800,
+      "density": 1800.0,
       "name": "Steel",
-      "specific_heat": 900
+      "specific_heat": 900.0
     }
   },
   "openings": {},
@@ -162,18 +174,6 @@
       "panes": 2,
       "sill": 0.9,
       "width": 1.2
-    }
-  },
-  "classification_systems": {
-    "cs-uniclass": {
-      "name": "Uniclass",
-      "edition": "",
-      "entries": [
-        {
-          "code": "EF_25_10",
-          "title": "Walls"
-        }
-      ]
     }
   }
 }

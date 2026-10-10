@@ -64,6 +64,8 @@ export interface ModelArtifact {
   /** @state artifact */
   area_schemes?: Record<string, AreaScheme>;
   /** @state artifact */
+  space_conditions?: Record<string, SpaceConditions>;
+  /** @state artifact */
   views?: Record<string, View>;
   /** @state artifact */
   sheets?: Record<string, Sheet>;
@@ -87,6 +89,20 @@ export interface ModelArtifact {
   family_parameters?: Record<string, FamilyParameter>;
   /** @state artifact */
   family_solids?: Record<string, FamilySolid>;
+  /** @state artifact */
+  components?: Record<string, Component>;
+  /** @state artifact */
+  component_overrides?: Record<string, ComponentOverride>;
+  /** @state artifact */
+  mep_elements?: Record<string, MepElement>;
+  /** @state artifact */
+  clash_sets?: Record<string, ClashSet>;
+  /** @state artifact */
+  rules?: Record<string, Rule>;
+  /** @state artifact */
+  issues?: Record<string, Issue>;
+  /** @state artifact */
+  issue_comments?: Record<string, IssueComment>;
   /** @state artifact */
   wall_sweeps?: Record<string, WallSweep>;
   /** @state artifact */
@@ -121,6 +137,18 @@ export type ParameterKind = "Length" | "Angle" | "Real" | "Integer" | "Boolean" 
 
 export type SolidAxis = "X" | "Y" | "Z";
 
+export type MepSystem = "Supply" | "Return" | "Exhaust" | "DomesticWater" | "Waste" | "Gas" | "Power" | "Data" | "Lighting";
+
+export type ElementClass = "Wall" | "CurtainWall" | "Window" | "Door" | "Column" | "Beam" | "Slab" | "Ceiling" | "Roof" | "Stair" | "Ramp" | "Railing" | "WallSweep" | "Component" | "Mep";
+
+export type RuleKind = "MinClearHeight" | "MaxRiser" | "MinTread" | "MinStairWidth" | "MinDoorWidth" | "MaxRampSlope" | "MinCorridorWidth" | "MaxCompartmentArea";
+
+export type RuleSeverity = "Error" | "Warning" | "Note";
+
+export type IssueStatus = "Open" | "InProgress" | "Resolved" | "Closed";
+
+export type IssuePriority = "Low" | "Normal" | "High" | "Critical";
+
 export type IsoSize = "A0" | "A1" | "A2" | "A3" | "A4";
 
 export type Orientation = "Landscape" | "Portrait";
@@ -145,7 +173,7 @@ export type RiserKind = "Open" | "Closed";
 
 export type ScheduleCategory = "Wall" | "CurtainWall" | "Slab" | "Roof" | "Column" | "Beam" | "Window" | "Door" | "Void" | "Stair" | "Railing" | "Space" | "Finish" | "Material";
 
-export type ScheduleField = "Id" | "Name" | "Kind" | "Storey" | "Level" | "Type" | "Phase" | "Material" | "Host" | "Number" | "Usage" | "Surface" | "Swing" | "Leaves" | "Panes" | "Count" | "Length" | "Width" | "Height" | "Perimeter" | "GrossSideArea" | "OpeningArea" | "NetSideArea" | "GrossArea" | "NetArea" | "SurfaceArea" | "GrossVolume" | "NetVolume" | "Mass" | "Risers" | "Thickness" | "LayerArea" | "LayerVolume" | "LayerMass" | "FinishArea";
+export type ScheduleField = "Id" | "Name" | "Kind" | "Storey" | "Level" | "Type" | "Phase" | "Material" | "Host" | "Number" | "Usage" | "Surface" | "Swing" | "Leaves" | "Panes" | "Count" | "Length" | "Width" | "Height" | "Perimeter" | "GrossSideArea" | "OpeningArea" | "NetSideArea" | "GrossArea" | "NetArea" | "SurfaceArea" | "GrossVolume" | "NetVolume" | "Mass" | "Risers" | "Thickness" | "LayerArea" | "LayerVolume" | "LayerMass" | "FinishArea" | "UValue" | "GValue";
 
 export type ScheduleOp = "Equals" | "NotEquals" | "Contains" | "Greater" | "GreaterOrEqual" | "Less" | "LessOrEqual" | "Empty" | "NotEmpty";
 
@@ -181,6 +209,11 @@ export type SolidShape =
   | { Revolution: { profile: ParametricProfile; axis: SolidAxis; angle: string } }
   | { Sweep: { profile: ParametricProfile; path: ExprPoint[] } }
   | { Cuboid: { x: string; y: string; z: string; width: string; depth: string; height: string } };
+
+export type MepShape =
+  | { Duct: { width: number; height: number } }
+  | { Pipe: { diameter: number } }
+  | { Tray: { width: number; height: number } };
 
 export type Paper =
   | { Iso: { size: IsoSize } }
@@ -288,6 +321,17 @@ export interface ClassificationSystem {
   entries: ClassificationItem[];
 }
 
+export interface SpaceConditions {
+  occupancy?: string;
+  occupancy_density?: number;
+  heating_setpoint?: number;
+  cooling_setpoint?: number;
+  ventilation_rate?: number;
+  lighting_power_density?: number;
+  equipment_power_density?: number;
+  schedule?: string;
+}
+
 export interface Dimension {
   storey: string;
   anchors: AnnotationAnchor[];
@@ -363,6 +407,106 @@ export interface FamilySolid {
   material: string;
   visible: string;
   offset: ExprPoint3;
+}
+
+export interface Point3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface Component {
+  storey: string;
+  family: string;
+  position: Point2;
+  elevation: number;
+  rotation: number;
+  mirrored: boolean;
+  host?: string;
+  system?: MepSystem;
+  name: string;
+}
+
+export interface ComponentOverride {
+  component: string;
+  name: string;
+  value: string;
+}
+
+export interface MepElement {
+  storey: string;
+  system: MepSystem;
+  shape: MepShape;
+  path: Point3[];
+  name: string;
+}
+
+export interface ElementSelector {
+  classes: ElementClass[];
+  storeys: string[];
+  phases: Phase[];
+  ids: string[];
+}
+
+export interface RuleScope {
+  storeys: string[];
+  phases: Phase[];
+  ids: string[];
+  filter: string;
+}
+
+export interface ClashRef {
+  set: string;
+  first: string;
+  second: string;
+}
+
+export interface SectionBox {
+  min: Point3;
+  max: Point3;
+}
+
+export interface IssueViewpoint {
+  camera: ViewCamera;
+  section?: SectionBox;
+  isolate: string[];
+}
+
+export interface ClashSet {
+  name: string;
+  a: ElementSelector;
+  b: ElementSelector;
+  tolerance: number;
+  clearance: number;
+}
+
+export interface Rule {
+  name: string;
+  kind: RuleKind;
+  limit: number;
+  severity: RuleSeverity;
+  scope: RuleScope;
+}
+
+export interface Issue {
+  title: string;
+  description: string;
+  status: IssueStatus;
+  priority: IssuePriority;
+  assignee: string;
+  author: string;
+  created: string;
+  labels: string[];
+  elements: string[];
+  clash?: ClashRef;
+  viewpoint?: IssueViewpoint;
+}
+
+export interface IssueComment {
+  issue: string;
+  author: string;
+  date: string;
+  text: string;
 }
 
 export interface Sheet {
@@ -508,6 +652,9 @@ export interface WindowType {
   frame_depth: number;
   panes: number;
   material: string;
+  u_value?: number;
+  g_value?: number;
+  frame_fraction?: number;
 }
 
 export interface DoorType {
@@ -519,6 +666,7 @@ export interface DoorType {
   leaves: DoorLeaves;
   swing: Swing;
   material: string;
+  u_value?: number;
 }
 
 export interface Site {
@@ -576,6 +724,9 @@ export interface CurtainWallType {
   panel: CurtainPanel;
   panel_material: string;
   mullion_material: string;
+  u_value?: number;
+  g_value?: number;
+  frame_fraction?: number;
 }
 
 export interface CurtainPanelOverride {
@@ -813,3 +964,10 @@ export type PropertySet = Record<string, Record<string, PropertyValue>>;
 
 export type ClassificationSet = Record<string, string>;
 
+
+/** 🦴️ Authored SI structural support/load contracts. */
+export type StructuralLocation = { Point: { station: number } } | { Line: { start: number; end: number } } | "Area";
+export interface Restraints { x: boolean; y: boolean; z: boolean; rx: boolean; ry: boolean; rz: boolean; }
+export interface StructuralSupport { name: string; member: string; location: StructuralLocation; offset: Point3; restraints: Restraints; }
+export interface LoadCase { name: string; category: string; factor: number; }
+export interface StructuralLoad { name: string; load_case: string; member: string; location: StructuralLocation; force: Point3; moment: Point3; }

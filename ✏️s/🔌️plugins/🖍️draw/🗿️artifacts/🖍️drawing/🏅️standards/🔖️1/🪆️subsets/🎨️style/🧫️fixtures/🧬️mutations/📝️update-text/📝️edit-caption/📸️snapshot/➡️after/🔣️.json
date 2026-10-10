@@ -34,7 +34,8 @@
       "x": 10,
       "y": 20,
       "content": "Grüße 🌍\n123",
-      "size": 36
+      "size": 36,
+      "fontFamily": "anta"
     }
   ],
   "artboard": {

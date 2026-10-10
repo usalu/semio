@@ -1,0 +1,11 @@
+# Pending Original ToolRun Presentation
+
+The concrete pending owner composes genuine original progress cloning, counter replacement, ring insertion, joint provenance editing, sealed identity capture and original payload transfer. It retains the original tick, previous presentation, completed children and unpublished output behind guarded typed custody. It publishes one joint body only after the individual child operations and their physical close frontiers finish. Cancellation is flags-only; foreign run identity refuses without reconstructing or losing original fields.
+
+The language-neutral update corpus covers retained/replaced payload, retained/replaced progress counters, five interruption positions, provenance rollback plus append, and foreign run refusal. Portable output agrees with independent RFC6902 fields and set projection; strict TypeScript uses the existing canonical original-progress source route. The portable twin proves logical reference/value behavior; physical claims come only from the native allocator law.
+
+Native TDD invocation7566 failed at the intentionally absent update namespace. Canonical invocation3400 then passed seven original-progress native laws. The pending update includes forty-eight completion/interruption/source-order journeys and two foreign-run refusals. Each measured step matched its actual allocation/release receipt and independent comparison/movement currencies; denied physical grants preserved the same demand and candidate. Published counters and payload retain their incoming original backing, preserved payload and identity text retain their original issuer pointer, and the previous body's pointer/counters remain unchanged throughout preparation. Each terminal drop released zero bytes.
+
+Frozen receipts: `presentation-update-source-red.log`, `presentation-update-portable-green.log`, `presentation-update-native-red.log`, `presentation-update-native-green1.log`, `presentation-update-native-green2.log`. Green2 is authoritative for progress replacement and foreign refusal; green1 predates those expanded cases.
+
+Actual OS Entry, borrowed rendering, owned Context capture and normal-work scheduling still need this producer's adoption. Native acceptance here does not prove mounted editor completion or the remaining original child/peer/context close graphs.

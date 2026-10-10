@@ -1,1 +1,14 @@
-{}
+{
+  "viewports": {
+    "vp-1": {
+      "entry": "Created",
+      "position": {
+        "x": 20.0,
+        "y": 20.0
+      },
+      "scale": 1000,
+      "sheet": "sh-1",
+      "view": "v-ground"
+    }
+  }
+}

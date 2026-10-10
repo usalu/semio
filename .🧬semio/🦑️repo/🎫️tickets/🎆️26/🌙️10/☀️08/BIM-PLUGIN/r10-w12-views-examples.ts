@@ -36,6 +36,8 @@ export function extents(model: Json, building: string): [number, number, number,
   for (const row of Object.values<Json>(model.railings ?? {}).filter((row) => on(row.storey))) points.push(...row.path);
   for (const row of Object.values<Json>(model.stairs ?? {}).filter((row) => on(row.storey))) points.push(row.start);
   for (const row of Object.values<Json>(model.ramps ?? {}).filter((row) => on(row.storey))) points.push(...row.path.map((vertex: Json) => vertex.point));
+  for (const row of Object.values<Json>(model.components ?? {}).filter((row) => on(row.storey))) points.push(row.position);
+  for (const row of Object.values<Json>(model.mep_elements ?? {}).filter((row) => on(row.storey))) points.push(...row.path.map((point: Json) => ({ x: point.x, y: point.y })));
   if (points.length === 0) return undefined;
   const x0 = Math.min(...points.map((p) => p.x));
   const y0 = Math.min(...points.map((p) => p.y));

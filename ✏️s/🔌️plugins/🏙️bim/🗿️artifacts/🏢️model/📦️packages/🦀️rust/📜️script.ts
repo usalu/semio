@@ -57,6 +57,14 @@ class SqliteOracle extends BundleScript {
 const PLATFORM = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts";
 const OWNER = "🏙️bim";
 
+/** 💰️ Runs the independent costing implementation against its language-neutral and decimal arithmetic witnesses. */
+class CostTests extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("test-costs-source takes no arguments");
+    await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💰️costs/🧪️tests/🟦️.ts")], {cwd: this.repoRoot, budgetMs: testLevelBudgetMs()});
+  }
+}
+
 /** 📏️ Checks the defining Source schema and owning provider without publishing artifacts. */
 class SqliteVerify extends BundleScript { run(args:string[]):void{if(args.length!==1||args[0]!=="source")throw Error("verify-snapshot-sqlite source");const owner=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any");runCmd("bun",[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--skipLibCheck",resolve(owner,"🧬️schema/🟦️.ts"),resolve(owner,"🧬️schema/📸️snapshot/🟦️.ts"),resolve(owner,"🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"),resolve(owner,"🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"),resolve(this.root,"📜️script.ts")],{cwd:this.repoRoot});}}
 
@@ -71,7 +79,7 @@ function platformRole(role: "oracle" | "subject" | "parity"): new (root: string,
 }
 
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-bim-model", {
-  commands: { "verify-snapshot-sqlite": SqliteVerify, "sqlite-oracle": SqliteOracle },
+  commands: { "verify-snapshot-sqlite": SqliteVerify, "sqlite-oracle": SqliteOracle, "test-costs-source": CostTests },
   snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],
   testCommands: { oracle: platformRole("oracle"), subject: platformRole("subject"), parity: platformRole("parity") },
 });

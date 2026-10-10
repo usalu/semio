@@ -1,0 +1,11 @@
+{
+  "mutation": "setIssue",
+  "id": "i-1",
+  "clash": {
+    "value": {
+      "set": "cs-1",
+      "first": "w-south",
+      "second": "w-east"
+    }
+  }
+}

@@ -1,1 +1,49 @@
-{}
+{
+  "curtain_walls": {
+    "cw-1": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "entry": "Patched"
+    }
+  },
+  "openings": {
+    "o-arc": {
+      "entry": "Patched",
+      "flip_hand": true,
+      "offset": 6.27295218
+    },
+    "o-cw": {
+      "entry": "Patched",
+      "flip_facing": true,
+      "flip_hand": true
+    }
+  },
+  "walls": {
+    "w-arc": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.5,
+          "end": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        }
+      },
+      "entry": "Patched"
+    }
+  }
+}

@@ -67,12 +67,17 @@ mod agent_lane_preview_tests {
             self.closing = true;
         }
 
-        fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+        fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+
+        fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
             if !self.closing {
                 return semio_framework_job::InteractiveJobCloseStep::Blocked;
             }
             self.released = true;
-            semio_framework_job::InteractiveJobCloseStep::Complete
+            semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
         }
 
         fn terminal_is_empty(&self) -> bool {
@@ -116,7 +121,7 @@ mod agent_lane_preview_tests {
                 operation: semio_framework_job::allocate_operation_id(),
                 generation: semio_framework_job::Generation(1),
                 cancel,
-                config: semio_framework_job::BatchDriveConfig { site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
+                config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
                 now_us: scripted_now_us,
             };
             let verdict = drive_agent_lane_preview(job, params, name);

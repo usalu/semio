@@ -6908,7 +6908,7 @@ mod plugin_dependency_tests;
 // mount instead). Kept additive: `ViewModel` is consumed outside this pass by 🛍️products/💻️os
 // (plugin/renderer modules) and ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue
 // added alongside, not replacing, Serialize/Deserialize.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ViewModel {
@@ -7008,7 +7008,7 @@ pub struct ViewModel {
 /// 🪟️ One tree container's host-known state: whether the user opened or closed it (`None` = the
 /// author's own default still stands) and the row window on screen, overscan included. `body_key`
 /// names the panel body the container lives in, `node_key` the container's **window path** within it.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TreeWindowRequest {
@@ -7038,7 +7038,7 @@ pub struct TreeWindowRequest {
 /// for a base, unsplit window), `window_kind_id` is the `AppDefinition.windowKinds` entry it renders.
 // 🚧️ UNBLOCKED: was gated on `ViewModel` above, itself gated on `ui_wgpu::wgpu::{Locale,
 // Terminology}` gaining `ToValue`/`FromValue` — both now converted (see `ViewModel`'s own comment).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ViewWindowInstance {
@@ -7047,7 +7047,7 @@ pub struct ViewWindowInstance {
 }
 
 /// 🪪️ The authenticated OS session identity projected into every guest call while available.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ViewSessionIdentity {
@@ -7062,7 +7062,7 @@ impl ViewModel {
             active_mode_id: None,
             active_window_kind_id: None,
             active_utility_id: None,
-            active_utility_by_window_id: std::collections::HashMap::new(),
+            active_utility_by_window_id: Default::default(),
             active_tool_id: None,
             panel_json: None,
             session_identity: None,
@@ -7072,7 +7072,7 @@ impl ViewModel {
             window_id: None,
             focused_window_id: None,
             window_instances: Vec::new(),
-            tool_run_trace_cursor_by_window_id: std::collections::HashMap::new(),
+            tool_run_trace_cursor_by_window_id: Default::default(),
             tree_windows: Vec::new(),
             tree_viewport_rows: None,
         }

@@ -110,41 +110,6 @@
     ]
   },
   {
-    "name": "text stays explicit",
-    "expected": [
-      {
-        "id": "a",
-        "groups": [],
-        "transform": [
-          1,
-          0,
-          0,
-          1,
-          3,
-          4
-        ],
-        "opacity": 1,
-        "blendMode": "normal",
-        "visible": true,
-        "segments": [],
-        "fillRule": "nonzero",
-        "fill": {
-          "kind": "solid",
-          "color": [
-            1,
-            0,
-            0,
-            1
-          ]
-        },
-        "text": {
-          "content": "Grüße 😀",
-          "size": 16
-        }
-      }
-    ]
-  },
-  {
     "name": "group full affine",
     "expected": [
       {

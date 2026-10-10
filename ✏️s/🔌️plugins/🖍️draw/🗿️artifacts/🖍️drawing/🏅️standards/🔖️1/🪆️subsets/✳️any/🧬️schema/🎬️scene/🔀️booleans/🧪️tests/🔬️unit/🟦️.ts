@@ -1,7 +1,8 @@
 const neutral=(value:any):any=>value instanceof Uint8Array?Array.from(value):Array.isArray(value)?value.map(neutral):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,neutral(item)])):value;
 /** 🧪️ Actual documents, reference geometry, independent SVG pixels and publication limits. */
 import {test,expect} from "bun:test";
-import Ajv from "ajv";
+import Ajv from "ajv/dist/2020.js";
+import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
 import sharp from "sharp";
 import rows from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
@@ -19,7 +20,7 @@ import {DocumentBooleanJob,resolveDocumentBooleans,type DocumentBooleanInput,typ
 import documentTraceSchema from "../../../🔍️trace/🧬️schema/🔣️.json";
 import bitmapTraceSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔍️trace/🧬️schema/🔣️.json";
 import traceRows from "../../../🔍️trace/🧫️fixtures/🔣️.json";
-const ajv=new Ajv({strict:true});for(const s of [pathSchema,imageSchema,rasterSchema,prepSchema,flatSchema,regionSchema,curveSchema,bitmapTraceSchema,documentTraceSchema])ajv.addSchema(s);const valid=ajv.compile(schema),validProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),validResult=ajv.compile({$ref:schema.$id+"#/definitions/result"});
+const ajv=new Ajv({strict:true}).addMetaSchema(draft7);for(const s of [pathSchema,imageSchema,rasterSchema,prepSchema,flatSchema,regionSchema,curveSchema,bitmapTraceSchema,documentTraceSchema])ajv.addSchema(s);const valid=ajv.compile(schema),validProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),validResult=ajv.compile({$ref:schema.$id+"#/definitions/result"});
 function lift(v:any):any{return typeof v==="number"?binary64(v):Array.isArray(v)?v.map(lift):v&&typeof v==="object"?Object.fromEntries(Object.entries(v).map(([k,v])=>[k,lift(v)])):v;}
 function input(row:typeof rows[number]):DocumentBooleanInput{const job=new DocumentSceneJob({...row.document,layers:lift(row.document.layers)} as any,row.preparation);while(!job.advance(4096).done){}return{plan:job.result(),limits:row.limits};}
 function finish(value:DocumentBooleanInput,grant:number,observer?:(p:DocumentBooleanProgress)=>void){

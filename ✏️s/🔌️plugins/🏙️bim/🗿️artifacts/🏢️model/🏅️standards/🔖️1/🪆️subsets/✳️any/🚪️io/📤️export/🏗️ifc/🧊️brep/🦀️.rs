@@ -1,6 +1,7 @@
-//! 🧊️ Triangle meshes as `IfcFacetedBrep` bodies, for elements without an extruded-profile form (roofs, stairs, railings, sloped slabs, curtain-wall parts).
+//! 🧊️ Triangle meshes as bodies, for elements without an extruded-profile form (roofs, stairs, railings, sloped slabs, curtain-wall parts): an `IfcFacetedBrep` in IFC 2x3, an `IfcTriangulatedFaceSet`
+//! (representation type `Tessellation`) in IFC4, whose point list and index list replace the three entities per triangle of the brep.
 
-use super::writer::{flag, refs, rf, Ifc};
+use super::writer::{flag, int, list, real, refs, rf, unset, Ifc, Schema};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidGroup};
 use semio_framework_geometry::mesh::TriMesh;
 
@@ -25,6 +26,31 @@ pub fn faceted_brep(ifc: &mut Ifc, mesh: &TriMesh) -> Option<u64> {
     Some(ifc.add("IFCFACETEDBREP", vec![rf(shell)]))
 }
 
+/// 🧊️ An `IfcTriangulatedFaceSet` of `mesh` over one `IfcCartesianPointList3D` (one-based indices, welded corners); `None` when the mesh has no triangle.
+pub fn tessellation(ifc: &mut Ifc, mesh: &TriMesh) -> Option<u64> {
+    let welded = mesh.welded();
+    if welded.indices.is_empty() {
+        return None;
+    }
+    let points = list(welded.positions.iter().map(|position| list(position.iter().map(|value| real(*value)).collect())).collect());
+    let coordinates = ifc.add("IFCCARTESIANPOINTLIST3D", vec![points]);
+    let triangles = list(welded.indices.iter().map(|triangle| list(triangle.iter().map(|index| int(i64::from(*index) + 1)).collect())).collect());
+    Some(ifc.add("IFCTRIANGULATEDFACESET", vec![rf(coordinates), unset(), unset(), triangles, unset()]))
+}
+
+/// 🧊️ The body item of `mesh` in the schema of `ifc`: a faceted brep or a triangulated face set.
+pub fn mesh_item(ifc: &mut Ifc, mesh: &TriMesh) -> Option<u64> {
+    match ifc.schema {
+        Schema::Ifc2x3 => faceted_brep(ifc, mesh),
+        Schema::Ifc4 => tessellation(ifc, mesh),
+    }
+}
+
+/// 🏷️ The `RepresentationType` of a mesh body in the schema of `ifc`.
+pub fn body_kind(ifc: &Ifc) -> &'static str {
+    ifc.schema.pick("Brep", "Tessellation")
+}
+
 /// 🧊️ The triangles of `solid` that `keep` accepts (given the face group and the triangle centroid in building coordinates), shifted down by `drop` into the storey frame.
 pub fn mesh_where(solid: &ElementSolid, drop: f64, keep: impl Fn(&SolidGroup, [f64; 3]) -> bool) -> TriMesh {
     let corner = |index: u32| {
@@ -43,12 +69,13 @@ pub fn mesh_where(solid: &ElementSolid, drop: f64, keep: impl Fn(&SolidGroup, [f
     mesh
 }
 
-/// 🧱️ A product definition shape with one `Body`/`Brep` representation of `mesh`.
+/// 🧱️ A product definition shape with one `Body` representation of `mesh` (`Brep` or `Tessellation`).
 pub fn brep_definition(ifc: &mut Ifc, mesh: &TriMesh) -> Option<u64> {
-    let brep = faceted_brep(ifc, mesh)?;
-    let shape = ifc.shape(ifc.body, "Body", "Brep", &[brep]);
+    let item = mesh_item(ifc, mesh)?;
+    let shape = ifc.shape(ifc.body, "Body", body_kind(ifc), &[item]);
     Some(ifc.definition(&[shape]))
 }
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

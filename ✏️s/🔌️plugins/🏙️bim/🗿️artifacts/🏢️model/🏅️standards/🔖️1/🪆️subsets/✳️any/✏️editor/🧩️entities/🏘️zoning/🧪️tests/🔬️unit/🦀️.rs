@@ -1,6 +1,6 @@
 use super::super::{kind_of, kind_holding, ENTITIES};
 use super::*;
-use crate::standards::v1::subsets::any::editor::bim::terminology::BimLabels;
+use crate::editor::bim::terminology::BimLabels;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const ZONING: &str = include_str!("../../../../../🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json");

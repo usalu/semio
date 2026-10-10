@@ -1,0 +1,7 @@
+{
+  "component_overrides": {
+    "cmp-table.double": {
+      "entry": "Deleted"
+    }
+  }
+}

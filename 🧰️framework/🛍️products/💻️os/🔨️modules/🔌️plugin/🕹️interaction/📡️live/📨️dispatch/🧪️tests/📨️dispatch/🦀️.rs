@@ -19,12 +19,12 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sy
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(711), generation: semio_framework_job::Generation(1),
         cancel: semio_framework_job::CancelToken::root_now(),
-        config: semio_framework_job::BatchDriveConfig { site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
+        config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
         now_us: semio_framework_job::default_now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) { Ok(session) => session, Err(_) => panic!("fixed terminal fixture admission") };
     session.begin_close();
-    for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES); }
+    for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(crate::app::plugin_page_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)); }
     assert!(session.terminal_is_empty());
     let mut pump = RuntimeCloseCleanupPump::new();
     pump.session = Some(session); pump.terminal = true; pump.complete = complete; pump.faulted = faulted; pump.blocked = blocked;
@@ -188,10 +188,18 @@ async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_own
     assert_eq!(std::sync::Arc::ptr_eq(state.cell.lock().unwrap().as_ref().unwrap(), &cell), fixture["owners"]["nonterminalPreflightKeepsExactAllocation"].as_bool().unwrap());
     {
         let mut instance = cell.instance.lock().unwrap();
-        for _ in 0..200_000 { if instance.app.close_terminal_is_empty() { break; } let _ = instance.app.close_step(1, 4096).unwrap(); }
+        for _ in 0..200_000 {
+            if instance.app.close_terminal_is_empty() { break; }
+            let demand = instance.app.close_retirement_demands(4096).unwrap();
+            let _ = instance.app.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(4096), ..crate::app::plugin_demand_grant(demand) }).unwrap();
+        }
         assert!(instance.app.close_terminal_is_empty());
     }
-    let _ = cell.maintenance_pump.lock().unwrap().close_step(1, 4096);
+    {
+        let mut pump = cell.maintenance_pump.lock().unwrap();
+        let demand = pump.retirement_demands(4096).unwrap();
+        let _ = pump.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(4096), ..crate::app::plugin_demand_grant(demand) });
+    }
     assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::ExternalWait);
     assert_eq!(std::sync::Arc::ptr_eq(state.cell.lock().unwrap().as_ref().unwrap(), &cell), fixture["owners"]["sharedRestoreKeepsExactAllocation"].as_bool().unwrap());
     drop(cell);
@@ -207,7 +215,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), progress: None, contended: false, closing: false };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(719), generation: semio_framework_job::Generation(1), cancel: semio_framework_job::CancelToken::root_now(),
-        config: semio_framework_job::BatchDriveConfig { site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
+        config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
         now_us: || Some(0),
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) { Ok(session) => session, Err(_) => panic!("fixed source fixture admission") };
@@ -239,7 +247,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     pump.outcome = None;
     if let Some(session) = pump.session.as_mut() {
         session.begin_close();
-        for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES); }
+        for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(crate::app::plugin_page_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)); }
         assert!(session.terminal_is_empty());
     }
     pump.session = None;
@@ -471,10 +479,10 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
     let mut interaction = store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
-    interaction.install_document_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
+    store::install_unscheduled_catalog(&mut interaction, crate::local_interaction::retirement::funded_interaction_store_owners()).unwrap();
     let mut app = interaction_app_raw().await;
     let mut previous = std::mem::replace(&mut app.interaction_store, interaction);
-    for _ in 0..10_000 { if previous.close_owned_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
+    previous.close_owned_unscheduled().unwrap();
     assert!(previous.close_owned_terminal_is_empty());
     app.bind_instance_id(7).await;
     app

@@ -1,1 +1,289 @@
-{}
+{
+  "beam_types": {
+    "bt-30x50": {
+      "material": "m-brick",
+      "name": "Beam 30x50",
+      "profile": {
+        "Rectangle": {
+          "depth": 0.5,
+          "width": 0.3
+        }
+      }
+    }
+  },
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "classifications": {},
+  "column_types": {
+    "ct-400": {
+      "material": "m-brick",
+      "name": "Column 400",
+      "profile": {
+        "Rectangle": {
+          "depth": 0.4,
+          "width": 0.4
+        }
+      }
+    }
+  },
+  "columns": {},
+  "curtain_walls": {},
+  "door_types": {
+    "dt-1": {
+      "frame_depth": 0.12,
+      "frame_width": 0.07,
+      "height": 2.1,
+      "leaves": "Single",
+      "material": "m-brick",
+      "name": "Door",
+      "swing": "Left",
+      "width": 0.9
+    }
+  },
+  "grids": {},
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    },
+    "m-glass": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Glass",
+      "specific_heat": 900.0
+    },
+    "m-steel": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Steel",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {
+    "rt-200": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.2
+        }
+      ],
+      "name": "Roof 200"
+    }
+  },
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {
+    "slt-200": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.2
+        }
+      ],
+      "name": "Slab 200"
+    }
+  },
+  "slabs": {
+    "sl-1": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 3.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 3.0,
+            "y": 0.0
+          }
+        }
+      ],
+      "holes": [],
+      "name": "Floor",
+      "offset": 0.0,
+      "phase": "New",
+      "slab_type": "slt-200",
+      "storey": "st-ground"
+    },
+    "sl-2": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 3.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 3.0,
+            "y": 6.0
+          }
+        }
+      ],
+      "holes": [
+        [
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 5.0,
+              "y": 2.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 6.0,
+              "y": 2.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 6.0,
+              "y": 3.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 5.0,
+              "y": 3.0
+            }
+          }
+        ]
+      ],
+      "name": "Floor",
+      "offset": 0.0,
+      "phase": "New",
+      "slab_type": "slt-200",
+      "storey": "st-ground"
+    }
+  },
+  "spaces": {},
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {},
+  "window_types": {
+    "win-1": {
+      "frame_depth": 0.12,
+      "frame_width": 0.07,
+      "height": 1.2,
+      "material": "m-brick",
+      "name": "Window",
+      "panes": 2,
+      "sill": 0.9,
+      "width": 1.2
+    }
+  }
+}

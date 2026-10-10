@@ -1,5 +1,5 @@
 /** 🏙️ BIM model direct-mutation discriminated union. */
-import type { AnnotationAnchor, AnnotationStyle, AreaMeasure, AreaScheme, Axis, Baluster, Beam, BeamType, Building, Ceiling, CeilingType, ClassificationItem, ClassificationSystem, Column, ColumnType, CurtainGrid, CurtainPanel, CurtainPanelOverride, CurtainWall, CurtainWallType, DetailLevel, Dimension, DimensionUnit, DoorLeaves, DoorType, EndJoin, ExprPoint3, Family, FamilyCategory, FamilySolid, GridLine, Infill, Layer, Leader, LocationLine, Material, MaterialCategory, Opening, OpeningKind, Orientation, Paper, ParameterKind, Phase, Point2, Profile, PropertyDef, PropertyTemplate, PropertyValue, Railing, RailingHost, Ramp, Rgb, RiserKind, Roof, RoofShape, RoofType, Schedule, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleSort, Sheet, SheetRevision, Site, Slab, SlabType, Slope, SolidShape, Space, SpaceBoundary, Stair, StairFlight, StairStringer, Storey, Swing, Tag, TagCategory, TemplateTarget, Terminator, TextNote, TopConstraint, Vertex, View, ViewCamera, ViewCategory, ViewCrop, ViewPlane, Viewport, Wall, WallSide, WallSweep, WallType, WindowType, Zone } from "../🟦️.ts";
+import type { AnnotationAnchor, AnnotationStyle, AreaMeasure, AreaScheme, Axis, Baluster, Beam, BeamType, Building, Ceiling, CeilingType, ClashRef, ClashSet, ClassificationItem, ClassificationSystem, Column, ColumnType, Component, CurtainGrid, CurtainPanel, CurtainPanelOverride, CurtainWall, CurtainWallType, DetailLevel, Dimension, DimensionUnit, DoorLeaves, DoorType, ElementSelector, EndJoin, ExprPoint3, Family, FamilyCategory, FamilySolid, GridLine, Infill, Issue, IssueComment, IssuePriority, IssueStatus, IssueViewpoint, Layer, Leader, LocationLine, Material, MaterialCategory, MepElement, MepShape, MepSystem, Opening, OpeningKind, Orientation, Paper, ParameterKind, Phase, Point2, Point3, Profile, PropertyDef, PropertyTemplate, PropertyValue, Railing, RailingHost, Ramp, Rgb, RiserKind, Roof, RoofShape, RoofType, Rule, RuleKind, RuleScope, RuleSeverity, Schedule, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleSort, Sheet, SheetRevision, Site, Slab, SlabType, Slope, SolidShape, Space, SpaceBoundary, Stair, StairFlight, StairStringer, Storey, Swing, Tag, TagCategory, TemplateTarget, Terminator, TextNote, TopConstraint, Vertex, View, ViewCamera, ViewCategory, ViewCrop, ViewPlane, Viewport, Wall, WallSide, WallSweep, WallType, WindowType, Zone } from "../🟦️.ts";
 
 export interface CreateSite {
   mutation: "createSite";
@@ -824,6 +824,65 @@ export interface DeleteRamp {
   id: string;
 }
 
+export interface CreateComponent {
+  mutation: "createComponent";
+  id: string;
+  component: Component;
+}
+
+export interface SetComponent {
+  mutation: "setComponent";
+  id: string;
+  storey?: string;
+  family?: string;
+  position?: Point2;
+  elevation?: number;
+  rotation?: number;
+  mirrored?: boolean;
+  host?: Record<string, unknown>;
+  system?: MepSystem;
+  name?: string;
+}
+
+export interface DeleteComponent {
+  mutation: "deleteComponent";
+  id: string;
+}
+
+export interface SetComponentOverride {
+  mutation: "setComponentOverride";
+  component: string;
+  name: string;
+  value: string;
+}
+
+export interface RemoveComponentOverride {
+  mutation: "removeComponentOverride";
+  component: string;
+  name: string;
+}
+
+export interface CreateMepElement {
+  mutation: "createMepElement";
+  id: string;
+  mep: MepElement;
+}
+
+export interface SetMepElement {
+  mutation: "setMepElement";
+  id: string;
+  storey?: string;
+  system?: MepSystem;
+  shape?: MepShape;
+  path?: Point3[];
+  name?: string;
+}
+
+export interface DeleteMepElement {
+  mutation: "deleteMepElement";
+  id: string;
+}
+
 export interface CreateDimension {
   mutation: "createDimension";
   id: string;
@@ -1050,6 +1109,94 @@ export interface DeleteSheetRevision {
   id: string;
 }
 
+export interface CreateClashSet {
+  mutation: "createClashSet";
+  id: string;
+  clash_set: ClashSet;
+}
+
+export interface SetClashSet {
+  mutation: "setClashSet";
+  id: string;
+  name?: string;
+  a?: ElementSelector;
+  b?: ElementSelector;
+  tolerance?: number;
+  clearance?: number;
+}
+
+export interface DeleteClashSet {
+  mutation: "deleteClashSet";
+  id: string;
+}
+
+export interface CreateRule {
+  mutation: "createRule";
+  id: string;
+  rule: Rule;
+}
+
+export interface SetRule {
+  mutation: "setRule";
+  id: string;
+  name?: string;
+  kind?: RuleKind;
+  limit?: number;
+  severity?: RuleSeverity;
+  scope?: RuleScope;
+}
+
+export interface DeleteRule {
+  mutation: "deleteRule";
+  id: string;
+}
+
+export interface CreateIssue {
+  mutation: "createIssue";
+  id: string;
+  issue: Issue;
+}
+
+export interface SetIssue {
+  mutation: "setIssue";
+  id: string;
+  title?: string;
+  description?: string;
+  status?: IssueStatus;
+  priority?: IssuePriority;
+  assignee?: string;
+  author?: string;
+  created?: string;
+  labels?: string[];
+  elements?: string[];
+  clash?: ClashRef;
+  viewpoint?: IssueViewpoint;
+}
+
+export interface DeleteIssue {
+  mutation: "deleteIssue";
+  id: string;
+}
+
+export interface CreateIssueComment {
+  mutation: "createIssueComment";
+  id: string;
+  issue_comment: IssueComment;
+}
+
+export interface SetIssueComment {
+  mutation: "setIssueComment";
+  id: string;
+  author?: string;
+  date?: string;
+  text?: string;
+}
+
+export interface DeleteIssueComment {
+  mutation: "deleteIssueComment";
+  id: string;
+}
+
 export interface CreatePropertyTemplate {
   mutation: "createPropertyTemplate";
   id: string;
@@ -1155,6 +1302,32 @@ export interface DeleteCurtainPanelOverride {
   id: string;
 }
 
+export interface SetSpaceConditions {
+  mutation: "setSpaceConditions";
+  id: string;
+  occupancy?: Record<string, unknown>;
+  occupancy_density?: Record<string, unknown>;
+  heating_setpoint?: Record<string, unknown>;
+  cooling_setpoint?: Record<string, unknown>;
+  ventilation_rate?: Record<string, unknown>;
+  lighting_power_density?: Record<string, unknown>;
+  equipment_power_density?: Record<string, unknown>;
+  schedule?: Record<string, unknown>;
+}
+
+export interface RemoveSpaceConditions {
+  mutation: "removeSpaceConditions";
+  id: string;
+}
+
+export interface SetTypeThermalData {
+  mutation: "setTypeThermalData";
+  id: string;
+  u_value?: Record<string, unknown>;
+  g_value?: Record<string, unknown>;
+  frame_fraction?: Record<string, unknown>;
+}
+
 export interface CreateFamily {
   mutation: "createFamily";
   id: string;
@@ -1209,6 +1382,15 @@ export interface SetFamilySolid {
 }
 
 export type ModelMutation =
+  | CreateSupport
+  | SetSupport
+  | DeleteSupport
+  | CreateLoadCase
+  | SetLoadCase
+  | DeleteLoadCase
+  | CreateLoad
+  | SetLoad
+  | DeleteLoad
   | CreateSite
   | DeleteSite
   | CreateBuilding
@@ -1328,6 +1510,14 @@ export type ModelMutation =
   | CreateRamp
   | SetRamp
   | DeleteRamp
+  | CreateComponent
+  | SetComponent
+  | DeleteComponent
+  | SetComponentOverride
+  | RemoveComponentOverride
+  | CreateMepElement
+  | SetMepElement
+  | DeleteMepElement
   | CreateDimension
   | DeleteDimension
   | SetDimension
@@ -1358,6 +1548,18 @@ export type ModelMutation =
   | CreateSheetRevision
   | SetSheetRevision
   | DeleteSheetRevision
+  | CreateClashSet
+  | SetClashSet
+  | DeleteClashSet
+  | CreateRule
+  | SetRule
+  | DeleteRule
+  | CreateIssue
+  | SetIssue
+  | DeleteIssue
+  | CreateIssueComment
+  | SetIssueComment
+  | DeleteIssueComment
   | CreatePropertyTemplate
   | SetPropertyTemplate
   | DeletePropertyTemplate
@@ -1374,6 +1576,9 @@ export type ModelMutation =
   | CreateCurtainPanelOverride
   | SetCurtainPanelOverride
   | DeleteCurtainPanelOverride
+  | SetSpaceConditions
+  | RemoveSpaceConditions
+  | SetTypeThermalData
   | CreateFamily
   | DeleteFamily
   | SetFamily
@@ -1382,3 +1587,14 @@ export type ModelMutation =
   | CreateFamilySolid
   | DeleteFamilySolid
   | SetFamilySolid;
+
+import type {StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints} from "../🟦️.ts";
+export interface CreateSupport { mutation: "createSupport"; id: string; support: StructuralSupport; }
+export interface SetSupport { mutation: "setSupport"; id: string; name?: string; member?: string; location?: StructuralLocation; offset?: Point3; restraints?: Restraints; }
+export interface DeleteSupport { mutation: "deleteSupport"; id: string;  }
+export interface CreateLoadCase { mutation: "createLoadCase"; id: string; load_case: LoadCase; }
+export interface SetLoadCase { mutation: "setLoadCase"; id: string; name?: string; category?: string; factor?: number; }
+export interface DeleteLoadCase { mutation: "deleteLoadCase"; id: string;  }
+export interface CreateLoad { mutation: "createLoad"; id: string; load: StructuralLoad; }
+export interface SetLoad { mutation: "setLoad"; id: string; name?: string; load_case?: string; member?: string; location?: StructuralLocation; force?: Point3; moment?: Point3; }
+export interface DeleteLoad { mutation: "deleteLoad"; id: string;  }

@@ -34,6 +34,11 @@ pub(super) fn owner(label: &str) -> Box<dyn ArtifactInstanceOperationOwner> {
     Box::new(MediaOwner { label: label.into(), closed: false })
 }
 
+fn close_owner(owner: &ArtifactInstanceOperationOwnerHandle, items: usize) -> crate::app::PluginLifecycleStep {
+    let grant = crate::app::plugin_demand_grant(owner.retirement_demands(0).expect("owner close quote"));
+    owner.close_step(crate::app::RetainedCloneGrant { maximum_items: items, ..grant }).expect("owner close turn")
+}
+
 pub(super) fn export(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, SurfaceSnapshot>) -> Result<Media, MediaError> {
     owner
         .with_mut::<MediaOwner, _>(|owner| {
@@ -67,7 +72,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let context_port = fixture["contextPort"].as_str().unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let supplied = ArtifactInstanceOperationOwnerHandle::new(owner(case["owner"].as_str().unwrap()));
-        assert!(matches!(supplied.close_step(0, 0).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert_eq!(close_owner(&supplied, 0), crate::app::PluginLifecycleStep::Progress(Default::default()), "an unfunded close turn yields without releasing the owner");
         assert!(!supplied.terminal_is_empty().unwrap());
         let editor = payload(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());
         let viewer = payload(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());
@@ -75,7 +80,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
         assert_eq!(viewer, case["expected"]);
         validator.validate_json(&editor.to_string()).unwrap();
         validator.validate_json(&viewer.to_string()).unwrap();
-        supplied.close_step(1, 4096).unwrap();
+        assert!(matches!(close_owner(&supplied, 1), crate::app::PluginLifecycleStep::Complete(_)));
         assert!(supplied.terminal_is_empty().unwrap());
         assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
         assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
@@ -86,7 +91,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let foreign = ArtifactInstanceOperationOwnerHandle::new(Box::new(crate::app::EmptyArtifactInstanceOperationOwner));
     assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
     assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
-    foreign.close_step(1, 4096).unwrap();
+    assert!(matches!(close_owner(&foreign, 1), crate::app::PluginLifecycleStep::Complete(_)));
     let default_port = fixture["defaultPort"].as_str().unwrap();
     let supplied = ArtifactInstanceOperationOwnerHandle::new(owner("defaults"));
     let default_editor = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();
@@ -102,7 +107,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     }
     assert!(matches!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
     assert!(matches!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
-    supplied.close_step(1, 4096).unwrap();
+    assert!(matches!(close_owner(&supplied, 1), crate::app::PluginLifecycleStep::Complete(_)));
     let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
     editor

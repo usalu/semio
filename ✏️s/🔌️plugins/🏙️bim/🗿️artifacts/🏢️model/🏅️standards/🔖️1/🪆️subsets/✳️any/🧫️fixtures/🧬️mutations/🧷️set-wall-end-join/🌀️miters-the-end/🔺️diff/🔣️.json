@@ -1,1 +1,10 @@
-{}
+{
+  "walls": {
+    "w-east": {
+      "end_join": {
+        "value": "Miter"
+      },
+      "entry": "Patched"
+    }
+  }
+}

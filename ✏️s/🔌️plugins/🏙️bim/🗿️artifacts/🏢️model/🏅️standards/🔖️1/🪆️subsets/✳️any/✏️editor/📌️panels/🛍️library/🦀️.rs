@@ -29,7 +29,7 @@ const ROOT: &str = "bim-library";
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.panel_library.as_str(), BimLabels::NATIVE_DE.panel_library.as_str()),
+        label: BimLabels::localized(|labels| labels.panel_library),
         group: PanelGroup::Workbench,
         body_key: Some(BODY_KEY.into()),
         children: Vec::new(),

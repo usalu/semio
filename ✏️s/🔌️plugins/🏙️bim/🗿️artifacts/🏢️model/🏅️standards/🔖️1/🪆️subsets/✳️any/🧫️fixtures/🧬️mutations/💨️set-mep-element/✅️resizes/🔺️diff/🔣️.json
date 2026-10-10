@@ -1,0 +1,13 @@
+{
+  "mep_elements": {
+    "mep-duct": {
+      "entry": "Patched",
+      "shape": {
+        "Duct": {
+          "height": 0.25,
+          "width": 0.4
+        }
+      }
+    }
+  }
+}

@@ -32,6 +32,11 @@ use semio_framework_tool_machine::{
 };
 use std::collections::BTreeMap;
 use std::sync::Arc;
+#[path="🖐️gesture/🎟️issuer/🦀️.rs"]
+mod gesture_issuer;
+pub use gesture_issuer::GestureCapture;
+use gesture_issuer::{GestureOperation,reserve_live,issue_live};
+use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
 use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 /// 🧮️ Folds the provisional `leaf` onto `running` (else `committed`) and answers whether it applied (a leaf its base refuses
@@ -92,12 +97,14 @@ pub(super) enum ToolDispatch {
 /// at admission with the press it last closed, the document revision the dispatch runs on, and what the dispatch decided — kept by the runtime only when
 /// the dispatch publishes, and only while the window still holds the gesture it was admitted on. Shared with the dispatch's
 /// retained job, so its state sits behind one lock.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct GestureSlot<M> {
     window: String,
     base_revision: String,
     state: std::sync::Mutex<GestureSlotState<M>>,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct GestureSlotState<M> {
     admitted: Option<GestureState<M>>,
     closed: Option<String>,
@@ -108,6 +115,7 @@ struct GestureSlotState<M> {
 
 /// 📮️ What a driven slot hands the runtime at publication: the gesture it was admitted on, the gesture it decided (when it
 /// changed) and the press it closed.
+#[derive(semio_framework_value::RetireOwned)]
 struct GestureSlotDecision<M> {
     admitted: Option<GestureState<M>>,
     decided: Option<Option<GestureState<M>>>,
@@ -241,10 +249,11 @@ impl<M, CM> PressLeaf<M, CM> {
 /// host fact ended a gesture since the last repaint) and [`TypingLedger`], the committed ⊕ provisional overlays every render seam reads while a press or run is open — the
 /// document, the app config and each window's config —, the tag of the dispatch being admitted, the tags of admitted
 /// operations until their completion publishes, and the logical tick that makes every typing clock unique.
-pub struct ToolMachineRuntime<P, M, C = NoConfig, CM = NoConfigMutation> {
+pub struct ToolMachineRuntime<P, M:RetireOwned+Send+'static, C = NoConfig, CM = NoConfigMutation> {
     presses: ScrubLedger<PressLeaf<M, CM>>,
     gestures: GestureLedger<M>,
-    gesture_operations: Vec<(u64, Arc<GestureSlot<M>>)>,
+    gesture_operations: [Option<GestureOperation<M>>;ARTIFACT_LIVE_OUTPUT_SLOTS],
+    gesture_retirement:Option<ControlledRetirement<GestureOperation<M>>>,
     gesture_ended: bool,
     typing: TypingLedger<M>,
     overlay: Option<Arc<P>>,
@@ -265,12 +274,13 @@ pub struct ToolMachineRuntime<P, M, C = NoConfig, CM = NoConfigMutation> {
     now_ms: Option<u64>,
 }
 
-impl<P, M, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
+impl<P, M:RetireOwned+Send+'static, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
     fn default() -> Self {
         Self {
             presses: ScrubLedger::default(),
             gestures: GestureLedger::default(),
-            gesture_operations: Vec::new(),
+            gesture_operations:std::array::from_fn(|_|None),
+            gesture_retirement:None,
             gesture_ended: false,
             typing: TypingLedger::default(),
             overlay: None,
@@ -293,7 +303,7 @@ impl<P, M, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
     }
 }
 
-impl<P, M: Mutation<P> + 'static, C, CM: Mutation<C> + 'static> ToolMachineRuntime<P, M, C, CM> {
+impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static> ToolMachineRuntime<P, M, C, CM> {
     /// 🔎️ The open typing runs.
     pub fn typing(&self) -> &TypingLedger<M> {
         &self.typing
@@ -564,49 +574,59 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
-    /// 🎟️ The gesture slot of the dispatch `meta` admits as `operation` on the document revision `base`: the gesture its
-    /// window holds now, bound to the operation until its completion publishes (the oldest slot of an operation that never
-    /// completed yields its place). Windows that left the dispatching view's roster retire their gestures first.
-    pub(super) fn admit_gesture_slot(&mut self, operation: u64, base: &[u8; 32], meta: &ActionMeta) -> Arc<GestureSlot<A::Mutation>> {
-        let view = meta.view_state.as_ref();
-        if let Some(view) = view.filter(|view| !view.window_instances.is_empty()) {
-            let retired = self.tool_machines.gestures.retain_windows(|window| window.is_empty() || view.window_instances.iter().any(|instance| instance.id == window));
-            if !retired.is_empty() {
-                self.tool_machines.gesture_ended = true;
-                self.follow_tool_machines(true);
-            }
+    /// 🎟️ Admits the dispatch's original window gesture into a fixed runtime slot and caller-funded strong-only capture.
+    /// Completed decisions retain their slot until physical maintenance; occupied slots preserve the refused admission.
+    pub(super) fn admit_gesture_slot(&mut self,operation:u64,base:&[u8;32],meta:&ActionMeta,birth:RetainedCloneGrant,handoff:RetainedCloneGrant)->Result<GestureCapture<A::Mutation>,Fault>{
+        let index=self.tool_machines.gesture_operations.iter().position(Option::is_none);
+        let available=index.is_some()&&!self.tool_machines.gesture_operations.iter().flatten().any(|original|original.operation==operation);
+        let prepared=reserve_live::<A::Mutation>(available,birth,handoff).map_err(|error|error.into_fault())?;
+        let view=meta.view_state.as_ref();
+        if let Some(view)=view.filter(|view|!view.window_instances.is_empty()){
+            let retired=self.tool_machines.gestures.retain_windows(|window|window.is_empty()||view.window_instances.iter().any(|instance|instance.id==window));
+            if !retired.is_empty(){self.tool_machines.gesture_ended=true;self.follow_tool_machines(true);}
         }
-        let window = view.and_then(|view| view.window_id.clone()).unwrap_or_default();
-        let base_revision = base.iter().map(|byte| format!("{byte:02x}")).collect();
-        let open = self.tool_machines.gestures.open(&window).cloned();
-        let closed = self.tool_machines.gestures.closed(&window).map(str::to_string);
-        let slot = Arc::new(GestureSlot::of(window, base_revision, open, closed));
-        if self.tool_machines.gesture_operations.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
-            self.tool_machines.gesture_operations.remove(0);
-        }
-        self.tool_machines.gesture_operations.push((operation, Arc::clone(&slot)));
-        slot
+        let window=view.and_then(|view|view.window_id.clone()).unwrap_or_default();
+        let base_revision=base.iter().map(|byte|format!("{byte:02x}")).collect();
+        let open=self.tool_machines.gestures.open(&window).cloned();
+        let closed=self.tool_machines.gestures.closed(&window).map(str::to_string);
+        let(original,capture)=issue_live(prepared,GestureSlot::of(window,base_revision,open,closed),operation,handoff);
+        self.tool_machines.gesture_operations[index.expect("original fixed gesture slot was reserved")]=Some(original);
+        Ok(capture)
     }
 
-    /// 🖋️ Keeps what `operation`'s dispatch decided for its window's gesture, now that it publishes: only while no history
-    /// edit freezes the document and the window still holds the gesture the dispatch was admitted on (a host fact or another
-    /// dispatch that moved the slot since wins). Answers whether the dispatch drove its slot at all.
-    pub(super) fn settle_gesture_slot(&mut self, operation: u64, publishes: bool) -> bool {
-        let Some(index) = self.tool_machines.gesture_operations.iter().position(|(owner, _)| *owner == operation) else { return false };
-        let slot = self.tool_machines.gesture_operations.remove(index).1;
-        let Some(decision) = slot.take() else { return false };
-        if publishes && !self.time_travel.freezes_local_emits() && self.tool_machines.gestures.open(slot.window()) == decision.admitted.as_ref() {
-            if let Some(press) = decision.closing {
-                self.tool_machines.gestures.close(slot.window(), press);
-            }
-            if let Some(decided) = decision.decided {
-                self.tool_machines.gestures.settle(slot.window(), decided);
-                self.follow_tool_machines(true);
-            }
+    /// 🖋️ Settlement retains the original captured slot and rejected decision until funded maintenance.
+    pub(super) fn settle_gesture_slot(&mut self,operation:u64,publishes:bool)->bool{
+        let Some(original)=self.tool_machines.gesture_operations.iter_mut().flatten().find(|original|original.operation==operation&&!original.settled)else{return false};
+        original.settled=true;
+        original.decision=original.slot.take();
+        let Some(decision)=original.decision.as_mut()else{return false};
+        if publishes&&!self.time_travel.freezes_local_emits()&&self.tool_machines.gestures.open(original.slot.window())==decision.admitted.as_ref(){
+            if let Some(press)=decision.closing.take(){self.tool_machines.gestures.close(original.slot.window(),press);}
+            if let Some(decided)=decision.decided.take(){self.tool_machines.gestures.settle(original.slot.window(),decided);self.follow_tool_machines(true);}
         }
         true
     }
 
+    /// 🛑️ Cancellation records intent while preserving the original slot and every decided field.
+    pub(crate) fn request_gesture_cancellation(&mut self,operation:u64){if let Some(original)=self.tool_machines.gesture_operations.iter_mut().flatten().find(|original|original.operation==operation){original.request_cancellation();}}
+    /// 🪦️ The bounded fixed registry closes every original operation through its existing maintenance child.
+    pub(crate) fn begin_gesture_retirement(&mut self){for original in self.tool_machines.gesture_operations.iter_mut().flatten(){original.request_cancellation();}}
+    fn gesture_retirement_pending(&self)->bool{self.tool_machines.gesture_retirement.is_some()||self.tool_machines.gesture_operations.iter().flatten().any(|original|original.settled)}
+    fn gesture_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=self.tool_machines.gesture_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ControlledRetirement<GestureOperation<A::Mutation>>>>(),depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};}
+        Ok(RetirementDemand{copy_bytes:std::mem::size_of::<GestureOperation<A::Mutation>>(),depth:1,..Default::default()})
+    }
+    fn gesture_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let demand=self.gesture_retirement_demand(grant.maximum_copy_bytes)?;
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if let Some(owner)=self.tool_machines.gesture_retirement.as_mut(){
+            if owner.terminal_is_empty(){drop(self.tool_machines.gesture_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+            return owner.step(grant);
+        }
+        let Some(index)=self.tool_machines.gesture_operations.iter().position(|original|original.as_ref().is_some_and(|original|original.settled))else{return Ok(RetainedCloneStep::Complete(Default::default()));};
+        let original=self.tool_machines.gesture_operations[index].take().expect("selected original settled gesture");
+        match ControlledRetirement::new(original){Ok(owner)=>{self.tool_machines.gesture_retirement=Some(owner);Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))},Err((error,original))=>{self.tool_machines.gesture_operations[index]=Some(original);Err(error)}}
+    }
     /// 🛎️ A host fact of one window: its open gesture ends with the fact's reason and zero trace — the ONE place a blur, a
     /// lost capture, a utility switch, a closing window, a moved base or a history edit ends a gesture; no editor maps it.
     pub(super) fn end_window_gesture(&mut self, event: &HostEvent) {
@@ -678,10 +698,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     pub(crate) fn tool_overlay_retirement_pending(&self)->bool{
-        self.tool_machines.pending_overlay_aliases.is_some()||self.tool_machines.overlay_alias_retirement.is_some()||self.tool_machines.pending_config_aliases.is_some()||self.tool_machines.config_alias_retirement.is_some()||self.window_config_store.preview_retirement_pending()
+        self.gesture_retirement_pending()||self.tool_machines.pending_overlay_aliases.is_some()||self.tool_machines.overlay_alias_retirement.is_some()||self.tool_machines.pending_config_aliases.is_some()||self.tool_machines.config_alias_retirement.is_some()||self.window_config_store.preview_retirement_pending()
     }
     pub(crate) fn tool_overlay_refold_owed(&self)->bool{self.tool_machines.refold_owed}
-    pub(crate) fn tool_overlay_retirement_demand(&self)->Result<RetirementDemand,ValueError>{
+    pub(crate) fn tool_overlay_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if self.gesture_retirement_pending(){return self.gesture_retirement_demand(body);}
         if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ToolOriginalAliasBatch<A::Snapshot>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes())};}
         if self.tool_machines.pending_overlay_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Snapshot>::constructor_demand());}
         if let Some(owner)=self.tool_machines.config_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ToolOriginalAliasBatch<A::Config>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes())};}
@@ -691,8 +712,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🎟️ Original refold Vec/Arc owners wait for this actual full grant; no cold-drain fallback is admitted.
     pub(crate) fn tool_overlay_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if !self.tool_overlay_retirement_pending(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+        if self.gesture_retirement_pending(){return self.gesture_retirement_step(grant);}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        let demand=self.tool_overlay_retirement_demand()?;
+        let demand=self.tool_overlay_retirement_demand(grant.maximum_copy_bytes)?;
         if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_mut(){
             if owner.terminal_is_empty(){drop(self.tool_machines.overlay_alias_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}

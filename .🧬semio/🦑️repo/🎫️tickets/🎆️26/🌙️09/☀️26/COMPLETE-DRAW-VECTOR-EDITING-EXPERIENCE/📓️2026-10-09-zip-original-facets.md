@@ -1,0 +1,11 @@
+# ZIP Original Facets Compiler Frontier
+
+The actual inspector native1 canonical Draw owner terminated EXIT1 before Draw assertions on nine ZIP production errors. Frozen inspector-actions-native1-owner.log records three apply_mutation scope failures at the actual ISO21320 construction caller and six missing RetireOwned bounds in actual native codec/registered route factories for ZipSnapshot/ZipMutation. No compiler error is inferred from warnings or a source scan.
+
+Root moved the existing crate::apply_mutation import from derived_composition into derived_construction. The central original stdio contract applies a mutation by obtaining its declared diff and using the Kernel capability-bearing apply_diff path, with typed diagnostic absorption; this is the existing two-argument central API. No legacy signature/adapter was introduced.
+
+The original persisted ZIP objects now derive first-party genuine RetireOwned on ZipExtraField, ZipLocalHeaderMetadata, ZipCentralHeaderMetadata, ZipEntryMetadata, ZipEntry and ZipSnapshot. Their real fields are owned scalars, String, Vec, Option and nested metadata. The original ZipMutation enum and all five original payload leaves (add-entry, remove-entry, rename-entry, set-archive-comment, set-entry-data) also derive the same existing exact owned facet. This preserves original payloads/backings and uses existing typed retirement rather than mocked credits or a whole-root opaque refusal. Existing source/schema serialization and sparse diff/inverse behavior were not changed; existing first-party Value dependency already exists.
+
+Modified files are ZIP2.0/base schema snapshot/🦀️.rs, base schema mutations/🦀️.rs and its five payload leaf 🦀️.rs files, and ZIP2.0/iso21320 io/🦀️.rs. Paths are under the original source taxonomy; no source backup, new runtime dependency, permanent extra script, Git mutation or migration was introduced.
+
+Canonical Draw inspector native2 session68984 is the actual current compiler/assertion replay, unique inspector-actions-native2-wrapper.log. Until it executes, the owned facets are authored/compiler-frontier corrections and are unaccepted as native runtime/physical receipts. Separate ZIP payload physical law should be added under the original owner if the composed gate exposes a real allocation/refusal bug; no generic leaf proof is asserted as whole ZipSnapshot acceptance.

@@ -187,7 +187,7 @@ where
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         let released_bytes = group.retirement_demands()?.release_bytes;
-        if grant.maximum_release_bytes < released_bytes || Arc::weak_count(&group.visibility) != 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_release_bytes < released_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         publication.begin_close();
         publication.group_preparation = None;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))

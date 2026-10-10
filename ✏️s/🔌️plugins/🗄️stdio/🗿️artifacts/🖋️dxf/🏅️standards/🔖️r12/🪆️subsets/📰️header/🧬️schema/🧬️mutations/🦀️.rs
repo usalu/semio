@@ -98,7 +98,7 @@ pub mod set_style;
 /// 📐️ Typed content mutation for `stdio.dxf`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none, and `no`
 /// is not an approved semantic verb.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned)]
 #[mutations(snapshot = DxfSnapshot, diff = DxfDiff, schema = "DxfMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DxfMutation {

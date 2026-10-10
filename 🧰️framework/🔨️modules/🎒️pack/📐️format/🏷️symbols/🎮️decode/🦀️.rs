@@ -48,6 +48,7 @@ impl RetainedInlineSymbols {
 
     pub fn next_copy_byte_demand(&self) -> usize {
         if self.closing || self.fault.is_some() || self.is_finished() { return 0; }
+        if self.binding.is_none() { return RetainedCloneBinding::alias_copy_bytes(); }
         if self.phase == Phase::Place { if self.symbols.has_reserved_slot() { size_of::<SymbolSpan>() } else { 0 } } else { 1 }
     }
 
@@ -57,21 +58,22 @@ impl RetainedInlineSymbols {
         let idle = RetainedCloneProgress::default();
         if grant.maximum_items == 0 || self.closing || self.is_finished() { return Ok(idle); }
         if let Some(fault) = self.fault { return Err(fault); }
+        if let Some(progress) = source.bind(&mut self.binding, grant).map_err(|_| self.refused(InlineSymbolRefusal::Source))? { return Ok(progress); }
         if self.phase == Phase::Place {
             if !self.symbols.has_reserved_slot() {
                 if grant.maximum_capacity_bytes == 0 { return Ok(idle); }
-                source.bind(&mut self.binding).map_err(|_| self.refused(InlineSymbolRefusal::Source))?;
+
                 let progress = self.symbols.reserve_one(grant.maximum_capacity_bytes).map_err(|_| self.refused(InlineSymbolRefusal::Ownership))?;
                 return Ok(RetainedCloneProgress { copied_items: usize::from(progress.progressed), retained_capacity_bytes: progress.allocated_bytes, ..idle });
             }
             if grant.maximum_copy_bytes < size_of::<SymbolSpan>() { return Ok(idle); }
-            source.bind(&mut self.binding).map_err(|_| self.refused(InlineSymbolRefusal::Source))?;
+
             let progress = self.symbols.place_reserved(&mut self.pending, grant.maximum_copy_bytes).map_err(|_| self.refused(InlineSymbolRefusal::Ownership))?;
             self.phase = if self.symbols.len() == self.count { Phase::Complete } else { Phase::Length };
             return Ok(RetainedCloneProgress { copied_items: usize::from(progress.progressed), copied_bytes: progress.placed_bytes, ..idle });
         }
         if grant.maximum_copy_bytes == 0 { return Ok(idle); }
-        source.bind(&mut self.binding).map_err(|_| self.refused(InlineSymbolRefusal::Source))?;
+
         let bytes = source.get();
         if self.phase == Phase::Payload {
             let copied = self.remaining.min(grant.maximum_copy_bytes).min(4096);
@@ -109,7 +111,7 @@ impl RetainedInlineSymbols {
     /// 🔤️ Returns the admitted original UTF8 byte span without reconstruction or rescanning.
     pub fn symbol_bytes<'source>(&mut self, source: RetainedCloneRef<'source, Vec<u8>>, index: usize) -> Result<Option<&'source [u8]>, InlineSymbolRefusal> {
         if !self.is_finished() { return Err(InlineSymbolRefusal::Source); }
-        source.bind(&mut self.binding).map_err(|_| InlineSymbolRefusal::Source)?;
+        if source.bind(&mut self.binding, Default::default()).map_err(|_| InlineSymbolRefusal::Source)?.is_some() { return Err(InlineSymbolRefusal::Source); }
         let Some(span) = self.symbols.get(index) else { return Ok(None); };
         let bytes = source.get().get(span.start..span.end).ok_or(InlineSymbolRefusal::Source)?;
         Ok(Some(bytes))

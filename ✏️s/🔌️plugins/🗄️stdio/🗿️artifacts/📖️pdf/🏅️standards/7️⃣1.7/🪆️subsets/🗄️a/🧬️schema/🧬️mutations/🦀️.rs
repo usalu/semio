@@ -54,7 +54,7 @@ pub use set_output_intent::SetOutputIntent;
 //#region 🔖️Aggregate
 /// 📐️ Typed PDF/A-2 and PDF/A-3 conformance mutation vocabulary. Every variant directly wraps its
 /// authoritative semantic leaf payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.7.a")]
 pub enum PdfAMutation {

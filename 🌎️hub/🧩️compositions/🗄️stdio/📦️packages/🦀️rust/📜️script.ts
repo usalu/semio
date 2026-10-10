@@ -24,7 +24,7 @@ import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰�
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { FRESH_COMPONENT_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import { projectNativeCodecReceiptPublicationV1, type NativeCodecPublicationReceiptV1 } from "../../📇️publication/♻️native-receipt/🟦️.ts";
+import { projectNativeCodecReceiptPublicationV1, selectNativeCodecPublicationFactoryV1, type NativeCodecPublicationReceiptV1 } from "../../📇️publication/♻️native-receipt/🟦️.ts";
 
 import { prepareStdioComposition } from "../../🧩️composition/🟦️.ts";
 
@@ -1269,13 +1269,12 @@ class CatalogRootScript extends BundleScript {
 class NativeCodecProjectionScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "refresh") {
-      const artifact = segments[1];
-      if (!artifact || segments.length !== 2 || !/^[a-z][a-z0-9-]*$/.test(artifact)) throw new Error("native-codec-projection refresh requires one authored artifact identity");
+      const factoryId = segments[1];
+      if (!factoryId || segments.length !== 2) throw new Error("native-codec-projection refresh requires one authored factory identity");
       const factoryPath = resolve(this.root, "../../🔌️plugin/📇️catalog/📜️native-codec-factories.json");
       const catalogPath = resolve(this.root, "../../📇️publication/📜️native-catalog.json");
-      const selected = JSON.parse(readFileSync(factoryPath, "utf8")).receipts.filter((row: any) => row.artifact === artifact);
-      if (selected.length !== 1) throw new Error("native-codec-projection requires exactly one authored factory");
-      const authored = selected[0];
+      const authored = selectNativeCodecPublicationFactoryV1(JSON.parse(readFileSync(factoryPath, "utf8")).receipts, factoryId);
+      const artifact = authored.artifact;
       const control = new AbortController();
       const interrupt = () => control.abort();
       process.on("SIGINT", interrupt);
@@ -1308,7 +1307,7 @@ class NativeCodecProjectionScript extends BundleScript {
       }
       return;
     }
-    if (segments.length) throw new Error("native-codec-projection accepts refresh <artifact>");
+    if (segments.length) throw new Error("native-codec-projection accepts refresh <factory-id>");
     runCmd("cargo", ["test", "--manifest-path", join(this.root, "Cargo.toml"), "-p", "semio-hub-stdio", "--features", "full-artifact-catalog", "--test", "native_openable_provider", "--", "native_codec_projection_pack_schema_hashes_equal_live_receipts", "--exact"], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_NATIVE_CODEC_PROJECTION: "write", CARGO_INCREMENTAL: "0" }), budgetMs: buildBudgetMs() });
   }
 }

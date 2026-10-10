@@ -12,7 +12,7 @@ pub const ID: &str = "s.stdio.gltf.mutation.change-node-name.v1";
 /// 🕳️ `value` carries `#[value(required)]`: this derive, like `serde`'s, decodes a MISSING `Option<T>` key as `None` unless
 /// the field says otherwise, and `required` is exactly the opt-out — a present wire key is mandatory even for an `Option<T>`,
 /// so clearing the name (`{"value": null}`) and a wire that forgot the value never decode to the same payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfChangeNodeNamePayload {
     pub node: u32,
@@ -63,7 +63,7 @@ pub fn inverse(p: &GltfChangeNodeNamePayload, base: &GltfSnapshot) -> Vec<super:
 //#endregion ⚙️Validation
 
 //#region 🧬️Operation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ChangeNodeNameMutation {

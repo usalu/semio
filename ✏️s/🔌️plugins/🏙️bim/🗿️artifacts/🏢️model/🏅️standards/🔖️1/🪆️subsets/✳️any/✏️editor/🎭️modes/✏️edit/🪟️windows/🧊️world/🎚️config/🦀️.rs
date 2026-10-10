@@ -16,11 +16,18 @@ window_config! {
     projection: semio_framework_plugin::WorldProjectionConfig = semio_framework_plugin::WorldProjectionConfig::default();
     isolated_storey: String = String::new();
     hidden_storeys: Vec<String> = Vec::new();
+    isolated_elements: Vec<String> = Vec::new();
+    section_box: Vec<f64> = Vec::new();
     view_phase: String = String::new();
     section_enabled: bool = false;
     section_axis: String = "z".to_string();
     section_offset: f64 = 1.2;
     framed: bool = false;
+    selected_options: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
+    workset_visibility: std::collections::BTreeMap<String, bool> = std::collections::BTreeMap::new();
+    energy_overlay: bool = false;
+    structural_overlay: bool = false;
+    energy_mode: String = "u_value".to_string();
 }
 
 #[cfg(test)]

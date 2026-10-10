@@ -1,0 +1,1 @@
+{"cases":[{"value":0},{"value":-17},{"value":2147483647}],"malformed":[{}, {"value":"invalid"}, {"value":1,"value2":2}]}

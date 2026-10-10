@@ -23,9 +23,10 @@ fn changes(payload: &PlaceElements, base: &ModelSnapshot) -> Result<Change, Refu
         if !target.numbers().iter().all(|number| number.is_finite()) {
             return Err(Refusal::new(OutcomeCode::Invariant, format!("The placement of \"{id}\" must be finite."), ["placements".to_string(), id.clone()]));
         }
-        if *target != current {
+        let target = target.clone().mounted_like(&current);
+        if target != current {
             change.before.insert(id.clone(), current);
-            change.after.insert(id.clone(), target.clone());
+            change.after.insert(id.clone(), target);
         }
     }
     Ok(change)

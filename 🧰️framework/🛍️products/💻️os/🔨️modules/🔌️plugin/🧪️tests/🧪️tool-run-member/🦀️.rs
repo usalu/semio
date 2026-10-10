@@ -89,7 +89,7 @@ async fn member_store() -> ToolRunMembers {
     let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", text(&member_fixture()["childId"]), TestSnapshot::default(), None);
     envelope.dialect = Some(member_dialect());
     let mut child = ArtifactStore::new(envelope, protocol::ActorId(text(&fixture()["actor"]).into())).await.expect("the member store opens");
-    child.install_document_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
+    store::install_funded_member_store_owners(&mut child).expect("the original member catalog is funded and installed");
     ToolRunMembers::Child(Box::new(child))
 }
 

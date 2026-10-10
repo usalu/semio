@@ -24,3 +24,19 @@ pub fn third_party(bytes: &[u8]) -> (gltf::Document, Vec<u8>) {
     let parsed = gltf::Gltf::from_slice(bytes).expect("the gltf crate reads the container and validates the document");
     (parsed.document, parsed.blob.unwrap_or_default())
 }
+
+/// 🪑️ The committed components model: free and hosted components, terminals of several systems, ducts, pipes and trays on two storeys.
+pub const COMPONENTS: &str = include_str!("../../../../../🧫️fixtures/🏗️ifc/🪑️components/📸️snapshot/🔣️.json");
+
+/// 📁️ The directory of the committed glTF export of the components model and the table the `three` oracle measured from it.
+pub const COMPONENTS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧊️gltf/🪑️components");
+
+/// 🪑️ The decoded components model.
+pub fn components() -> ModelSnapshot {
+    from_json_str(COMPONENTS, JsonMemberPolicy::Reject).expect("the committed components model decodes")
+}
+
+/// 📖️ A committed file of the components fixture directory.
+pub fn read_components(name: &str) -> Vec<u8> {
+    std::fs::read(format!("{COMPONENTS_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `bun 🟦️.ts write` of the export case."))
+}

@@ -2,7 +2,7 @@
 //! placed kinds (the one record a move, a rotation and their exact inverse all speak), and the name slot of every element kind.
 
 use crate::{
-    Assigned, Axis, BeamPatch, CeilingPatch, ColumnPatch, CurtainWallPatch, Entry, GridLinePatch, KeyedDelta, ModelDiff, ModelSnapshot, OpeningPatch, Patch, Point2, RailingPatch, RampPatch, RoofPatch, RoofShape, SlabPatch, Slope, SpaceBoundary, SpacePatch, StairFlight, StairPatch, Vertex, WallPatch,
+    Assigned, Axis, BeamPatch, CeilingPatch, ColumnPatch, ComponentPatch, CurtainWallPatch, Entry, GridLinePatch, KeyedDelta, MepElementPatch, ModelDiff, ModelSnapshot, OpeningPatch, Patch, Point2, Point3, RailingPatch, RampPatch, RoofPatch, RoofShape, SlabPatch, Slope, SpaceBoundary, SpacePatch, StairFlight, StairPatch, Vertex, WallPatch,
 };
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 //#region 🔖️Placement
 /// 📍️ The absolute placement fields of one placed element, tagged by its kind: exactly what a move or a rotation may change and
 /// nothing else. A slab carries its slope and a roof its shape because a rotation turns their fall and ridge directions.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Placement {
     Wall {
         axis: Axis,
@@ -66,6 +66,15 @@ pub enum Placement {
         offset: f64,
         flip_hand: bool,
         flip_facing: bool,
+    },
+    Component {
+        position: Point2,
+        rotation: f64,
+        mirrored: bool,
+        hosted: bool,
+    },
+    Mep {
+        path: Vec<Point3>,
     },
 }
 
@@ -140,6 +149,16 @@ impl Placement {
             },
             Placement::Grid { start, end } => Placement::Grid { start: point(*start), end: point(*end) },
             Placement::Opening { .. } => self.clone(),
+            Placement::Component { position, rotation, mirrored, hosted } => Placement::Component { position: point(*position), rotation: if *hosted { *rotation } else { turned(*rotation, turn) }, mirrored: *mirrored, hosted: *hosted },
+            Placement::Mep { path } => Placement::Mep {
+                path: path
+                    .iter()
+                    .map(|vertex| {
+                        let moved = point(Point2 { x: vertex.x, y: vertex.y });
+                        Point3 { x: moved.x, y: moved.y, z: vertex.z }
+                    })
+                    .collect(),
+            },
         }
     }
 
@@ -185,12 +204,22 @@ impl Placement {
                 SpaceBoundary::Bounded { seed } => vec![seed.x, seed.y],
                 SpaceBoundary::Explicit { outline } => loop_numbers(outline),
             },
+            Placement::Component { position, rotation, .. } => vec![position.x, position.y, *rotation],
+            Placement::Mep { path } => path.iter().flat_map(|vertex| [vertex.x, vertex.y, vertex.z]).collect(),
         }
     }
 
     /// 🧬️ Whether both placements belong to the same element kind.
     pub fn same_kind(&self, other: &Placement) -> bool {
         std::mem::discriminant(self) == std::mem::discriminant(other)
+    }
+
+    /// 🧱️ This placement with the mounting flag of `current`: whether a component hangs on a host wall is read from the record, never given, so a placement the caller built without it is compared and written as the record has it.
+    pub fn mounted_like(self, current: &Placement) -> Placement {
+        match (self, current) {
+            (Placement::Component { position, rotation, mirrored, .. }, Placement::Component { hosted, .. }) => Placement::Component { position, rotation, mirrored, hosted: *hosted },
+            (other, _) => other,
+        }
     }
 }
 
@@ -228,6 +257,12 @@ pub fn placement(base: &ModelSnapshot, id: &str) -> Option<Placement> {
     }
     if let Some(space) = base.spaces.get(id) {
         return Some(Placement::Space { boundary: space.boundary.clone() });
+    }
+    if let Some(component) = base.components.get(id) {
+        return Some(Placement::Component { position: component.position, rotation: component.rotation, mirrored: component.mirrored, hosted: component.host.is_some() });
+    }
+    if let Some(mep) = base.mep_elements.get(id) {
+        return Some(Placement::Mep { path: mep.path.clone() });
     }
     base.grids.get(id).map(|grid| Placement::Grid { start: grid.start, end: grid.end })
 }
@@ -308,6 +343,14 @@ pub fn placement_diff(before: &BTreeMap<String, Placement>, after: &BTreeMap<Str
             Placement::Opening { offset, flip_hand, flip_facing } => {
                 let (was_offset, was_hand, was_facing) = if let Some(Placement::Opening { offset, flip_hand, flip_facing }) = prior { (Some(offset), Some(flip_hand), Some(flip_facing)) } else { (None, None, None) };
                 diff.openings = patched(diff.openings.take(), id, OpeningPatch { offset: moved(offset, was_offset), flip_hand: moved(flip_hand, was_hand), flip_facing: moved(flip_facing, was_facing), ..Default::default() });
+            }
+            Placement::Component { position, rotation, mirrored, .. } => {
+                let (was_position, was_rotation, was_mirrored) = if let Some(Placement::Component { position, rotation, mirrored, .. }) = prior { (Some(position), Some(rotation), Some(mirrored)) } else { (None, None, None) };
+                diff.components = patched(diff.components.take(), id, ComponentPatch { position: moved(position, was_position), rotation: moved(rotation, was_rotation), mirrored: moved(mirrored, was_mirrored), ..Default::default() });
+            }
+            Placement::Mep { path } => {
+                let was = if let Some(Placement::Mep { path }) = prior { Some(path) } else { None };
+                diff.mep_elements = patched(diff.mep_elements.take(), id, MepElementPatch { path: moved(path, was), ..Default::default() });
             }
         }
     }
@@ -401,6 +444,8 @@ pub fn exists(base: &ModelSnapshot, id: &str) -> bool {
         || base.stairs.contains_key(id)
         || base.railings.contains_key(id)
         || base.ramps.contains_key(id)
+        || base.components.contains_key(id)
+        || base.mep_elements.contains_key(id)
         || base.spaces.contains_key(id)
         || base.zones.contains_key(id)
         || base.area_schemes.contains_key(id)
@@ -436,6 +481,9 @@ macro_rules! noun {
 pub fn taken(base: &ModelSnapshot, id: &str) -> Option<&'static str> {
     noun!(
         base, id,
+        option_groups => "Option group",
+        design_options => "Design option",
+        worksets => "Workset",
         sites => "Site",
         buildings => "Building",
         storeys => "Storey",
@@ -453,6 +501,9 @@ pub fn taken(base: &ModelSnapshot, id: &str) -> Option<&'static str> {
         stairs => "Stair",
         railings => "Railing",
         ramps => "Ramp",
+        components => "Component",
+        component_overrides => "Component override",
+        mep_elements => "MEP element",
         spaces => "Space",
         zones => "Zone",
         area_schemes => "Area scheme",
@@ -460,6 +511,13 @@ pub fn taken(base: &ModelSnapshot, id: &str) -> Option<&'static str> {
         sheets => "Sheet",
         viewports => "Viewport",
         sheet_revisions => "Sheet revision",
+        supports => "Structural support",
+        load_cases => "Load case",
+        loads => "Structural load",
+        clash_sets => "Clash set",
+        rules => "Rule",
+        issues => "Issue",
+        issue_comments => "Issue comment",
         materials => "Material",
         wall_types => "Wall type",
         slab_types => "Slab type",
@@ -516,6 +574,8 @@ pub fn rename(base: &ModelSnapshot, id: &str, name: &str) -> Option<(String, Mod
         stairs => StairPatch.name,
         railings => RailingPatch.name,
         ramps => RampPatch.name,
+        components => ComponentPatch.name,
+        mep_elements => MepElementPatch.name,
         spaces => SpacePatch.name,
         zones => ZonePatch.name,
         area_schemes => AreaSchemePatch.name,
@@ -552,7 +612,7 @@ macro_rules! restoreyed {
 
 /// 🪜️ The storey the element `id` stands on, `None` for an id that is no storey-placed element (an opening stands on the storey of its host, a grid line, site, building or storey on none).
 pub fn storey_of(base: &ModelSnapshot, id: &str) -> Option<String> {
-    storeyed!(base, id, walls, curtain_walls, columns, beams, slabs, ceilings, roofs, stairs, railings, ramps, spaces)
+    storeyed!(base, id, walls, curtain_walls, columns, beams, slabs, ceilings, roofs, stairs, railings, ramps, components, mep_elements, spaces)
 }
 
 /// 🪜️ The one-field diff that stands the storey-placed element `id` on `storey`, `None` for an id that is no storey-placed element.
@@ -569,6 +629,8 @@ pub fn restorey(base: &ModelSnapshot, id: &str, storey: &str) -> Option<ModelDif
         stairs => StairPatch,
         railings => RailingPatch,
         ramps => RampPatch,
+        components => ComponentPatch,
+        mep_elements => MepElementPatch,
         spaces => SpacePatch,
     )
 }

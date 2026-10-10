@@ -1,4 +1,4 @@
-//! 🫴️ One explicitly installed caller slot retains returned decoder ownership until physical drain.
+//! 🫴️ Retains original decoder ownership until physical drain.
 use crate::{ErasedSnapshotRetirement,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
 use std::mem::ManuallyDrop;
 static RECIPIENT_IDS:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
@@ -25,3 +25,4 @@ impl ErasedSnapshotRetirement for NativeDecodeRetirementRecipient{
     fn next_depth_demand(&self)->Result<usize,ValueError>{if self.reserved{return Ok(1)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.depth))}
 }
 impl Drop for NativeDecodeRetirementRecipient{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"decoder recipient retains returned physical ownership");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);}}}}
+                                                                                                

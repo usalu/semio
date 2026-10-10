@@ -3,6 +3,18 @@ use super::*;
 use crate::schema::{create_drawing_shape_layer_rect, layer_base_mut};
 use semio_framework_plugin::{artifact_app_laws::project_and_retire_fixture_tree, built_to_component_tree, ViewModel};
 
+fn retire_inspector_view(view:ViewModel){
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+    let mut owner=ControlledRetirement::new(view).unwrap_or_else(|(_,original)|{let _original=std::mem::ManuallyDrop::new(original);panic!("original inspector view retirement was refused");});
+    for _ in 0..100000 {
+        if owner.terminal_is_empty(){return;}
+        let copy=owner.next_copy_byte_demand().unwrap().max(4096);
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+        assert!(owner.step(grant).unwrap().progress().fits(grant));
+    }
+    panic!("original inspector view retained physical owners");
+}
+
 #[test]
 fn inspector_selection_fixtures() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
@@ -49,6 +61,7 @@ fn inspector_path_nodes_publish_localized_edit_actions() {
             let paged = ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: DRAWING_PLAY_BODY_PROPERTIES.into(), node_key: "drawing-inspector.nodes".into(), open: Some(true), offset, rows: 1 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
             let tree = render(&document, &["path".into()], labels, &TreeWindows::for_body(&paged, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
             json.push_str(&project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap());
+            retire_inspector_view(paged);
         }
         for id in ["node.0.anchor.x", "node.1.control1.x", "node.1.control2.y", "node.1.split", "node.0.reverse"] { assert!(json.contains(id), "missing {id}"); }
         assert!(json.contains("editPath"));
@@ -180,6 +193,7 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
         check(&json,&fixture["controlEvents"],&mut count);
         assert!(count >= 30,"missing inspector controls: {count}");
     }
+    retire_inspector_view(view);
 }
 
 #[test]
@@ -341,6 +355,7 @@ fn authored_geometry_controls_match_shared_inspector_contract() {
                 let view=ViewModel{tree_windows:vec![semio_framework_plugin::TreeWindowRequest{body_key:DRAWING_PLAY_BODY_PROPERTIES.into(),node_key:ROOT.into(),open:Some(true),offset,rows:1}],..ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native)};
                 let tree=render(&document,&[id.clone()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
                 json.push_str(&project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap());
+                retire_inspector_view(view);
             }
             for field in case["fields"].as_array().unwrap(){assert!(json.contains(&format!("drawing-inspector.{}.input",field.as_str().unwrap())));}
             if case["kind"]=="shape:polygon" {for field in fixture["polygonCoordinates"].as_array().unwrap(){assert!(json.contains(field.as_str().unwrap()));}}
@@ -363,4 +378,107 @@ fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
         let tree=render(&document,&[id],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json=project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();assert!(json.contains("path.simplify"));assert!(json.contains(labels.simplify_tolerance.as_str()));
     }
+}
+
+/// 🧭️ Neutral eligibility cases reach the actual bilingual inspector with inherited locks and original groups.
+#[test]
+fn inspector_actions_respect_selection_eligibility() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎬️actions/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let selection=&row["selection"];
+        let count=selection["count"].as_u64().unwrap() as usize;
+        let locked=selection["locked"].as_bool().unwrap();
+        let same_parent=selection["sameParent"].as_bool().unwrap();
+        let convertible=selection["convertibleShapes"].as_bool().unwrap();
+        let ungroupable=selection["ungroupableGroups"].as_bool().unwrap();
+        let mut layers=Vec::new();
+        let mut ids=Vec::new();
+        for index in 0..count {
+            let mut layer=if convertible {create_drawing_shape_layer_rect("Shape")} else if ungroupable || row["name"]=="one unresolved composited group" {crate::schema::create_drawing_group_layer("Group")} else {crate::schema::create_layer_by_kind("text")};
+            let id=format!("selected-{index}");
+            layer_base_mut(&mut layer).id=id.as_str().into();
+            if row["name"]=="one unresolved composited group" {layer_base_mut(&mut layer).opacity=0.5;}
+            ids.push(id);
+            layers.push(layer);
+        }
+        if locked {
+            let mut parent=crate::schema::create_drawing_group_layer("Locked parent");
+            layer_base_mut(&mut parent).id="locked-parent".into();
+            layer_base_mut(&mut parent).locked=true;
+            if let DrawingLayerNode::Group(group)=&mut parent {group.children=layers.into();}
+            layers=vec![parent];
+        }else if !same_parent {
+            layers=layers.into_iter().enumerate().map(|(index,layer)|{
+                let mut parent=crate::schema::create_drawing_group_layer("Parent");
+                layer_base_mut(&mut parent).id=format!("parent-{index}").into();
+                if let DrawingLayerNode::Group(group)=&mut parent {group.children=vec![layer].into();}
+                parent
+            }).collect();
+        }
+        let structure=row["structure"].as_str().unwrap_or("");
+        match structure {
+            "ancestorChild"|"ancestorChildSibling"=>{
+                let mut group=crate::schema::create_drawing_group_layer("Selected ancestor");
+                layer_base_mut(&mut group).id="selected-0".into();
+                let child=layers.remove(1);
+                if let DrawingLayerNode::Group(body)=&mut group {body.children=vec![child].into();}
+                layers[0]=group;
+            }
+            "missing"=>ids.push("missing-layer".into()),
+            "hidden"=>layer_base_mut(&mut layers[0]).visible=false,
+            "inheritedHidden"=>{
+                let mut parent=crate::schema::create_drawing_group_layer("Hidden parent");
+                layer_base_mut(&mut parent).id="hidden-parent".into();
+                layer_base_mut(&mut parent).visible=false;
+                if let DrawingLayerNode::Group(group)=&mut parent {group.children=layers.into();}
+                layers=vec![parent];
+            }
+            "isolated"|"blended"=>{
+                let mut group=crate::schema::create_drawing_group_layer("Composited group");
+                layer_base_mut(&mut group).id="selected-0".into();
+                if let DrawingLayerNode::Group(body)=&mut group {
+                    body.isolation=structure=="isolated";
+                    if structure=="blended" {body.base.blend_mode="multiply".into();}
+                }
+                layers=vec![group];
+            }
+            "duplicateRows"=>{
+                ids=vec![crate::schema::drawing_play_layers_tree_row_id(&layers[0]);2];
+            }
+            "shapePath"=>{
+                let shape=&layers[1];
+                layers[1]=DrawingLayerNode::Path(crate::DrawingPathBody {base:layer_base(shape).clone(),segments:crate::schema::layer_to_path_segments(shape).into()});
+            }
+            _=>{}
+        }
+        let document=DrawingSnapshot {layers:layers.into(),..Default::default()};
+        let resolved=crate::schema::selected_drawing_layers(&document,&ids);
+        let eligibility=selection_actions::SelectionActionEligibility::from_selection(&document,&resolved,&ids);
+        assert_eq!(eligibility.count,count,"{}: resolved count",row["name"]);
+        assert_eq!(eligibility.locked,locked,"{}: inherited lock",row["name"]);
+        assert_eq!(eligibility.same_parent,same_parent,"{}: same parent",row["name"]);
+        assert_eq!(eligibility.complete,selection["complete"].as_bool().unwrap(),"{}: original requested ids",row["name"]);
+        assert_eq!(eligibility.arrangement_count,selection["arrangementCount"].as_u64().unwrap() as usize,"{}: ancestor selection boundary",row["name"]);
+        assert_eq!(eligibility.arrangeable,selection["arrangeable"].as_bool().unwrap(),"{}: inherited visibility",row["name"]);
+        if !structure.is_empty() {
+            for operation in ["alignLeft","distributeHorizontal","ungroup"] {
+                let expected=eligibility.allows(operation);
+                let actual=crate::editor::drawing::commands::edit_selection::plan(&document,&ids,operation).is_ok();
+                assert_eq!(actual,expected,"{}: actual planner {operation}",row["name"]);
+            }
+        }
+        let before=document.clone();
+        for (locale,labels) in [(semio_framework_ui_locale::Locale::En,&DrawingPlayLabels::NATIVE_EN),(semio_framework_ui_locale::Locale::De,&DrawingPlayLabels::NATIVE_DE)] {
+            let view=ViewModel::new(locale,semio_framework_ui_locale::Terminology::Native);
+            let tree=render(&document,&ids,labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+            let json=project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
+            for action in fixture["actions"].as_array().unwrap() {
+                let operation=action.as_str().unwrap();
+                let expected=row["expected"].as_array().unwrap().iter().any(|value|value==action);
+                assert_eq!(json.contains(&format!("\"drawing-inspector.{operation}\"")),expected,"{}: {operation}: {json}",row["name"]);
+            }
+            assert_eq!(document,before,"inspector projection cannot publish a document edit");
+        }
+    }
+    eprintln!("[DEBUG] Actual EN/DE inspector action projection matched twenty-one neutral selection cases including inherited locks and unresolved group compositing");
 }

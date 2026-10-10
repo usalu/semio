@@ -2,9 +2,9 @@
 //! centre offset keeps it inside its host and clear of its neighbours. Stairs: the invariants every authored stair must hold. Columns: the authored rise between a base and a top constraint.
 //! Nothing here is stored; lengths and widths are derived from authored parameters on every read.
 
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::resolve_size;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{resolve, stacking, StoreyLevel};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::axis_length;
+use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
+use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
+use crate::standards::v1::subsets::any::schema::authored::storeys::elevation;
 use crate::{ramp_construction_problem, stair_construction_problem, ModelDiff, ModelSnapshot, Opening, OpeningKind, Railing, Ramp, Stair, StairFlight, TopConstraint};
 use protocol::{MutationOutcome, OutcomeCode};
 
@@ -213,21 +213,6 @@ pub fn host_issue(base: &ModelSnapshot, railing: &Railing) -> Option<StairIssue>
 //#endregion 🔖️RailingHosts
 
 //#region 🔖️Rise
-/// 🪜️ The elevation of storey `id` above its building datum, summed from stored heights along the stacking of its building: a pure read of
-/// `base` that runs no inference engine, none when the storey is absent.
-pub fn storey_elevation(base: &ModelSnapshot, id: &str) -> Option<f64> {
-    let storey = base.storeys.get(id)?;
-    let mut levels: std::collections::BTreeMap<String, StoreyLevel> = std::collections::BTreeMap::new();
-    for (key, parent) in stacking(base, &storey.building) {
-        let level = resolve(base, &key, parent.as_ref().and_then(|parent| levels.get(parent)));
-        if key == id {
-            return Some(level.elevation);
-        }
-        levels.insert(key, level);
-    }
-    None
-}
-
 /// 📏️ The authored rise between a base offset on storey `storey_id` and the top constraint `top`, none when the storey the rise is measured
 /// from or the storey the top names is absent.
 pub fn rise(base: &ModelSnapshot, storey_id: &str, base_offset: f64, top: &TopConstraint) -> Option<f64> {
@@ -236,7 +221,7 @@ pub fn rise(base: &ModelSnapshot, storey_id: &str, base_offset: f64, top: &TopCo
         TopConstraint::Unconnected { height } => Some(*height),
         TopConstraint::StoreyTop { offset } => Some(storey.height + offset - base_offset),
         TopConstraint::Storey { storey: target, offset } if target == storey_id => Some(offset - base_offset),
-        TopConstraint::Storey { storey: target, offset } => Some(storey_elevation(base, target)? + offset - storey_elevation(base, storey_id)? - base_offset),
+        TopConstraint::Storey { storey: target, offset } => Some(elevation(base, target)? + offset - elevation(base, storey_id)? - base_offset),
         TopConstraint::Roof { .. } | TopConstraint::Slab { .. } | TopConstraint::Ceiling { .. } => None,
     }
 }

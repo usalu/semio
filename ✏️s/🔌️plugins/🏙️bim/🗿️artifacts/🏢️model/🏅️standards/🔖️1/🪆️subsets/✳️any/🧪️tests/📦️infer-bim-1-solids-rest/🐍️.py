@@ -57,6 +57,7 @@ ARC_SAMPLES = 4096
 CASES = {
     "columns-profiles": "columns",
     "beams-profiles": "beams",
+    "frame-tilt-joins": "frame",
     "slabs-holes-slope": "slabs",
     "ceilings-holes-slope": "ceilings",
     "ceilings-meshes": "ceilings",
@@ -245,8 +246,29 @@ def xy_bounds(polygon):
 
 
 # region 🔖️Columns
+def lean_of(column):
+    """📐️ `((ux, uy), stretch, slope)` of a leaning column (the unit direction in plan, `1 / cos(angle)`, `tan(angle)`), `None` for a plumb one."""
+    tilt = column.get("tilt")
+    if not tilt or not math.isfinite(tilt["angle"]) or abs(tilt["angle"]) <= 1e-12 or abs(tilt["angle"]) >= math.pi / 2.0:
+        return None
+    return (math.cos(tilt["direction"]), math.sin(tilt["direction"])), 1.0 / math.cos(tilt["angle"]), math.tan(tilt["angle"])
+
+
+def column_footprint(column, polygon, base, z):
+    """🔷️ The horizontal section of a column at the height `z`: the profile rotated and placed; a leaning column stretches it by `1 / cos(angle)` along the lean and moves it by `(z - base) * tan(angle)` along it (a shear, `shapely.affinity`)."""
+    position = (column["position"]["x"], column["position"]["y"])
+    placed = affinity.translate(affinity.rotate(polygon, column["rotation"], origin=(0, 0), use_radians=True), *position)
+    lean = lean_of(column)
+    if lean is None:
+        return placed
+    (ux, uy), stretch, slope = lean
+    k = stretch - 1.0
+    sheared = affinity.affine_transform(affinity.translate(placed, -position[0], -position[1]), [1.0 + k * ux * ux, k * ux * uy, k * ux * uy, 1.0 + k * uy * uy, 0.0, 0.0])
+    return affinity.translate(sheared, position[0] + (z - base) * slope * ux, position[1] + (z - base) * slope * uy)
+
+
 def column_rows(snapshot, levels):
-    """🏛️ Column volume and bounds."""
+    """🏛️ Column volume and bounds; a leaning column is the sheared prism between its stretched base section and the same section moved along the lean (volume `area * rise / cos(angle)`)."""
     rows = {}
     for column_id, column in snapshot.get("columns", {}).items():
         rows[column_id] = None
@@ -258,9 +280,11 @@ def column_rows(snapshot, levels):
         if section is None or top - base <= EXACT:
             continue
         polygon, area, arcs = section
-        placed = affinity.translate(affinity.rotate(polygon, column["rotation"], origin=(0, 0), use_radians=True), column["position"]["x"], column["position"]["y"])
-        min_x, min_y, max_x, max_y = xy_bounds(placed)
-        rows[column_id] = row("Column", area * (top - base), (min_x, min_y, base, max_x, max_y, top), arcs, top - base, arcs > 0, height=top - base, base_z=base, top_z=top)
+        lean = lean_of(column)
+        low, high = column_footprint(column, polygon, base, base), column_footprint(column, polygon, base, top)
+        min_x, min_y, max_x, max_y = low.union(high).bounds if lean else xy_bounds(low)
+        volume = area * (top - base) * (lean[1] if lean else 1.0)
+        rows[column_id] = row("Column", volume, (min_x, min_y, base, max_x, max_y, top), arcs, top - base, arcs > 0, height=top - base, base_z=base, top_z=top)
     return rows
 
 
@@ -268,24 +292,96 @@ def column_rows(snapshot, levels):
 
 
 # region 🔖️Beams
+def axis_stations(axis):
+    """〰️ `(points, length)` of a beam axis: the two ends of a line, or the arc cut into `ARC_SAMPLES` chords (`shapely` measures the polyline)."""
+    (kind, body), = axis.items()
+    start, end = (body["start"]["x"], body["start"]["y"]), (body["end"]["x"], body["end"]["y"])
+    if kind == "Line":
+        return [start, end], math.dist(start, end)
+    centre, radius, sweep = arc(start, end, body["bulge"])
+    first = math.atan2(start[1] - centre[1], start[0] - centre[0])
+    points = [(centre[0] + radius * math.cos(first + sweep * i / ARC_SAMPLES), centre[1] + radius * math.sin(first + sweep * i / ARC_SAMPLES)) for i in range(ARC_SAMPLES + 1)]
+    points[0], points[-1] = start, end
+    return points, abs(sweep) * radius
+
+
+def beam_cuts(snapshot, levels, beam, points, depth, tops):
+    """🔗️ How far the axis is cut back at each end by the columns of its storey whose vertical extent holds the mid-depth of the beam there: the piece of the axis inside the column sections (`shapely` intersection) that starts at the end."""
+    from shapely.geometry import Point
+    from shapely.ops import unary_union
+
+    cuts = []
+    for index, line in enumerate((LineString(points), LineString(points[::-1]))):
+        middle = tops[index] - depth / 2.0
+        rings = []
+        for column in snapshot.get("columns", {}).values():
+            kind = snapshot.get("column_types", {}).get(column["column_type"])
+            section = profile_region(kind["profile"]) if kind and column["storey"] == beam["storey"] else None
+            if section is None:
+                continue
+            own = levels[column["storey"]]
+            base = own[0] + column["base_offset"]
+            top = resolved_top(column["top"], base, own, target_level(column["top"], levels))
+            if base - EXACT <= middle <= top + EXACT:
+                rings.append(column_footprint(column, section[0], base, middle))
+        piece = 0.0
+        if rings:
+            found = line.intersection(unary_union(rings))
+            for part in getattr(found, "geoms", [found]):
+                if part.geom_type == "LineString" and part.distance(Point(line.coords[0])) < EXACT:
+                    piece = max(piece, part.length)
+        cuts.append(piece)
+    return cuts
+
+
 def beam_rows(snapshot, levels):
-    """➖️ Beam volume and bounds: the profile hangs from the reference line, the section rectangle is swept along the axis."""
+    """➖️ Beam volume and bounds: the profile hangs from the reference line and is swept along the axis (a line or an arc), perpendicular to the climbing axis of an inclined beam, cut back to the faces of the columns it joins; the volume is the area of the profile times the axis length between the cuts (Pappus), the bounds those of the swept corners of the hull of the profile."""
     rows = {}
     for beam_id, beam in snapshot.get("beams", {}).items():
         rows[beam_id] = None
         kind = snapshot.get("beam_types", {}).get(beam["beam_type"])
         section = profile_region(kind["profile"]) if kind else None
-        start, end = (beam["start"]["x"], beam["start"]["y"]), (beam["end"]["x"], beam["end"]["y"])
-        length = LineString([start, end]).length
+        points, length = axis_stations(beam["axis"])
         if section is None or length <= EXACT:
             continue
         polygon, area, arcs = section
-        min_u, min_v, max_u, max_v = polygon.bounds
-        top = levels[beam["storey"]][1] + beam["top_offset"]
-        normal = ((start[1] - end[1]) / length, (end[0] - start[0]) / length)
-        sweep = Polygon([(start[0] + normal[0] * u, start[1] + normal[1] * u) for u in (min_u, max_u)] + [(end[0] + normal[0] * u, end[1] + normal[1] * u) for u in (max_u, min_u)])
-        min_x, min_y, max_x, max_y = xy_bounds(sweep)
-        rows[beam_id] = row("Beam", area * length, (min_x, min_y, top - (max_v - min_v), max_x, max_y, top), arcs, length, arcs > 0, bounds_scale=2.0, length=length, top_z=top)
+        max_v = polygon.bounds[3]
+        depth = max_v - polygon.bounds[1]
+        storey_top = levels[beam["storey"]][1]
+        top = storey_top + beam["top_offset"]
+        end_top = storey_top + (beam["top_offset"] if beam.get("end_top_offset") is None else beam["end_top_offset"])
+        cuts = beam_cuts(snapshot, levels, beam, points, depth, (top, end_top))
+        if cuts[0] + cuts[1] >= length - 1e-6:
+            cuts = [0.0, 0.0]
+        rise = end_top - top
+        slope = math.atan2(rise, length)
+        sine, cosine = math.sin(slope), math.cos(slope)
+        cloud = numpy.array(points)
+        steps = numpy.diff(cloud, axis=0)
+        sizes = numpy.hypot(steps[:, 0], steps[:, 1])
+        walked = numpy.concatenate([[0.0], numpy.cumsum(sizes)])
+        curved_axis = len(points) > 2
+        distances = [cuts[0] + (length - cuts[0] - cuts[1]) * step / ARC_SAMPLES for step in range(ARC_SAMPLES + 1)] if curved_axis else [cuts[0], length - cuts[1]]
+        corners = list(polygon.convex_hull.simplify(1e-12).exterior.coords)
+        lows, highs = [math.inf] * 3, [-math.inf] * 3
+        for distance in distances:
+            index = min(max(int(numpy.searchsorted(walked, min(distance, walked[-1]), side="right")) - 1, 0), len(steps) - 1)
+            fraction = (min(distance, walked[-1]) - walked[index]) / sizes[index]
+            station = cloud[index] + steps[index] * fraction
+            tangent = steps[index] / sizes[index]
+            lateral = (-tangent[1], tangent[0])
+            for u, v in corners:
+                v -= max_v
+                values = (station[0] + lateral[0] * u - tangent[0] * v * sine, station[1] + lateral[1] * u - tangent[1] * v * sine, top + rise * distance / length + v * cosine)
+                for axis_index, value in enumerate(values):
+                    lows[axis_index], highs[axis_index] = min(lows[axis_index], value), max(highs[axis_index], value)
+        solid_length = (length - cuts[0] - cuts[1]) / math.cos(slope)
+        made = row("Beam", area * solid_length, (lows[0], lows[1], lows[2], highs[0], highs[1], highs[2]), arcs, solid_length, curved_axis or arcs > 0, bounds_scale=3.0 if curved_axis else 2.0, length=length, top_z=top)
+        if curved_axis:
+            radius = arc(points[0], points[-1], next(iter(beam["axis"].values()))["bulge"])[1]
+            made["volume_tolerance"] = max(made["volume_tolerance"], 3.0 * area * solid_length * CHORD_TOLERANCE / radius)
+            made["curved"] = True
+        rows[beam_id] = made
     return rows
 
 
@@ -343,6 +439,9 @@ def ceiling_rows(snapshot, levels):
 
 
 # region 🔖️Roofs
+SKELETON_TOLERANCE = 1e-7
+"""⚖️ Tolerance of the corners of a skeleton roof: the framework merges event points within 1e-9 of the extent, which moves areas and heights by about 1e-8."""
+
 GABLE_END_TOLERANCE = 0.02
 """📐️ Largest sine of the angle between an edge and the perpendicular of the ridge for which the edge is a gable end (`roof::GABLE_END_TOLERANCE`)."""
 
@@ -480,6 +579,9 @@ def roof_rows(snapshot, levels):
             extra["ridge_length"] = ridge_length
             extra["ridge_length_tolerance"] = 1e-5
         rows[roof_id] = row("Roof", area * thickness, (min_x, min_y, z0, max_x, max_y, z0 + rise + thickness), arcs, thickness, arcs > 0, thickness=thickness, rise=rise, **extra)
+        if name in ("Gable", "Hip", "Mansard") and rise > 0:
+            rows[roof_id]["volume_tolerance"] = max(rows[roof_id]["volume_tolerance"], SKELETON_TOLERANCE)
+            rows[roof_id]["bounds_tolerance"] = max(rows[roof_id]["bounds_tolerance"], SKELETON_TOLERANCE)
     return rows
 
 
@@ -711,7 +813,7 @@ def railing_rows(snapshot, levels):
 
 
 # region 🔖️Tables
-FAMILIES = {"columns": column_rows, "beams": beam_rows, "slabs": slab_rows, "ceilings": ceiling_rows, "roofs": roof_rows, "stairs": stair_rows, "railings": railing_rows}
+FAMILIES = {"columns": column_rows, "beams": beam_rows, "frame": lambda snapshot, levels: {**column_rows(snapshot, levels), **beam_rows(snapshot, levels)}, "slabs": slab_rows, "ceilings": ceiling_rows, "roofs": roof_rows, "stairs": stair_rows, "railings": railing_rows}
 
 
 def expected_of(case_name, snapshot):
@@ -773,6 +875,7 @@ def main(arguments):
         table = canonical(expected_of(name, document["snapshot"]))
         if mode == "write":
             document["expected"] = table
+            file.unlink()
             file.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             print("%s: wrote %d elements (%d absent)" % (name, len(table), sum(1 for row in table.values() if row is None)))
         elif document["expected"] != table:

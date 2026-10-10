@@ -26,7 +26,7 @@ pub const MAX_RISERS: u32 = 512;
 const EPS: f64 = 1e-9;
 
 /// 🌀️ The circular walking line of a winding flight (spiral stair).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct StairWinder {
     pub centre: Point2,
     pub inner_radius: f64,
@@ -37,7 +37,7 @@ pub struct StairWinder {
 
 /// 🪜️ One flight: `risers` risers and `treads` plain treads, starting at the foot of riser `first_riser` (1-based). `length` is the horizontal distance
 /// from the first to the last riser along the walking line; `tread` is the going per step on that line.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct StairFlightRun {
     pub first_riser: u32,
     pub risers: u32,
@@ -52,7 +52,7 @@ pub struct StairFlightRun {
 }
 
 /// 🟫️ A landing: a `depth` by `width` rectangle centred on `centre`, its depth along `direction` (the direction of the arriving flight), at height `z`.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct StairLanding {
     pub after_flight: u32,
     pub z: f64,
@@ -63,7 +63,7 @@ pub struct StairLanding {
 }
 
 /// 🚦️ The code flags of one stair run.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct StairCompliance {
     pub rise_positive: bool,
     pub riser_ok: bool,
@@ -73,7 +73,7 @@ pub struct StairCompliance {
 }
 
 /// 🪜️ Resolved run of one stair, in metres and radians.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct StairRun {
     pub base_z: f64,
     pub top_z: f64,

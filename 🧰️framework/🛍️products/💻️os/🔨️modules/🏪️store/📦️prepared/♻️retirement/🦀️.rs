@@ -52,3 +52,6 @@ impl<P:Send+Sync+'static,M:Send+'static> ErasedSnapshotRetirement for ArtifactSt
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
 impl<P,M> Drop for ArtifactStorePreparedRetirement<P,M>{fn drop(&mut self){assert!(std::thread::panicking()||self.empty(),"prepared retirement retains original owners until funded terminal closure");if self.empty(){unsafe{ManuallyDrop::drop(&mut self.edit);ManuallyDrop::drop(&mut self.unboxed);ManuallyDrop::drop(&mut self.post);ManuallyDrop::drop(&mut self.authority);ManuallyDrop::drop(&mut self.strings);ManuallyDrop::drop(&mut self.mutation_factory);ManuallyDrop::drop(&mut self.snapshot_factory);ManuallyDrop::drop(&mut self.active);ManuallyDrop::drop(&mut self.factories);}}}}
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

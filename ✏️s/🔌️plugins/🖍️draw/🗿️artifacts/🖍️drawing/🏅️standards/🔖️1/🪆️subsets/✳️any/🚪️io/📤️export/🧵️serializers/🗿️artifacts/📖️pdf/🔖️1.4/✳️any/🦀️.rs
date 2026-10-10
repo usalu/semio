@@ -34,7 +34,9 @@ pub struct DrawingIntoPdf;
 impl Serializer<DrawingSnapshot> for DrawingIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    const OWNED_FACTORY: Option<semio_framework_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::standards::v1::subsets::any::io::owned_export::PDF_FACTORY);
     async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        let _ = control;
         let bytes = drawing_document_to_pdf(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DrawingIntoPdf: {message}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }

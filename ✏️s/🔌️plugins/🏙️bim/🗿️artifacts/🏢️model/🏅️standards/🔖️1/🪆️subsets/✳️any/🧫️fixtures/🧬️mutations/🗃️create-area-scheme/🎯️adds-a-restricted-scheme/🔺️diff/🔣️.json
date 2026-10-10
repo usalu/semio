@@ -1,1 +1,16 @@
-{}
+{
+  "area_schemes": {
+    "as-nsa": {
+      "entry": "Created",
+      "measure": "Net",
+      "name": "Net sales area",
+      "usages": [
+        "Kitchen",
+        "Sleeping"
+      ],
+      "zones": [
+        "z-day"
+      ]
+    }
+  }
+}

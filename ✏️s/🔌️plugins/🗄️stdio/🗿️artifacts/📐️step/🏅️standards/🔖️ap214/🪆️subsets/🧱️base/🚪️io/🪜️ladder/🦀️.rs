@@ -156,7 +156,7 @@ pub fn ceiling_type_of(max_rung: u8) -> Option<&'static str> {
 /// `representation` supertype gives it -- `name`, `items` and `context_of_items`. Nothing more is
 /// modelled, because nothing more is what a CONFORMANCE CLASS is about: the class restricts which
 /// representation types may appear, not what geometry they carry.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ShapeRepresentationRow {
     pub type_name: String,
@@ -169,7 +169,7 @@ pub struct ShapeRepresentationRow {
 /// because [`has_product_definition_chain`] is a CONJUNCTION over all three: an edit to a single
 /// rung could never deterministically turn the `product-definition-chain` diagnostic on or off, so a
 /// vocabulary derived from that rule addresses the triple or it addresses nothing.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ProductIdentity {
     pub product: u64,
@@ -392,7 +392,7 @@ pub fn product_identity_diff(base: &StepSnapshot, identity: Option<&ProductIdent
 
 /// 📦️ One row that puts entity `id` back exactly: `entity` is its absolute value (`None` removes it) and `index` the position a new entity takes
 /// among the final entities (last when absent).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct EntityRestore {
     pub id: u64,

@@ -150,3 +150,21 @@ mod conformance_laws {
     }
 }
 //#endregion 🔖️ConformanceLaws
+
+#[test]
+fn the_ifc4_document_codec_round_trips_an_ifc4_file_and_refuses_other_schemas() {
+    use crate::standards::v4::engine::{decode_ifc4_document, encode_ifc4_document};
+    let ifc4 = b"ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((\x27ViewDefinition []\x27),\x272;1\x27);\nFILE_NAME(\x27a.ifc\x27,\x27\x27,(\x27\x27),(\x27\x27),\x27\x27,\x27\x27,\x27\x27);\nFILE_SCHEMA((\x27IFC4\x27));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n";
+    let document = decode_ifc4_document(ifc4).expect("an IFC4 file decodes");
+    assert_eq!(document.instances.len(), 1);
+    let again = encode_ifc4_document(&document).expect("it encodes");
+    assert_eq!(decode_ifc4_document(&again).expect("and decodes again").instances, document.instances);
+    let other = String::from_utf8_lossy(ifc4).replace("\x27IFC4\x27", "\x27IFC2X3\x27");
+    assert!(decode_ifc4_document(other.as_bytes()).is_err(), "an IFC2X3 file is refused");
+    let mut foreign = document.clone();
+    foreign.header.file_schema = Vec::new();
+    assert!(encode_ifc4_document(&foreign).is_err(), "a header without IFC4 is refused");
+    let mut twice = document;
+    twice.instances.push(twice.instances[0].clone());
+    assert!(encode_ifc4_document(&twice).is_err(), "a repeated instance id is refused");
+}

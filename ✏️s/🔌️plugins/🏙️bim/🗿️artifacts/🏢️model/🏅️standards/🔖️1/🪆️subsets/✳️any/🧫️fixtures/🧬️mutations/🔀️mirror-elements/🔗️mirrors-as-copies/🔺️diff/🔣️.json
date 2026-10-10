@@ -1,1 +1,112 @@
-{}
+{
+  "classifications": {
+    "mi-1-1": {
+      "cs-uniclass": "EF_25_10",
+      "entry": "Created"
+    }
+  },
+  "openings": {
+    "mi-1-2": {
+      "entry": "Created",
+      "flip_facing": false,
+      "flip_hand": true,
+      "host": "mi-1-1",
+      "kind": {
+        "Door": {
+          "door_type": "dt-1"
+        }
+      },
+      "name": "Door",
+      "offset": 6.5
+    },
+    "mi-1-3": {
+      "entry": "Created",
+      "flip_facing": false,
+      "flip_hand": true,
+      "host": "mi-1-1",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "name": "Window",
+      "offset": 2.5
+    }
+  },
+  "properties": {
+    "mi-1-1": {
+      "Pset_WallCommon": {
+        "FireRating": {
+          "Text": {
+            "value": "F90"
+          }
+        }
+      },
+      "entry": "Created"
+    },
+    "mi-1-3": {
+      "Pset_WindowCommon": {
+        "ThermalTransmittance": {
+          "Real": {
+            "value": 1.1
+          }
+        }
+      },
+      "entry": "Created"
+    }
+  },
+  "walls": {
+    "mi-1-0": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    },
+    "mi-1-1": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

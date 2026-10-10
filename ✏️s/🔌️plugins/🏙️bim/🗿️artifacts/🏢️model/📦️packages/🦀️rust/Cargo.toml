@@ -32,6 +32,7 @@ semio-framework-geometry = { workspace = true }
 semio-framework-expression = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-deflate = { path = "../../../../../../../🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-ifc = { workspace = true }

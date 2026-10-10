@@ -1,0 +1,23 @@
+{
+  "items": {
+    "finish": {"name": "Surface finish", "currency": "EUR", "basis": "NetSideArea", "unit_cost": 12.5, "precision": 2},
+    "structure": {"name": "Concrete", "currency": "EUR", "basis": "NetVolume", "unit_cost": 100, "precision": 2},
+    "import": {"name": "Imported component", "currency": "CHF", "basis": "Count", "unit_cost": 40, "precision": 2}
+  },
+  "links": {
+    "wall-finish": {"type_id": "wall-type", "item": "finish", "factor": 1.1},
+    "wall-structure": {"type_id": "wall-type", "item": "structure", "factor": 1},
+    "component-import": {"type_id": "component-type", "item": "import", "factor": 1}
+  },
+  "elements": {
+    "wall-a": {"storey": "ground", "type_id": "wall-type", "count": 1, "net_side_area": 8, "net_volume": 2},
+    "wall-b": {"storey": "upper", "type_id": "wall-type", "count": 1, "net_side_area": 4, "net_volume": 1},
+    "component": {"storey": "ground", "type_id": "component-type", "count": 2}
+  },
+  "expected": {
+    "project": {"CHF": 80, "EUR": 465},
+    "storeys": {"ground": {"CHF": 80, "EUR": 310}, "upper": {"EUR": 155}},
+    "types": {"component-type": {"CHF": 80}, "wall-type": {"EUR": 465}},
+    "items": {"finish": {"EUR": 165}, "import": {"CHF": 80}, "structure": {"EUR": 300}}
+  }
+}

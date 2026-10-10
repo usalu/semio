@@ -1,1 +1,10 @@
-{}
+{
+  "annotation_styles": {
+    "as-plan": {
+      "entry": "Patched",
+      "precision": 1,
+      "terminator": "Dot",
+      "unit": "Centimetre"
+    }
+  }
+}

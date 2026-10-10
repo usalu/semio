@@ -39,7 +39,7 @@ mod tests {
         // copied into an array) -- `IoEntry` derives no `Copy`/`Clone`, so moving a value OUT of
         // a separate `static` to build `[ENTRY]` would not compile; a single constant-expression
         // array literal has no such move.
-        static ENTRIES: [IoEntry; 1] = [IoEntry { from: TEST_DIALECT, into: CARRIER_BINARY, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run }];
+        static ENTRIES: [IoEntry; 1] = [IoEntry { owned_serializer: None, from: TEST_DIALECT, into: CARRIER_BINARY, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run }];
         // 📌️ Idempotent re-registration (nextest runs this file's tests in one process) -- a
         // second run of this same test binary registering the identical static entry must not error.
         io_register(&ENTRIES).ok();

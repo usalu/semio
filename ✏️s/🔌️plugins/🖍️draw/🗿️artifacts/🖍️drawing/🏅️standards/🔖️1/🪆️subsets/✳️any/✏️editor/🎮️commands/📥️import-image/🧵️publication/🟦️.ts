@@ -1,0 +1,7 @@
+/** 🪪️ Canonical image identities include the original authoring seed and exact operation wire words. */
+import {sha256Hex} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
+export interface ImagePublicationIdentity {revisionHex:string;appInstanceHex:string;operationHex:string;generationHex:string;authoringSeed:string}
+export function imagePublicationIdentities(input:ImagePublicationIdentity):{assetId:string;layerId:string}{
+ const words=[input.revisionHex,input.appInstanceHex,input.operationHex,input.generationHex],lengths=[64,8,16,16];for(let at=0;at<words.length;at++)if(words[at]!.length!==lengths[at]||!/^[0-9a-f]+$/.test(words[at]!))throw RangeError("Invalid image publication identity word");
+ const prefix=new TextEncoder().encode("semio.draw.image-publication/v1"),seed=new TextEncoder().encode(input.authoringSeed),fixed=words.join("");const bytes=new Uint8Array(prefix.length+fixed.length/2+8+seed.length);bytes.set(prefix);let offset=prefix.length;for(let at=0;at<fixed.length;at+=2)bytes[offset++]=Number.parseInt(fixed.slice(at,at+2),16);new DataView(bytes.buffer).setBigUint64(offset,BigInt(seed.length),false);offset+=8;bytes.set(seed,offset);const digest=sha256Hex(bytes);return {assetId:"image-asset-"+digest,layerId:"layer-"+digest};
+}

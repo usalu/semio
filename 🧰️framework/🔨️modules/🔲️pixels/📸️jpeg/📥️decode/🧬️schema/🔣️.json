@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/pixels/jpeg/decode",
+  "title": "Owned JPEG Decode Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data", "maxPixels", "maxBytes", "maxSegments", "maxWorkingBytes"],
+  "properties": {
+    "data": {"type": "array", "minItems": 4, "maxItems": 67108864, "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+    "maxPixels": {"type": "integer", "minimum": 1, "maximum": 16777216},
+    "maxBytes": {"type": "integer", "minimum": 4, "maximum": 67108864},
+    "maxSegments": {"type": "integer", "minimum": 1, "maximum": 65536},
+    "maxWorkingBytes": {"type": "integer", "minimum": 256, "maximum": 536870912}
+  },
+  "$defs": {
+    "grant": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
+      "properties": {
+        "maximumItems": {"type": "integer", "minimum": 0},
+        "maximumCopyBytes": {"type": "integer", "minimum": 0},
+        "maximumCapacityBytes": {"type": "integer", "minimum": 0},
+        "maximumReleaseBytes": {"type": "integer", "minimum": 0},
+        "maximumDepth": {"type": "integer", "minimum": 0}
+      }
+    },
+    "progress": {
+      "type": "object", "additionalProperties": false,
+      "required": ["phase", "bytes", "totalBytes", "blocks", "pixels", "totalPixels", "work", "done"],
+      "properties": {
+        "phase": {"enum": ["markers", "tables", "allocate", "initialize", "entropy", "transform", "pixels", "complete", "transferred"]},
+        "bytes": {"type": "integer", "minimum": 0},
+        "totalBytes": {"type": "integer", "minimum": 4},
+        "blocks": {"type": "integer", "minimum": 0},
+        "pixels": {"type": "integer", "minimum": 0},
+        "totalPixels": {"type": "integer", "minimum": 0},
+        "work": {"type": "integer", "minimum": 0},
+        "done": {"type": "boolean"}
+      }
+    }
+  }
+}

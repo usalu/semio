@@ -31,7 +31,7 @@ pub(crate) mod fixture {
     /// stay `LanguagePair { text: None, binary: None }`, which the type itself documents as legal.
     macro_rules! fixture_channel {
         ($snapshot:ident, $diff:ident, $mutation:ident, $leaf_owner:ident, $command:ident, $dialect:expr, $schema:literal) => {
-            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+            #[derive(::semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
             pub(crate) struct $snapshot {
                 pub value: i32,
             }
@@ -148,7 +148,7 @@ pub(crate) mod fixture {
                 }
             }
 
-            #[derive(Clone, Copy, Debug, Default, PartialEq)]
+            #[derive(::semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq)]
             pub(crate) enum $command {
                 #[default]
                 Noop,
@@ -368,8 +368,8 @@ pub(crate) mod fixture {
 
     fn native_codecs<S, M>(schema: &str) -> NativeCodecs
     where
-        S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + store::ArtifactSqliteSnapshot + 'static,
-        M: Mutation<S> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + OpText + OpBinary + 'static,
+        S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + semio_framework_value::retirement::RetireOwned + store::ArtifactDsl + ArtifactPack + store::ArtifactSqliteSnapshot + 'static,
+        M: Mutation<S> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + OpText + OpBinary + 'static,
     {
         NativeCodecs {
             snapshot: LanguagePair { text: None, binary: None },

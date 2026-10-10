@@ -5,7 +5,7 @@ use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.move-texture.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/textures"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfMoveTexturePayload {
     pub index: usize,
@@ -39,7 +39,7 @@ pub fn inverse(p: &GltfMoveTexturePayload, base: &GltfSnapshot) -> Vec<super::Gl
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveTextureMutation {

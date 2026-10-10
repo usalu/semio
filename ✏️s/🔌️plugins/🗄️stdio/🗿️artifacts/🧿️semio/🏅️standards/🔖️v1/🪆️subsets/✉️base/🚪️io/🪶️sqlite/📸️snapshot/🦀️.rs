@@ -4,8 +4,10 @@ mod semantic;
 #[path = "📏️native/🦀️.rs"]
 pub mod native;
 
+#[path="🫙️projection/🦀️.rs"]
+pub(crate)mod projection;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
+
 use crate::standards::v1::subsets::base::schema::snapshot::*;
 use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
@@ -46,8 +48,7 @@ control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework
 
 const SQLITE_SCHEMA:&'static str=SQL;
 fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(c)}
-fn from_sqlite_database(db:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let result=(||->Result<Self,ValueError>{c.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(db,SQL,SqliteSnapshotPhase::ReconstructSnapshot,c)?;let row=db.table("semio_base_document")?.single_row()?;if row.rowid!=1||row.integer(0)?!=1||row.values.len()!=21{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio union document identity or columns"));}let tag=row.text(2)?;let(column,prefix)=selection(tag)?;for i in 3..21{if i==column{if row.integer(i)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio union selected document FK must be one"));}}else if row.values[i]!=SqliteValue::Null{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio union requires one selected document"));}}for table in &db.tables{if table.name!="semio_base_document"&&!table.name.starts_with(prefix)&&!table.rows.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unselected Semio subset rows must be empty"));}}
-let subset=Owned::new(match tag{"brep"=>SemioSubsetSnapshot::Brep(SemioBrepSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"mesh"=>SemioSubsetSnapshot::Mesh(SemioMeshSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"model"=>SemioSubsetSnapshot::Model(SemioModelSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"value"=>SemioSubsetSnapshot::Value(SemioValueSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"document"=>SemioSubsetSnapshot::Document(SemioDocumentSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"cad"=>SemioSubsetSnapshot::Cad(SemioCadSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"drawing"=>SemioSubsetSnapshot::Drawing(SemioDrawingSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"image"=>SemioSubsetSnapshot::Image(SemioImageSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"video"=>SemioSubsetSnapshot::Video(SemioVideoSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"audio"=>SemioSubsetSnapshot::Audio(SemioAudioSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"animation"=>SemioSubsetSnapshot::Animation(SemioAnimationSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"presentation"=>SemioSubsetSnapshot::Presentation(SemioPresentationSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"flow"=>SemioSubsetSnapshot::Flow(SemioFlowSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"text"=>SemioSubsetSnapshot::Text(SemioTextSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"table"=>SemioSubsetSnapshot::Table(SemioTableSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"graph"=>SemioSubsetSnapshot::Graph(SemioGraphSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"object"=>SemioSubsetSnapshot::Object(SemioObjectSnapshot::reconstruct_sqlite_database(db,c,SQL)?),"kit"=>SemioSubsetSnapshot::Kit(SemioKitSnapshot::reconstruct_sqlite_database(db,c,SQL)?),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio union discriminator"))});let mut r=Reconstruction::new(c)?;let value=Owned::new(Self{schema:r.text(row.text(1)?)?,subset:subset.take()});r.checkpoint()?;Ok(value.take())})();result}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruction::reconstruct(database,control)}
 }
 
 impl SemioSnapshot{
@@ -74,3 +75,5 @@ pub(crate) mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
 pub(crate) mod native_decoding;
+
+#[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

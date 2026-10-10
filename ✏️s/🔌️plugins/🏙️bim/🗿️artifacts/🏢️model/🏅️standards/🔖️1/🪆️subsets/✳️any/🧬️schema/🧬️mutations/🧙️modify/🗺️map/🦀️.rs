@@ -6,11 +6,11 @@
 
 use crate::mutations::elements::{self, Refusal};
 use super::{AlignAxis, AlignEdge};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::segment_of;
+use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::{Point, Rect};
-use crate::{Axis, Beam, Ceiling, Column, CurtainWall, EndJoin, GridLine, ModelSnapshot, Opening, Point2, Railing, Ramp, Roof, RoofShape, Slab, Slope, Space, SpaceBoundary, Stair, StairFlight, Turn, Vertex, Wall};
+use crate::{Axis, Beam, Ceiling, Column, Component, CurtainWall, EndJoin, GridLine, MepElement, ModelSnapshot, Opening, Point2, Point3, Railing, Ramp, Roof, RoofShape, Slab, Slope, Space, SpaceBoundary, Stair, StairFlight, Turn, Vertex, Wall};
 use protocol::OutcomeCode;
 
 fn snap(value: f64) -> f64 {
@@ -171,6 +171,33 @@ pub fn opening(opening: &Opening, host_length: f64, curtain: bool, map: &Map) ->
         Opening { offset: ((host_length - opening.offset) * 1e9).round() / 1e9 + 0.0, flip_hand: !opening.flip_hand, ..opening.clone() }
     }
 }
+
+/// 🪑️ The image of a component. A free-standing one is turned like a direction; a reflection also mirrors it, which turns the family frame by a half turn on top of the reflected direction, because the family
+/// flips its local x axis before it is turned. A mounted one keeps its rotation under a translation and a turn (the wall carries it) and reflects it to its negative under a reflection.
+pub fn component(row: &Component, map: &Map) -> Component {
+    let (rotation, mirrored) = match (map.mirrors(), row.host.is_some()) {
+        (true, true) => (snap(0.0 - row.rotation), !row.mirrored),
+        (true, false) => (snap(map.turn(row.rotation) - std::f64::consts::PI), !row.mirrored),
+        (false, true) => (row.rotation, row.mirrored),
+        (false, false) => (map.turn(row.rotation), row.mirrored),
+    };
+    Component { position: map.point(row.position), rotation, mirrored, ..row.clone() }
+}
+
+/// 🌀️ The image of an MEP element: every path point moves in the plan and keeps its height.
+pub fn mep(row: &MepElement, map: &Map) -> MepElement {
+    MepElement {
+        path: row
+            .path
+            .iter()
+            .map(|vertex| {
+                let moved = map.point(Point2 { x: vertex.x, y: vertex.y });
+                Point3 { x: moved.x, y: moved.y, z: vertex.z }
+            })
+            .collect(),
+        ..row.clone()
+    }
+}
 //#endregion 🔖️Records
 
 //#region 🔖️Image
@@ -187,6 +214,8 @@ pub enum Image {
     Stair(Stair),
     Railing(Railing),
     Ramp(Ramp),
+    Component(Component),
+    Mep(MepElement),
     Space(Space),
     Grid(GridLine),
 }
@@ -233,6 +262,12 @@ pub fn image(base: &ModelSnapshot, id: &str, map: &Map) -> Result<Image, Refusal
     if let Some(row) = base.ramps.get(id) {
         return Ok(Image::Ramp(Ramp { path: path_image(&row.path, map), ..row.clone() }));
     }
+    if let Some(row) = base.components.get(id) {
+        return Ok(Image::Component(component(row, map)));
+    }
+    if let Some(row) = base.mep_elements.get(id) {
+        return Ok(Image::Mep(mep(row, map)));
+    }
     if let Some(row) = base.spaces.get(id) {
         let boundary = match &row.boundary {
             SpaceBoundary::Bounded { seed } => SpaceBoundary::Bounded { seed: map.point(*seed) },
@@ -264,6 +299,8 @@ impl Image {
             Image::Stair(row) => Placement::Stair { start: row.start, direction: row.direction, flight: Some(row.flight.clone()) },
             Image::Railing(row) => Placement::Railing { path: row.path.clone() },
             Image::Ramp(row) => Placement::Ramp { path: row.path.clone() },
+            Image::Component(row) => Placement::Component { position: row.position, rotation: row.rotation, mirrored: row.mirrored, hosted: row.host.is_some() },
+            Image::Mep(row) => Placement::Mep { path: row.path.clone() },
             Image::Space(row) => Placement::Space { boundary: row.boundary.clone() },
             Image::Grid(row) => Placement::Grid { start: row.start, end: row.end },
         }
@@ -308,6 +345,8 @@ pub fn bounds(placement: &elements::Placement) -> Option<[f64; 4]> {
             let steps = path.windows(2).map(|pair| rectangle(BulgeSeg::new(Point::new(pair[0].point.x, pair[0].point.y), Point::new(pair[1].point.x, pair[1].point.y), pair[0].bulge).bounds()));
             steps.fold(spanned(path.iter().map(|vertex| vertex.point)), united)
         }
+        P::Component { position, .. } => spanned([*position]),
+        P::Mep { path } => spanned(path.iter().map(|vertex| Point2 { x: vertex.x, y: vertex.y })),
         P::Space { boundary: SpaceBoundary::Bounded { seed } } => spanned([*seed]),
         P::Space { boundary: SpaceBoundary::Explicit { outline } } => loop_bounds(outline),
         P::Opening { .. } => None,

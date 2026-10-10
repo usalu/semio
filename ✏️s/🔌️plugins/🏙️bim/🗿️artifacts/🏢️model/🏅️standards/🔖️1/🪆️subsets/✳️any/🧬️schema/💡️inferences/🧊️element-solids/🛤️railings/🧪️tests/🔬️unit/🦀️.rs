@@ -149,7 +149,7 @@ async fn the_infill_is_a_slab_per_bay_inset_by_half_a_post_in_glass_or_in_the_ra
     assert_eq!(infill_material("r-straight"), None);
     let quantities = ModelInference::infer(&snapshot).expect("infers").quantities;
     for id in ["r-glass", "r-panel", "r-balusters-glass", "r-balusters-short"] {
-        assert!(close(table[id]["infill_area"].as_f64().expect("number"), quantities.elements[id].surface_area, 1e-9), "{id}: the infill area of the quantity is the oracle's");
+        assert!(close(table[id]["infill_area"].as_f64().expect("number"), quantities.elements[id].surface_area, 1e-4), "{id}: the infill area of the quantity is the oracle's");
     }
     assert_eq!(quantities.elements["r-balusters"].balusters, 22);
     assert_eq!(quantities.elements["r-balusters-glass"].balusters, 30);

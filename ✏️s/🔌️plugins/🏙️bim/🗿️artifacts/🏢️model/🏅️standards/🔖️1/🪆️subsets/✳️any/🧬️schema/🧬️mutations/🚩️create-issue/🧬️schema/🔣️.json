@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-issue/schema.json",
+  "title": "CreateIssue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "issue"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createIssue"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Issue id",
+          "de": "Hinweis-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "issue": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Issue",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Issue",
+          "de": "Hinweis"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

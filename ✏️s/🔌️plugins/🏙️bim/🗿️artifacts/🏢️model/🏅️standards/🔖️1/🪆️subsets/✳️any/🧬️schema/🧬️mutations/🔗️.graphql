@@ -706,6 +706,57 @@ type DeleteRamp {
   id: String!
 }
 
+type CreateComponent {
+  id: String!
+  component: Component!
+}
+
+type SetComponent {
+  id: String!
+  storey: String
+  family: String
+  position: Point2
+  elevation: Float
+  rotation: Float
+  mirrored: Boolean
+  host: JSON
+  system: MepSystem
+  name: String
+}
+
+type DeleteComponent {
+  id: String!
+}
+
+type SetComponentOverride {
+  component: String!
+  name: String!
+  value: String!
+}
+
+type RemoveComponentOverride {
+  component: String!
+  name: String!
+}
+
+type CreateMepElement {
+  id: String!
+  mep: MepElement!
+}
+
+type SetMepElement {
+  id: String!
+  storey: String
+  system: MepSystem
+  shape: MepShape
+  path: [Point3!]
+  name: String
+}
+
+type DeleteMepElement {
+  id: String!
+}
+
 type CreateDimension {
   id: String!
   dimension: Dimension!
@@ -902,6 +953,82 @@ type DeleteSheetRevision {
   id: String!
 }
 
+type CreateClashSet {
+  id: String!
+  clash_set: ClashSet!
+}
+
+type SetClashSet {
+  id: String!
+  name: String
+  a: ElementSelector
+  b: ElementSelector
+  tolerance: Float
+  clearance: Float
+}
+
+type DeleteClashSet {
+  id: String!
+}
+
+type CreateRule {
+  id: String!
+  rule: Rule!
+}
+
+type SetRule {
+  id: String!
+  name: String
+  kind: RuleKind
+  limit: Float
+  severity: RuleSeverity
+  scope: RuleScope
+}
+
+type DeleteRule {
+  id: String!
+}
+
+type CreateIssue {
+  id: String!
+  issue: Issue!
+}
+
+type SetIssue {
+  id: String!
+  title: String
+  description: String
+  status: IssueStatus
+  priority: IssuePriority
+  assignee: String
+  author: String
+  created: String
+  labels: [String!]
+  elements: [String!]
+  clash: ClashRef
+  viewpoint: IssueViewpoint
+}
+
+type DeleteIssue {
+  id: String!
+}
+
+type CreateIssueComment {
+  id: String!
+  issue_comment: IssueComment!
+}
+
+type SetIssueComment {
+  id: String!
+  author: String
+  date: String
+  text: String
+}
+
+type DeleteIssueComment {
+  id: String!
+}
+
 type CreatePropertyTemplate {
   id: String!
   template: PropertyTemplate!
@@ -991,6 +1118,29 @@ type DeleteCurtainPanelOverride {
   id: String!
 }
 
+type SetSpaceConditions {
+  id: String!
+  occupancy: JSON
+  occupancy_density: JSON
+  heating_setpoint: JSON
+  cooling_setpoint: JSON
+  ventilation_rate: JSON
+  lighting_power_density: JSON
+  equipment_power_density: JSON
+  schedule: JSON
+}
+
+type RemoveSpaceConditions {
+  id: String!
+}
+
+type SetTypeThermalData {
+  id: String!
+  u_value: JSON
+  g_value: JSON
+  frame_fraction: JSON
+}
+
 type CreateFamily {
   id: String!
   family: Family!
@@ -1036,4 +1186,25 @@ type SetFamilySolid {
   offset: ExprPoint3
 }
 
-union ModelMutation = CreateSite | DeleteSite | CreateBuilding | DeleteBuilding | CreateStorey | RenameStorey | SetStoreyHeight | SetStoreyLevel | DeleteStorey | CreateWall | DeleteWall | SetWallTop | SetStoreyCutHeight | CreateMaterial | DeleteMaterial | SetMaterial | CreateWallType | DeleteWallType | SetWallType | CreateSlabType | DeleteSlabType | SetSlabType | CreateRoofType | DeleteRoofType | SetRoofType | CreateColumnType | DeleteColumnType | SetColumnType | CreateBeamType | DeleteBeamType | SetBeamType | CreateWindowType | DeleteWindowType | SetWindowType | CreateDoorType | DeleteDoorType | SetDoorType | SetProjectInfo | SetSite | SetBuilding | CreateGridLine | DeleteGridLine | SetGridLine | SetWallAxis | SetWallBaseOffset | SetWallTypeOf | SetWallLocation | FlipWall | SplitWall | CreateCurtainWall | DeleteCurtainWall | SetCurtainWall | CreateColumn | DeleteColumn | SetColumn | CreateBeam | DeleteBeam | SetBeam | CreateSlab | DeleteSlab | SetSlabBoundary | SetSlab | CreateRoof | DeleteRoof | SetRoofFootprint | SetRoofShape | CreateOpening | DeleteOpening | MoveOpening | SetOpening | CreateStair | DeleteStair | SetStair | CreateRailing | DeleteRailing | SetRailing | CreateSpace | DeleteSpace | SetSpace | MoveElements | RotateElements | DeleteElements | RenameElement | SetElementProperty | RemoveElementProperty | SetElementClassification | RemoveElementClassification | PlaceElements | SetElementStorey | SetElementPhase | SetWallEndJoin | CopyElements | MirrorElements | ArrayElements | AlignElements | OffsetWall | TrimExtendWall | SplitSlab | SplitBeam | CreateCeilingType | DeleteCeilingType | SetCeilingType | CreateCeiling | DeleteCeiling | SetCeilingBoundary | SetCeiling | CreateZone | SetZone | DeleteZone | CreateAreaScheme | SetAreaScheme | DeleteAreaScheme | CreateWallSweep | SetWallSweep | DeleteWallSweep | SetWallBaseSlab | CreateRamp | SetRamp | DeleteRamp | CreateDimension | DeleteDimension | SetDimension | CreateTag | DeleteTag | SetTag | CreateTextNote | DeleteTextNote | SetTextNote | CreateLeader | DeleteLeader | SetLeader | CreateAnnotationStyle | DeleteAnnotationStyle | SetAnnotationStyle | CreateView | SetView | DeleteView | CreateSchedule | SetSchedule | DeleteSchedule | CreateSheet | SetSheet | DeleteSheet | CreateViewport | SetViewport | DeleteViewport | CreateSheetRevision | SetSheetRevision | DeleteSheetRevision | CreatePropertyTemplate | SetPropertyTemplate | DeletePropertyTemplate | CreateClassificationSystem | SetClassificationSystem | DeleteClassificationSystem | SetBeamAxis | SetColumnTilt | CreateCurtainWallType | SetCurtainWallType | DeleteCurtainWallType | SetCurtainWallTypeOf | SetCurtainWallGrid | CreateCurtainPanelOverride | SetCurtainPanelOverride | DeleteCurtainPanelOverride | CreateFamily | DeleteFamily | SetFamily | SetFamilyParameter | RemoveFamilyParameter | CreateFamilySolid | DeleteFamilySolid | SetFamilySolid
+union ModelMutation = CreateSupport | SetSupport | DeleteSupport | CreateLoadCase | SetLoadCase | DeleteLoadCase | CreateLoad | SetLoad | DeleteLoad |  CreateSite | DeleteSite | CreateBuilding | DeleteBuilding | CreateStorey | RenameStorey | SetStoreyHeight | SetStoreyLevel | DeleteStorey | CreateWall | DeleteWall | SetWallTop | SetStoreyCutHeight | CreateMaterial | DeleteMaterial | SetMaterial | CreateWallType | DeleteWallType | SetWallType | CreateSlabType | DeleteSlabType | SetSlabType | CreateRoofType | DeleteRoofType | SetRoofType | CreateColumnType | DeleteColumnType | SetColumnType | CreateBeamType | DeleteBeamType | SetBeamType | CreateWindowType | DeleteWindowType | SetWindowType | CreateDoorType | DeleteDoorType | SetDoorType | SetProjectInfo | SetSite | SetBuilding | CreateGridLine | DeleteGridLine | SetGridLine | SetWallAxis | SetWallBaseOffset | SetWallTypeOf | SetWallLocation | FlipWall | SplitWall | CreateCurtainWall | DeleteCurtainWall | SetCurtainWall | CreateColumn | DeleteColumn | SetColumn | CreateBeam | DeleteBeam | SetBeam | CreateSlab | DeleteSlab | SetSlabBoundary | SetSlab | CreateRoof | DeleteRoof | SetRoofFootprint | SetRoofShape | CreateOpening | DeleteOpening | MoveOpening | SetOpening | CreateStair | DeleteStair | SetStair | CreateRailing | DeleteRailing | SetRailing | CreateSpace | DeleteSpace | SetSpace | MoveElements | RotateElements | DeleteElements | RenameElement | SetElementProperty | RemoveElementProperty | SetElementClassification | RemoveElementClassification | PlaceElements | SetElementStorey | SetElementPhase | SetWallEndJoin | CopyElements | MirrorElements | ArrayElements | AlignElements | OffsetWall | TrimExtendWall | SplitSlab | SplitBeam | CreateCeilingType | DeleteCeilingType | SetCeilingType | CreateCeiling | DeleteCeiling | SetCeilingBoundary | SetCeiling | CreateZone | SetZone | DeleteZone | CreateAreaScheme | SetAreaScheme | DeleteAreaScheme | CreateWallSweep | SetWallSweep | DeleteWallSweep | SetWallBaseSlab | CreateRamp | SetRamp | DeleteRamp | CreateComponent | SetComponent | DeleteComponent | SetComponentOverride | RemoveComponentOverride | CreateMepElement | SetMepElement | DeleteMepElement | CreateDimension | DeleteDimension | SetDimension | CreateTag | DeleteTag | SetTag | CreateTextNote | DeleteTextNote | SetTextNote | CreateLeader | DeleteLeader | SetLeader | CreateAnnotationStyle | DeleteAnnotationStyle | SetAnnotationStyle | CreateView | SetView | DeleteView | CreateSchedule | SetSchedule | DeleteSchedule | CreateSheet | SetSheet | DeleteSheet | CreateViewport | SetViewport | DeleteViewport | CreateSheetRevision | SetSheetRevision | DeleteSheetRevision | CreateClashSet | SetClashSet | DeleteClashSet | CreateRule | SetRule | DeleteRule | CreateIssue | SetIssue | DeleteIssue | CreateIssueComment | SetIssueComment | DeleteIssueComment | CreatePropertyTemplate | SetPropertyTemplate | DeletePropertyTemplate | CreateClassificationSystem | SetClassificationSystem | DeleteClassificationSystem | SetBeamAxis | SetColumnTilt | CreateCurtainWallType | SetCurtainWallType | DeleteCurtainWallType | SetCurtainWallTypeOf | SetCurtainWallGrid | CreateCurtainPanelOverride | SetCurtainPanelOverride | DeleteCurtainPanelOverride | SetSpaceConditions | RemoveSpaceConditions | SetTypeThermalData | CreateFamily | DeleteFamily | SetFamily | SetFamilyParameter | RemoveFamilyParameter | CreateFamilySolid | DeleteFamilySolid | SetFamilySolid
+
+# 🦴️ Authored structural analysis schema
+type StructuralLocation { Point: PointLocation, Line: LineLocation, Area: Boolean }
+type PointLocation { station: Float! }
+type LineLocation { start: Float!, end: Float! }
+type Restraints { x:Boolean!, y:Boolean!, z:Boolean!, rx:Boolean!, ry:Boolean!, rz:Boolean! }
+type StructuralSupport { name: String! member: String! location: StructuralLocation! offset: Point3! restraints: Restraints! }
+type StructuralSupportRow { id:String!, value:StructuralSupport! }
+type LoadCase { name: String! category: String! factor: Float! }
+type LoadCaseRow { id:String!, value:LoadCase! }
+type StructuralLoad { name: String! load_case: String! member: String! location: StructuralLocation! force: Point3! moment: Point3! }
+type StructuralLoadRow { id:String!, value:StructuralLoad! }
+type CreateSupport { mutation:String!, id:String!, support:StructuralSupport! }
+type SetSupport { mutation:String!, id:String!, name:String member:String location:StructuralLocation offset:Point3 restraints:Restraints }
+type DeleteSupport { mutation:String!, id:String!,  }
+type CreateLoadCase { mutation:String!, id:String!, load_case:LoadCase! }
+type SetLoadCase { mutation:String!, id:String!, name:String category:String factor:Float }
+type DeleteLoadCase { mutation:String!, id:String!,  }
+type CreateLoad { mutation:String!, id:String!, load:StructuralLoad! }
+type SetLoad { mutation:String!, id:String!, name:String load_case:String member:String location:StructuralLocation force:Point3 moment:Point3 }
+type DeleteLoad { mutation:String!, id:String!,  }

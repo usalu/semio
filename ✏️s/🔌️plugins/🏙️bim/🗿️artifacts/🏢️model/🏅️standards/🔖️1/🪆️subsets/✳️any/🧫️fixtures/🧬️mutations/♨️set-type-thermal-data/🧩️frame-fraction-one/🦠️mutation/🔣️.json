@@ -1,0 +1,7 @@
+{
+  "mutation": "setTypeThermalData",
+  "id": "win-1",
+  "frame_fraction": {
+    "value": 1
+  }
+}

@@ -21,10 +21,10 @@ async fn store_named(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, De
 }
 
 /// 🌱️ The author of `edits` and a replica holding its whole log.
-async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, Vec<crate::os_spr::MutationEnvelope>) {
+async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, Vec<crate::os_spr::MutationEnvelope>) {
     let mut author = store_named(id, n).await;
     for mutations in edits {
-        author.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, identity).await.expect("a clean edit applies");
+        test_support::dispatch_test_command(&mut author, ArtifactCommand::Apply { mutations, transaction: None }).await.expect("a clean edit applies");
     }
     let log = author.event_log().expect("log");
     (author, log)
@@ -192,7 +192,7 @@ async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() 
     let mut deferred = replica("deferred-restart", Some(0), &log, Some(2)).await;
     deferred.ingest_remote(remote_supersede("deferred-restart", vec![replaced(&ids[0], set(10))], 0)).await.expect("admitted");
     deferred.step_reprojection(None).await.expect("a step");
-    deferred.dispatch(ArtifactCommand::Apply { mutations: vec![add(100)], transaction: None }, &mut identity).await.expect("a local edit while the replay waits");
+    test_support::dispatch_test_command(&mut deferred, ArtifactCommand::Apply { mutations: vec![add(100)], transaction: None }).await.expect("a local edit while the replay waits");
     assert_eq!(deferred.snapshot_ref().n, Some(129), "the local edit lands on the history before the change");
     let later = remote_supersede("deferred-restart", vec![replaced(&ids[3], add(0))], 1);
     deferred.ingest_remote(later.clone()).await.expect("a further remote change joins the waiting one");
@@ -241,7 +241,6 @@ async fn the_prefix_ring_grows_with_the_square_root_of_the_history() {
     assert!(store.prefix_ring.iter().all(|entry| live.get(entry.length) == Some(&entry.digest)), "every retained prefix is live");
 }
 //#endregion 🧪️DeferredReprojectionLaws
-
 //#region 🧪️DeferredLocalStepLaws
 std::thread_local! {
     static COUNTED_FOLDS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -262,6 +261,10 @@ impl CountedOp {
 impl ToValue for CountedOp {
     fn to_value(&self) -> DslValue {
         self.0.to_value()
+    }
+
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        self.0.to_value_controlled(control)
     }
 }
 
@@ -328,11 +331,25 @@ impl MemberStoreOwner<CountedOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, CountedOp>::source_birth_bytes::<DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, CountedOp>>()?, depth: 1 })
+        super::fixture_authoring_birth_demand::<CountedOp>()
     }
 
     fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, CountedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, CountedOp>> {
-        DocumentStoreOwners::admit_source_constructor(grant, || (DemoSnapshotRetirementFactory, DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, CountedOp>::new()))
+        super::fixture_authoring_member_owners::<CountedOp>(grant)
+    }
+}
+
+impl ArtifactCanonicalJson for CountedOp {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+        self.0.canonical_json_node(path)
+    }
+
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
+        self.0.canonical_json_key(path, index)
+    }
+
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+        self.0.canonical_json_borrowed_root()
     }
 }
 
@@ -353,13 +370,13 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) {
 /// 🌱️ A store with a long production-shaped history (owners installed, prefix ring live): `set(1)` authored by `early`,
 /// then `add(1)` × 239 authored by `later`, so `early`'s undo is an interior revert at position 0 that replays every later
 /// edit. The store authors as `early` afterwards and defers local replays by `budget`.
-async fn long_history(id: &str, budget: Option<ReplayTurnBudget>, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ArtifactStore<DemoSnapshot, CountedOp> {
+async fn long_history(id: &str, budget: Option<ReplayTurnBudget>, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ArtifactStore<DemoSnapshot, CountedOp> {
     let mut store = ArtifactStore::new_with_actor(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None), ActorId("early".into())).await;
     store.enable_convergence_early_exit();
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], transaction: None }, identity).await.expect("the early edit");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], transaction: None }).await.expect("the early edit");
     for _ in 1..LONG_HISTORY {
         settle(&mut store);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1), Some("later"))], transaction: None }, identity).await.expect("a later edit");
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![CountedOp(add(1), Some("later"))], transaction: None }).await.expect("a later edit");
     }
     settle(&mut store);
     store.defer_local_replays(budget);
@@ -420,18 +437,18 @@ async fn long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferr
         let before = counted_view(&deferred);
         let folds = CountedOp::folds();
         let next = command(&deferred);
-        let receipt = deferred.dispatch(next, &mut identity).await;
+        let receipt = test_support::dispatch_test_command(&mut deferred, next).await;
         assert!(receipt.is_ok(), "{name}: {receipt:?}");
         settle(&mut deferred);
         assert!(CountedOp::folds() - folds <= LOCAL_BUDGET + 1, "{name}: the dispatch folded {} operations", CountedOp::folds() - folds);
         assert!(deferred.local_step_pending(), "{name}: a long step waits for later turns");
         assert_eq!(counted_view(&deferred), before, "{name}: nothing of the step shows or is logged while it waits");
-        assert_eq!(deferred.dispatch(ArtifactCommand::Undo, &mut identity).await.err().map(|error| error.into_fault().code.0 == "history.replaying"), Some(true), "{name}: another history step waits");
+        assert_eq!(test_support::dispatch_test_command(&mut deferred, ArtifactCommand::Undo).await.err().map(|error| error.into_fault().code.0 == "history.replaying"), Some(true), "{name}: another history step waits");
         let (turns, verdict) = drive_local(&mut deferred).await;
         assert!(verdict.is_ok(), "{name}: {verdict:?}");
         assert!(turns as i32 >= (LONG_HISTORY - 2) / LOCAL_BUDGET as i32, "{name}: the replay spreads over the turns ({turns})");
         let next = command(&undeferred);
-        undeferred.dispatch(next, &mut identity).await.unwrap_or_else(|error| panic!("{name}: undeferred {error}"));
+        test_support::dispatch_test_command(&mut undeferred, next).await.unwrap_or_else(|error| panic!("{name}: undeferred {error}"));
         settle(&mut undeferred);
         let (deferred_view, undeferred_view) = (counted_view(&deferred), counted_view(&undeferred));
         assert_eq!(
@@ -456,7 +473,7 @@ async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_
     let first = store.mutation_ops().expect("operations")[0].mutation_id.clone();
     let before = counted_view(&store);
     for steps in [0usize, 1, 5] {
-        store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first.clone(), replacement: Some(CountedOp(set(100), None)) }] }, &mut identity).await.expect("the finalize waits");
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first.clone(), replacement: Some(CountedOp(set(100), None)) }] }).await.expect("the finalize waits");
         for _ in 0..steps {
             assert!(store.step_reprojection(None).await.expect("a step").is_some(), "still waiting after {steps} steps");
         }
@@ -465,9 +482,9 @@ async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_
         assert_eq!(counted_view(&store), before, "a discard after {steps} steps leaves zero trace");
         assert!(!store.discard_local_step(), "nothing left to discard");
     }
-    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first, replacement: Some(CountedOp(set(100), None)) }] }, &mut identity).await.expect("the finalize waits");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first, replacement: Some(CountedOp(set(100), None)) }] }).await.expect("the finalize waits");
     store.step_reprojection(None).await.expect("a step");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1000), None)], transaction: None }, &mut identity).await.expect("an edit while the finalize waits");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![CountedOp(add(1000), None)], transaction: None }).await.expect("an edit while the finalize waits");
     assert_eq!(store.snapshot_ref().n, Some(LONG_HISTORY + 1000), "the edit lands on the history before the finalize");
     assert_eq!(store.reprojection_progress().map(|progress| progress.done), Some(0), "the edit restarts the finalize's replay");
     assert!(drive_local(&mut store).await.1.is_ok());
@@ -490,10 +507,10 @@ async fn a_deferred_finalize_whose_report_blocks_is_refused_with_nothing_recorde
         inputs: vec![SupersedeInput { target: store.mutation_ops().expect("operations")[0].mutation_id.clone(), replacement: Some(CountedOp(DemoMutation::DeleteN(DeleteN {}), None)) }],
     };
     let next = withdraw_n(&undeferred);
-    let refused = undeferred.dispatch(next, &mut identity).await.err().expect("an undeferred blocking finalize is refused");
+    let refused = test_support::dispatch_test_command(&mut undeferred, next).await.err().expect("an undeferred blocking finalize is refused");
     let before = counted_view(&deferred);
     let next = withdraw_n(&deferred);
-    deferred.dispatch(next, &mut identity).await.expect("the deferred finalize waits");
+    test_support::dispatch_test_command(&mut deferred, next).await.expect("the deferred finalize waits");
     let (_, verdict) = drive_local(&mut deferred).await;
     let verdict = verdict.err().expect("the blocking finalize is refused once replayed");
     assert!(matches!(&verdict, VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages } if !messages.is_empty()), "{verdict:?}");
@@ -522,7 +539,7 @@ async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_
     let mut deferred = long_history("local-wall", Some(budget), &mut identity).await;
     let mut undeferred = long_history("local-wall-undeferred", None, &mut identity).await;
     let folds = CountedOp::folds();
-    deferred.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("the interior undo waits");
+    test_support::dispatch_test_command(&mut deferred, ArtifactCommand::Undo).await.expect("the interior undo waits");
     settle(&mut deferred);
     assert!(CountedOp::folds() - folds <= 5, "the dispatch folded {} operations in its 4 ms", CountedOp::folds() - folds);
     assert!(deferred.local_step_pending(), "the interior undo outlasts one wall budget");
@@ -546,7 +563,7 @@ async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_
         assert!(turns < 10_000, "the deferred undo finishes");
     }
     assert!(turns as i32 >= (LONG_HISTORY - 2) / 5, "the replay spreads over wall-bounded turns ({turns})");
-    undeferred.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("the undeferred undo");
+    test_support::dispatch_test_command(&mut undeferred, ArtifactCommand::Undo).await.expect("the undeferred undo");
     settle(&mut undeferred);
     let (deferred_view, undeferred_view) = (counted_view(&deferred), counted_view(&undeferred));
     assert_eq!(
@@ -591,6 +608,8 @@ async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_
     assert!(matches!(deadline.step_operations(&author.envelope.vcs.edits, count, &mut || { deadline_checks += 1; true }).unwrap(), ReplayStep::Pending(_)));
     assert_eq!(deadline_checks, 1);
     assert_eq!(deadline.state.as_ref().unwrap().n, Some(1));
+    replay.retire_unscheduled().expect("the capped replay retires from its own quoted demands");
+    deadline.retire_unscheduled().expect("the deadline replay retires from its own quoted demands");
     println!("[DEBUG] Replay operation authority12/cap1 retains structural deadline checks and zero-cap unchanged projection");
 }
 

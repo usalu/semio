@@ -37,7 +37,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.window_schedule.as_str(), BimLabels::NATIVE_DE.window_schedule.as_str()),
+        label: BimLabels::localized(|labels| labels.window_schedule),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Table,
         icon_id: "table".into(),
@@ -134,6 +134,7 @@ pub fn preset_label(labels: &BimLabels, key: &str) -> String {
         "window" => labels.sp_window,
         "room" => labels.sp_room,
         "finish" => labels.sp_finish,
+        "envelope" => labels.sp_envelope,
         "wall" => labels.sp_wall,
         _ => labels.sp_material,
     }

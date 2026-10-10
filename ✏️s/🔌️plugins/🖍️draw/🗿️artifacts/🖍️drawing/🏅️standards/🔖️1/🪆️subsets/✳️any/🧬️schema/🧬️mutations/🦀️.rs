@@ -75,6 +75,7 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
         "imageKey" => { if !matches!(layer,DrawingLayerNode::Image(_)){return None;}value.as_str()?; }
         "imageWidth" | "imageHeight" => { if !matches!(layer,DrawingLayerNode::Image(_))||finite()?<=0.0{return None;} }
         "textContent" => { if !matches!(layer, DrawingLayerNode::Text(_)) { return None; } value.as_str()?; }
+        "fontFamily" => {if !matches!(layer,DrawingLayerNode::Text(_)){return None;}crate::DrawingFontFamily::parse(value.as_str()?).ok()?;}
         "textSize" => { if !matches!(layer, DrawingLayerNode::Text(_)) || finite()? <= 0.0 { return None; } }
         "visible" | "locked" | "fillEnabled" | "strokeEnabled" => { value.as_bool()?; }
         "opacity" | "traceThreshold" => { if !(0.0..=1.0).contains(&finite()?) { return None; } }
@@ -94,9 +95,9 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
     }
     let operation = match field {
         "name" => rename_layer(layer_id.clone(), value.as_str().unwrap_or("").into()),
-        "textContent" | "textSize" => {
+        "textContent" | "textSize" | "fontFamily" => {
             let DrawingLayerNode::Text(text) = layer else { return None; };
-            update_text(layer_id.clone(), if field == "textContent" { value.as_str()?.into() } else { text.content.clone() }, if field == "textSize" { finite()? } else { text.size })
+            update_text(layer_id.clone(), if field == "textContent" { value.as_str()?.into() } else { text.content.clone() }, if field == "textSize" { finite()? } else { text.size },if field=="fontFamily"{crate::DrawingFontFamily::parse(value.as_str()?).ok()?}else{text.font_family})
         }
         "imageKey" | "imageWidth" | "imageHeight" => {
             let DrawingLayerNode::Image(image)=layer else{return None;};

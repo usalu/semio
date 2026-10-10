@@ -1,1 +1,276 @@
-{}
+{
+  "beams": {
+    "b-1": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": -4.0,
+            "y": 3.0
+          },
+          "start": {
+            "x": 4.0,
+            "y": 3.0
+          }
+        }
+      },
+      "entry": "Patched"
+    }
+  },
+  "columns": {
+    "c-1": {
+      "entry": "Patched",
+      "position": {
+        "x": 0.0,
+        "y": 3.0
+      },
+      "rotation": 2.89159265359
+    }
+  },
+  "curtain_walls": {
+    "cw-1": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": -4.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 4.0,
+            "y": 6.0
+          }
+        }
+      },
+      "entry": "Patched"
+    }
+  },
+  "grids": {
+    "g-a": {
+      "end": {
+        "x": 4.0,
+        "y": 7.0
+      },
+      "entry": "Patched",
+      "start": {
+        "x": 4.0,
+        "y": -1.0
+      }
+    }
+  },
+  "openings": {
+    "o-1": {
+      "entry": "Patched",
+      "flip_hand": true,
+      "offset": 7.0
+    }
+  },
+  "railings": {
+    "r-1": {
+      "entry": "Patched",
+      "path": [
+        {
+          "x": 3.0,
+          "y": 1.0
+        },
+        {
+          "x": -1.0,
+          "y": 1.0
+        }
+      ]
+    }
+  },
+  "roofs": {
+    "rf-1": {
+      "entry": "Patched",
+      "footprint": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 4.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 4.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": -4.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": -4.0,
+            "y": 0.0
+          }
+        }
+      ],
+      "shape": {
+        "Gable": {
+          "pitch": 0.6,
+          "ridge_direction": 3.14159265359
+        }
+      }
+    }
+  },
+  "slabs": {
+    "sl-1": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 4.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 4.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": -4.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": -4.0,
+            "y": 0.0
+          }
+        }
+      ],
+      "entry": "Patched",
+      "holes": [
+        [
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 2.0,
+              "y": 2.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 2.0,
+              "y": 3.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 1.0,
+              "y": 3.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 1.0,
+              "y": 2.0
+            }
+          }
+        ]
+      ],
+      "slope": {
+        "value": {
+          "angle": 0.1,
+          "direction": 2.64159265359
+        }
+      }
+    }
+  },
+  "spaces": {
+    "sp-1": {
+      "boundary": {
+        "Explicit": {
+          "outline": [
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 4.0,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 4.0,
+                "y": 3.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.0,
+                "y": 3.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          ]
+        }
+      },
+      "entry": "Patched"
+    }
+  },
+  "stairs": {
+    "s-1": {
+      "direction": 2.64159265359,
+      "entry": "Patched",
+      "start": {
+        "x": 3.0,
+        "y": 1.0
+      }
+    }
+  },
+  "walls": {
+    "w-east": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": -4.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": -4.0,
+            "y": 6.0
+          }
+        }
+      },
+      "entry": "Patched"
+    },
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 4.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": -4.0,
+            "y": 0.0
+          }
+        }
+      },
+      "entry": "Patched"
+    }
+  }
+}

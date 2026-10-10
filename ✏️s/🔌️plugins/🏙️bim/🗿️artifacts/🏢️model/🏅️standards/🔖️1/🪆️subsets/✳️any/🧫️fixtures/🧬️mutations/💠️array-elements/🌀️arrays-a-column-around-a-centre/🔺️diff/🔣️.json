@@ -1,1 +1,58 @@
-{}
+{
+  "columns": {
+    "ar-1-0": {
+      "base_offset": 0.0,
+      "column_type": "ct-400",
+      "entry": "Created",
+      "name": "C1",
+      "phase": "New",
+      "position": {
+        "x": 4.0,
+        "y": 5.0
+      },
+      "rotation": 1.570796326795,
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      }
+    },
+    "ar-2-0": {
+      "base_offset": 0.0,
+      "column_type": "ct-400",
+      "entry": "Created",
+      "name": "C1",
+      "phase": "New",
+      "position": {
+        "x": 2.0,
+        "y": 3.0
+      },
+      "rotation": 3.14159265359,
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      }
+    },
+    "ar-3-0": {
+      "base_offset": 0.0,
+      "column_type": "ct-400",
+      "entry": "Created",
+      "name": "C1",
+      "phase": "New",
+      "position": {
+        "x": 4.0,
+        "y": 1.0
+      },
+      "rotation": 4.712388980385,
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      }
+    }
+  }
+}

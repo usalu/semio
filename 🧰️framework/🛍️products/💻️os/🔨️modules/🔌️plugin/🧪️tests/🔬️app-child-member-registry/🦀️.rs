@@ -574,7 +574,7 @@ mod child_member_registry_tests {
         });
         assert_eq!(birth.requested_bytes, page_bytes + root_bytes);
         assert_eq!(birth.released_bytes, 0);
-        for physical in [page_bytes, root_bytes] {
+        for (turn, physical) in [page_bytes, root_bytes].into_iter().enumerate() {
             assert_eq!(view.prepared_structure_close_byte_demand(), physical);
             let root_pointer = std::sync::Arc::as_ptr(view.root.as_ref().unwrap());
             for grant in [store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }, store::ArtifactStoreOneItemGrant { maximum_release_bytes: physical - 1, ..full }, store::ArtifactStoreOneItemGrant { maximum_depth: view.prepared_structure_close_depth_demand() - 1, ..full }] {

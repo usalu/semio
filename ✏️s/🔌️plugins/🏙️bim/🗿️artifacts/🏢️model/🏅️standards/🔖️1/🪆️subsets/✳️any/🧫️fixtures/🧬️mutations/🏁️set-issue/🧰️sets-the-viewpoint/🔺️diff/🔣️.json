@@ -1,0 +1,36 @@
+{
+  "issues": {
+    "i-2": {
+      "entry": "Patched",
+      "viewpoint": {
+        "value": {
+          "camera": {
+            "azimuth": 0.8,
+            "distance": 25.0,
+            "pitch": 0.5,
+            "target": {
+              "x": 4.0,
+              "y": 3.0
+            },
+            "target_height": 1.5
+          },
+          "isolate": [
+            "w-east"
+          ],
+          "section": {
+            "max": {
+              "x": 8.0,
+              "y": 6.0,
+              "z": 3.0
+            },
+            "min": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@
 
 ## Schema Limits
 
-The current shape schema has no rectangle corner radii; text schema has only content, size and position, with no font/layout fields. This execution exposes actual authored facets without inventing unsupported controls. Polygon topology addition/removal remains conversion-to-path plus existing path editing; authored polygon vertices can now be edited directly.
+The current shape schema has no rectangle corner radii. Text now requires explicit fontFamily from Anta, Kelly Slab, Share Tech Mono or Noto Emoji, alongside content, size and position; the font execution lane owns its schema, localized inspector and portable glyph producer. This execution exposes actual authored facets without inventing unsupported controls. Polygon topology addition/removal remains conversion-to-path plus existing path editing; authored polygon vertices can now be edited directly.
 
 ## Validation
 
@@ -52,3 +52,21 @@ The actual focused native image_sources selector completed5 tests with0 failures
 The final image-import TypeScript selector reran after parent/index schema and source changes:16 passed,0 failed,1445 assertions, strict source exit0. The final test output is owner-test-image-import.log. Native image import DTO/work/publication tests remain authored but unexecuted because the full Draw artifact cannot compile through the concurrently changing OS kernel. Browser/native end-user import behavior has not been verified. A lazy retained workspace prevents an invalid unopened import route from abandoning a live ControlledRetirement owner on preflight rejection.
 
 A path-length inventory of generated native decoder artifacts found no paths over256 characters. The shared ticket runner preserves source-scoped verification, managed Bun1.3.14 identity, fresh log truncation and the coordinator's ui-test native selector. Focused image-source arguments are selected in the input router instead of relying on Nx to forward arbitrary compiler flags. Generated artifacts stay under the ticket generated folder for coordinator cleanup at ticket completion.
+
+## Current Integration Prerequisite Evidence
+
+The historical OS Kernel blockage above describes the earlier lane snapshots. The canonical JPEG factory publisher subsequently reached actual native compilation and passed its original carrier law, publishing a protocol receipt matching current source. MP3 and PDF17 authentic publisher receipts remain sequential prerequisites for the standard managed Draw serve. The new gesture original issuer source has three passing tests and 37 assertions plus strict TypeScript; its fresh exact native replay remains pending after coordinated Plugin fixture compiler repairs. Current browser end-user creation, layers, path painting, history, export pane and EN/DE journeys have still not been run against the freshly materialized mounted app. There is no current Draw end-user acceptance claim.
+
+## Canonical mounted acceptance entry
+
+The existing launch entry at386.31 runs `@semio-tech/framework-os-dev:serve-draw-react-dev`. Its actual Dev script lazy-loads activation/serve, validates the requested variant/profile activation receipt, ensures the declared local hub, and starts the declared Vite configuration with fixed catalog port and explicit Draw/React environment. The repository cache-contract source expects each `serve-<variant>-react-<profile>` target to delegate that same permanent script and depend on the original plugin-registry session. This was read-only source inspection, not a serve or browser pass. No alternate Vite process, stale runtime, private target or codec protocol bypass was introduced.
+
+Authentic JPEG publication now matches current source. Read-only inspection still finds current protocol mismatches only for MP3 and PDF17. The original MP3 publisher is live; PDF17 follows after its terminal receipt. Mounted acceptance remains pending. Required real journeys include localized creation choices and sparse properties, image file import and selection, layers and inherited locks, node modes and simplification, no-op-safe history, cancellation/progress, and PNG/SVG/PDF export through the declared owner infrastructure.
+
+## Current browser surface observation
+
+After reading the provided computer-use skill and its guidance/confirmation policy, this lane used the purpose-built CUA browser inventory only, following the skill preference for browser automation. The actual current `cua.getState()` response was `apps:[]` and `browsers:[]`. No app or tab was created, no managed server was started, and no UI input was sent. Earlier parent observations of two browsers are historical or belong to its own enabled surface; this observation must not be treated as a current browser acceptance pass. The canonical managed Draw server and its emitted URL remain the required entry when codec receipts are stable. Native automation is disabled in this lane's CUA tools.
+
+## Current raster import format authority
+
+Fresh read-only source inspection confirms the existing dedicated image action remains explicitly PNG: its file-open effect accepts `image/png,.png`, both native/TypeScript validation require the PNG base64 prefix, the localized label says Import PNG Image/PNG-Bild importieren, and the shared neutral corpus deliberately rejects JPEG input. The native framework ImageDecodeJob itself rejects every MIME except image/png before creating its yielded PNG decoder. Expanding only the picker or label would therefore create a nonfunctional route; additional raster formats require a real decoding/conversion producer and shared oracle fixtures. This checkpoint is distinct from the parent's current editable SVG ingress work and from authentic JPEG codec publication, which proves its Stdio document carrier rather than Draw raster admission. No raster import or decoder source was changed by this inspection.

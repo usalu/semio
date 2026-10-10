@@ -1,1 +1,9 @@
-{}
+{
+  "ramps": {
+    "rp-1": {
+      "entry": "Patched",
+      "railing_left": true,
+      "railing_right": true
+    }
+  }
+}

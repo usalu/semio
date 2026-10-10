@@ -4,6 +4,8 @@
 //! each storey. The functions here only decide *which* nodes exist and *which* nodes are their parents; what a node computes is in `compute`.
 
 use super::super::super::annotation_layout;
+use super::super::super::clash_sets;
+use super::super::super::rule_results;
 use super::super::super::effective_properties;
 use super::super::super::families;
 use super::super::super::element_solids::beams;
@@ -11,7 +13,9 @@ use super::super::super::element_solids::fillers::family_of;
 use super::super::super::element_solids::{SolidFamily, SolidKey};
 use super::super::super::schedules::rows::{candidates, property_keys};
 use super::super::super::storey_levels::{constraint_storeys, stackings};
-use super::super::super::wall_layout::{attach, band_of, joins};
+use super::super::super::wall_layout::{band_of, joins};
+use crate::standards::v1::subsets::any::schema::authored::references;
+use super::super::super::energy_envelope::{neighbour_storey, Climate, EnergyScope};
 use super::super::super::zones::counts;
 use super::{DiagnosticScope, ModelNode, NodeKind, TotalsScope};
 use crate::{ModelSnapshot, TopConstraint, ViewKind};
@@ -46,7 +50,7 @@ fn step(key: ModelNode, parents: Vec<ModelNode>) -> InferenceStep<ModelNode> {
 }
 
 /// 🧭️ The steps of the wanted kinds (a mask of [`NodeKind`] bits, already closed under `requires`) in topological order.
-pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNode>> {
+pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNode>> {
     let has = |kind: NodeKind| wanted & kind.bit() != 0;
     let mut steps: Vec<InferenceStep<ModelNode>> = Vec::new();
     let on_storey = |storey: &String| snapshot.storeys.contains_key(storey);
@@ -77,9 +81,9 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
     if has(NodeKind::CurtainLayout) {
         steps.extend(curtains.iter().map(|(id, curtain)| step(ModelNode::CurtainLayout((*id).clone()), storeys_of(snapshot, &curtain.storey, Some(&curtain.top)))));
     }
-    let surfaces: BTreeSet<&str> = walls.iter().flat_map(|(_, wall)| attach::targets_of(wall)).filter(|id| attach::storey_of(snapshot, id).is_some_and(|storey| on_storey(storey))).collect();
+    let surfaces: BTreeSet<&str> = walls.iter().flat_map(|(_, wall)| references::targets_of(wall)).filter(|id| references::storey_of(snapshot, id).is_some_and(|storey| on_storey(storey))).collect();
     if has(NodeKind::Surface) {
-        steps.extend(surfaces.iter().filter_map(|id| attach::storey_of(snapshot, id).map(|storey| step(ModelNode::Surface((*id).to_string()), vec![ModelNode::Storey(storey.clone())]))));
+        steps.extend(surfaces.iter().filter_map(|id| references::storey_of(snapshot, id).map(|storey| step(ModelNode::Surface((*id).to_string()), vec![ModelNode::Storey(storey.clone())]))));
     }
     if has(NodeKind::WallLayout) {
         let mut bands: BTreeMap<&str, BTreeMap<String, joins::Band>> = BTreeMap::new();
@@ -92,7 +96,7 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
         steps.extend(walls.iter().map(|(id, wall)| {
             let mut parents = storeys_of(snapshot, &wall.storey, Some(&wall.top));
             parents.push(ModelNode::Band((*id).clone()));
-            parents.extend(attach::targets_of(wall).into_iter().filter(|target| surfaces.contains(target)).map(|target| ModelNode::Surface(target.to_string())));
+            parents.extend(references::targets_of(wall).into_iter().filter(|target| surfaces.contains(target)).map(|target| ModelNode::Surface(target.to_string())));
             if let Some(touch) = touching.get(wall.storey.as_str()) {
                 parents.extend(joins::neighbourhood(touch, id).into_iter().map(ModelNode::Band));
             }
@@ -139,7 +143,37 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
     if has(NodeKind::Family) {
         steps.extend(snapshot.families.keys().map(|id| step(ModelNode::Family(id.clone()), Vec::new())));
     }
+    let components: Vec<(&String, &crate::Component)> = snapshot.components.iter().filter(|(_, component)| on_storey(&component.storey)).collect();
+    let meps: Vec<(&String, &crate::MepElement)> = snapshot.mep_elements.iter().filter(|(_, mep)| on_storey(&mep.storey)).collect();
+    let mut meps_by_storey: BTreeMap<&str, Vec<&String>> = BTreeMap::new();
+    for (id, mep) in &meps {
+        meps_by_storey.entry(mep.storey.as_str()).or_default().push(id);
+    }
+    if has(NodeKind::Component) {
+        for (id, component) in &components {
+            let mut parents = vec![ModelNode::Storey(component.storey.clone())];
+            if snapshot.families.contains_key(&component.family) {
+                parents.push(ModelNode::Family(component.family.clone()));
+            }
+            if let Some(wall) = component.host.as_ref().filter(|wall| walls_by_id.contains_key(wall.as_str())) {
+                parents.push(ModelNode::WallLayout(wall.clone()));
+            }
+            steps.push(step(ModelNode::Component((*id).clone()), parents));
+        }
+    }
+    if has(NodeKind::Mep) {
+        steps.extend(meps.iter().map(|(id, mep)| step(ModelNode::Mep((*id).clone()), vec![ModelNode::Storey(mep.storey.clone())])));
+    }
+    if has(NodeKind::MepClash) {
+        steps.extend(meps_by_storey.iter().map(|(storey, ids)| step(ModelNode::MepClash((*storey).to_string()), ids.iter().map(|id| ModelNode::Mep((*id).clone())).collect())));
+    }
     if has(NodeKind::Solid) {
+        for (id, component) in &components {
+            steps.push(step(ModelNode::Solid(SolidKey::of(SolidFamily::Component, id)), vec![ModelNode::Storey(component.storey.clone()), ModelNode::Component((*id).clone())]));
+        }
+        for (id, mep) in &meps {
+            steps.push(step(ModelNode::Solid(SolidKey::of(SolidFamily::Mep, id)), vec![ModelNode::Storey(mep.storey.clone()), ModelNode::Mep((*id).clone())]));
+        }
         for (id, wall) in &walls {
             let mut parents = vec![ModelNode::Storey(wall.storey.clone()), ModelNode::WallLayout((*id).clone())];
             parents.extend(by_host.get(id.as_str()).into_iter().flatten().map(|opening| ModelNode::OpeningFrame((*opening).clone())));
@@ -228,6 +262,8 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
             if annotated.contains(storey) {
                 parents.push(ModelNode::Annotation(storey.clone()));
             }
+            parents.extend(components.iter().filter(|(_, component)| &component.storey == storey).map(|(id, _)| ModelNode::Component((*id).clone())));
+            parents.extend(meps_by_storey.get(storey.as_str()).into_iter().flatten().map(|id| ModelNode::Mep((*id).clone())));
             steps.push(step(ModelNode::Plan(storey.clone()), parents));
         }
     }
@@ -273,6 +309,12 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
         }
         for (id, _) in &ramps {
             quantities.push(((*id).clone(), vec![ModelNode::RampRun((*id).clone()), ModelNode::Solid(SolidKey::of(SolidFamily::Ramp, id))]));
+        }
+        for (id, _) in &components {
+            quantities.push(((*id).clone(), vec![ModelNode::Component((*id).clone()), ModelNode::Solid(SolidKey::of(SolidFamily::Component, id))]));
+        }
+        for (id, _) in &meps {
+            quantities.push(((*id).clone(), vec![ModelNode::Mep((*id).clone()), ModelNode::Solid(SolidKey::of(SolidFamily::Mep, id))]));
         }
         for (id, railing) in &snapshot.railings {
             quantities.push((id.clone(), if on_storey(&railing.storey) { [vec![ModelNode::Solid(SolidKey::of(SolidFamily::Railing, id))], railing_parents(snapshot, railing)].concat() } else { Vec::new() }));
@@ -329,6 +371,36 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
         }
     }
 
+    let envelopes: Vec<ModelNode> = if has(NodeKind::Envelope) && !snapshot.space_conditions.is_empty() {
+        let mut nodes = Vec::new();
+        for (id, space) in snapshot.spaces.iter().filter(|(_, space)| room_storeys.contains(&space.storey)) {
+            let mut parents = vec![ModelNode::Room(space.storey.clone())];
+            for up in [true, false] {
+                if let Some(other) = neighbour_storey(snapshot, &space.storey, up).filter(|other| room_storeys.contains(other)) {
+                    parents.push(ModelNode::Room(other));
+                }
+            }
+            parents.extend(wall_layouts(&space.storey));
+            let on_storey = walls.iter().filter(|(_, wall)| wall.storey == space.storey).flat_map(|(wall, _)| by_host.get(wall.as_str()).into_iter().flatten());
+            parents.extend(on_storey.map(|opening| ModelNode::OpeningFrame((*opening).clone())));
+            nodes.push(ModelNode::Envelope(id.clone()));
+            steps.push(step(ModelNode::Envelope(id.clone()), parents));
+        }
+        if has(NodeKind::EnergyTotals) {
+            let climate = Climate::of(snapshot);
+            let members = |scope: &EnergyScope| -> Vec<ModelNode> { nodes.iter().filter(|node| matches!(node, ModelNode::Envelope(space) if climate.in_scope(scope, space))).cloned().collect() };
+            let scopes: Vec<EnergyScope> = snapshot.zones.keys().map(|zone| EnergyScope::Zone(zone.clone())).chain(snapshot.buildings.keys().map(|building| EnergyScope::Building(building.clone()))).chain(std::iter::once(EnergyScope::Project)).collect();
+            let totals: Vec<(EnergyScope, Vec<ModelNode>)> = scopes.into_iter().map(|scope| (scope.clone(), members(&scope))).collect();
+            steps.extend(totals.into_iter().map(|(scope, parents)| step(ModelNode::EnergyTotals(scope), parents)));
+        }
+        nodes
+    } else {
+        Vec::new()
+    };
+    if has(NodeKind::OptionScope) {
+        let parents = steps.iter().filter_map(|step| matches!(step.key, ModelNode::Quantity(_)).then(|| step.key.clone())).collect();
+        steps.push(step(ModelNode::OptionScope, parents));
+    }
     if has(NodeKind::Diagnostics) {
         let buildings: BTreeSet<&String> = snapshot.storeys.values().map(|storey| &storey.building).collect();
         for storey in snapshot.storeys.keys() {
@@ -346,6 +418,11 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
             if annotated.contains(storey) {
                 parents.push(ModelNode::Annotation(storey.clone()));
             }
+            parents.extend(components.iter().filter(|(_, component)| &component.storey == storey).map(|(id, _)| ModelNode::Component((*id).clone())));
+            if let Some(ids) = meps_by_storey.get(storey.as_str()) {
+                parents.extend(ids.iter().map(|id| ModelNode::Mep((*id).clone())));
+                parents.push(ModelNode::MepClash(storey.clone()));
+            }
             steps.push(step(ModelNode::Diagnostics(DiagnosticScope::Storey(storey.clone())), parents));
         }
         for building in buildings {
@@ -357,6 +434,9 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
             steps.push(step(ModelNode::Diagnostics(DiagnosticScope::Building(building.clone())), parents));
         }
         steps.push(step(ModelNode::Diagnostics(DiagnosticScope::Model), snapshot.families.keys().map(|id| ModelNode::Family(id.clone())).collect()));
+        if !envelopes.is_empty() {
+            steps.push(step(ModelNode::Diagnostics(DiagnosticScope::Energy), envelopes.clone()));
+        }
         if !(snapshot.properties.is_empty() && snapshot.classifications.is_empty() && snapshot.property_templates.is_empty() && snapshot.classification_systems.is_empty()) {
             steps.push(step(ModelNode::Diagnostics(DiagnosticScope::Data), properties.iter().cloned().map(ModelNode::Properties).collect()));
         }
@@ -371,6 +451,16 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u32) -> Vec<InferenceStep<ModelNo
     if has(NodeKind::Sheet) {
         steps.extend(sheet_steps(snapshot, &steps));
     }
+    if has(NodeKind::ClashSet) {
+        steps.extend(clash_steps(snapshot, &steps));
+    }
+    if has(NodeKind::Rule) {
+        steps.extend(rule_steps(snapshot, &steps));
+    }
+    if has(NodeKind::StructuralAnalysis) {
+        let parents = steps.iter().filter(|step| matches!(step.key, ModelNode::Storey(_) | ModelNode::WallLayout(_) | ModelNode::Solid(_))).map(|step| step.key.clone()).collect();
+        steps.push(step(ModelNode::StructuralAnalysis, parents));
+    }
     steps
 }
 
@@ -383,6 +473,44 @@ fn sheet_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>]) -> 
         .map(|id| {
             let views: BTreeSet<&String> = snapshot.viewports.values().filter(|viewport| &viewport.sheet == id && planned.contains(&viewport.view)).map(|viewport| &viewport.view).collect();
             step(ModelNode::Sheet(id.clone()), views.into_iter().map(|view| ModelNode::View(view.clone())).collect())
+        })
+        .collect()
+}
+
+/// 🧨️ The `Probe` nodes (the spatial index of every solid some clash set picks) and the `ClashSet` nodes (one per set, the probes of the elements it picks as parents).
+fn clash_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>]) -> Vec<InferenceStep<ModelNode>> {
+    let solids: Vec<SolidKey> = steps.iter().filter_map(|planned| if let ModelNode::Solid(key) = &planned.key { Some(key.clone()) } else { None }).collect();
+    let mut probes: BTreeSet<SolidKey> = BTreeSet::new();
+    let mut sets: Vec<InferenceStep<ModelNode>> = Vec::new();
+    for (id, set) in &snapshot.clash_sets {
+        let picked = clash_sets::needed(snapshot, set, &solids);
+        probes.extend(picked.iter().map(|key| (*key).clone()));
+        sets.push(step(ModelNode::ClashSet(id.clone()), picked.into_iter().map(|key| ModelNode::Probe(key.clone())).collect()));
+    }
+    probes.into_iter().map(|key| step(ModelNode::Probe(key.clone()), vec![ModelNode::Solid(key)])).chain(sets).collect()
+}
+
+/// ⚖️ The `Rule` nodes: one per rule, the planned nodes that hold the measures of its members as parents (stair runs, opening frames, ramp runs, rooms of the storeys of its spaces or zones).
+fn rule_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>]) -> Vec<InferenceStep<ModelNode>> {
+    use crate::RuleKind::{MaxCompartmentArea, MaxRampSlope, MaxRiser, MinClearHeight, MinCorridorWidth, MinDoorWidth, MinStairWidth, MinTread};
+    let planned: BTreeSet<&ModelNode> = steps.iter().map(|planned| &planned.key).collect();
+    snapshot
+        .rules
+        .iter()
+        .map(|(id, rule)| {
+            let members = rule_results::members(snapshot, rule);
+            let nodes: BTreeSet<ModelNode> = members
+                .iter()
+                .filter_map(|member| match rule.kind {
+                    MaxRiser | MinTread | MinStairWidth => Some(ModelNode::StairRun(member.id.clone())),
+                    MinDoorWidth => Some(ModelNode::OpeningFrame(member.id.clone())),
+                    MaxRampSlope => Some(ModelNode::RampRun(member.id.clone())),
+                    MaxCompartmentArea => Some(ModelNode::Zone(member.id.clone())),
+                    MinClearHeight | MinCorridorWidth => member.storey.clone().map(ModelNode::Room),
+                })
+                .filter(|node| planned.contains(node))
+                .collect();
+            step(ModelNode::Rule(id.clone()), nodes.into_iter().collect())
         })
         .collect()
 }
@@ -444,6 +572,8 @@ pub fn element_storey(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
         .or_else(|| snapshot.stairs.get(id).map(|row| row.storey.clone()))
         .or_else(|| snapshot.railings.get(id).map(|row| row.storey.clone()))
         .or_else(|| snapshot.ramps.get(id).map(|row| row.storey.clone()))
+        .or_else(|| snapshot.components.get(id).map(|row| row.storey.clone()))
+        .or_else(|| snapshot.mep_elements.get(id).map(|row| row.storey.clone()))
         .or_else(|| snapshot.spaces.get(id).map(|row| row.storey.clone()))
         .or_else(|| opening_storey(snapshot, id))
         .or_else(|| snapshot.wall_sweeps.get(id).and_then(|row| snapshot.walls.get(&row.host)).map(|wall| wall.storey.clone()))

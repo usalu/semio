@@ -191,6 +191,12 @@ fn attributes_through(values: &[(String, usize)], remap: Remap) -> Option<GltfAt
     (!removed.is_empty() || !inserted.is_empty()).then(|| GltfAttributesDelta::rows(removed, inserted, Vec::new()))
 }
 
+/// 🧵️ The texture reference rebound through the remap; dropped when its texture is dropped.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn texture_info(info: &Option<GltfTextureInfo>, remap: Remap) -> Option<GltfTextureInfo> {
+    info.as_ref().and_then(|info| remap(info.index).map(|index| GltfTextureInfo { index, ..info.clone() }))
+}
+
 /// 🧵️ The sparse rows that rebind every typed reference to `family` through `remap`: a referrer is named only when one of its
 /// references lands elsewhere (or is dropped, when `remap` answers `None`). Entries of `family` itself that refer to `family`
 /// (node children) are named like any other referrer; the owning leaf folds or drops them.

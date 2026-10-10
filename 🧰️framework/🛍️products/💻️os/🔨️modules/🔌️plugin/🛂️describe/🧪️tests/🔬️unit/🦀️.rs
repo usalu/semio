@@ -13,8 +13,8 @@ async fn package_descriptor_lists_its_io_mechanism_rows_with_their_native_side()
         Ok(IoOutcome::clean(payload.clone()))
     }
     static ENTRIES: [IoEntry; 2] = [
-        IoEntry { from: NATIVE, into: FOREIGN, fidelity: IoFidelity::Lossy, direction: Side::Export, sniff: None, run: passthrough },
-        IoEntry { from: FOREIGN, into: NATIVE, fidelity: IoFidelity::Lossy, direction: Side::Import, sniff: None, run: passthrough },
+        IoEntry { owned_serializer: None, from: NATIVE, into: FOREIGN, fidelity: IoFidelity::Lossy, direction: Side::Export, sniff: None, run: passthrough },
+        IoEntry { owned_serializer: None, from: FOREIGN, into: NATIVE, fidelity: IoFidelity::Lossy, direction: Side::Import, sniff: None, run: passthrough },
     ];
     io_register(&ENTRIES).expect("the entries register");
     let plugin = crate::app::Plugin::<crate::app::NoPluginApp>::builder("describe-io").label("Describe Io").version("0.1.0").package_id("semio:describe-io").try_build().expect("the plugin assembles");

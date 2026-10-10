@@ -1,1 +1,40 @@
-{}
+{
+  "ramps": {
+    "rp-1": {
+      "base_offset": 0.0,
+      "entry": "Created",
+      "landing_end": 1.5,
+      "landing_start": 1.5,
+      "landing_turn": 1.5,
+      "material": "m-concrete",
+      "max_slope": 0.0833333333333333,
+      "name": "Entrance Ramp",
+      "path": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 10.0,
+            "y": 0.0
+          }
+        }
+      ],
+      "railing_left": false,
+      "railing_right": false,
+      "storey": "st-ground",
+      "thickness": 0.2,
+      "top": {
+        "Unconnected": {
+          "height": 0.5
+        }
+      },
+      "width": 1.2
+    }
+  }
+}

@@ -19,8 +19,8 @@ async fn fresh(document: &str, initial: Option<i32>) -> DemoStore {
     ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", document, DemoSnapshot { n: initial }, None)).await
 }
 
-async fn apply(store: &mut DemoStore, mutations: Vec<DemoMutation>, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
-    store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, identity).await.expect("a clean edit applies");
+async fn apply(store: &mut DemoStore, mutations: Vec<DemoMutation>, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    test_support::dispatch_test_command(store, ArtifactCommand::Apply { mutations, transaction: None }).await.expect("a clean edit applies");
 }
 
 fn integer(value: &serde_json::Value) -> i32 {
@@ -125,26 +125,26 @@ async fn act(replicas: &mut [Replica; 2], at: usize, action: &serde_json::Value,
             replicas[at].authored.push(operations);
         }
         "commit" => {
-            replicas[at].store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }, identity).await.expect("a checkpoint");
+            test_support::dispatch_test_command(&mut replicas[at].store, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("a checkpoint");
         }
         "alternative" => {
             let inputs = vec![SupersedeInput { target: target(replicas, &action["target"]), replacement: replacement(&action["replacement"]) }];
             let name = action["name"].as_str().expect("an alternative name").to_string();
-            replicas[at].store.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs }, identity).await.expect("a finalize as a new alternative");
+            test_support::dispatch_test_command(&mut replicas[at].store, ArtifactCommand::CreateAlternativeWithSupersede { name, inputs }).await.expect("a finalize as a new alternative");
         }
         "supersede" => {
             let inputs = vec![SupersedeInput { target: target(replicas, &action["target"]), replacement: replacement(&action["replacement"]) }];
             let scope = (action["scope"].as_str() == Some("line")).then(|| replicas[at].store.active_line_id());
-            replicas[at].store.dispatch(ArtifactCommand::Supersede { scope, inputs }, identity).await.expect("a finalize");
+            test_support::dispatch_test_command(&mut replicas[at].store, ArtifactCommand::Supersede { scope, inputs }).await.expect("a finalize");
         }
         "switch" => {
             let alternative_id = line_id(&replicas[at].store, action["to"].as_str().expect("an alternative"));
-            replicas[at].store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id }, identity).await.expect("a local switch");
+            test_support::dispatch_test_command(&mut replicas[at].store, ArtifactCommand::SwitchAlternative { alternative_id }).await.expect("a local switch");
         }
         "checkout" => {
             let ordinal = usize::try_from(action["checkpoint"].as_u64().expect("a checkpoint index")).expect("a usize");
             let checkpoint_id = replicas[at].store.envelope().vcs.checkpoints.iter().nth(ordinal).map(|checkpoint| checkpoint.id.clone()).expect("a listed checkpoint");
-            replicas[at].store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }, identity).await.expect("a local checkout");
+            test_support::dispatch_test_command(&mut replicas[at].store, ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("a local checkout");
         }
         "receive" => {
             let mut log = replicas[replica_index(&action["from"])].store.event_log().expect("log");
@@ -198,7 +198,7 @@ async fn the_viewer_head_corpus_matches_two_stores() {
             assert_eq!(serde_json::json!(listed(&replica)), case["converged"]["alternatives"], "{name} arrival {arrival}: listed alternatives");
             for (line, expected) in case["converged"]["lines"].as_object().expect("lines") {
                 let alternative_id = line_id(&replica, line);
-                replica.dispatch(ArtifactCommand::SwitchAlternative { alternative_id }, &mut identity).await.expect("a local switch");
+                test_support::dispatch_test_command(&mut replica, ArtifactCommand::SwitchAlternative { alternative_id }).await.expect("a local switch");
                 assert_eq!(&projection(&replica), expected, "{name} arrival {arrival}: {line}");
             }
         }
@@ -244,14 +244,14 @@ async fn a_content_revision_names_a_head_whatever_line_its_replica_stood_on() {
                     replica.ingest_remote(event).await.expect("a replica ingests a shared event");
                     if !standing && replica.envelope().vcs.alternatives.iter().any(|alternative| alternative.name == *stand) {
                         let alternative_id = line_id(&replica, stand);
-                        replica.dispatch(ArtifactCommand::SwitchAlternative { alternative_id }, &mut identity).await.expect("a replica steps onto a listed line");
+                        test_support::dispatch_test_command(&mut replica, ArtifactCommand::SwitchAlternative { alternative_id }).await.expect("a replica steps onto a listed line");
                         standing = true;
                     }
                 }
                 assert!(standing && replica.dag.pending_is_empty(), "{name} arrival {arrival}: the replica stood on {stand} and every event found its dependencies");
                 for line in &lines {
                     let alternative_id = line_id(&replica, line);
-                    replica.dispatch(ArtifactCommand::SwitchAlternative { alternative_id }, &mut identity).await.expect("a local switch");
+                    test_support::dispatch_test_command(&mut replica, ArtifactCommand::SwitchAlternative { alternative_id }).await.expect("a local switch");
                     let revision = replica.content_revision_now();
                     assert_eq!(reloaded(&replica, "spr").await.content_revision_now(), revision, "{name} arrival {arrival}, stood on {stand}: the persisted pair restores the revision {line} showed");
                     let positions = replica.envelope().vcs.edits.iter().map(|edit| edit.sequence_number.to_string()).collect::<Vec<_>>().join(",");
@@ -278,13 +278,13 @@ async fn the_ledgers_list_their_facts_in_log_order_whatever_order_the_events_arr
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut a = fresh("viewer-ledger-order", Some(0)).await;
     apply(&mut a, vec![DemoMutation::SetN(SetN { n: 1 })], &mut identity).await;
-    a.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }, &mut identity).await.expect("a's checkpoint");
-    a.dispatch(ArtifactCommand::CreateAlternative { name: "red".into() }, &mut identity).await.expect("a's alternative");
+    test_support::dispatch_test_command(&mut a, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("a's checkpoint");
+    test_support::dispatch_test_command(&mut a, ArtifactCommand::CreateAlternative { name: "red".into() }).await.expect("a's alternative");
     let mut b = fresh("viewer-ledger-order", Some(0)).await;
     deliver(&mut b, a.event_log().expect("log")).await;
     apply(&mut b, vec![DemoMutation::AddN(AddN { delta: 2 })], &mut identity).await;
-    b.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }, &mut identity).await.expect("b's checkpoint");
-    b.dispatch(ArtifactCommand::CreateAlternative { name: "blue".into() }, &mut identity).await.expect("b's alternative");
+    test_support::dispatch_test_command(&mut b, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("b's checkpoint");
+    test_support::dispatch_test_command(&mut b, ArtifactCommand::CreateAlternative { name: "blue".into() }).await.expect("b's alternative");
     deliver(&mut a, b.event_log().expect("log")).await;
     let facts = |store: &DemoStore| {
         let vcs = &store.envelope().vcs;
@@ -347,13 +347,13 @@ async fn a_finalize_as_a_new_alternative_moves_only_its_author() {
 
     let author_shown = shown(&author);
     let events = peer.event_log().expect("log").len();
-    peer.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: edited.clone() }, &mut identity).await.expect("the peer checks the alternative out locally");
+    test_support::dispatch_test_command(&mut peer, ArtifactCommand::SwitchAlternative { alternative_id: edited.clone() }).await.expect("the peer checks the alternative out locally");
     assert_eq!((peer.envelope().active_alternative_id.clone(), peer.snapshot_ref().n, peer.supersessions().len()), (Some(edited.clone()), Some(12), 1));
     assert_eq!(peer.event_log().expect("log").len(), events, "a local checkout authors nothing");
     deliver(&mut author, peer.event_log().expect("log")).await;
     assert_eq!(shown(&author), author_shown, "the peer's checkout and its trunk edit leave the author's alternative alone");
     let trunk = peer.trunk_alternative_id();
-    peer.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }, &mut identity).await.expect("the peer returns to the trunk");
+    test_support::dispatch_test_command(&mut peer, ArtifactCommand::SwitchAlternative { alternative_id: trunk }).await.expect("the peer returns to the trunk");
     assert_eq!(shown(&peer), before);
 
     let (author_reloaded, peer_reloaded) = (reloaded(&author, "spr").await, reloaded(&peer, "spr").await);
@@ -371,7 +371,7 @@ async fn a_finalize_as_a_new_alternative_moves_only_its_author() {
         deliver(&mut replica, arrival).await;
         assert_eq!((replica.envelope().active_alternative_id.clone(), replica.snapshot_ref().n, replica.supersessions().len()), (None, Some(103), 0), "rotation {rotation}: a replica that only received the log stands on the trunk");
         assert_eq!(registrations(&replica), registrations(&author), "rotation {rotation}: the registrations are shared");
-        replica.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: edited.clone() }, &mut identity).await.expect("a local switch");
+        test_support::dispatch_test_command(&mut replica, ArtifactCommand::SwitchAlternative { alternative_id: edited.clone() }).await.expect("a local switch");
         assert_eq!((replica.snapshot_ref().n, replica.supersessions()), (Some(12), author.supersessions()), "rotation {rotation}: equal heads project alike");
         revisions.insert(replica.content_revision_now());
     }
@@ -389,10 +389,10 @@ async fn a_commit_on_an_alternative_waits_for_the_alternative() {
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut author = fresh("viewer-commit-line", Some(0)).await;
     apply(&mut author, vec![DemoMutation::SetN(SetN { n: 1 })], &mut identity).await;
-    author.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }, &mut identity).await.expect("a trunk checkpoint");
-    author.dispatch(ArtifactCommand::CreateAlternative { name: "side".into() }, &mut identity).await.expect("an alternative");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("a trunk checkpoint");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::CreateAlternative { name: "side".into() }).await.expect("an alternative");
     apply(&mut author, vec![DemoMutation::AddN(AddN { delta: 2 })], &mut identity).await;
-    author.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }, &mut identity).await.expect("a checkpoint on the alternative");
+    test_support::dispatch_test_command(&mut author, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("a checkpoint on the alternative");
     let side = author.envelope().active_alternative_id.clone().expect("the author stands on the alternative");
     let log = author.event_log().expect("log");
     let transitions: Vec<(MutationId, Vec<MutationId>, crate::os_spr::HistoryTransition)> =
@@ -411,7 +411,7 @@ async fn a_commit_on_an_alternative_waits_for_the_alternative() {
         let mut replica = fresh("viewer-commit-line", Some(0)).await;
         deliver(&mut replica, events).await;
         assert_eq!(registrations(&replica), registrations(&author), "arrival {arrival}: the line and its checkpoints are shared");
-        replica.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: side.clone() }, &mut identity).await.expect("a local switch");
+        test_support::dispatch_test_command(&mut replica, ArtifactCommand::SwitchAlternative { alternative_id: side.clone() }).await.expect("a local switch");
         assert_eq!(replica.snapshot_ref().n, Some(3), "arrival {arrival}: the line projects as its author's");
     }
 }
@@ -453,7 +453,7 @@ async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_a
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "folder-reload", DemoSnapshot { n: Some(0) }, None)).await;
     for n in [1, 2, 3] {
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n })], transaction: None }, &mut identity).await.expect("a clean edit applies");
+        test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n })], transaction: None }).await.expect("a clean edit applies");
     }
     let ids: Vec<MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     finalized(&mut store, &ids[0], SeverityMutation::SetWarningN(SetWarningN { n: 5 }), HistoryFinalization::Overwrite, &mut identity).await;
@@ -501,7 +501,7 @@ async fn a_read_back_pair_merges_its_log_and_never_moves_the_reader() {
     let mut b = fresh("pair-merge", Some(0)).await;
     deliver(&mut b, a.event_log().expect("log")).await;
     let first = a.mutation_ops().expect("applied operations")[0].mutation_id.clone();
-    a.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name: "mine".into(), inputs: vec![SupersedeInput { target: first, replacement: Some(DemoMutation::SetN(SetN { n: 10 })) }] }, &mut identity).await.expect("a history edit as a new alternative");
+    test_support::dispatch_test_command(&mut a, ArtifactCommand::CreateAlternativeWithSupersede { name: "mine".into(), inputs: vec![SupersedeInput { target: first, replacement: Some(DemoMutation::SetN(SetN { n: 10 })) }] }).await.expect("a history edit as a new alternative");
     apply(&mut a, vec![DemoMutation::AddN(AddN { delta: 5 })], &mut identity).await;
     apply(&mut b, vec![DemoMutation::AddN(AddN { delta: 100 })], &mut identity).await;
     let (a_shown, b_shown) = (shown(&a), shown(&b));
@@ -523,9 +523,9 @@ async fn a_read_back_pair_merges_its_log_and_never_moves_the_reader() {
     assert_eq!(b.merge_persisted_pair(&a_pair.pack, &a_pair.spr).await.expect("nothing left to take"), PairMerge::default());
     let trunk = a.trunk_alternative_id();
     let mine = a.active_line_id();
-    a.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }, &mut identity).await.expect("a looks at the trunk");
+    test_support::dispatch_test_command(&mut a, ArtifactCommand::SwitchAlternative { alternative_id: trunk }).await.expect("a looks at the trunk");
     assert_eq!(a.snapshot_ref().n, Some(103), "the merged edit shows where it was authored");
-    a.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: mine }, &mut identity).await.expect("a returns");
+    test_support::dispatch_test_command(&mut a, ArtifactCommand::SwitchAlternative { alternative_id: mine }).await.expect("a returns");
     assert_eq!(shown(&a), a_shown);
 
     let mut other = fresh("another-document", Some(0)).await;

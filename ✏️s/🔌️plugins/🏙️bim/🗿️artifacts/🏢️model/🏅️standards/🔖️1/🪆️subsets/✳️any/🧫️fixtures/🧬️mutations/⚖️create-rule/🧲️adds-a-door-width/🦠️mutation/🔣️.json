@@ -1,0 +1,18 @@
+{
+  "mutation": "createRule",
+  "id": "r-1",
+  "rule": {
+    "name": "Minimum door width",
+    "kind": "MinDoorWidth",
+    "limit": 0.9,
+    "severity": "Warning",
+    "scope": {
+      "storeys": [
+        "st-ground"
+      ],
+      "phases": [],
+      "ids": [],
+      "filter": ""
+    }
+  }
+}

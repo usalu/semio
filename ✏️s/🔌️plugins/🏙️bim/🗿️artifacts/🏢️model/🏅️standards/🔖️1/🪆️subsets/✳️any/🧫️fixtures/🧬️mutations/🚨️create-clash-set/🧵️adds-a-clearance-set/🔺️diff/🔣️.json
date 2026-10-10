@@ -1,0 +1,28 @@
+{
+  "clash_sets": {
+    "cs-1": {
+      "a": {
+        "classes": [
+          "Mep"
+        ],
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "b": {
+        "classes": [
+          "Beam",
+          "Column",
+          "Slab"
+        ],
+        "ids": [],
+        "phases": [],
+        "storeys": []
+      },
+      "clearance": 0.05,
+      "entry": "Created",
+      "name": "Service clearance",
+      "tolerance": 0.005
+    }
+  }
+}

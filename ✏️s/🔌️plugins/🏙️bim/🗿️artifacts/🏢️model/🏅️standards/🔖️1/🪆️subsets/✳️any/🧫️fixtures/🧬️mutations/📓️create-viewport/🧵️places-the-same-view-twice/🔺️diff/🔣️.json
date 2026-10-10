@@ -1,1 +1,24 @@
-{}
+{
+  "viewports": {
+    "vp-2": {
+      "crop": {
+        "max": {
+          "x": 3.0,
+          "y": 3.0
+        },
+        "min": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      "entry": "Created",
+      "position": {
+        "x": 220.0,
+        "y": 120.0
+      },
+      "scale": 20,
+      "sheet": "sh-1",
+      "view": "v-ground"
+    }
+  }
+}

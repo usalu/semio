@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-issue-comment/schema.json",
+  "title": "SetIssueComment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setIssueComment"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Comment",
+          "de": "Kommentar"
+        },
+        "ref": {
+          "kind": "issue-comment"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "author": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Author",
+          "de": "Verfasser"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "date": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Written (date and time)",
+          "de": "Geschrieben (Datum und Zeit)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "text": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Comment",
+          "de": "Kommentar"
+        },
+        "group": "value",
+        "order": 40
+      }
+    }
+  }
+}

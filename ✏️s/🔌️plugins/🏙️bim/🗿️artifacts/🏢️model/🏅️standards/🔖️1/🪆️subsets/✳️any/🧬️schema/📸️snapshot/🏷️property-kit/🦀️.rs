@@ -82,7 +82,7 @@ impl PropertyValue {
 }
 
 /// 🚫️ How a value breaks the definition of its property.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum Violation {
     KindMismatch,
     BelowMinimum,

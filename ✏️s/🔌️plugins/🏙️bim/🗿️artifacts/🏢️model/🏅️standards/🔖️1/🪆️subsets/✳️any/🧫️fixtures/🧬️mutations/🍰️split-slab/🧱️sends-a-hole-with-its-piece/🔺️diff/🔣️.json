@@ -1,1 +1,108 @@
-{}
+{
+  "slabs": {
+    "sl-1": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 3.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 3.0,
+            "y": 0.0
+          }
+        }
+      ],
+      "entry": "Patched",
+      "holes": []
+    },
+    "sl-2": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 3.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 3.0,
+            "y": 6.0
+          }
+        }
+      ],
+      "entry": "Created",
+      "holes": [
+        [
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 5.0,
+              "y": 2.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 6.0,
+              "y": 2.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 6.0,
+              "y": 3.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 5.0,
+              "y": 3.0
+            }
+          }
+        ]
+      ],
+      "name": "Floor",
+      "offset": 0.0,
+      "phase": "New",
+      "slab_type": "slt-200",
+      "storey": "st-ground"
+    }
+  }
+}

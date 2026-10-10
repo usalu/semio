@@ -2,5 +2,6 @@
   "mutation": "updateText",
   "layerId": "caption",
   "content": "Grüße 🌍\n123",
-  "size": 36
+  "size": 36,
+  "fontFamily": "anta"
 }

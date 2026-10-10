@@ -1,1 +1,73 @@
-{}
+{
+  "ceilings": {
+    "ce-living": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      ],
+      "ceiling_type": "ct-board",
+      "entry": "Created",
+      "holes": [
+        [
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 3.0,
+              "y": 2.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 4.0,
+              "y": 2.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 4.0,
+              "y": 3.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 3.0,
+              "y": 3.0
+            }
+          }
+        ]
+      ],
+      "name": "Living ceiling",
+      "offset": 0.3,
+      "storey": "st-ground"
+    }
+  }
+}

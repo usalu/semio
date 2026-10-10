@@ -1,0 +1,1 @@
+{"owner":"original read root","copyGrants":[1,7,4096],"maximumTurns":128,"cases":[{"kind":"typed","interruptedAfter":0},{"kind":"typed","interruptedAfter":1},{"kind":"typed","interruptedAfter":2},{"kind":"erased","interruptedAfter":0},{"kind":"erased","interruptedAfter":1},{"kind":"erased","interruptedAfter":2}]}

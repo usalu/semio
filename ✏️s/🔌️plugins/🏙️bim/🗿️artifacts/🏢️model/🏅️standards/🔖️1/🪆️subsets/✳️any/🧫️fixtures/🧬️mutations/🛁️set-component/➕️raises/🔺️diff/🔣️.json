@@ -1,0 +1,8 @@
+{
+  "components": {
+    "cmp-table": {
+      "elevation": 0.05,
+      "entry": "Patched"
+    }
+  }
+}

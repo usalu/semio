@@ -9,7 +9,7 @@
 //! profile-closed — it either preserves Tiny conformance or is rejected with a real diagnostic —
 //! and two operations exist that Full 1.1 has no use for at all: [`SvgTinyMutation::StampBaseProfile`],
 //! the profile declaration itself, and [`SvgTinyMutation::StripNonTiny`], the Full→Tiny
-//! down-conversion, whose inverse is [`SvgTinyMutation::ReinstateNonTiny`].
+//! down-conversion, whose inverse is [`SvgTinyMutation::RestoreNonTiny`].
 //!
 //! The excluded-vocabulary lists are restated here, beside the vocabulary they gate, because the
 //! subset's own `check_svg_tiny_conformance` answers a different question — it judges a whole
@@ -60,7 +60,7 @@ pub mod strip_non_tiny;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgTinyMutation")]
 pub enum SvgTinyMutation {
     /// 🏷️ Sets (or, with `None`, clears) the root's `baseProfile`/`version` declaration. Tiny's own
@@ -85,7 +85,7 @@ pub enum SvgTinyMutation {
     /// presentation attribute anywhere in the document.
     StripNonTiny(strip_non_tiny::StripNonTiny),
     /// ♻️ The inverse of the down-conversion: puts the stripped elements and attributes back at their exact positions.
-    ReinstateNonTiny(restore_non_tiny::ReinstateNonTiny),
+    RestoreNonTiny(restore_non_tiny::RestoreNonTiny),
 }
 
 /// 📇️ Kebab-case spelling of every `SvgTinyMutation` variant, in declaration order — the exact
@@ -108,7 +108,7 @@ pub fn kind_of(mutation: &SvgTinyMutation) -> &'static str {
         SvgTinyMutation::SetViewBox(_) => "set-view-box",
         SvgTinyMutation::SetTransform(_) => "set-transform",
         SvgTinyMutation::StripNonTiny(_) => "strip-non-tiny",
-        SvgTinyMutation::ReinstateNonTiny(_) => "restore-non-tiny",
+        SvgTinyMutation::RestoreNonTiny(_) => "restore-non-tiny",
     }
 }
 //#endregion 🔖️Mutations

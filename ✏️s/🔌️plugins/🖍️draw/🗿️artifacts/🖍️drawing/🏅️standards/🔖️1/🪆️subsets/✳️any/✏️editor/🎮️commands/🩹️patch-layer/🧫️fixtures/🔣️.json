@@ -145,7 +145,8 @@
             "x": 0,
             "y": 0,
             "content": "Grüße 🌍",
-            "size": 14
+            "size": 14,
+            "fontFamily": "anta"
           },
           {
             "id": "image",
@@ -890,7 +891,8 @@
         "mutation": "updateText",
         "layerId": "text",
         "content": "Grüße 🌍",
-        "size": 14
+        "size": 14,
+        "fontFamily": "anta"
       },
       "changed": false,
       "patch": [
@@ -912,7 +914,8 @@
         "mutation": "updateText",
         "layerId": "text",
         "content": "Edited",
-        "size": 14
+        "size": 14,
+        "fontFamily": "anta"
       },
       "changed": true,
       "patch": [
@@ -934,7 +937,8 @@
         "mutation": "updateText",
         "layerId": "text",
         "content": "Grüße 🌍",
-        "size": 18
+        "size": 18,
+        "fontFamily": "anta"
       },
       "changed": true,
       "patch": [

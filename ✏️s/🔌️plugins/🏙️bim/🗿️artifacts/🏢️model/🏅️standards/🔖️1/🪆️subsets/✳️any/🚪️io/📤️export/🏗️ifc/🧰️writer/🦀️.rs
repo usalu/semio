@@ -1,10 +1,35 @@
-//! 🧰️ The IFC 2x3 writer kit: typed value constructors, a deterministic compressed GUID and an `Ifc` builder over the Part-21 instance allocator.
-//! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/
+//! 🧰️ The IFC writer kit (IFC 2x3 and IFC4 ADD2 TC1): typed value constructors, a deterministic compressed GUID and an `Ifc` builder over the Part-21 instance allocator.
+//! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
 use semio_s_artifact_stdio_ifc::part21::{Part21Builder, Part21Decimal, Part21Value};
 use std::collections::BTreeMap;
 
 pub type V = Part21Value;
+
+/// 🔖️ The IFC schema a file is written in.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Schema {
+    Ifc2x3,
+    Ifc4,
+}
+
+impl Schema {
+    /// 🏷️ The identifier in `FILE_SCHEMA`.
+    pub fn id(self) -> &'static str {
+        match self {
+            Schema::Ifc2x3 => "IFC2X3",
+            Schema::Ifc4 => "IFC4",
+        }
+    }
+
+    /// 🎚️ `v2x3` for IFC 2x3, `v4` for IFC4.
+    pub fn pick<T>(self, v2x3: T, v4: T) -> T {
+        match self {
+            Schema::Ifc2x3 => v2x3,
+            Schema::Ifc4 => v4,
+        }
+    }
+}
 
 //#region 🔖️Values
 /// 🔗️ A reference to instance `id`.
@@ -134,6 +159,7 @@ fn orthogonal_to(axis: [f64; 3]) -> [f64; 3] {
 pub struct Ifc {
     builder: Part21Builder,
     shared: BTreeMap<String, u64>,
+    pub schema: Schema,
     pub owner: u64,
     pub context: u64,
     pub body: u64,
@@ -143,19 +169,22 @@ pub struct Ifc {
 }
 
 impl Ifc {
-    /// 🌱️ Allocates the owner history, the model context with its body, axis and footprint sub-contexts and the world origin.
+    /// 🌱️ The shared context of an IFC 2x3 file (see [`Ifc::in_schema`]).
     pub fn new(author: &str, organization: &str, true_north: f64) -> Self {
-        Self::started(author, organization, true_north, "ADDED")
+        Self::in_schema(Schema::Ifc2x3, author, organization, true_north)
     }
 
-    /// 🌱️ The same shared context with the `ChangeAction` of the owner history named: IFC4 requires a modification date next to `ADDED`, so a file without dates writes `NOCHANGE`.
-    pub fn started(author: &str, organization: &str, true_north: f64, change_action: &str) -> Self {
-        let mut ifc = Self { builder: Part21Builder::new(), shared: BTreeMap::new(), owner: 0, context: 0, body: 0, axis: 0, footprint: 0, origin: 0 };
-        let person = ifc.add("IFCPERSON", vec![unset(), text(author), unset(), unset(), unset(), unset(), unset(), unset()]);
-        let organisation = ifc.add("IFCORGANIZATION", vec![unset(), text(organization), unset(), unset(), unset()]);
-        let account = ifc.add("IFCPERSONANDORGANIZATION", vec![rf(person), rf(organisation), unset()]);
-        let application = ifc.add("IFCAPPLICATION", vec![rf(organisation), text("1"), text("semio BIM"), text("semio.bim")]);
-        ifc.owner = ifc.add("IFCOWNERHISTORY", vec![rf(account), rf(application), unset(), en(change_action), unset(), unset(), unset(), int(0)]);
+    /// 🌱️ Allocates the model context with its body, axis and footprint sub-contexts and the world origin; IFC 2x3 also allocates the owner history it requires on every rooted entity, IFC4 writes none (its `OwnerHistory` is optional and the author
+    /// and organization travel in the file header).
+    pub fn in_schema(schema: Schema, author: &str, organization: &str, true_north: f64) -> Self {
+        let mut ifc = Self { builder: Part21Builder::new(), shared: BTreeMap::new(), schema, owner: 0, context: 0, body: 0, axis: 0, footprint: 0, origin: 0 };
+        if schema == Schema::Ifc2x3 {
+            let person = ifc.add("IFCPERSON", vec![unset(), text(author), unset(), unset(), unset(), unset(), unset(), unset()]);
+            let organisation = ifc.add("IFCORGANIZATION", vec![unset(), text(organization), unset(), unset(), unset()]);
+            let account = ifc.add("IFCPERSONANDORGANIZATION", vec![rf(person), rf(organisation), unset()]);
+            let application = ifc.add("IFCAPPLICATION", vec![rf(organisation), text("1"), text("semio BIM"), text("semio.bim")]);
+            ifc.owner = ifc.add("IFCOWNERHISTORY", vec![rf(account), rf(application), unset(), en("ADDED"), unset(), unset(), unset(), int(0)]);
+        }
         ifc.origin = ifc.axis3([0.0, 0.0, 0.0], None, None);
         let north = ifc.dir2([-true_north.sin(), true_north.cos()]);
         ifc.context = ifc.add("IFCGEOMETRICREPRESENTATIONCONTEXT", vec![unset(), text("Model"), int(3), real(1e-6), rf(ifc.origin), rf(north)]);
@@ -169,9 +198,14 @@ impl Ifc {
 
     /// 📏️ The `IfcUnitAssignment` of the SI units the file uses: metre, square metre, cubic metre and radian.
     pub fn units(&mut self) -> u64 {
+        if let Some(id) = self.shared.get("units") {
+            return *id;
+        }
         let rows = [("LENGTHUNIT", "METRE"), ("AREAUNIT", "SQUARE_METRE"), ("VOLUMEUNIT", "CUBIC_METRE"), ("PLANEANGLEUNIT", "RADIAN")];
         let ids: Vec<u64> = rows.iter().map(|(unit, name)| self.add("IFCSIUNIT", vec![derived(), en(unit), unset(), en(name)])).collect();
-        self.add("IFCUNITASSIGNMENT", vec![refs(&ids)])
+        let assignment = self.add("IFCUNITASSIGNMENT", vec![refs(&ids)]);
+        self.shared.insert("units".to_string(), assignment);
+        assignment
     }
 
     /// ➕️ Allocates one instance.
@@ -192,7 +226,8 @@ impl Ifc {
 
     /// 🏷️ Allocates a rooted instance: `GlobalId` from `guid_key`, the shared owner history, `Name`, `Description`, then `tail`.
     pub fn rooted(&mut self, entity: &str, guid_key: &str, name: &str, description: &str, tail: Vec<V>) -> u64 {
-        let mut args = vec![text(global_id(&format!("{entity}:{guid_key}"))), rf(self.owner), opt_text(name), opt_text(description)];
+        let owner = if self.owner == 0 { unset() } else { rf(self.owner) };
+        let mut args = vec![text(global_id(&format!("{entity}:{guid_key}"))), owner, opt_text(name), opt_text(description)];
         args.extend(tail);
         self.add(entity, args)
     }
@@ -273,7 +308,10 @@ impl Ifc {
     /// 🏗️ An `IfcIShapeProfileDef` centred at the origin.
     pub fn i_shape(&mut self, width: f64, depth: f64, web: f64, flange: f64) -> u64 {
         let position = self.axis2([0.0, 0.0], None);
-        self.add("IFCISHAPEPROFILEDEF", vec![en("AREA"), unset(), rf(position), real(width), real(depth), real(web), real(flange), unset()])
+        let tail = self.schema.pick(vec![unset()], vec![unset(), unset(), unset()]);
+        let mut args = vec![en("AREA"), unset(), rf(position), real(width), real(depth), real(web), real(flange)];
+        args.extend(tail);
+        self.add("IFCISHAPEPROFILEDEF", args)
     }
 
     /// 🔷️ An arbitrary profile bounded by `outer` with `inner` voids.

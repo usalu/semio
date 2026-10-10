@@ -227,10 +227,10 @@ fn the_armed_utility_falls_back_through_window_then_focus_then_flat_then_select(
     view.active_utility_id = Some(grid::UTILITY_MASK.into());
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_MASK);
     view.focused_window_id = Some("focused".into());
-    view.active_utility_by_window_id.insert("focused".into(), grid::UTILITY_PIN.into());
+    view.active_utility_by_window_id.cold_insert("focused".into(), grid::UTILITY_PIN.into());
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_PIN);
     view.window_id = Some("rendered".into());
-    view.active_utility_by_window_id.insert("rendered".into(), grid::UTILITY_SELECT.into());
+    view.active_utility_by_window_id.cold_insert("rendered".into(), grid::UTILITY_SELECT.into());
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_SELECT);
 }
 

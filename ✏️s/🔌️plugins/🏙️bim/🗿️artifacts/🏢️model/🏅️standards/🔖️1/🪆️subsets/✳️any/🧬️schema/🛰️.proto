@@ -35,24 +35,32 @@ message ModelArtifact {
   map<string, Ceiling> ceilings = 29;
   map<string, Zone> zones = 30;
   map<string, AreaScheme> area_schemes = 31;
-  map<string, View> views = 32;
-  map<string, Sheet> sheets = 33;
-  map<string, Viewport> viewports = 34;
-  map<string, SheetRevision> sheet_revisions = 35;
-  map<string, Dimension> dimensions = 36;
-  map<string, Tag> tags = 37;
-  map<string, TextNote> text_notes = 38;
-  map<string, Leader> leaders = 39;
-  map<string, AnnotationStyle> annotation_styles = 40;
-  map<string, Family> families = 41;
-  map<string, FamilyParameter> family_parameters = 42;
-  map<string, FamilySolid> family_solids = 43;
-  map<string, WallSweep> wall_sweeps = 44;
-  map<string, Schedule> schedules = 45;
-  map<string, PropertyTemplate> property_templates = 46;
-  map<string, ClassificationSystem> classification_systems = 47;
-  map<string, PropertySetRows> properties = 48;
-  map<string, ClassificationSetRows> classifications = 49;
+  map<string, SpaceConditions> space_conditions = 32;
+  map<string, View> views = 33;
+  map<string, Sheet> sheets = 34;
+  map<string, Viewport> viewports = 35;
+  map<string, SheetRevision> sheet_revisions = 36;
+  map<string, Dimension> dimensions = 37;
+  map<string, Tag> tags = 38;
+  map<string, TextNote> text_notes = 39;
+  map<string, Leader> leaders = 40;
+  map<string, AnnotationStyle> annotation_styles = 41;
+  map<string, Family> families = 42;
+  map<string, FamilyParameter> family_parameters = 43;
+  map<string, FamilySolid> family_solids = 44;
+  map<string, Component> components = 45;
+  map<string, ComponentOverride> component_overrides = 46;
+  map<string, MepElement> mep_elements = 47;
+  map<string, ClashSet> clash_sets = 48;
+  map<string, Rule> rules = 49;
+  map<string, Issue> issues = 50;
+  map<string, IssueComment> issue_comments = 51;
+  map<string, WallSweep> wall_sweeps = 52;
+  map<string, Schedule> schedules = 53;
+  map<string, PropertyTemplate> property_templates = 54;
+  map<string, ClassificationSystem> classification_systems = 55;
+  map<string, PropertySetRows> properties = 56;
+  map<string, ClassificationSetRows> classifications = 57;
 }
 
 enum PropertyKind {
@@ -160,6 +168,73 @@ enum SolidAxis {
   SOLIDAXIS_X = 1;
   SOLIDAXIS_Y = 2;
   SOLIDAXIS_Z = 3;
+}
+
+enum MepSystem {
+  MEPSYSTEM_UNSPECIFIED = 0;
+  MEPSYSTEM_SUPPLY = 1;
+  MEPSYSTEM_RETURN = 2;
+  MEPSYSTEM_EXHAUST = 3;
+  MEPSYSTEM_DOMESTICWATER = 4;
+  MEPSYSTEM_WASTE = 5;
+  MEPSYSTEM_GAS = 6;
+  MEPSYSTEM_POWER = 7;
+  MEPSYSTEM_DATA = 8;
+  MEPSYSTEM_LIGHTING = 9;
+}
+
+enum ElementClass {
+  ELEMENTCLASS_UNSPECIFIED = 0;
+  ELEMENTCLASS_WALL = 1;
+  ELEMENTCLASS_CURTAINWALL = 2;
+  ELEMENTCLASS_WINDOW = 3;
+  ELEMENTCLASS_DOOR = 4;
+  ELEMENTCLASS_COLUMN = 5;
+  ELEMENTCLASS_BEAM = 6;
+  ELEMENTCLASS_SLAB = 7;
+  ELEMENTCLASS_CEILING = 8;
+  ELEMENTCLASS_ROOF = 9;
+  ELEMENTCLASS_STAIR = 10;
+  ELEMENTCLASS_RAMP = 11;
+  ELEMENTCLASS_RAILING = 12;
+  ELEMENTCLASS_WALLSWEEP = 13;
+  ELEMENTCLASS_COMPONENT = 14;
+  ELEMENTCLASS_MEP = 15;
+}
+
+enum RuleKind {
+  RULEKIND_UNSPECIFIED = 0;
+  RULEKIND_MINCLEARHEIGHT = 1;
+  RULEKIND_MAXRISER = 2;
+  RULEKIND_MINTREAD = 3;
+  RULEKIND_MINSTAIRWIDTH = 4;
+  RULEKIND_MINDOORWIDTH = 5;
+  RULEKIND_MAXRAMPSLOPE = 6;
+  RULEKIND_MINCORRIDORWIDTH = 7;
+  RULEKIND_MAXCOMPARTMENTAREA = 8;
+}
+
+enum RuleSeverity {
+  RULESEVERITY_UNSPECIFIED = 0;
+  RULESEVERITY_ERROR = 1;
+  RULESEVERITY_WARNING = 2;
+  RULESEVERITY_NOTE = 3;
+}
+
+enum IssueStatus {
+  ISSUESTATUS_UNSPECIFIED = 0;
+  ISSUESTATUS_OPEN = 1;
+  ISSUESTATUS_INPROGRESS = 2;
+  ISSUESTATUS_RESOLVED = 3;
+  ISSUESTATUS_CLOSED = 4;
+}
+
+enum IssuePriority {
+  ISSUEPRIORITY_UNSPECIFIED = 0;
+  ISSUEPRIORITY_LOW = 1;
+  ISSUEPRIORITY_NORMAL = 2;
+  ISSUEPRIORITY_HIGH = 3;
+  ISSUEPRIORITY_CRITICAL = 4;
 }
 
 enum IsoSize {
@@ -303,6 +378,8 @@ enum ScheduleField {
   SCHEDULEFIELD_LAYERVOLUME = 33;
   SCHEDULEFIELD_LAYERMASS = 34;
   SCHEDULEFIELD_FINISHAREA = 35;
+  SCHEDULEFIELD_UVALUE = 36;
+  SCHEDULEFIELD_GVALUE = 37;
 }
 
 enum ScheduleOp {
@@ -472,6 +549,28 @@ message SolidShape {
     SolidShapeRevolution revolution = 2;
     SolidShapeSweep sweep = 3;
     SolidShapeCuboid cuboid = 4;
+  }
+}
+
+message MepShapeDuct {
+  double width = 1;
+  double height = 2;
+}
+
+message MepShapePipe {
+  double diameter = 1;
+}
+
+message MepShapeTray {
+  double width = 1;
+  double height = 2;
+}
+
+message MepShape {
+  oneof variant {
+    MepShapeDuct duct = 1;
+    MepShapePipe pipe = 2;
+    MepShapeTray tray = 3;
   }
 }
 
@@ -816,6 +915,17 @@ message ClassificationSystem {
   repeated ClassificationItem entries = 4;
 }
 
+message SpaceConditions {
+  optional string occupancy = 1;
+  optional double occupancy_density = 2;
+  optional double heating_setpoint = 3;
+  optional double cooling_setpoint = 4;
+  optional double ventilation_rate = 5;
+  optional double lighting_power_density = 6;
+  optional double equipment_power_density = 7;
+  optional string schedule = 8;
+}
+
 message Dimension {
   string storey = 1;
   repeated AnnotationAnchor anchors = 2;
@@ -891,6 +1001,106 @@ message FamilySolid {
   string material = 4;
   string visible = 5;
   ExprPoint3 offset = 6;
+}
+
+message Point3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Component {
+  string storey = 1;
+  string family = 2;
+  Point2 position = 3;
+  double elevation = 4;
+  double rotation = 5;
+  bool mirrored = 6;
+  optional string host = 7;
+  optional MepSystem system = 8;
+  string name = 9;
+}
+
+message ComponentOverride {
+  string component = 1;
+  string name = 2;
+  string value = 3;
+}
+
+message MepElement {
+  string storey = 1;
+  MepSystem system = 2;
+  MepShape shape = 3;
+  repeated Point3 path = 4;
+  string name = 5;
+}
+
+message ElementSelector {
+  repeated ElementClass classes = 1;
+  repeated string storeys = 2;
+  repeated Phase phases = 3;
+  repeated string ids = 4;
+}
+
+message RuleScope {
+  repeated string storeys = 1;
+  repeated Phase phases = 2;
+  repeated string ids = 3;
+  string filter = 4;
+}
+
+message ClashRef {
+  string set = 1;
+  string first = 2;
+  string second = 3;
+}
+
+message SectionBox {
+  Point3 min = 1;
+  Point3 max = 2;
+}
+
+message IssueViewpoint {
+  ViewCamera camera = 1;
+  optional SectionBox section = 2;
+  repeated string isolate = 3;
+}
+
+message ClashSet {
+  string name = 1;
+  ElementSelector a = 2;
+  ElementSelector b = 3;
+  double tolerance = 4;
+  double clearance = 5;
+}
+
+message Rule {
+  string name = 1;
+  RuleKind kind = 2;
+  double limit = 3;
+  RuleSeverity severity = 4;
+  RuleScope scope = 5;
+}
+
+message Issue {
+  string title = 1;
+  string description = 2;
+  IssueStatus status = 3;
+  IssuePriority priority = 4;
+  string assignee = 5;
+  string author = 6;
+  string created = 7;
+  repeated string labels = 8;
+  repeated string elements = 9;
+  optional ClashRef clash = 10;
+  optional IssueViewpoint viewpoint = 11;
+}
+
+message IssueComment {
+  string issue = 1;
+  string author = 2;
+  string date = 3;
+  string text = 4;
 }
 
 message Sheet {
@@ -1036,6 +1246,9 @@ message WindowType {
   double frame_depth = 6;
   uint32 panes = 7;
   string material = 8;
+  optional double u_value = 9;
+  optional double g_value = 10;
+  optional double frame_fraction = 11;
 }
 
 message DoorType {
@@ -1047,6 +1260,7 @@ message DoorType {
   DoorLeaves leaves = 6;
   Swing swing = 7;
   string material = 8;
+  optional double u_value = 9;
 }
 
 message Site {
@@ -1104,6 +1318,9 @@ message CurtainWallType {
   CurtainPanel panel = 6;
   string panel_material = 7;
   string mullion_material = 8;
+  optional double u_value = 9;
+  optional double g_value = 10;
+  optional double frame_fraction = 11;
 }
 
 message CurtainPanelOverride {
@@ -1385,8 +1602,20 @@ message AnnotationAnchorList {
   repeated AnnotationAnchor items = 1;
 }
 
+message Point3List {
+  repeated Point3 items = 1;
+}
+
+message ElementClassList {
+  repeated ElementClass items = 1;
+}
+
 message StringList {
   repeated string items = 1;
+}
+
+message PhaseList {
+  repeated Phase items = 1;
 }
 
 message LayerList {
@@ -1421,6 +1650,8 @@ message ScheduleGroupList {
   repeated ScheduleGroup items = 1;
 }
 
-message PhaseList {
-  repeated Phase items = 1;
-}
+message StructuralLocation { message Point { double station = 1; } message Line { double start = 1; double end = 2; } oneof location { Point point = 1; Line line = 2; bool area = 3; } }
+message Restraints { bool x = 1; bool y = 2; bool z = 3; bool rx = 4; bool ry = 5; bool rz = 6; }
+message StructuralSupport { string name = 1; string member = 2; StructuralLocation location = 3; Point3 offset = 4; Restraints restraints = 5; }
+message LoadCase { string name = 1; string category = 2; double factor = 3; }
+message StructuralLoad { string name = 1; string load_case = 2; string member = 3; StructuralLocation location = 4; Point3 force = 5; Point3 moment = 6; }

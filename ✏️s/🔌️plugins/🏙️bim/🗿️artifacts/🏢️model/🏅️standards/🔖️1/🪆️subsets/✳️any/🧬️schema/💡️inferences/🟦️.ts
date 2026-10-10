@@ -1,5 +1,29 @@
 /** 💡️ BIM model inference schema: derived elevations and wall layouts, keyed by element id. */
 
+import type { PropertyValue } from "../🟦️.ts";
+
+export type PropertySource = "Own" | "Type" | "Default";
+
+export type PropertyIssue = "Missing" | "KindMismatch" | "BelowMinimum" | "AboveMaximum" | "NotAllowed";
+
+export interface PropertyFinding {
+  template: string;
+  set: string;
+  property: string;
+  issue: PropertyIssue;
+}
+
+export interface EffectivePropertyValue {
+  value: PropertyValue;
+  source: PropertySource;
+  template?: string;
+}
+
+export interface EffectiveProperties {
+  values: Record<string, Record<string, EffectivePropertyValue>>;
+  findings: PropertyFinding[];
+}
+
 export interface StoreyLevel {
   elevation: number;
   top_elevation: number;
@@ -290,9 +314,10 @@ export interface ElementQuantity {
   finishes: FinishQuantity[];
   panels?: PanelQuantity[];
   mullions?: MullionQuantity[];
+  groups?: string[];
 }
 
-export type QuantityKind = "Wall" | "CurtainWall" | "Slab" | "Roof" | "Column" | "Beam" | "Window" | "Door" | "Void" | "Stair" | "Railing" | "Ramp" | "Space" | "Ceiling";
+export type QuantityKind = "Wall" | "CurtainWall" | "Slab" | "Roof" | "Column" | "Beam" | "Window" | "Door" | "Void" | "Stair" | "Railing" | "Ramp" | "Space" | "Ceiling" | "Component" | "Mep";
 
 export type FinishSurface = "Floor" | "Wall" | "Ceiling";
 
@@ -315,6 +340,7 @@ export interface QuantityTotals {
   types: Record<string, Totals>;
   materials: Record<string, Totals>;
   finishes: Record<string, Totals>;
+  groups?: Record<string, Totals>;
 }
 
 export interface ZoneTotals {
@@ -345,7 +371,7 @@ export interface Totals {
   mass: number;
 }
 
-export type SolidFamily = "Wall" | "CurtainWall" | "Window" | "Door" | "Column" | "Beam" | "Slab" | "Roof" | "Stair" | "Ramp" | "Railing" | "Ceiling";
+export type SolidFamily = "Wall" | "CurtainWall" | "Window" | "Door" | "Column" | "Beam" | "Slab" | "Roof" | "Stair" | "Ramp" | "Railing" | "Ceiling" | "Component" | "Mep";
 
 export interface SolidPoint {
   x: number;
@@ -387,7 +413,7 @@ export interface ElementSolid {
 
 export type PlanStyle = "Cut" | "Projection" | "Hidden" | "Annotation";
 
-export type PlanKind = "WallCut" | "WallLayer" | "WallOutline" | "CurtainAxis" | "CurtainMullion" | "WindowFrame" | "WindowGlazing" | "WindowSill" | "DoorLeaf" | "DoorSwing" | "ColumnCut" | "ColumnOutline" | "BeamOutline" | "SlabEdge" | "SlabHole" | "RoofOutline" | "StairOutline" | "StairRiser" | "StairCutLine" | "StairArrow" | "StairLanding" | "RailingPath" | "SpaceOutline" | "SpaceTag" | "GridLine" | "GridBubble" | "GridLabel" | "SectionCut" | "Silhouette" | "Edge" | "Datum" | "DatumLabel" | "CeilingEdge" | "CeilingHole" | "RampOutline" | "RampLanding" | "RampArrow" | "RampTag";
+export type PlanKind = "WallCut" | "WallLayer" | "WallOutline" | "CurtainAxis" | "CurtainMullion" | "WindowFrame" | "WindowGlazing" | "WindowSill" | "DoorLeaf" | "DoorSwing" | "ColumnCut" | "ColumnOutline" | "BeamOutline" | "SlabEdge" | "SlabHole" | "RoofOutline" | "StairOutline" | "StairRiser" | "StairCutLine" | "StairArrow" | "StairLanding" | "RailingPath" | "SpaceOutline" | "SpaceTag" | "GridLine" | "GridBubble" | "GridLabel" | "SectionCut" | "Silhouette" | "Edge" | "Datum" | "DatumLabel" | "CeilingEdge" | "CeilingHole" | "RampOutline" | "RampLanding" | "RampArrow" | "RampTag" | "ComponentOutline" | "ComponentFront" | "ComponentConnector" | "MepAxis" | "MepBand" | "MepDrop";
 
 export interface PlanVertex {
   x: number;
@@ -445,7 +471,7 @@ export interface PlanLinework {
 
 export type Severity = "Info" | "Warning" | "Error";
 
-export type DiagnosticCode = "ClashWallWall" | "ClashWallColumn" | "ClashColumnColumn" | "ClashWallBeam" | "ClashBeamColumn" | "ClashBeamBeam" | "ClashBeamSlab" | "ClashStairWall" | "ClashStairColumn" | "ClashStairBeam" | "ClashStairStair" | "ClashSlabSlab" | "RefWallType" | "RefColumnType" | "RefBeamType" | "RefSlabType" | "RefRoofType" | "RefWindowType" | "RefDoorType" | "RefTopStorey" | "RefOpeningHost" | "RefElementStorey" | "RefStoreyBuilding" | "RefBuildingSite" | "RefGridBuilding" | "RefLayerMaterial" | "RefTypeMaterial" | "RefPropertyElement" | "DuplicateId" | "OpeningOutsideHost" | "OpeningBelowBase" | "OpeningAboveTop" | "OpeningOverlap" | "OpeningSize" | "OpeningOutsideTrimmed" | "DegenerateAxis" | "DegenerateThickness" | "DegenerateHeight" | "DegenerateProfile" | "DegenerateLoop" | "SelfIntersectingLoop" | "DegeneratePath" | "NonFinite" | "DegenerateSpacing" | "DegenerateStorey" | "StoreyLevelGap" | "StoreyLevelDuplicate" | "StoreyNoDatum" | "StairNoRise" | "StairRiserHeight" | "StairTreadDepth" | "StairComfort" | "StairStringerIgnored" | "SpaceNotEnclosed" | "SpaceSeedInWall" | "SpaceDuplicateNumber" | "RoofFlatCurved" | "RoofFlatSkeleton" | "RoofFlatDegenerate" | "RoofFlatPitch" | "RoofOverhangCollapsed" | "RoofGableToHip" | "AnnotationAnchorMissing" | "AnnotationAnchorUnresolved" | "AnnotationStyleMissing" | "DimensionZero" | "DimensionLockViolated" | "TagEmpty" | "ClashBeamCeiling" | "ClashCeilingCeiling" | "RefCeilingType" | "CurtainOverrideOutOfGrid" | "CurtainDoorNotAtBase" | "CurtainGridLineOutside" | "CurtainDuplicateOverride" | "RefCurtainWallType" | "RefCurtainPanel" | "RefCurtainOverrideHost" | "ColumnTiltInvalid" | "CeilingOutsideStorey" | "RampSlope" | "RampNoRun" | "RefRailingHost" | "RailingHostUnresolved";
+export type DiagnosticCode = "ClashWallWall" | "ClashWallColumn" | "ClashColumnColumn" | "ClashWallBeam" | "ClashBeamColumn" | "ClashBeamBeam" | "ClashBeamSlab" | "ClashStairWall" | "ClashStairColumn" | "ClashStairBeam" | "ClashStairStair" | "ClashSlabSlab" | "RefWallType" | "RefColumnType" | "RefBeamType" | "RefSlabType" | "RefRoofType" | "RefWindowType" | "RefDoorType" | "RefTopStorey" | "RefOpeningHost" | "RefElementStorey" | "RefStoreyBuilding" | "RefBuildingSite" | "RefGridBuilding" | "RefLayerMaterial" | "RefTypeMaterial" | "RefPropertyElement" | "DuplicateId" | "OpeningOutsideHost" | "OpeningBelowBase" | "OpeningAboveTop" | "OpeningOverlap" | "OpeningSize" | "OpeningOutsideTrimmed" | "DegenerateAxis" | "DegenerateThickness" | "DegenerateHeight" | "DegenerateProfile" | "DegenerateLoop" | "SelfIntersectingLoop" | "DegeneratePath" | "NonFinite" | "DegenerateSpacing" | "DegenerateStorey" | "StoreyLevelGap" | "StoreyLevelDuplicate" | "StoreyNoDatum" | "StairNoRise" | "StairRiserHeight" | "StairTreadDepth" | "StairComfort" | "StairStringerIgnored" | "SpaceNotEnclosed" | "SpaceSeedInWall" | "SpaceDuplicateNumber" | "RoofFlatCurved" | "RoofFlatSkeleton" | "RoofFlatDegenerate" | "RoofFlatPitch" | "RoofOverhangCollapsed" | "RoofGableToHip" | "AnnotationAnchorMissing" | "AnnotationAnchorUnresolved" | "AnnotationStyleMissing" | "DimensionZero" | "DimensionLockViolated" | "TagEmpty" | "ClashBeamCeiling" | "ClashCeilingCeiling" | "RefCeilingType" | "CurtainOverrideOutOfGrid" | "CurtainDoorNotAtBase" | "CurtainGridLineOutside" | "CurtainDuplicateOverride" | "RefCurtainWallType" | "RefCurtainPanel" | "RefCurtainOverrideHost" | "ColumnTiltInvalid" | "CeilingOutsideStorey" | "RampSlope" | "RampNoRun" | "RefRailingHost" | "RailingHostUnresolved" | "FamilySyntax" | "FamilyKind" | "FamilyCycle" | "FamilyUnknown" | "FamilyDivisionByZero" | "FamilyNegative" | "FamilyDependency" | "FamilyDomain" | "FamilyOutline" | "RefProfileFamily" | "PropertyRequiredMissing" | "PropertyKindMismatch" | "PropertyOutOfRange" | "PropertyNotAllowed" | "ClassificationUnknownCode" | "RefClassificationSystem" | "ComponentOutsideStorey" | "ComponentInWall" | "RefComponentFamily" | "RefComponentHost" | "ComponentOverride" | "MepDegenerate" | "MepClash" | "TerminalUnconnected";
 
 export interface SeverityCounts {
   error: number;
@@ -477,6 +503,147 @@ export interface Diagnostic {
   values: Record<string, number>;
 }
 
+export type FamilyCategory = "Furniture" | "Equipment" | "Casework" | "Plumbing" | "Lighting" | "Mechanical" | "Electrical" | "Generic" | "Profile";
+
+export type ParameterKind = "Length" | "Angle" | "Real" | "Integer" | "Boolean" | "Text" | "Material";
+
+export type IssueOwner = "Parameter" | "Solid" | "Family";
+
+export type FamilyIssueCode = "Syntax" | "Kind" | "Cycle" | "Unknown" | "DivisionByZero" | "Negative" | "Dependency" | "Domain" | "Outline";
+
+export interface FamilyIssue {
+  code: FamilyIssueCode;
+  owner: IssueOwner;
+  subject: string;
+  field: string;
+  path: number[];
+  detail: string;
+  names: string[];
+}
+
+export type ParameterValue = { Number: { value: number } } | { Length: { value: number } } | { Angle: { value: number } } | { Boolean: { value: boolean } } | { Text: { value: string } };
+
+export interface ResolvedParameter {
+  kind: ParameterKind;
+  formula: string;
+  value?: ParameterValue;
+}
+
+export interface FamilySolidMesh {
+  name: string;
+  material: string;
+  visible: boolean;
+  positions: number[];
+  normals: number[];
+  indices: number[];
+  bounds: SolidBounds;
+  volume: number;
+  area: number;
+}
+
+export interface FamilyValue {
+  name: string;
+  category?: FamilyCategory;
+  order: string[];
+  parameters: Record<string, ResolvedParameter>;
+  solids: Record<string, FamilySolidMesh>;
+  outline: Vertex[];
+  issues: FamilyIssue[];
+}
+
+export type MepSystem = "Supply" | "Return" | "Exhaust" | "DomesticWater" | "Waste" | "Gas" | "Power" | "Data" | "Lighting";
+
+export type MepSectionKind = "Duct" | "Pipe" | "Tray";
+
+export type MepIssueCode = "NonFinite" | "SectionDegenerate" | "PathDegenerate";
+
+export type ComponentIssueCode = "FamilyMissing" | "FamilyProfile" | "HostMissing" | "HostOtherStorey" | "HostDegenerate" | "Override" | "NonFinite";
+
+export interface Point3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface HostFit {
+  wall: string;
+  station: number;
+  side: number;
+  face: Point2;
+  normal: Point2;
+}
+
+export interface ComponentPlacement {
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+  mirrored: boolean;
+  host?: HostFit;
+}
+
+export interface Connector {
+  system: MepSystem;
+  colour: string;
+  position: Point3;
+}
+
+export interface ComponentIssue {
+  code: ComponentIssueCode;
+  subject: string;
+  detail: string;
+  family_issue?: FamilyIssue;
+}
+
+export interface ComponentValue {
+  storey: string;
+  family: string;
+  category?: FamilyCategory;
+  placement: ComponentPlacement;
+  footprint: Point2[];
+  footprint_area: number;
+  bounds: SolidBounds;
+  volume: number;
+  connector?: Connector;
+  overridden: string[];
+  parameters: Record<string, ResolvedParameter>;
+  issues: ComponentIssue[];
+}
+
+export interface MepSection {
+  kind: MepSectionKind;
+  width: number;
+  height: number;
+  area: number;
+  perimeter: number;
+  label: string;
+}
+
+export interface MepSegment {
+  from: Point3;
+  to: Point3;
+  length: number;
+}
+
+export interface MepIssue {
+  code: MepIssueCode;
+  detail: string;
+}
+
+export interface MepValue {
+  storey: string;
+  system: MepSystem;
+  colour: string;
+  section: MepSection;
+  path: Point3[];
+  segments: MepSegment[];
+  length: number;
+  volume: number;
+  surface_area: number;
+  bounds: SolidBounds;
+  issues: MepIssue[];
+}
+
 export interface ModelInference {
   /** @derived */
   element_solids: Record<string, ElementSolid>;
@@ -484,6 +651,9 @@ export interface ModelInference {
   stair_runs: Record<string, StairRun>;
   /** @derived */
   ramp_runs: Record<string, RampRun>;
+  families: Record<string, FamilyValue>;
+  components: Record<string, ComponentValue>;
+  mep: Record<string, MepValue>;
   /** @derived */
   spaces: Record<string, SpaceRoom>;
   /** @derived */
@@ -506,4 +676,14 @@ export interface ModelInference {
   scheme_totals: Record<string, SchemeTotals>;
   /** @derived */
   diagnostic_index: DiagnosticIndex;
+  /** @derived */
+  effective_properties: Record<string, EffectiveProperties>;
 }
+
+import type {StructuralSupport,StructuralLoad} from "../🟦️.ts";
+export interface AnalyticalMember { element:string; storey:string; kind:string; path:Point3[]; boundary:Point3[]; holes:Point3[][]; length:number; area:number; start_offset:number; end_offset:number; }
+export interface RigidLink { member:string; other:string; start:Point3; end:Point3; length:number; }
+export interface ResolvedSupport { authored:StructuralSupport; points:Point3[]; }
+export interface ResolvedLoad { authored:StructuralLoad; points:Point3[]; factor:number; }
+export interface StructuralAnalysis { members:Record<string,AnalyticalMember>; rigid_links:Record<string,RigidLink>; supports:Record<string,ResolvedSupport>; loads:Record<string,ResolvedLoad>; findings:string[]; }
+export interface ModelInference { analytical_members:Record<string,AnalyticalMember>; structural_analysis:StructuralAnalysis; }

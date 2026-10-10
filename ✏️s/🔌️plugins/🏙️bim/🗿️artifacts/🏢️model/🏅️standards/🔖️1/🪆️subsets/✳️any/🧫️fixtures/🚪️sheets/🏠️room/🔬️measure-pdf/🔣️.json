@@ -1,0 +1,22 @@
+{
+  "pages": [
+    {
+      "width": 420.0,
+      "height": 297.0,
+      "has_number": true,
+      "has_name": true
+    },
+    {
+      "width": 210.0,
+      "height": 297.0,
+      "has_number": true,
+      "has_name": true
+    },
+    {
+      "width": 500.0,
+      "height": 350.0,
+      "has_number": true,
+      "has_name": true
+    }
+  ]
+}

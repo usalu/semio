@@ -28,4 +28,6 @@ message BimWorldWindowConfig {
   string section_axis = 7;
   double section_offset = 8;
   bool framed = 9;
+  bool energy_overlay = 10;
+  string energy_mode = 11;
 }

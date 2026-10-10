@@ -30,6 +30,7 @@ import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../
 
 // #region 🧫️Cases
 const GLB = "shared://🧊️gltf/🏠️house/🏠️house.glb";
+const COMPONENTS_GLB = "shared://🧊️gltf/🪑️components/🪑️components.glb";
 const SPATIAL = new Set(["site", "building", "storey"]);
 
 type Counts = { elements: number; triangles: number };
@@ -41,6 +42,7 @@ type Table = {
   materials: number;
   kinds: Record<string, number>;
   storeys: Record<string, Counts>;
+  volumes: Record<string, number>;
   bounds: { min: number[]; max: number[] };
 };
 // #endregion 🧫️Cases
@@ -62,11 +64,32 @@ function trianglesOf(object: THREE.Object3D): number {
   return count;
 }
 
+/** 🧊️ The volume enclosed by every mesh at or below an object: the sum of the signed tetrahedra over the origin of each triangle, from the 32-bit vertices as stored (node transforms are rigid, so the local volume is the world volume). */
+function volumeOf(object: THREE.Object3D): number {
+  let volume = 0;
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  object.traverse((child) => {
+    const mesh = child as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const position = mesh.geometry.getAttribute("position");
+    const index = mesh.geometry.getIndex()!;
+    for (let corner = 0; corner < index.count; corner += 3) {
+      a.fromBufferAttribute(position, index.getX(corner));
+      b.fromBufferAttribute(position, index.getX(corner + 1));
+      c.fromBufferAttribute(position, index.getX(corner + 2));
+      volume += a.dot(b.cross(c)) / 6;
+    }
+  });
+  return volume;
+}
+
 /** 📏️ The table of a GLB, measured with three.js. */
 export async function measure(bytes: Uint8Array): Promise<Table> {
   const { scene, parser } = await load(bytes);
   scene.updateMatrixWorld(true);
-  const table: Table = { nodes: parser.json.nodes.length, meshes: parser.json.meshes.length, primitives: 0, triangles: 0, materials: parser.json.materials.length, kinds: {}, storeys: {}, bounds: { min: [], max: [] } };
+  const table: Table = { nodes: parser.json.nodes.length, meshes: parser.json.meshes.length, primitives: 0, triangles: 0, materials: parser.json.materials.length, kinds: {}, storeys: {}, volumes: {}, bounds: { min: [], max: [] } };
   const used = new Set<THREE.Material>();
   scene.traverse((object) => {
     const mesh = object as THREE.Mesh;
@@ -86,6 +109,7 @@ export async function measure(bytes: Uint8Array): Promise<Table> {
     const row = (table.storeys[extras.storey!] ??= { elements: 0, triangles: 0 });
     row.elements += 1;
     row.triangles += trianglesOf(object);
+    table.volumes[(object.userData as { id: string }).id] = volumeOf(object);
   });
   if (described !== table.nodes) throw new Error(`the scene graph holds ${described} described nodes, the document ${table.nodes}`);
   if (used.size !== table.materials) throw new Error(`${used.size} materials are used, the document defines ${table.materials}`);
@@ -102,10 +126,17 @@ async function exportGltfHouse(ctx: AdapterContext): Promise<AdapterOutcome> {
   return { projection: table, raw: JSON.stringify(table) };
 }
 
+/** 🪑️ Oracle answer for the components model: the same table, with the volume of every component and MEP element from the stored vertices. */
+async function exportGltfComponents(ctx: AdapterContext): Promise<AdapterOutcome> {
+  const table = await measure(ctx.inputBytes(COMPONENTS_GLB));
+  return { projection: table, raw: JSON.stringify(table) };
+}
+
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "export-gltf-house": { oracle: exportGltfHouse },
+    "export-gltf-components": { oracle: exportGltfComponents },
   },
 });
 // #endregion 🧭️Adapter
@@ -113,17 +144,22 @@ export default defineTestAdapter({
 // #region 🏃️Standalone
 /** 🏃️ `check` compares the committed table with the measurement of the committed file; `write` rewrites the table from the file. */
 async function main(command: string, root: string): Promise<number> {
-  const folder = join(root, "🏠️house");
-  const table = await measure(new Uint8Array(readFileSync(join(folder, "🏠️house.glb"))));
-  const path = join(folder, "🔬️measure", "🔣️.json");
-  if (command === "write") {
-    writeFileSync(path, `${JSON.stringify(table, null, 2)}\n`, "utf8");
-    console.log(`wrote the table: ${table.nodes} nodes, ${table.triangles} triangles`);
-    return 0;
+  let failed = 0;
+  for (const [name, file] of [["🏠️house", "🏠️house.glb"], ["🪑️components", "🪑️components.glb"]]) {
+    const folder = join(root, name);
+    const table = await measure(new Uint8Array(readFileSync(join(folder, file))));
+    const path = join(folder, "🔬️measure", "🔣️.json");
+    if (command === "write") {
+      writeFileSync(path, `${JSON.stringify(table, null, 2)}
+`, "utf8");
+      console.log(`wrote the table of ${name}: ${table.nodes} nodes, ${table.triangles} triangles, ${Object.keys(table.volumes).length} volumes`);
+      continue;
+    }
+    const same = JSON.stringify(JSON.parse(readFileSync(path, "utf8"))) === JSON.stringify(table);
+    console.log(same ? `check: oracle agrees on ${name} (three 0.182.0)` : `[FAIL] the committed table of ${name} differs from the measurement of the committed file`);
+    failed += same ? 0 : 1;
   }
-  const same = JSON.stringify(JSON.parse(readFileSync(path, "utf8"))) === JSON.stringify(table);
-  console.log(same ? "check: oracle agrees (three 0.182.0)" : "[FAIL] the committed table differs from the measurement of the committed file");
-  return same ? 0 : 1;
+  return failed === 0 ? 0 : 1;
 }
 
 if (import.meta.main) process.exit(await main(process.argv[2]!, process.argv[3]!));

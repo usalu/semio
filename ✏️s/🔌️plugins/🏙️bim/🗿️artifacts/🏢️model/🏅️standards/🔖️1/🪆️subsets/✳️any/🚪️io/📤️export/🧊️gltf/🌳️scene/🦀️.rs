@@ -34,6 +34,8 @@ pub fn kind_of(family: SolidFamily) -> &'static str {
         SolidFamily::Railing => "railing",
         SolidFamily::Ceiling => "ceiling",
         SolidFamily::WallSweep => "wall-sweep",
+        SolidFamily::Component => "component",
+        SolidFamily::Mep => "mep",
     }
 }
 

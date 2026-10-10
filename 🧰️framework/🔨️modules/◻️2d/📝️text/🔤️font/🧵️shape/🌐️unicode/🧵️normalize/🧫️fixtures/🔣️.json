@@ -1,0 +1,14 @@
+[
+ {"name":"Empty","text":"","scalars":[],"clusters":[]},
+ {"name":"German Canonical","text":"A\u0308V o\u0308","scalars":[196,86,32,246],"clusters":[0,3,4,5]},
+ {"name":"Stable Combining Order","text":"a\u0315\u0300","scalars":[224,789],"clusters":[0,1]},
+ {"name":"Composition Blocking","text":"A\u0305\u0301","scalars":[65,773,769],"clusters":[0,1,3]},
+ {"name":"Recursive Canonical","text":"\u01fa","scalars":[506],"clusters":[0]},
+ {"name":"Canonical Singleton","text":"\u212b","scalars":[197],"clusters":[0]},
+ {"name":"Compatibility Preserved","text":"\ufb01","scalars":[64257],"clusters":[0]},
+ {"name":"Hangul Joined","text":"\u1100\u1161\u11a8","scalars":[44033],"clusters":[0]},
+ {"name":"Hangul Original","text":"\uac01","scalars":[44033],"clusters":[0]},
+ {"name":"Emoji Join Cluster","text":"👩‍💻","scalars":[128105,8205,128187],"clusters":[0,4,7]},
+ {"name":"Isolated Right To Left","text":"a\u2067א\u2069b","scalars":[97,8295,1488,8297,98],"clusters":[0,1,4,6,9]},
+ {"name":"Initial Combining Order","text":"\u0315\u0300a","scalars":[768,789,97],"clusters":[2,0,4]}
+]

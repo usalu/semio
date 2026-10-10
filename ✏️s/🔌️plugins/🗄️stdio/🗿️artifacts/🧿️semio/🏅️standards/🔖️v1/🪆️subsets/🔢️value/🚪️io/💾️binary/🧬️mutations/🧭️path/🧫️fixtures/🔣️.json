@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"name":"root","path":[],"bytes":[0]},
+    {"name":"empty-key","path":[{"kind":"key","key":""}],"bytes":[1,0,0]},
+    {"name":"unicode-mixed","path":[{"kind":"key","key":"é"},{"kind":"index","index":129},{"kind":"key","key":"a"}],"bytes":[3,0,2,195,169,1,129,1,0,1,97]},
+    {"name":"wide-index","path":[{"kind":"index","index":4294967295}],"bytes":[1,1,255,255,255,255,15]}
+  ],
+  "malformed":[[],[1],[1,2],[1,0,2,195],[1,0,1,255],[2,1,0],[1,1,128],[255,255,255,255,255,255,255,255,255,2]]
+}

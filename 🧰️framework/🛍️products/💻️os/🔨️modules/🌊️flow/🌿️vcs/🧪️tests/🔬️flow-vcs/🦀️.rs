@@ -1,7 +1,8 @@
 
 use super::*;
 use crate::os_spr::{ArtifactId, Edit, Identified, Mutation, MutationDiff, SchemaId};
-use crate::os_store::{create_document_envelope, ArtifactCommand, ArtifactStore, SnapshotRetirementFactory, SnapshotRetirementStep};
+use crate::host::history_identity;
+use crate::os_store::{create_document_envelope, ArtifactCommand, ArtifactStore, SnapshotRetirementFactory};
 use neural::{Atom, Dictionary, Tree, Value as NeuralValue};
 use std::sync::Arc;
 
@@ -1844,18 +1845,18 @@ async fn a_streamed_layout_drag_produces_one_edit() {
     // without one — the refusal drops the replayed projection on its error path, so the law reports
     // `ordered-map root must be explicitly retired before drop` instead of the validation that caused it
     // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    store.install_document_store_owners_exact(<FlowHostSnapshot as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
+    crate::os_store::install_funded_member_store_owners(&mut store).expect("flow history owners");
     let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000f1".into(), tool: "s.flow@1/*#editor#drag".into() };
     for y in [10.0, 20.0, 30.0] {
-        store
+        history_identity!(|identity| store
             .dispatch(ArtifactCommand::AppendTransaction {
                 mutations: vec![FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] })],
                 transaction: transaction.clone(),
-            })
-            .await
+            }, &mut identity)
+            .await)
             .expect("drag tick");
     }
-    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id }).await.expect("drag commit");
+    history_identity!(|identity| store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id }, &mut identity).await).expect("drag commit");
     assert_eq!(store.envelope().vcs.edits.len(), 1, "a streamed drag must produce exactly one edit");
     let snapshot = store.snapshot().expect("projection");
     assert_eq!(snapshot.layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
@@ -1938,9 +1939,9 @@ fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let envelope = create_document_envelope("test/v1", "test", FlowHostSnapshot::default(), None);
     let mut store = ArtifactStore::new(envelope, crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(<FlowHostSnapshot as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
+    crate::os_store::install_funded_member_store_owners(&mut store).expect("flow history owners");
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("apply");
+    history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity).await).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     crate::os_store::test_support::assert_command_envelope_round_trip::<FlowHostSnapshot, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));

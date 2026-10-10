@@ -65,3 +65,57 @@ Feature: Drive every BIM authoring tool from the keyboard with typed points and 
     When the cursor is moved with the arrow keys and placed, then moved and placed again
     Then the model holds the wall between the two placed points
     And moving the cursor alone writes nothing and shows the rubber band of the tool
+
+  @id-component-fit
+  @level-exhaustive
+  @mode-differential
+  Scenario: A wall-mounted component stands on the face of the wall with its back to it
+    Given the committed gesture cases shared://🧫️fixtures/🛠️gestures/🔣️.json
+    When the plan point of each component_fits case is fitted to the wall axis of its thickness
+    Then the family origin lies on the face of the side the point is on (the left face for a point on the axis) within 1e-8 metres
+    And the local depth axis points away from the wall along the outward normal of that face
+
+  @id-component-frame
+  @level-exhaustive
+  @mode-differential
+  Scenario: The family frame is mirrored, then turned, then moved to its origin
+    Given the committed gesture cases shared://🧫️fixtures/🛠️gestures/🔣️.json
+    When each local point of each component_frames case is placed in the plan
+    Then it lands on the point numpy computed with a rotation matrix within 1e-8 metres
+
+  @id-component-place
+  @level-exhaustive
+  @mode-scenario
+  Scenario: A family is placed with a ghost, turned in steps of fifteen degrees, and written by a click
+    Given a plan window with the component tool armed and a table family and a basin family in the library
+    When the ghost is turned three times by fifteen degrees, mirrored and raised by two tenths of a metre and the plan is clicked
+    Then the model holds one component of the table with a rotation of 45 degrees, mirrored, 0.2 m above the storey elevation
+    And the committed turns cases of numpy equal the summed rotation modulo 360 degrees for every run of turn keys
+    And the typed lines "z 0.8", "rot 45", "mirror", "sys water" and "fam basin" set the same options without a pointer
+
+  @id-component-host
+  @level-exhaustive
+  @mode-scenario
+  Scenario: A basin clings to the wall beside the pointer and Ctrl places it free
+    Given a plan window with the component tool armed and the basin family selected in the library
+    When the pointer is half a wall thickness and three centimetres from a wall and the plan is clicked
+    Then the component is hosted by that wall and keeps the pointer as its position
+    And with Ctrl held the component has no host
+    And a table family is never hosted
+
+  @id-route-length
+  @level-exhaustive
+  @mode-differential
+  Scenario: A route is written from its clicks and measures what numpy measures
+    Given the committed gesture cases shared://🧫️fixtures/🛠️gestures/🔣️.json
+    When the vertices of each routes case are clicked at their elevations, typed as "z <metres>", and the run is finished
+    Then the rubber band label shows the length numpy summed from the segment norms
+    And the model holds one MEP element whose path is the clicked vertices at their elevations
+
+  @id-route-keys
+  @level-exhaustive
+  @mode-scenario
+  Scenario: A route is edited with the keys while it is drawn
+    Given a plan window with the MEP route tool armed
+    When two vertices are clicked, the system is changed with Alt+T, the section kind with Tab, the elevation with Alt+PageUp and a third vertex is clicked
+    Then Backspace takes the last vertex back, Enter writes the element with the chosen system and section, and Escape drops a route in progress before it leaves the tool

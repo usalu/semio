@@ -2,8 +2,8 @@
 
 use super::*;
 use crate::app::InteractionConfigMutation;
-use crate::local_interaction::retirement::interaction_store_owners;
 use protocol::InteractionState;
+use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use store::{ArtifactStore, ErasedSnapshotRetirement, SpaceMember};
 
 type InteractionStore = ArtifactStore<InteractionState, InteractionConfigMutation>;
@@ -252,6 +252,77 @@ impl store::ArtifactCanonicalJson for HostileRoot {
     fn canonical_json_borrowed_root(&self) -> Result<Option<store::ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         use store::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonObject as Object, ArtifactCanonicalJsonValue as Value};
         Ok(Some(Value::Object(Object::new([("first", Value::Scalar(Node::String(&self.first))), ("second", Value::Source(&self.second))].into_iter()))))
+    }
+}
+
+impl store::SnapshotRetirementFactory<HostileRoot> for HostileRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<HostileRoot>) -> usize { std::mem::size_of::<HostileRetirement>() }
+
+    fn retire(&self, root: std::sync::Arc<HostileRoot>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<HostileRoot>)> {
+        match (RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<HostileRetirement>(), depth: 1 }).admit(grant) {
+            Ok(progress) => Ok((Box::new(HostileRetirement { root: Some(root), bytes: Vec::new() }), progress)),
+            Err(error) => Err((error, root)),
+        }
+    }
+}
+
+impl HostileRetirement {
+    fn demands(&self) -> RetirementDemand {
+        if self.terminal_is_empty() {
+            Default::default()
+        } else if self.root.is_some() {
+            RetirementDemand { depth: 1, ..Default::default() }
+        } else if !self.bytes.is_empty() {
+            RetirementDemand { copy_bytes: 1, depth: 1, ..Default::default() }
+        } else {
+            RetirementDemand { release_bytes: self.bytes.capacity(), depth: 1, ..Default::default() }
+        }
+    }
+}
+
+impl ErasedSnapshotRetirement for HostileRetirement {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+        let idle = RetainedCloneProgress::default();
+        if self.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(idle));
+        }
+        let demand = self.demands();
+        if grant.maximum_depth < demand.depth {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "hostile retirement exceeds admitted depth"));
+        }
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(idle));
+        }
+        let progress = if let Some(root) = self.root.take() {
+            if let Some(root) = std::sync::Arc::into_inner(root) {
+                self.bytes = root.first.into_bytes();
+            }
+            RetainedCloneProgress { copied_items: 1, ..idle }
+        } else if !self.bytes.is_empty() {
+            let copied_bytes = grant.maximum_copy_bytes.min(self.bytes.len());
+            self.bytes.truncate(self.bytes.len() - copied_bytes);
+            RetainedCloneProgress { copied_items: 1, copied_bytes, ..idle }
+        } else {
+            let released_bytes = self.bytes.capacity();
+            self.bytes = Vec::new();
+            RetainedCloneProgress { copied_items: 1, released_bytes, ..idle }
+        };
+        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.root.is_none() && self.bytes.is_empty() && self.bytes.capacity() == 0
+    }
+    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.demands().copy_bytes)
+    }
+    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.demands().capacity_bytes)
+    }
+    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.demands().release_bytes)
+    }
+    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.demands().depth)
     }
 }
 

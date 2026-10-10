@@ -39,7 +39,7 @@ pub use set_info_title::SetInfoTitle;
 
 //#region 🔖️Aggregate
 /// 📐️ Typed PDF/H conformance vocabulary with one direct wrapped variant per semantic operation.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.7.h")]
 pub enum PdfHMutation {

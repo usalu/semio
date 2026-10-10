@@ -1,4 +1,21 @@
 use super::*;
+
+#[test]
+fn retained_copy_original_backing_uses_shared_four_axis_allocator_law(){
+ use semio_framework_value::retained_clone::RetainedCloneGrant;
+ use semio_framework_trace::observe_heap_allocations_on_this_thread;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../♻️close/🧫️fixtures/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){
+  let capacity=row["capacity"].as_u64().unwrap()as usize;let mut bytes=Vec::with_capacity(capacity);bytes.extend_from_slice(row["content"].as_str().unwrap().as_bytes());let actual=bytes.capacity();
+  let mut reserved=row["reserved"].as_bool().unwrap();let mut complete=row["complete"].as_bool().unwrap();let demand=retained_copy_close_demands(&bytes,reserved,complete);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(demand.release_bytes,actual);
+  if demand.depth!=0{for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=observe_heap_allocations_on_this_thread(||retained_copy_close_step(&mut bytes,&mut reserved,&mut complete,denied));assert_eq!(heap,Default::default());assert!(matches!(step,semio_framework_job::InteractiveJobCloseStep::Pending{progress}if progress==Default::default()));}}
+  if actual>0{let(step,heap)=observe_heap_allocations_on_this_thread(||retained_copy_close_step(&mut bytes,&mut reserved,&mut complete,RetainedCloneGrant{maximum_release_bytes:actual-1,..grant}));assert_eq!(heap,Default::default());assert!(matches!(step,semio_framework_job::InteractiveJobCloseStep::Pending{progress}if progress==Default::default()));let(step,heap)=observe_heap_allocations_on_this_thread(||retained_copy_close_step(&mut bytes,&mut reserved,&mut complete,grant));assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,actual);assert!(matches!(step,semio_framework_job::InteractiveJobCloseStep::Pending{progress}if progress.released_bytes==actual&&progress.retained_capacity_bytes==0));}
+  for _ in 0..2{let(step,heap)=observe_heap_allocations_on_this_thread(||retained_copy_close_step(&mut bytes,&mut reserved,&mut complete,RetainedCloneGrant{maximum_release_bytes:0,maximum_depth:1,..grant}));assert_eq!(heap,Default::default());if matches!(step,semio_framework_job::InteractiveJobCloseStep::Complete{..}){break;}}
+  assert!(bytes.is_empty()&&bytes.capacity()==0&&!reserved&&!complete);
+ }
+ println!("[DEBUG] shared original retained copy 4 cases verify original allocation capacity, no prefix truncation, denied axes and separate zero-heap terminal flags");
+}
+
 use semio_framework_plugin::plugin_app_close_prelude::store as fixture_store;
 use std::collections::BTreeMap;
 
@@ -126,8 +143,11 @@ impl fixture_store::ArtifactStoreOneItemPreparationFactory<u8, u8> for ProbePrep
         }
     }
 
-    fn begin(&self, request: fixture_store::ArtifactStoreOneItemPreparationRequest<u8, u8>) -> Result<Box<dyn fixture_store::ArtifactStoreOneItemPreparation<u8, u8>>, fixture_store::ArtifactStoreOneItemPreparationRequest<u8, u8>> {
-        Err(request)
+    fn begin_demand(&self,_mutation:&u8,_lane:fixture_store::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"))
+    }
+    fn begin(&self, request:fixture_store::ArtifactStoreOneItemPreparationRequest<u8,u8>,_grant:fixture_store::ArtifactStoreOneItemGrant)->Result<(Box<dyn fixture_store::ArtifactStoreOneItemPreparation<u8,u8>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,fixture_store::ArtifactStoreOneItemPreparationRequest<u8,u8>)>{
+        Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"),request))
     }
 }
 
@@ -170,16 +190,16 @@ impl fixture_store::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || !grant.permits_one() {
-            return Ok(fixture_store::SnapshotRetirementStep::Blocked);
-        }
-        if self.remaining == 0 {
-            return Ok(fixture_store::SnapshotRetirementStep::Complete);
-        }
-        self.remaining -= 1;
-        Ok(fixture_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 1 })
+    fn close_step(&mut self,grant:fixture_store::ArtifactStoreOneItemGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+        use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
+        if self.closing&&self.remaining==0{return Ok(RetainedCloneStep::Complete(Default::default()));}
+        if !self.closing||!grant.permits_one()||grant.maximum_copy_bytes<std::mem::size_of::<usize>(){return Ok(RetainedCloneStep::Progress(Default::default()));}
+        self.remaining-=1;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<usize>(),..Default::default()}))
     }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if self.remaining==0{0}else{std::mem::size_of::<usize>()})}
+    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(self.remaining!=0))}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.remaining == 0
@@ -207,7 +227,7 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let units = lifecycle["units"].as_u64().expect("units") as usize;
     let cancel_after = lifecycle["cancelAfter"].as_u64().expect("cancel after") as usize;
     let mut preparation = ProbePreparation { remaining: units, checkpoint: Default::default(), cancelled: false, closing: false };
-    let grant = fixture_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 };
+    let grant = fixture_store::ArtifactStoreOneItemGrant { maximum_items:1,maximum_copy_bytes:std::mem::size_of::<usize>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1 };
     let mut progress = Vec::new();
     for _ in 0..cancel_after {
         let fixture_store::ArtifactStoreOneItemPreparationStep::Progress(checkpoint) = fixture_store::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("progress") else {
@@ -222,7 +242,7 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let mut close_steps = 0usize;
     loop {
         close_steps += 1;
-        if fixture_store::ArtifactStoreOneItemPreparation::close_step(&mut preparation, grant).expect("bounded close") == fixture_store::SnapshotRetirementStep::Complete {
+        if matches!(fixture_store::ArtifactStoreOneItemPreparation::close_step(&mut preparation,grant).expect("bounded close"),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             break;
         }
     }
@@ -272,9 +292,9 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let mut close_steps = 0usize;
     while !cancelled.terminal_is_empty() {
         close_steps += 1;
-        cancelled.close_step(1, page_bytes);
+        let demand=cancelled.close_demands();cancelled.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth});
     }
-    assert_eq!(close_steps, text_copy["expectedCloseSteps"].as_u64().expect("close steps") as usize);
+    assert_eq!(close_steps,2);
 
     let document_copy = &fixture["documentCopy"];
     let sibling_length = document_copy["siblingByteLength"].as_u64().expect("sibling byte length") as usize;
@@ -296,7 +316,7 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
         assert!(cancelled.advance(&sibling, page_bytes).expect("copy cancelled byte page").expect("positive byte grant") <= page_bytes);
     }
     while !cancelled.terminal_is_empty() {
-        cancelled.close_step(1, page_bytes);
+        let demand=cancelled.close_demands();cancelled.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth});
     }
 }
 

@@ -1,0 +1,1432 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Components",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-oak": {
+      "name": "Oak",
+      "category": "Wood",
+      "color": {
+        "r": 0.62,
+        "g": 0.45,
+        "b": 0.28
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1200
+    },
+    "m-steel": {
+      "name": "Steel",
+      "category": "Metal",
+      "color": {
+        "r": 0.55,
+        "g": 0.58,
+        "b": 0.62
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1200
+    },
+    "m-ceramic": {
+      "name": "Ceramic",
+      "category": "Finish",
+      "color": {
+        "r": 0.88,
+        "g": 0.88,
+        "b": 0.85
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1200
+    },
+    "m-paint": {
+      "name": "Paint",
+      "category": "Finish",
+      "color": {
+        "r": 0.96,
+        "g": 0.95,
+        "b": 0.92
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1200
+    },
+    "m-timber": {
+      "name": "Timber",
+      "category": "Wood",
+      "color": {
+        "r": 0.8,
+        "g": 0.62,
+        "b": 0.4
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1200
+    },
+    "m-plaster": {
+      "name": "Plaster",
+      "category": "Finish",
+      "color": {
+        "r": 0.92,
+        "g": 0.92,
+        "b": 0.88
+      },
+      "density": 700,
+      "conductivity": 0.2,
+      "specific_heat": 1200
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    },
+    "w-north": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "North"
+    },
+    "w-west": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 6
+          },
+          "end": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "West"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {},
+  "families": {
+    "fam-table": {
+      "name": "Table",
+      "category": "Furniture"
+    },
+    "fam-chair": {
+      "name": "Chair",
+      "category": "Furniture"
+    },
+    "fam-kitchen": {
+      "name": "Kitchen unit",
+      "category": "Casework"
+    },
+    "fam-wc": {
+      "name": "WC",
+      "category": "Plumbing"
+    },
+    "fam-basin": {
+      "name": "Basin",
+      "category": "Plumbing"
+    },
+    "fam-lamp": {
+      "name": "Pendant lamp",
+      "category": "Lighting"
+    },
+    "fam-diffuser": {
+      "name": "Air terminal",
+      "category": "Mechanical"
+    },
+    "fam-panel": {
+      "name": "Distribution board",
+      "category": "Electrical"
+    },
+    "fam-pillar": {
+      "name": "Pillar",
+      "category": "Generic"
+    },
+    "fam-rig": {
+      "name": "Fan unit",
+      "category": "Mechanical"
+    }
+  },
+  "family_parameters": {
+    "fam-table.width": {
+      "family": "fam-table",
+      "name": "width",
+      "kind": "Length",
+      "value": "1.6 m"
+    },
+    "fam-table.depth": {
+      "family": "fam-table",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.8 m"
+    },
+    "fam-table.height": {
+      "family": "fam-table",
+      "name": "height",
+      "kind": "Length",
+      "value": "0.74 m"
+    },
+    "fam-table.top_thickness": {
+      "family": "fam-table",
+      "name": "top_thickness",
+      "kind": "Length",
+      "value": "30 mm"
+    },
+    "fam-table.leg_section": {
+      "family": "fam-table",
+      "name": "leg_section",
+      "kind": "Length",
+      "value": "60 mm"
+    },
+    "fam-table.leg_inset": {
+      "family": "fam-table",
+      "name": "leg_inset",
+      "kind": "Length",
+      "value": "50 mm"
+    },
+    "fam-table.leg_height": {
+      "family": "fam-table",
+      "name": "leg_height",
+      "kind": "Length",
+      "value": "height - top_thickness"
+    },
+    "fam-table.leg_x": {
+      "family": "fam-table",
+      "name": "leg_x",
+      "kind": "Length",
+      "value": "width - leg_inset - leg_section"
+    },
+    "fam-table.leg_y": {
+      "family": "fam-table",
+      "name": "leg_y",
+      "kind": "Length",
+      "value": "depth - leg_inset - leg_section"
+    },
+    "fam-table.seats": {
+      "family": "fam-table",
+      "name": "seats",
+      "kind": "Integer",
+      "value": "if width > 1.4 m then 6 else 4"
+    },
+    "fam-chair.seat_width": {
+      "family": "fam-chair",
+      "name": "seat_width",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.seat_depth": {
+      "family": "fam-chair",
+      "name": "seat_depth",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.seat_height": {
+      "family": "fam-chair",
+      "name": "seat_height",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.back_height": {
+      "family": "fam-chair",
+      "name": "back_height",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-chair.plank": {
+      "family": "fam-chair",
+      "name": "plank",
+      "kind": "Length",
+      "value": "40 mm"
+    },
+    "fam-chair.leg": {
+      "family": "fam-chair",
+      "name": "leg",
+      "kind": "Length",
+      "value": "40 mm"
+    },
+    "fam-chair.leg_x": {
+      "family": "fam-chair",
+      "name": "leg_x",
+      "kind": "Length",
+      "value": "seat_width - leg"
+    },
+    "fam-chair.leg_y": {
+      "family": "fam-chair",
+      "name": "leg_y",
+      "kind": "Length",
+      "value": "seat_depth - leg"
+    },
+    "fam-chair.leg_height": {
+      "family": "fam-chair",
+      "name": "leg_height",
+      "kind": "Length",
+      "value": "seat_height - plank"
+    },
+    "fam-kitchen.width": {
+      "family": "fam-kitchen",
+      "name": "width",
+      "kind": "Length",
+      "value": "2.4 m"
+    },
+    "fam-kitchen.depth": {
+      "family": "fam-kitchen",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.6 m"
+    },
+    "fam-kitchen.height": {
+      "family": "fam-kitchen",
+      "name": "height",
+      "kind": "Length",
+      "value": "0.9 m"
+    },
+    "fam-kitchen.plinth": {
+      "family": "fam-kitchen",
+      "name": "plinth",
+      "kind": "Length",
+      "value": "0.1 m"
+    },
+    "fam-kitchen.worktop": {
+      "family": "fam-kitchen",
+      "name": "worktop",
+      "kind": "Length",
+      "value": "40 mm"
+    },
+    "fam-kitchen.overhang": {
+      "family": "fam-kitchen",
+      "name": "overhang",
+      "kind": "Length",
+      "value": "20 mm"
+    },
+    "fam-wc.width": {
+      "family": "fam-wc",
+      "name": "width",
+      "kind": "Length",
+      "value": "0.38 m"
+    },
+    "fam-wc.depth": {
+      "family": "fam-wc",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.68 m"
+    },
+    "fam-wc.bowl_height": {
+      "family": "fam-wc",
+      "name": "bowl_height",
+      "kind": "Length",
+      "value": "0.4 m"
+    },
+    "fam-wc.cistern_depth": {
+      "family": "fam-wc",
+      "name": "cistern_depth",
+      "kind": "Length",
+      "value": "0.2 m"
+    },
+    "fam-wc.cistern_height": {
+      "family": "fam-wc",
+      "name": "cistern_height",
+      "kind": "Length",
+      "value": "0.8 m"
+    },
+    "fam-basin.width": {
+      "family": "fam-basin",
+      "name": "width",
+      "kind": "Length",
+      "value": "0.55 m"
+    },
+    "fam-basin.depth": {
+      "family": "fam-basin",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.45 m"
+    },
+    "fam-basin.bowl_height": {
+      "family": "fam-basin",
+      "name": "bowl_height",
+      "kind": "Length",
+      "value": "0.18 m"
+    },
+    "fam-lamp.drop": {
+      "family": "fam-lamp",
+      "name": "drop",
+      "kind": "Length",
+      "value": "0.5 m"
+    },
+    "fam-lamp.shade": {
+      "family": "fam-lamp",
+      "name": "shade",
+      "kind": "Length",
+      "value": "0.4 m"
+    },
+    "fam-lamp.shade_height": {
+      "family": "fam-lamp",
+      "name": "shade_height",
+      "kind": "Length",
+      "value": "0.18 m"
+    },
+    "fam-lamp.cord": {
+      "family": "fam-lamp",
+      "name": "cord",
+      "kind": "Length",
+      "value": "12 mm"
+    },
+    "fam-diffuser.size": {
+      "family": "fam-diffuser",
+      "name": "size",
+      "kind": "Length",
+      "value": "0.6 m"
+    },
+    "fam-diffuser.thickness": {
+      "family": "fam-diffuser",
+      "name": "thickness",
+      "kind": "Length",
+      "value": "80 mm"
+    },
+    "fam-panel.width": {
+      "family": "fam-panel",
+      "name": "width",
+      "kind": "Length",
+      "value": "0.6 m"
+    },
+    "fam-panel.depth": {
+      "family": "fam-panel",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.2 m"
+    },
+    "fam-panel.height": {
+      "family": "fam-panel",
+      "name": "height",
+      "kind": "Length",
+      "value": "1.2 m"
+    },
+    "fam-pillar.side": {
+      "family": "fam-pillar",
+      "name": "side",
+      "kind": "Length",
+      "value": "0.3 m"
+    },
+    "fam-pillar.height": {
+      "family": "fam-pillar",
+      "name": "height",
+      "kind": "Length",
+      "value": "2.2 m"
+    },
+    "fam-rig.width": {
+      "family": "fam-rig",
+      "name": "width",
+      "kind": "Length",
+      "value": "0.8 m"
+    },
+    "fam-rig.depth": {
+      "family": "fam-rig",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.5 m"
+    },
+    "fam-rig.height": {
+      "family": "fam-rig",
+      "name": "height",
+      "kind": "Length",
+      "value": "0.4 m"
+    }
+  },
+  "family_solids": {
+    "fs-table-top": {
+      "family": "fam-table",
+      "name": "Top",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "leg_height",
+          "width": "width",
+          "depth": "depth",
+          "height": "top_thickness"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-leg-1": {
+      "family": "fam-table",
+      "name": "Leg 1",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_inset",
+          "y": "leg_inset",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-leg-2": {
+      "family": "fam-table",
+      "name": "Leg 2",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "leg_inset",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-leg-3": {
+      "family": "fam-table",
+      "name": "Leg 3",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-table-leg-4": {
+      "family": "fam-table",
+      "name": "Leg 4",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_inset",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg_section",
+          "depth": "leg_section",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-seat": {
+      "family": "fam-chair",
+      "name": "Seat",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "leg_height",
+          "width": "seat_width",
+          "depth": "seat_depth",
+          "height": "plank"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-back": {
+      "family": "fam-chair",
+      "name": "Back",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "seat_height",
+          "width": "seat_width",
+          "depth": "plank",
+          "height": "back_height"
+        }
+      },
+      "material": "\"m-oak\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-leg-1": {
+      "family": "fam-chair",
+      "name": "Leg 1",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "leg",
+          "depth": "leg",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-leg-2": {
+      "family": "fam-chair",
+      "name": "Leg 2",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "leg",
+          "depth": "leg",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-leg-3": {
+      "family": "fam-chair",
+      "name": "Leg 3",
+      "shape": {
+        "Cuboid": {
+          "x": "leg_x",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg",
+          "depth": "leg",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-chair-leg-4": {
+      "family": "fam-chair",
+      "name": "Leg 4",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "leg_y",
+          "z": "0 m",
+          "width": "leg",
+          "depth": "leg",
+          "height": "leg_height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-kitchen-carcass": {
+      "family": "fam-kitchen",
+      "name": "Carcass",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - width / 2",
+          "y": "0 m",
+          "z": "plinth",
+          "width": "width",
+          "depth": "depth",
+          "height": "height - plinth - worktop"
+        }
+      },
+      "material": "\"m-timber\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-kitchen-worktop": {
+      "family": "fam-kitchen",
+      "name": "Worktop",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - width / 2",
+          "y": "0 m",
+          "z": "height - worktop",
+          "width": "width",
+          "depth": "depth + overhang",
+          "height": "worktop"
+        }
+      },
+      "material": "\"m-ceramic\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-wc-cistern": {
+      "family": "fam-wc",
+      "name": "Cistern",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - width / 2",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "width",
+          "depth": "cistern_depth",
+          "height": "cistern_height"
+        }
+      },
+      "material": "\"m-ceramic\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-wc-bowl": {
+      "family": "fam-wc",
+      "name": "Bowl",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - width / 2",
+          "y": "cistern_depth",
+          "z": "0 m",
+          "width": "width",
+          "depth": "depth - cistern_depth",
+          "height": "bowl_height"
+        }
+      },
+      "material": "\"m-ceramic\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-basin-bowl": {
+      "family": "fam-basin",
+      "name": "Bowl",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - width / 2",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "bowl_height"
+        }
+      },
+      "material": "\"m-ceramic\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-lamp-cord": {
+      "family": "fam-lamp",
+      "name": "Cord",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - cord / 2",
+          "y": "0 m - cord / 2",
+          "z": "0 m - drop",
+          "width": "cord",
+          "depth": "cord",
+          "height": "drop"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-lamp-shade": {
+      "family": "fam-lamp",
+      "name": "Shade",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - shade / 2",
+          "y": "0 m - shade / 2",
+          "z": "0 m - drop - shade_height",
+          "width": "shade",
+          "depth": "shade",
+          "height": "shade_height"
+        }
+      },
+      "material": "\"m-paint\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-diffuser-plate": {
+      "family": "fam-diffuser",
+      "name": "Plate",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - size / 2",
+          "y": "0 m - size / 2",
+          "z": "0 m - thickness",
+          "width": "size",
+          "depth": "size",
+          "height": "thickness"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-panel-cabinet": {
+      "family": "fam-panel",
+      "name": "Cabinet",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - width / 2",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-pillar-shaft": {
+      "family": "fam-pillar",
+      "name": "Shaft",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - side / 2",
+          "y": "0 m - side / 2",
+          "z": "0 m",
+          "width": "side",
+          "depth": "side",
+          "height": "height"
+        }
+      },
+      "material": "\"m-timber\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "fs-rig-housing": {
+      "family": "fam-rig",
+      "name": "Housing",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m - width / 2",
+          "y": "0 m - depth / 2",
+          "z": "0 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "height"
+        }
+      },
+      "material": "\"m-steel\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    }
+  },
+  "components": {
+    "cmp-table": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "position": {
+        "x": 1.5,
+        "y": 1.5
+      },
+      "elevation": 0,
+      "rotation": 0.5,
+      "mirrored": false,
+      "name": "Table"
+    },
+    "cmp-chair-free": {
+      "storey": "st-ground",
+      "family": "fam-chair",
+      "position": {
+        "x": 3,
+        "y": 3
+      },
+      "elevation": 0,
+      "rotation": 1.5707963267948966,
+      "mirrored": false,
+      "name": "Free Chair"
+    },
+    "cmp-chair-mirrored": {
+      "storey": "st-ground",
+      "family": "fam-chair",
+      "position": {
+        "x": 4.5,
+        "y": 3
+      },
+      "elevation": 0,
+      "rotation": 0.3,
+      "mirrored": true,
+      "name": "Mirrored Chair"
+    },
+    "cmp-kitchen": {
+      "storey": "st-ground",
+      "family": "fam-kitchen",
+      "position": {
+        "x": 3,
+        "y": 5.7
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "host": "w-north",
+      "name": "Kitchen Unit"
+    },
+    "cmp-wc": {
+      "storey": "st-ground",
+      "family": "fam-wc",
+      "position": {
+        "x": 0.5,
+        "y": 4
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "host": "w-west",
+      "name": "WC"
+    },
+    "cmp-basin": {
+      "storey": "st-ground",
+      "family": "fam-basin",
+      "position": {
+        "x": 7.5,
+        "y": 3
+      },
+      "elevation": 0.8,
+      "rotation": 0,
+      "mirrored": false,
+      "host": "w-east",
+      "system": "Waste",
+      "name": "Basin"
+    },
+    "cmp-lamp": {
+      "storey": "st-ground",
+      "family": "fam-lamp",
+      "position": {
+        "x": 4,
+        "y": 2
+      },
+      "elevation": 2.6,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Lighting",
+      "name": "Lamp"
+    },
+    "cmp-diffuser": {
+      "storey": "st-ground",
+      "family": "fam-diffuser",
+      "position": {
+        "x": 6,
+        "y": 3
+      },
+      "elevation": 2.8,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Supply",
+      "name": "Diffuser"
+    },
+    "cmp-fan": {
+      "storey": "st-ground",
+      "family": "fam-rig",
+      "position": {
+        "x": 2,
+        "y": 4.5
+      },
+      "elevation": 0,
+      "rotation": 0.2,
+      "mirrored": false,
+      "name": "Fan Unit"
+    },
+    "cmp-pillar": {
+      "storey": "st-ground",
+      "family": "fam-pillar",
+      "position": {
+        "x": 6.5,
+        "y": 1
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Pillar"
+    },
+    "cmp-panel": {
+      "storey": "st-ground",
+      "family": "fam-panel",
+      "position": {
+        "x": 7,
+        "y": 5.7
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "host": "w-north",
+      "system": "Power",
+      "name": "Board"
+    },
+    "cmp-table-first": {
+      "storey": "st-first",
+      "family": "fam-table",
+      "position": {
+        "x": 2,
+        "y": 2
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Upper Table"
+    }
+  },
+  "component_overrides": {
+    "cmp-table.width": {
+      "component": "cmp-table",
+      "name": "width",
+      "value": "1.8 m"
+    },
+    "cmp-table.depth": {
+      "component": "cmp-table",
+      "name": "depth",
+      "value": "0.9 m"
+    },
+    "cmp-chair-mirrored.seat_height": {
+      "component": "cmp-chair-mirrored",
+      "name": "seat_height",
+      "value": "0.5 m"
+    },
+    "cmp-kitchen.width": {
+      "component": "cmp-kitchen",
+      "name": "width",
+      "value": "2.1 m"
+    }
+  },
+  "mep_elements": {
+    "mep-supply": {
+      "storey": "st-ground",
+      "system": "Supply",
+      "shape": {
+        "Duct": {
+          "width": 0.4,
+          "height": 0.25
+        }
+      },
+      "path": [
+        {
+          "x": 1,
+          "y": 3,
+          "z": 2.5
+        },
+        {
+          "x": 6,
+          "y": 3,
+          "z": 2.5
+        },
+        {
+          "x": 6,
+          "y": 3,
+          "z": 2.8
+        }
+      ],
+      "name": "Supply Duct"
+    },
+    "mep-return": {
+      "storey": "st-ground",
+      "system": "Return",
+      "shape": {
+        "Duct": {
+          "width": 0.3,
+          "height": 0.2
+        }
+      },
+      "path": [
+        {
+          "x": 1,
+          "y": 4.5,
+          "z": 2.6
+        },
+        {
+          "x": 7,
+          "y": 4.5,
+          "z": 2.6
+        }
+      ],
+      "name": "Return Duct"
+    },
+    "mep-water": {
+      "storey": "st-ground",
+      "system": "DomesticWater",
+      "shape": {
+        "Pipe": {
+          "diameter": 0.032
+        }
+      },
+      "path": [
+        {
+          "x": 7.85,
+          "y": 5,
+          "z": 0.95
+        },
+        {
+          "x": 7.85,
+          "y": 3,
+          "z": 0.95
+        },
+        {
+          "x": 7.85,
+          "y": 3,
+          "z": 0.2
+        }
+      ],
+      "name": "Water Pipe"
+    },
+    "mep-waste": {
+      "storey": "st-ground",
+      "system": "Waste",
+      "shape": {
+        "Pipe": {
+          "diameter": 0.1
+        }
+      },
+      "path": [
+        {
+          "x": 7.85,
+          "y": 3,
+          "z": 0.8
+        },
+        {
+          "x": 7.85,
+          "y": 3,
+          "z": 0.1
+        },
+        {
+          "x": 5,
+          "y": 3,
+          "z": 0.1
+        }
+      ],
+      "name": "Waste Pipe"
+    },
+    "mep-gas": {
+      "storey": "st-ground",
+      "system": "Gas",
+      "shape": {
+        "Pipe": {
+          "diameter": 0.025
+        }
+      },
+      "path": [
+        {
+          "x": 7.5,
+          "y": 5.5,
+          "z": 0
+        },
+        {
+          "x": 7.5,
+          "y": 5.5,
+          "z": 2.5
+        }
+      ],
+      "name": "Gas Riser"
+    },
+    "mep-tray": {
+      "storey": "st-ground",
+      "system": "Power",
+      "shape": {
+        "Tray": {
+          "width": 0.3,
+          "height": 0.06
+        }
+      },
+      "path": [
+        {
+          "x": 1,
+          "y": 1,
+          "z": 2.9
+        },
+        {
+          "x": 7,
+          "y": 1,
+          "z": 2.9
+        },
+        {
+          "x": 7,
+          "y": 5,
+          "z": 2.9
+        }
+      ],
+      "name": "Power Tray"
+    },
+    "mep-lighting": {
+      "storey": "st-ground",
+      "system": "Lighting",
+      "shape": {
+        "Tray": {
+          "width": 0.1,
+          "height": 0.05
+        }
+      },
+      "path": [
+        {
+          "x": 4,
+          "y": 2,
+          "z": 2.6
+        },
+        {
+          "x": 4,
+          "y": 2,
+          "z": 2.9
+        }
+      ],
+      "name": "Lighting Stub"
+    }
+  },
+  "views": {
+    "v-plan-ground": {
+      "building": "bldg-1",
+      "name": "Plan Ground",
+      "kind": "Plan",
+      "storey": "st-ground",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium"
+    },
+    "v-plan-first": {
+      "building": "bldg-1",
+      "name": "Plan First",
+      "kind": "Plan",
+      "storey": "st-first",
+      "depth": 100,
+      "hidden": [],
+      "scale": 100,
+      "detail": "Medium"
+    }
+  }
+}

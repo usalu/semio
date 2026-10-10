@@ -1,6 +1,6 @@
 use super::*;
-use protocol::os_spr::protocol_laws::assert_diff_algebra_between_law;
-use protocol::{OpBinary, OpText};
+use protocol::os_spr::protocol_laws::assert_diff_algebra_inverse_law;
+use protocol::{Mutation, OpBinary, OpText};
 use store::{ArtifactDsl, ArtifactPack};
 
 fn pinned() -> BimScheduleWindowConfig {
@@ -8,13 +8,15 @@ fn pinned() -> BimScheduleWindowConfig {
 }
 
 fn snapshot(config: BimScheduleWindowConfig) -> BimScheduleWindowConfigMutation {
-    BimScheduleWindowConfigMutation::Snapshot { config }
+    BimScheduleWindowConfigMutation::Replace { config }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn the_inverse_sums_to_the_negative_diff_and_between_is_the_state_delta() {
+async fn the_inverse_sums_to_the_negative_diff_and_the_diff_inverse_restores_the_base() {
     crate::render::window_config::assert_window_config_laws(&BimScheduleWindowConfig::default(), &snapshot(pinned())).await;
-    assert_diff_algebra_between_law::<BimScheduleWindowConfig, BimScheduleWindowConfigDiff>(&pinned(), &BimScheduleWindowConfig::default()).await;
+    let base = BimScheduleWindowConfig::default();
+    let outcome = snapshot(pinned()).diff(&base);
+    assert_diff_algebra_inverse_law::<BimScheduleWindowConfig, BimScheduleWindowConfigDiff>(&base, outcome.diff()).await;
 }
 
 #[semio_framework_async_macros::async_test]

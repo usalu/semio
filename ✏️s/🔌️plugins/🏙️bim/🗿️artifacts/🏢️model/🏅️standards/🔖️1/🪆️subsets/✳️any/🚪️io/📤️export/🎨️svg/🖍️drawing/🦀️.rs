@@ -6,7 +6,9 @@ use super::codec::{attr, element, text, CommonAttrs, SvgElement, TransformOp};
 use super::path::{commands, snap};
 use super::sheet::{Slot, TITLE_BAND};
 use super::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanText};
+use crate::standards::v1::subsets::any::schema::inferences::mep;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanText};
+use crate::ModelSnapshot;
 
 /// 🔑️ An XML id built from a prefix and a model id: characters outside `[A-Za-z0-9_.-]` become `_`.
 pub fn xml_id(prefix: &str, raw: &str) -> String {
@@ -28,6 +30,24 @@ pub fn lines_of(text: &PlanText) -> Vec<String> {
 fn classed(class: String, element: &str, id: &str) -> CommonAttrs {
     let mut common = CommonAttrs::new().with_class(class);
     common.extra_attrs = vec![attr("data-element", element), attr("data-id", id)];
+    common
+}
+
+/// 🎨️ The inline style property and colour a primitive of a routed element or a terminal connector gets from its service (the fixed palette of the systems): the stroke of a centre line, drop or connector, the fill of a band.
+pub fn tint(model: &ModelSnapshot, element: &str, kind: PlanKind) -> Option<(&'static str, &'static str)> {
+    let property = match kind {
+        PlanKind::MepBand => "fill",
+        PlanKind::MepAxis | PlanKind::MepDrop | PlanKind::ComponentConnector => "stroke",
+        _ => return None,
+    };
+    let colour = model.mep_elements.get(element).map(|row| mep::colour(row.system)).or_else(|| model.components.get(element).and_then(|row| row.system).map(mep::colour))?;
+    Some((property, colour))
+}
+
+fn tinted(mut common: CommonAttrs, model: &ModelSnapshot, element: &str, kind: PlanKind) -> CommonAttrs {
+    if let Some((property, colour)) = tint(model, element, kind) {
+        common.extra_attrs.push(attr("style", format!("{property}:{colour}")));
+    }
     common
 }
 
@@ -67,7 +87,7 @@ fn layer(class: &str, children: Vec<SvgElement>) -> SvgElement {
 }
 
 /// 🖍️ The layers of the drawing of one view placed in `slot`, in paint order: the filled regions, the stroked lines, the texts and, when the view is annotated, the annotation layer. A sheet viewport wraps these in its own clipped group.
-pub fn view_layers(slot: &Slot, plan: &PlanLinework) -> Vec<SvgElement> {
+pub fn view_layers(model: &ModelSnapshot, slot: &Slot, plan: &PlanLinework) -> Vec<SvgElement> {
     let mut regions: Vec<_> = plan.regions.iter().collect();
     regions.sort_by_key(|region| paint_rank(region.style));
     let mut lines: Vec<_> = plan.polylines.iter().filter(|line| !annotated(line.kind)).collect();
@@ -75,13 +95,13 @@ pub fn view_layers(slot: &Slot, plan: &PlanLinework) -> Vec<SvgElement> {
     let region_paths = regions
         .into_iter()
         .map(|region| SvgElement::Path {
-            common: classed(format!("region {} {}", style_class(region.style), kind_class(region.kind)), &region.element, &region.id),
+            common: tinted(classed(format!("region {} {}", style_class(region.style), kind_class(region.kind)), &region.element, &region.id), model, &region.element, region.kind),
             d: std::iter::once(&region.outer).chain(region.holes.iter()).flat_map(|ring| commands(ring, true, &slot.frame)).collect(),
         })
         .collect();
     let line_paths = lines
         .into_iter()
-        .map(|line| SvgElement::Path { common: classed(format!("line {} {}", style_class(line.style), kind_class(line.kind)), &line.element, &line.id), d: commands(&line.vertices, line.closed, &slot.frame) })
+        .map(|line| SvgElement::Path { common: tinted(classed(format!("line {} {}", style_class(line.style), kind_class(line.kind)), &line.element, &line.id), model, &line.element, line.kind), d: commands(&line.vertices, line.closed, &slot.frame) })
         .collect();
     let mut layers = vec![
         layer("layer regions", region_paths),
@@ -96,7 +116,7 @@ pub fn view_layers(slot: &Slot, plan: &PlanLinework) -> Vec<SvgElement> {
 }
 
 /// 🖍️ The group of the drawing of one view placed in `slot`.
-pub fn view_group(slot: &Slot, plan: &PlanLinework) -> SvgElement {
+pub fn view_group(model: &ModelSnapshot, slot: &Slot, plan: &PlanLinework) -> SvgElement {
     let title = if slot.name.is_empty() { slot.view.as_str() } else { slot.name.as_str() };
     let mut common = CommonAttrs::new().with_id(xml_id("view", &slot.view)).with_class(format!("view {}", view_class(slot.kind))).with_transform(vec![TransformOp::Translate { x: snap(slot.x), y: Some(snap(slot.y)) }]);
     common.extra_attrs = vec![attr("data-view", &slot.view), attr("data-kind", view_class(slot.kind)), attr("data-building", &slot.building), attr("data-name", &slot.name), attr("data-scale", slot.scale)];
@@ -106,7 +126,7 @@ pub fn view_group(slot: &Slot, plan: &PlanLinework) -> SvgElement {
     common.extra_attrs.push(attr("aria-label", title));
     let heading = SvgElement::Text { common: CommonAttrs::new().with_class("title"), x: Some(snap(slot.frame.left)), y: Some(snap(TITLE_BAND - (TITLE_BAND - TITLE_SIZE) / 2.0)), children: vec![text(title)] };
     let mut children = vec![element("title", vec![], vec![text(title)]), heading];
-    children.extend(view_layers(slot, plan));
+    children.extend(view_layers(model, slot, plan));
     SvgElement::Group { common, children }
 }
 

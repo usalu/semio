@@ -81,7 +81,7 @@ pub(super) struct ArtifactEphemeralTaskPreparation<P, M> {
     retirement: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     state_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
     mutation_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,
-    base_registry: ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryHandle>>,
+    base_registry: ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryAliasRetirement>>,
     factory_close: [Option<semio_framework_value::FactoryAuthority>; 2],
     checkpoint: ArtifactStoreOneItemCheckpoint,
     constructed: bool,
@@ -211,7 +211,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
                 }
                 ArtifactEphemeralBaseOwner::Presence(read) | ArtifactEphemeralBaseOwner::TransientRead(read) => {
                     if read.owner.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-                    if let Some(mut lease) = read.lease.take() { lease.return_now(); *self.base_registry = Some(lease.registry); }
+                    if let Some(mut lease) = read.lease.take() { lease.return_now(); *self.base_registry = Some(crate::os_store::SnapshotReadRegistryAliasRetirement::new(lease.registry)); }
                     self.base.take(); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
             }

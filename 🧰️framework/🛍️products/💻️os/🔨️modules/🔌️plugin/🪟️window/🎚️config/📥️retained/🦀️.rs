@@ -205,14 +205,23 @@ pub(super) trait ErasedWindowConfigPackLoad: Send {
 }
 
 pub struct WindowConfigPackLoad {
-    pub(super) inner: Box<dyn ErasedWindowConfigPackLoad>,
+    pub(super) inner:ManuallyDrop<Option<Box<dyn ErasedWindowConfigPackLoad>>>,
+    closed_progress:WindowConfigPackLoadProgress,
+    closed_diagnostic:Option<WindowConfigPackLoadDiagnostic>,
 }
-
 impl WindowConfigPackLoad {
     #[cfg(test)]
-    pub(super) fn candidate_actor_for_test<O: WindowConfigOwner>(&mut self) -> Option<protocol::ActorId> {
-        let typed = self.inner.as_any_mut().downcast_mut::<TypedWindowConfigPackLoad<O>>()?;
-        typed.candidate.as_ref().map(|candidate| candidate.store.local_actor_id().clone())
+    pub(super) fn candidate_actor_for_test<O:WindowConfigOwner>(&mut self)->Option<protocol::ActorId>{let typed=self.inner.as_mut()?.as_any_mut().downcast_mut::<TypedWindowConfigPackLoad<O>>()?;typed.candidate.as_ref().map(|candidate|candidate.store.local_actor_id().clone())}
+    pub fn phase(&self)->WindowConfigPackLoadPhase{self.inner.as_ref().map_or(WindowConfigPackLoadPhase::Complete,|inner|inner.phase())}
+    pub fn progress(&self)->WindowConfigPackLoadProgress{self.inner.as_ref().map_or(self.closed_progress,|inner|inner.progress())}
+    pub fn diagnostic(&self)->Option<WindowConfigPackLoadDiagnostic>{self.inner.as_ref().map_or(self.closed_diagnostic,|inner|inner.diagnostic())}
+    pub fn request_cancel(&mut self){if let Some(inner)=self.inner.as_mut(){inner.request_cancel();}}
+    pub fn cold_work_grant(&mut self)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.max(self.inner.as_mut().map_or(0,|inner|inner.demand_bytes())),maximum_capacity_bytes:store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,maximum_release_bytes:store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,maximum_depth:64}}
+    pub fn terminal_is_empty(&self)->bool{self.inner.is_none()}
+    pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        let Some(inner)=self.inner.as_ref()else{return Ok(Default::default());};
+        if inner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:std::mem::size_of_val(inner.as_ref()),depth:1,..Default::default()});}
+        let mut demand=inner.close_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"window load frame depth overflow"))?;Ok(demand)
     }
 
     pub fn phase(&self) -> WindowConfigPackLoadPhase {
@@ -271,6 +280,7 @@ enum BuiltValue {
     Dsl(semio_framework_value::DslValue),
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 enum ValueFrame {
     Record { kind: store::mounted_pack_rt::RetainedValueContainer, root: bool, spec: Option<semio_framework_dsl_record::BorrowedRecordSpec>, fields: semio_framework_dsl_record::RecordFields, field: Option<u16> },
     Sequence { kind: store::mounted_pack_rt::RetainedValueContainer, element: ExpectedValue, values: Vec<BuiltValue> },
@@ -279,7 +289,7 @@ enum ValueFrame {
     Bytes { values: Vec<u8>, remaining: usize },
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, semio_framework_value::RetireOwned)]
 enum ValueWrapper {
     Block,
     Dynamic,
@@ -763,6 +773,14 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     }
 }
 
+impl<O:WindowConfigOwner> semio_framework_value::retirement::RetireOwned for RetainedWindowConfigTypedState<O>{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
+  use semio_framework_value::retirement::{sequence,deferred};let original=ManuallyDrop::new(self);
+  unsafe{sequence(vec![deferred(std::ptr::read(&original.spec)),deferred(std::ptr::read(&original.stack)),deferred(std::ptr::read(&original.wrappers)),deferred(std::ptr::read(&original.string)),deferred(original.tag),deferred(std::ptr::read(&original.root)),deferred(original.complete),deferred(original.handed_back)])}
+ }
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.spec),deferred_birth_bytes_for(&self.stack),deferred_birth_bytes_for(&self.wrappers),deferred_birth_bytes_for(&self.string),deferred_birth_bytes_for(&self.tag),deferred_birth_bytes_for(&self.root),deferred_birth_bytes_for(&self.complete),deferred_birth_bytes_for(&self.handed_back)])}
+ fn controlled_retirement_supported()->bool{true}
+}
 impl<O: WindowConfigOwner> Drop for RetainedWindowConfigTypedState<O> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "retained typed window config reached Drop before handoff or terminal-empty retirement");
@@ -780,6 +798,7 @@ enum RetainedStatePhase {
 }
 
 struct RetainedWindowConfigStateDecode<O: WindowConfigOwner> {
+    active:ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     phase: RetainedStatePhase,
     inner_start: usize,
     admitted: usize,
@@ -807,6 +826,7 @@ struct RetainedWindowConfigStateDecode<O: WindowConfigOwner> {
 impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
     fn new() -> Self {
         Self {
+            active:ManuallyDrop::new(None),
             phase: RetainedStatePhase::Envelope,
             inner_start: 0,
             admitted: 0,
@@ -1130,8 +1150,27 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
 
+    fn close_retained(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+        let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"window state decoder depth refused"));}
+        self.request_cancel();
+        if self.active.is_some(){return store::artifact_retirement_box_close_step(&mut self.active,grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if self.state.is_some(){return store::artifact_retirement_admit_owned(&mut self.state,&mut self.active,grant);}
+        if self.typed.is_some(){return store::artifact_retirement_admit_owned(&mut self.typed,&mut self.active,grant);}
+        if self.document_byte.take().is_some()||self.catalog_value.take().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+        let convert=|step|match step{store::mounted_pack_rt::RetainedPackCloseStep::Pending{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}),store::mounted_pack_rt::RetainedPackCloseStep::Complete=>RetainedCloneStep::Progress(Default::default())};
+        if let Some(value)=self.value.as_mut(){let step=value.close_step(1,grant.maximum_release_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"window value retirement refused"))?;if matches!(step,store::mounted_pack_rt::RetainedPackCloseStep::Complete){if !value.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"window value false terminal"));}self.value.take();}return Ok(convert(step));}
+        if let Some(catalog)=self.catalog.as_mut(){let step=catalog.close_step(1,grant.maximum_release_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"window catalog retirement refused"))?;if matches!(step,store::mounted_pack_rt::RetainedPackCloseStep::Complete){if !catalog.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"window catalog false terminal"));}self.catalog.take();}return Ok(convert(step));}
+        if let Some(segment)=self.segment.as_mut(){let step=segment.close_step(1,grant.maximum_release_bytes);if matches!(step,store::mounted_pack_rt::RetainedPackCloseStep::Complete){if !segment.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"window segment false terminal"));}self.segment.take();}return Ok(convert(step));}
+        if let Some(anchor)=self.anchor.as_mut(){anchor.close_step();self.anchor.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+        if let Some(source)=self.source.as_mut(){let step=source.close_step(1,grant.maximum_release_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"window source retirement refused"))?;if matches!(step,store::mounted_pack_rt::RetainedPackCloseStep::Complete){if !source.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"window source false terminal"));}self.source.take();}return Ok(convert(step));}
+        self.phase=RetainedStatePhase::Closed;Ok(RetainedCloneStep::Complete(Default::default()))
+    }
     fn terminal_is_empty(&self) -> bool {
         self.phase == RetainedStatePhase::Closed
+            && self.active.is_none()
             && self.document_byte.is_none()
             && self.source.is_none()
             && self.anchor.is_none()
@@ -1145,6 +1184,14 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
     }
 }
 
+impl<O:WindowConfigOwner> store::ErasedSnapshotRetirement for RetainedWindowConfigStateDecode<O>{
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.retirement_demands(0).map(|demand|demand.copy_bytes)}
+ fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.retirement_demands(body).map(|demand|demand.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.retirement_demands(0).map(|demand|demand.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{self.retirement_demands(0).map(|demand|demand.depth)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_retained(grant)}
+ fn terminal_is_empty(&self)->bool{RetainedWindowConfigStateDecode::terminal_is_empty(self)}
+}
 impl<O: WindowConfigOwner> Drop for RetainedWindowConfigStateDecode<O> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "retained window config state decoder reached Drop before terminal-empty retirement");
@@ -1163,6 +1210,9 @@ enum LoadOriginal<O: WindowConfigOwner> {
 }
 
 struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
+    completed_states:ManuallyDrop<[Option<RetainedWindowConfigStateDecode<O>>;3]>,
+    pending_files:ManuallyDrop<Option<store::ArtifactPackFiles>>,
+    pending_address:ManuallyDrop<Option<String>>,
     opened_actor: ManuallyDrop<Option<protocol::ActorId>>,
     window_id: ManuallyDrop<Option<String>>,
     window_kind_id: ManuallyDrop<Option<String>>,
@@ -1203,6 +1253,9 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             Err(_) => (None, Some(WindowConfigPackLoadDiagnostic::Capacity)),
         };
         Self {
+            completed_states:ManuallyDrop::new(std::array::from_fn(|_|None)),
+            pending_files:ManuallyDrop::new(None),
+            pending_address:ManuallyDrop::new(None),
             opened_actor: ManuallyDrop::new(Some(opened_actor)),
             window_id: ManuallyDrop::new(Some(window_id)),
             window_kind_id: ManuallyDrop::new(Some(window_kind_id)),
@@ -1263,7 +1316,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         let pack = &self.files.as_ref().expect("retained window config input remains").pack;
         let decoder = self.state_decode.as_mut().expect("retained window config state decoder remains");
         let before = decoder.admitted;
-        match decoder.advance(pack, grant) {
+        match decoder.advance(pack, RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}) {
             Ok(_) => {
                 self.completed_bytes = self.completed_bytes.saturating_add(decoder.admitted.saturating_sub(before) as u64);
                 self.phase = match decoder.phase {
@@ -1335,7 +1388,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                 if !decoder.terminal_is_empty() {
                     return self.reject(WindowConfigPackLoadDiagnostic::Retirement);
                 }
-                self.history_decode.take();
+
                 *self.history = Some(history);
                 if self.adopt_original(LoadOriginal::Auxiliary(auxiliary)).is_err() { return self.reject(WindowConfigPackLoadDiagnostic::Retirement); }
                 self.phase = WindowConfigPackLoadPhase::InputRetirement;
@@ -1377,7 +1430,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             Err(_) => return self.reject(WindowConfigPackLoadDiagnostic::Retirement),
         }
         if self.hydration.is_none() {
-            if grant.maximum_items == 0 {
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 {
                 return self.pending();
             }
             let initial = self.initial.take().expect("decoded initial window config state remains");
@@ -1414,8 +1467,8 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             store::ConfigStoreHydrationStep::Pending(_) => self.pending(),
             store::ConfigStoreHydrationStep::Rejected(diagnostic) => self.reject(Self::map_hydration_diagnostic(diagnostic)),
             store::ConfigStoreHydrationStep::Ready(store) => {
-                self.hydration.take();
-                *self.candidate = Some(WindowConfigPartition { store: *store, disposer: Some(O::build_store_disposer()), pending_preview:None,pending_preview_address:None,pending_preview_alias:None,pending_preview_displaced:None,preview_retirement:None });
+
+                *self.candidate = Some(WindowConfigPartition { store: *store, disposer: Some(O::build_store_disposer()), pending_preview:None,pending_preview_reads:None,pending_preview_projection:None,pending_preview_projection_read:None,preview_retirement:None,returned_read_retirement:None });
                 self.phase = WindowConfigPackLoadPhase::Ready;
                 WindowConfigPackLoadStep::Ready
             }
@@ -1426,7 +1479,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         if let Some(diagnostic) = self.diagnostic {
             return WindowConfigPackLoadStep::Rejected(diagnostic);
         }
-        if grant.maximum_items == 0 {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return self.pending();
         }
         match self.phase {
@@ -1550,6 +1603,9 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
 
     fn ownership_is_empty(&self) -> bool {
         self.terminal
+            && self.completed_states.iter().all(Option::is_none)
+            && self.pending_files.is_none()
+            && self.pending_address.is_none()
             && self.opened_actor.is_none()
             && self.window_id.is_none()
             && self.window_kind_id.is_none()
@@ -1630,7 +1686,7 @@ pub(super) fn begin_typed_window_config_pack_load<O: WindowConfigOwner>(registry
     if over_bound {
         load.reject(WindowConfigPackLoadDiagnostic::Capacity);
     }
-    WindowConfigPackLoad { inner: Box::new(load) }
+    WindowConfigPackLoad { inner: ManuallyDrop::new(Some(Box::new(load))),closed_progress:WindowConfigPackLoadProgress{phase:WindowConfigPackLoadPhase::Complete,completed_bytes:0,total_bytes:0},closed_diagnostic:None }
 }
 
 pub(super) fn commit_typed_window_config_pack_load<O: WindowConfigOwner>(

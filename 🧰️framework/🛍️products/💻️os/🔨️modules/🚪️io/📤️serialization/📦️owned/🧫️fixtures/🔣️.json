@@ -1,0 +1,951 @@
+{
+  "cases": [
+    {
+      "id": "png-supported",
+      "format": "png",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": true,
+      "reason": null,
+      "sameOriginal": true,
+      "allocations": 128,
+      "releases": 0,
+      "factoryCalls": 1
+    },
+    {
+      "id": "png-missing",
+      "format": "png",
+      "capability": false,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "unsupported",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "png-import",
+      "format": "png",
+      "capability": true,
+      "direction": "import",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "unsupported",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "png-stale",
+      "format": "png",
+      "capability": true,
+      "direction": "export",
+      "current": false,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "stale",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "png-items",
+      "format": "png",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 0,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "png-capacity",
+      "format": "png",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "png-depth",
+      "format": "png",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 0
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "svg-supported",
+      "format": "svg",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": true,
+      "reason": null,
+      "sameOriginal": true,
+      "allocations": 128,
+      "releases": 0,
+      "factoryCalls": 1
+    },
+    {
+      "id": "svg-missing",
+      "format": "svg",
+      "capability": false,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "unsupported",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "svg-import",
+      "format": "svg",
+      "capability": true,
+      "direction": "import",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "unsupported",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "svg-stale",
+      "format": "svg",
+      "capability": true,
+      "direction": "export",
+      "current": false,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "stale",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "svg-items",
+      "format": "svg",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 0,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "svg-capacity",
+      "format": "svg",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "svg-depth",
+      "format": "svg",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 0
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "pdf-supported",
+      "format": "pdf",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": true,
+      "reason": null,
+      "sameOriginal": true,
+      "allocations": 128,
+      "releases": 0,
+      "factoryCalls": 1
+    },
+    {
+      "id": "pdf-missing",
+      "format": "pdf",
+      "capability": false,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "unsupported",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "pdf-import",
+      "format": "pdf",
+      "capability": true,
+      "direction": "import",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "unsupported",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "pdf-stale",
+      "format": "pdf",
+      "capability": true,
+      "direction": "export",
+      "current": false,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "stale",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "pdf-items",
+      "format": "pdf",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 0,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "pdf-capacity",
+      "format": "pdf",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    },
+    {
+      "id": "pdf-depth",
+      "format": "pdf",
+      "capability": true,
+      "direction": "export",
+      "current": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 0
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 128,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "reason": "grant",
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0,
+      "factoryCalls": 0
+    }
+  ],
+  "terminalHandoffs": [
+    {
+      "id": "output-original",
+      "kind": "output",
+      "finished": true,
+      "current": true,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": true,
+      "transferredItems": 1,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "fault-original",
+      "kind": "fault",
+      "finished": true,
+      "current": true,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": true,
+      "transferredItems": 1,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "fault-stale-source",
+      "kind": "fault",
+      "finished": true,
+      "current": false,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": true,
+      "transferredItems": 1,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "output-stale-source",
+      "kind": "output",
+      "finished": true,
+      "current": false,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "output-awaiting",
+      "kind": "output",
+      "finished": false,
+      "current": true,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "fault-awaiting",
+      "kind": "fault",
+      "finished": false,
+      "current": true,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "output-cancelled",
+      "kind": "output",
+      "finished": true,
+      "current": true,
+      "cancelled": true,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "fault-cancelled",
+      "kind": "fault",
+      "finished": true,
+      "current": true,
+      "cancelled": true,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "output-no-item",
+      "kind": "output",
+      "finished": true,
+      "current": true,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "fault-no-item",
+      "kind": "fault",
+      "finished": true,
+      "current": true,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "output-no-depth",
+      "kind": "output",
+      "finished": true,
+      "current": true,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 0
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "fault-no-depth",
+      "kind": "fault",
+      "finished": true,
+      "current": true,
+      "cancelled": false,
+      "available": true,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 0
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "output-transferred",
+      "kind": "output",
+      "finished": true,
+      "current": true,
+      "cancelled": false,
+      "available": false,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    },
+    {
+      "id": "fault-transferred",
+      "kind": "fault",
+      "finished": true,
+      "current": true,
+      "cancelled": false,
+      "available": false,
+      "grant": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "demand": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1
+      },
+      "accepted": false,
+      "transferredItems": 0,
+      "sameOriginal": true,
+      "allocations": 0,
+      "releases": 0
+    }
+  ]
+}

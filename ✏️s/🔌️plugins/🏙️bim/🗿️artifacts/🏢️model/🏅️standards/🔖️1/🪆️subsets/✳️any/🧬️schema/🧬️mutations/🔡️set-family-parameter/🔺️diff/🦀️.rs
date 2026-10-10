@@ -5,7 +5,7 @@
 use super::super::elements;
 use super::super::family_rules;
 use super::SetFamilyParameter;
-use crate::standards::v1::subsets::any::schema::inferences::families::formula;
+use crate::standards::v1::subsets::any::schema::authored::formula;
 use crate::{Entry, FamilyParameter, ModelDiff, ModelSnapshot, Patch};
 use protocol::{MutationOutcome, OutcomeCode};
 

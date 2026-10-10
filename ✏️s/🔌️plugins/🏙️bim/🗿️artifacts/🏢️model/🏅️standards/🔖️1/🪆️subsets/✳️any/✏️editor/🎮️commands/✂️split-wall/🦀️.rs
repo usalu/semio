@@ -12,7 +12,7 @@ use value_derive::{FromValue, ToValue};
 /// 🔢️ The fraction a wall splits at when none is typed.
 pub const MIDDLE: f64 = 0.5;
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "split-wall-at")]
 pub struct SplitWallAt {
     pub ids: Vec<String>,

@@ -1,6 +1,10 @@
 #!/usr/bin/env bun
 /** 🔮️ Registers the `s.bim.model@1` mutation vocabulary in the subset oracle manifest: derives catalog rows and manifest rows from the leaves on disk. `bun r3-f1-gen-oracle.ts` rewrites the two arrays in place. */
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync, writeFileSync as writeRaw } from "node:fs";
+const writeFileSync = (path: string, data: string) => {
+  rmSync(path, { force: true });
+  writeRaw(path, data);
+};
 import { join } from "node:path";
 
 const root = join(import.meta.dir, "../../../../../../..");

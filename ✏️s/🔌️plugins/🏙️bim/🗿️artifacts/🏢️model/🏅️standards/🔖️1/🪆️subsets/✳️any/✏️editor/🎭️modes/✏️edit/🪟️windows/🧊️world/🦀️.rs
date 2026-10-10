@@ -5,6 +5,9 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
+#[path = "🌡️envelope/🦀️.rs"]
+pub mod envelope;
+
 use self::config::BimWorldWindowConfig;
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::gestures::session::{Preview, Shape};
@@ -37,7 +40,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: crate::editor::bim::utilities::initial(),
         id: WINDOW_KIND_ID.into(),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.window_world.as_str(), BimLabels::NATIVE_DE.window_world.as_str()),
+        label: BimLabels::localized(|labels| labels.window_world),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "box".into(),
@@ -60,9 +63,18 @@ pub fn view_phase(config: &BimWorldWindowConfig) -> ViewPhase {
     ViewPhase::parse(&config.view_phase).unwrap_or_default()
 }
 
+/// 🔭️ Whether the world box of the solid meets the section box of the window (six values: the corner with the smallest coordinates, then the largest; none means no box).
+fn in_box(solid: &ElementSolid, config: &BimWorldWindowConfig) -> bool {
+    let [low_x, low_y, low_z, high_x, high_y, high_z] = config.section_box[..] else { return true };
+    world_bounds([solid]).is_none_or(|(min, max)| min[0] <= high_x && max[0] >= low_x && min[1] <= high_y && max[1] >= low_y && min[2] <= high_z && max[2] >= low_z)
+}
+
 /// 👁️ Whether the solid of element `id` is drawn: not on a hidden storey, on the isolated storey when there is one, and not hidden by the phase filter (the `phase-visibility` of its storey decides).
 pub fn visible(id: &str, solid: &ElementSolid, inference: &ModelInference, config: &BimWorldWindowConfig) -> bool {
-    (config.isolated_storey.is_empty() || solid.storey == config.isolated_storey)
+    (config.isolated_elements.is_empty() || config.isolated_elements.iter().any(|isolated| isolated == id))
+        && inference.option_scope.includes(id, &config.selected_options, &config.workset_visibility)
+        && in_box(solid, config)
+        && (config.isolated_storey.is_empty() || solid.storey == config.isolated_storey)
         && !config.hidden_storeys.contains(&solid.storey)
         && !inference.phase_visibility.get(&solid.storey).is_some_and(|phases| phases.hides(view_phase(config), id))
 }
@@ -166,8 +178,18 @@ pub fn scene(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimW
 /// 🎬️ [`scene`] with the marks of the gesture in progress painted over the model as the scene's engagement preview.
 pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &BimWorldWindowConfig, selection: &[String], hover: &[String], revision: u32, preview: &Preview) -> semio_framework_plugin::World3dScene {
     let solids = visible_solids(inference, config);
-    let meshes: Vec<DslValue> = solids.iter().map(|(id, solid)| mesh_entry(id, snapshot, solid)).collect();
-    let instances: Vec<DslValue> = solids.iter().map(|(id, solid)| instance_entry(id, snapshot, solid, selection.contains(id), hover.contains(id))).collect();
+    let mut meshes: Vec<DslValue> = solids.iter().map(|(id, solid)| mesh_entry(id, snapshot, solid)).collect();
+    let mut instances: Vec<DslValue> = solids.iter().map(|(id, solid)| instance_entry(id, snapshot, solid, selection.contains(id), hover.contains(id))).collect();
+    if config.structural_overlay {
+        let (structural_meshes,structural_instances)=crate::render::structure::overlay(inference,|id| inference.element_solids.get(id).is_some_and(|solid|visible(id,solid,inference,config)));
+        meshes.extend(structural_meshes);
+        instances.extend(structural_instances);
+    }
+    let overlay = envelope::overlay(snapshot, inference, config);
+    if let Some(overlay) = &overlay {
+        meshes.extend(overlay.meshes.iter().cloned());
+        instances.extend(overlay.instances.iter().cloned());
+    }
     let camera = if config.framed { config.camera } else { framing_camera(&solids) };
     let camera_json = semio_framework_plugin::world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &config.projection);
     let selected_ids: Vec<String> = selection.to_vec();
@@ -182,6 +204,10 @@ pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: 
     scene.domain_granularity_id = solids.first().and_then(|(id, _)| kind_holding(snapshot, id)).map(|row| row.kind.to_string());
     scene.fit_json = Some(semio_framework_pack_json::to_json_string(&DslValue::object([("enabled".to_string(), DslValue::Bool(!config.framed)), ("revision".to_string(), DslValue::float(f64::from(revision))), ("padding".to_string(), DslValue::float(1.25))])));
     scene.modelling_options = section_options(config);
+    if let Some(overlay) = overlay {
+        scene.annotations = overlay.annotations;
+        scene.scalar_field = overlay.scalar_field;
+    }
     let marks = preview_items(snapshot, inference, config, preview);
     scene.engagement_preview_json = (!marks.is_empty()).then(|| semio_framework_pack_json::to_json_string(&marks));
     scene

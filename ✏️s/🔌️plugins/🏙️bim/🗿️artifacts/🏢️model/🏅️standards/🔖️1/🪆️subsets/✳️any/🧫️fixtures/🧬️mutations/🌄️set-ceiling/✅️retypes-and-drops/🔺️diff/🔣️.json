@@ -1,1 +1,9 @@
-{}
+{
+  "ceilings": {
+    "ce-living": {
+      "ceiling_type": "ct-tile",
+      "entry": "Patched",
+      "offset": 0.5
+    }
+  }
+}

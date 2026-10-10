@@ -125,6 +125,24 @@
         "forwardAllArgs": false
       },
       "cache": false
+    },
+    "test-original-storage-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-original-storage source",
+        "forwardAllArgs": false,
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+      },
+      "cache": false
+    },
+    "test-original-storage-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-original-storage native",
+        "forwardAllArgs": false,
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+      },
+      "cache": false
     }
   }
 }

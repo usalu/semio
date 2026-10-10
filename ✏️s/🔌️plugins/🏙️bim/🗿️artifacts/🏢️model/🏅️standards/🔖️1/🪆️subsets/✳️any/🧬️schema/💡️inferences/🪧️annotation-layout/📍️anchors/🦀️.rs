@@ -11,7 +11,7 @@ use crate::{AnchorEnd, AnnotationAnchor, Axis, ModelSnapshot, Point2, Space, Spa
 pub const EPS: f64 = 1e-9;
 
 /// 🚫️ Why an anchor has no geometry now.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Reason {
     Missing,
     Curved,

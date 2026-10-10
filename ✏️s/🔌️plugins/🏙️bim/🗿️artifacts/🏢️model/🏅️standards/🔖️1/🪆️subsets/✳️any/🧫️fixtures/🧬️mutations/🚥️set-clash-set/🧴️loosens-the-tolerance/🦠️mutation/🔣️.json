@@ -1,0 +1,5 @@
+{
+  "mutation": "setClashSet",
+  "id": "cs-1",
+  "tolerance": 0.01
+}

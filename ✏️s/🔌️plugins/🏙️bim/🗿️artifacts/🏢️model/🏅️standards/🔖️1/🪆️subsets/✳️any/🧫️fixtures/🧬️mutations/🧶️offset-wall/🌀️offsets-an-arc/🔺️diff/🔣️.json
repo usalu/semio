@@ -1,1 +1,31 @@
-{}
+{
+  "walls": {
+    "w-arc-2": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.5,
+          "end": {
+            "x": 7.2,
+            "y": 0.6
+          },
+          "start": {
+            "x": 0.8,
+            "y": 0.6
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "Arc",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

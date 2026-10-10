@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Config
 /// 🗺️ Storey id (`""` = the lowest storey of the model) and viewport of one plan window. `framed` turns true with the first pan/zoom gesture
 /// and from then on suppresses the fit to the storey linework.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.bim.model.viewer-plan-window.config", extension = "bimviewerplanwindowcfg")]

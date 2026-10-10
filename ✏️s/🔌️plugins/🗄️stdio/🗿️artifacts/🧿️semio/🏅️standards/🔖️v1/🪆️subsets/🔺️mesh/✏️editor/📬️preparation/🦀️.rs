@@ -25,6 +25,7 @@ pub(super) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<
             PREFIX,
             recognizes,
             preflight,
+            || semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes:size_of::<MeshStructuralCopy>(),depth:1 },
             || Box::<MeshStructuralCopy>::default(),
             Arc::new(SemioMutationRetirementFactory::<SemioMeshMutation>(PhantomData)),
             Arc::new(SemioSnapshotRetirementFactory::<SemioMeshSnapshot>(PhantomData)),

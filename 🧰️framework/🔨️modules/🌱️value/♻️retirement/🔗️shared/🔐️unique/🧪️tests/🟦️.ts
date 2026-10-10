@@ -1,3 +1,6 @@
+import "../../../🔐️mutex/🧪️tests/🟦️.ts";
+import "../../🔒️sealed/🧪️tests/🟦️.ts";
+import "../../../../🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts";
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
@@ -11,3 +14,4 @@ test("unique Arc custody corpus includes original weak leases and bounded work g
  expect(fixture.copyGrants).toEqual([1,7,4096]);
  expect(validate({...fixture,cases:[{id:"negative",weakAliases:-1,value:31}]})).toBe(false);
 });
+  

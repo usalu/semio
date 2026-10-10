@@ -120,6 +120,10 @@ pub static ZONE_INFERRED: &[InferredRow] = &[
     inferred!("floor_finish_area", field_floor_finish_area, |_, inference, id| inference.zone_totals.get(id).map(|row| number(row.floor_finish_area))),
     inferred!("wall_finish_area", field_wall_finish_area, |_, inference, id| inference.zone_totals.get(id).map(|row| number(row.wall_finish_area))),
     inferred!("ceiling_finish_area", field_ceiling_finish_area, |_, inference, id| inference.zone_totals.get(id).map(|row| number(row.ceiling_finish_area))),
+    inferred!("envelope_area", field_envelope_area, |s, inference, id| super::energy::zone_total(s, inference, id, |totals| totals.envelope_area)),
+    inferred!("h_t_prime", field_h_t_prime, |s, inference, id| super::energy::zone_total(s, inference, id, |totals| totals.h_t_prime)),
+    inferred!("a_over_v", field_a_over_v, |s, inference, id| super::energy::zone_total(s, inference, id, |totals| totals.a_over_v)),
+    inferred!("glazing_ratio", field_glazing_ratio, |s, inference, id| super::energy::zone_total(s, inference, id, |totals| totals.glazing_ratio)),
 ];
 
 /// 🗃️ The distinct usages of the spaces of the model, so an area scheme can be written by what exists.

@@ -62,9 +62,10 @@ async fn the_command_downloads_the_csv_the_serializer_writes_for_that_schedule()
 
 #[semio_framework_async_macros::async_test]
 async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_as_the_one_shot_path() {
+    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = scheduled();
     let expected = schedule_csv(&snapshot, &ModelInference::infer(&snapshot).expect("infers"), "sch-walls").expect("the schedule");
-    let mut job = CsvJob::with_steps("sch-walls".into(), Some(7), 3, 2);
+    let mut job = CsvJob::with_steps("sch-walls".into(), Some(&instance), 3, 2);
     let (text, stages) = finished(&mut job, &snapshot);
     assert_eq!(text, expected, "chunked encoding is the same document");
     assert_eq!(stages.first(), Some(&"bim-schedule-csv-infer"));
@@ -76,21 +77,26 @@ async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_as_t
 
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_job_leaves_the_session_correct_and_the_next_job_finishes() {
+    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let snapshot = scheduled();
-    let mut cancelled = CsvJob::with_steps("sch-doors".into(), Some(8), 2, 1);
+    let mut cancelled = CsvJob::with_steps("sch-doors".into(), Some(&instance), 2, 1);
     for _ in 0..3 {
         cancelled.advance(&snapshot).expect("a step");
     }
+    cancelled.cancel(&snapshot);
+    let report = inference::report(Some(&instance));
+    assert!(report.cancelled && report.computed > 0);
     drop(cancelled);
-    let mut job = CsvJob::with_steps("sch-doors".into(), Some(8), 64, 64);
+    let mut job = CsvJob::with_steps("sch-doors".into(), Some(&instance), 64, 64);
     let (text, _) = finished(&mut job, &snapshot);
     assert_eq!(text, schedule_csv(&snapshot, &ModelInference::infer(&snapshot).expect("infers"), "sch-doors").expect("the schedule"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_job_over_a_schedule_that_left_the_model_stops_with_a_fault() {
+    let instance = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::detached();
     let mut snapshot = scheduled();
-    let mut job = CsvJob::new("sch-doors".into(), Some(9));
+    let mut job = CsvJob::new("sch-doors".into(), Some(&instance));
     job.advance(&snapshot).expect("the first step");
     snapshot.schedules.remove("sch-doors");
     assert_eq!(job.advance(&snapshot).expect_err("gone").code.0, "app.schedule.missing");

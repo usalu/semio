@@ -1,4 +1,5 @@
 use super::*;
+use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
 use crate::{ModelInference, ModelSnapshot};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{self, close};
@@ -112,3 +113,81 @@ fn the_section_is_counter_clockwise_and_starts_at_the_origin() {
     assert!(section.iter().map(|p| p.x).fold(f64::INFINITY, f64::min).abs() < 1e-12 && section.iter().map(|p| p.y).fold(f64::INFINITY, f64::min).abs() < 1e-12);
     assert!(close(extents_of(&sweep).0, 0.03) && close(extents_of(&sweep).1, 0.04));
 }
+
+//#region 🔖️Attic
+const ATTIC: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
+const ATTIC_TABLE: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/💡️inference/🧗️wall-depth/🔣️.json");
+const ATTIC_MESHES: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/🧊️meshes/🔣️.json");
+
+fn attic() -> ModelSnapshot {
+    from_json_str(ATTIC, JsonMemberPolicy::Reject).expect("the attic decodes")
+}
+
+fn attic_meshes() -> Value {
+    let rounded = |value: f64| (value * 1e12).round() / 1e12 + 0.0;
+    let meshes: serde_json::Map<String, Value> = compute_element_solids(&attic())
+        .iter()
+        .map(|(id, solid)| {
+            let welded = solid.mesh().welded();
+            (id.clone(), json!({ "positions": welded.positions.iter().flatten().map(|value| rounded(*value)).collect::<Vec<f64>>(), "indices": welded.indices.iter().flatten().copied().collect::<Vec<u32>>() }))
+        })
+        .collect();
+    json!({ "meshes": meshes })
+}
+
+fn same(left: &Value, right: &Value, path: &str) -> Vec<String> {
+    match (left, right) {
+        (Value::Object(a), Value::Object(b)) if a.keys().eq(b.keys()) => a.iter().flat_map(|(key, value)| same(value, &b[key], &format!("{path}/{key}"))).collect(),
+        (Value::Array(a), Value::Array(b)) if a.len() == b.len() => a.iter().zip(b).enumerate().flat_map(|(at, (x, y))| same(x, y, &format!("{path}/{at}"))).collect(),
+        (Value::Number(a), Value::Number(b)) if (a.as_f64().unwrap_or(f64::NAN) - b.as_f64().unwrap_or(f64::NAN)).abs() <= 1e-9 * a.as_f64().unwrap_or(0.0).abs().max(1.0) => Vec::new(),
+        _ if left == right => Vec::new(),
+        _ => vec![format!("{path}: {left} against {right}")],
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_inferred_attic_equals_the_table_shapely_wrote() {
+    let snapshot = attic();
+    let inferred = ModelInference::infer(&snapshot).expect("the attic infers");
+    let table: Value = serde_json::from_str(ATTIC_TABLE).expect("the oracle table is JSON");
+    let mut problems = Vec::new();
+    for (id, row) in table["walls"].as_object().expect("walls") {
+        let layout = &inferred.wall_layout[id.as_str()];
+        for (field, value) in [("base_z", layout.base_z), ("top_z", layout.top_z), ("side_area", layout.side_area)] {
+            problems.extend(same(&row[field], &json!(value), &format!("walls/{id}/{field}")));
+        }
+        if let Some(volume) = row.get("volume") {
+            problems.extend(same(volume, &json!(layout.volume), &format!("walls/{id}/volume")));
+        }
+    }
+    for (id, row) in table["sweeps"].as_object().expect("sweeps") {
+        let quantity = &inferred.quantities.elements[id.as_str()];
+        for (field, value) in [("length", quantity.length), ("section_area", quantity.gross_area), ("gross_volume", quantity.gross_volume), ("surface_area", quantity.surface_area)] {
+            problems.extend(same(&row[field], &json!(value), &format!("sweeps/{id}/{field}")));
+        }
+    }
+    for (id, row) in table["reveals"].as_object().expect("reveals") {
+        let filler = &inferred.element_solids[id.as_str()];
+        problems.extend(same(&row["frame_front_y"], &json!(filler.bounds.max.y), &format!("reveals/{id}/front")));
+        problems.extend(same(&row["frame_back_y"], &json!(filler.bounds.min.y), &format!("reveals/{id}/back")));
+    }
+    assert!(problems.is_empty(), "{problems:#?}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_committed_attic_meshes_are_the_inferred_ones() {
+    let committed: Value = serde_json::from_str(ATTIC_MESHES).expect("the meshes are JSON");
+    let problems = same(&committed, &attic_meshes(), "");
+    assert!(problems.is_empty(), "run the bless test (BIM_BLESS=1) after changing the attic or its inference: {:?}", &problems[..problems.len().min(5)]);
+}
+
+/// 🖨️ `BIM_BLESS=1` rewrites the committed meshes the three.js oracle in `🏔️solids-bim-1-wall-depth-three/🟦️.ts` measures.
+#[test]
+fn bless_the_wall_depth_meshes() {
+    if std::env::var_os("BIM_BLESS").is_none() {
+        return;
+    }
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/🧊️meshes/🔣️.json");
+    std::fs::write(path, serde_json::to_string_pretty(&attic_meshes()).expect("meshes serialise") + "\n").expect("meshes are written");
+}
+//#endregion 🔖️Attic

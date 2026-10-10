@@ -1,0 +1,5 @@
+{
+  "mutation": "removeComponentOverride",
+  "component": "cmp-table",
+  "name": "double"
+}

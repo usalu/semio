@@ -9,7 +9,7 @@ use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Mp3Diff {
     /// 🪆️ Tri-state: `None` = unchanged, `Some(None)` = id3v2 tag cleared, `Some(Some(tag))` =

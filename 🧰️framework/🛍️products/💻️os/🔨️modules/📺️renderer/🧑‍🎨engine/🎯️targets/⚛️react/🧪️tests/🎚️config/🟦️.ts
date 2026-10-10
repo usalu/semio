@@ -248,7 +248,7 @@ export default defineConfig({
     environment: "jsdom",
     coverage: { include: ["../../🟦️.tsx"] },
     exclude: [...configDefaults.exclude, ...playwrightEngineTestSuites, ...rootPolicySelfTestSuites],
-    include: includeAgentBridge ? [agentBridgeTestSuite] : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [...engineTestSuites],
+    include: (includeAgentBridge ? [agentBridgeTestSuite] : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [...engineTestSuites]).map(path => path.replaceAll("\\", "/")),
     testNamePattern: testLevel === "fundamental" ? /validates the language-neutral renderer resident capacity with the Node oracle/ : undefined,
     // 🧪️ In-source (`import.meta.vitest`) suites in the `🧑‍🎨engine/🧱️elements/` co-location dirs —
     // NOT under this package's own `root`, so the default `include` glob never finds them. Fundamental

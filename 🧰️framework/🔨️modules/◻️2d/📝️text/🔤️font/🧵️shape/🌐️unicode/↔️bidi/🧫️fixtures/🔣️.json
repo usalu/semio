@@ -1,0 +1,14 @@
+[
+{"name":"Empty Original Paragraph","text":"","direction":"auto","indices":[],"levels":[],"order":[]},
+{"name":"Original Latin Paragraph","text":"abc","direction":"auto","indices":[0,1,2],"levels":[0,0,0],"order":[0,1,2]},
+{"name":"Original Hebrew Paragraph","text":"אבג","direction":"auto","indices":[0,1,2],"levels":[1,1,1],"order":[2,1,0]},
+{"name":"Mixed Original Numbers","text":"abc אבג 123","direction":"auto","indices":[0,1,2,3,4,5,6,7,8,9,10],"levels":[0,0,0,0,1,1,1,1,2,2,2],"order":[0,1,2,3,8,9,10,7,6,5,4]},
+{"name":"Original Arabic Numbers","text":"مرحبا 123","direction":"auto","indices":[0,1,2,3,4,5,6,7,8],"levels":[1,1,1,1,1,1,2,2,2],"order":[6,7,8,5,4,3,2,1,0]},
+{"name":"Original Paired Brackets","text":"(אב)","direction":"auto","indices":[0,1,2,3],"levels":[1,1,1,1],"order":[3,2,1,0],"mirrors":[[0,41],[3,40]]},
+{"name":"Original Right Override","text":"a\u202ebc\u202cz","direction":"auto","indices":[0,2,3,5],"levels":[0,1,1,0],"order":[0,3,2,5]},
+{"name":"Original Right Isolate","text":"a\u2067אב\u2069z","direction":"auto","indices":[0,2,3,5],"levels":[0,1,1,0],"order":[0,3,2,5]},
+{"name":"Original First Strong Isolate","text":"a\u2068אב\u2069z","direction":"auto","indices":[0,2,3,5],"levels":[0,1,1,0],"order":[0,3,2,5]},
+{"name":"Latin Inside Original Right Isolate","text":"a\u2067bc\u2069z","direction":"auto","indices":[0,2,3,5],"levels":[0,2,2,0],"order":[0,2,3,5]},
+{"name":"Original Authored Right Paragraph","text":"abc","direction":"rtl","indices":[0,1,2],"levels":[2,2,2],"order":[0,1,2]},
+{"name":"Original Reset Whitespace","text":" אב ","direction":"ltr","indices":[0,1,2,3],"levels":[0,1,1,0],"order":[0,2,1,3]}
+]

@@ -123,11 +123,11 @@ pub fn png_rgba8_preview(image:&PngImage)->Result<Vec<u8>,String> {
 fn retire_png_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
     let item_bytes = std::mem::size_of::<T>();
     if !values.is_empty() {
-        let byte_items = if item_bytes == 0 { maximum_items } else { maximum_bytes / item_bytes };
-        let released_items = values.len().min(maximum_items).min(byte_items);
+
+        let released_items = values.len().min(maximum_items);
         if released_items == 0 { return Some((0, 0)); }
         values.truncate(values.len() - released_items);
-        return Some((released_items, released_items * item_bytes));
+        return Some((released_items, 0));
     }
     if values.capacity() == 0 { return None; }
     let backing = values.capacity().checked_mul(item_bytes).unwrap_or(usize::MAX);
@@ -138,10 +138,10 @@ fn retire_png_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_byt
 
 fn retire_png_string_step(value: &mut String, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
     if !value.is_empty() {
-        let bytes = value.chars().next_back().map_or(0, char::len_utf8);
-        if maximum_items == 0 || maximum_bytes < bytes { return Some((0, 0)); }
+
+        if maximum_items == 0 { return Some((0, 0)); }
         value.pop();
-        return Some((1, bytes));
+        return Some((1, 0));
     }
     if value.capacity() == 0 { return None; }
     let backing = value.capacity();
@@ -214,20 +214,20 @@ impl<'a> PngNativePaintWorkOperation<'a> {
     pub fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->semio_framework_job::InteractiveJobCloseStep {
         use semio_framework_job::InteractiveJobCloseStep as Step;
         if !self.closing {return Step::Blocked;}
-        let pending=|step:(usize,usize)|Step::Pending {released_items:step.0,released_bytes:step.1};
+        let pending=|step:(usize,usize)|Step::Pending {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:step.0,released_bytes:step.1,..Default::default()}};
         if let Some(result)=&mut self.result {
             let image=&mut result.image;
             if let Some(step)=retire_png_vec_step(&mut image.samples,maximum_items,maximum_bytes) {return pending(step);}
-            if let Some(text)=image.text_chunks.last_mut() {for field in [&mut text.keyword,&mut text.value,&mut text.language_tag,&mut text.translated_keyword] {if let Some(step)=retire_png_string_step(field,maximum_items,maximum_bytes) {return pending(step);}}if maximum_items==0||maximum_bytes<std::mem::size_of::<crate::schema::snapshot::PngTextChunk>() {return pending((0,0));}image.text_chunks.pop();return pending((1,std::mem::size_of::<crate::schema::snapshot::PngTextChunk>()));}
+            if let Some(text)=image.text_chunks.last_mut() {for field in [&mut text.keyword,&mut text.value,&mut text.language_tag,&mut text.translated_keyword] {if let Some(step)=retire_png_string_step(field,maximum_items,maximum_bytes) {return pending(step);}}if maximum_items==0 {return pending((0,0));}image.text_chunks.pop();return pending((1,0));}
             if let Some(step)=retire_png_vec_step(&mut image.text_chunks,maximum_items,maximum_bytes) {return pending(step);}
-            if let Some(chunk)=image.ancillary_chunks.last_mut() {if let Some(step)=retire_png_vec_step(&mut chunk.data,maximum_items,maximum_bytes) {return pending(step);}if maximum_items==0||maximum_bytes<std::mem::size_of::<crate::schema::snapshot::PngAncillaryChunk>() {return pending((0,0));}image.ancillary_chunks.pop();return pending((1,std::mem::size_of::<crate::schema::snapshot::PngAncillaryChunk>()));}
+            if let Some(chunk)=image.ancillary_chunks.last_mut() {if let Some(step)=retire_png_vec_step(&mut chunk.data,maximum_items,maximum_bytes) {return pending(step);}if maximum_items==0 {return pending((0,0));}image.ancillary_chunks.pop();return pending((1,0));}
             if let Some(step)=retire_png_vec_step(&mut image.ancillary_chunks,maximum_items,maximum_bytes) {return pending(step);}
             if let Some(palette)=&mut image.palette {if let Some(step)=retire_png_vec_step(palette,maximum_items,maximum_bytes) {return pending(step);}image.palette=None;}
             if let Some(PngTransparency::Indexed {alpha})=&mut image.transparency {if let Some(step)=retire_png_vec_step(alpha,maximum_items,maximum_bytes) {return pending(step);}}image.transparency=None;
             if let Some(step)=retire_png_string_step(&mut result.schema,maximum_items,maximum_bytes) {return pending(step);}
-            if maximum_items==0||maximum_bytes<std::mem::size_of::<PngSnapshot>() {return pending((0,0));}self.result=None;return pending((1,std::mem::size_of::<PngSnapshot>()));
+            if maximum_items==0 {return pending((0,0));}self.result=None;return pending((1,0));
         }
-        if let Some(step)=retire_png_string_step(&mut self.revision,maximum_items,maximum_bytes) {return pending(step);}Step::Complete
+        if let Some(step)=retire_png_string_step(&mut self.revision,maximum_items,maximum_bytes) {return pending(step);}Step::Complete {progress:Default::default()}
     }
     pub fn terminal_is_empty(&self)->bool {self.closing&&self.result.is_none()&&self.revision.capacity()==0}
 }
@@ -250,3 +250,4 @@ pub fn paint_native_region_owned_controlled(snapshot:&PngSnapshot,revision:&str,
 
 #[path="🪪️validation/🦀️.rs"]
 pub mod owned_validation;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   

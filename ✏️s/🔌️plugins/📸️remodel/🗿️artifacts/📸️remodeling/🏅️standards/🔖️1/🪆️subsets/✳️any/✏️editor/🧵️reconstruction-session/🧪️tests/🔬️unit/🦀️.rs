@@ -281,7 +281,7 @@ fn fresh_run(document: Arc<RemodelingSnapshot>) -> ReconstructionRunJob {
     ReconstructionRunJob::new(identity(), document, None, 0)
 }
 
-const WHOLE_TURNS: StepBudget = StepBudget { fuel: u64::MAX, deadline_us: u64::MAX };
+const WHOLE_TURNS: StepBudget = StepBudget { fuel: u64::MAX, deadline_us: u64::MAX, work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK };
 
 #[semio_framework_async_macros::async_test]
 async fn the_run_matches_the_language_neutral_fixture() {

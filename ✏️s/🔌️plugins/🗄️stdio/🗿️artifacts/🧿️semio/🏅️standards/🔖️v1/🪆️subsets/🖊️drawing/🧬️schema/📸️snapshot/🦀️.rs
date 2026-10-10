@@ -13,8 +13,8 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️PathSegment
 /// ✏️ A single SVG-style path command — the honest, complete production set for `Path.segments`
 /// (no `*OCTET`/size-eos catch-all: every field a real drawn quantity).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum PathSegment {
     MoveTo {
         to: SemioPoint2,
@@ -49,8 +49,8 @@ pub enum PathSegment {
 /// `SvgNodeDiff` recursive-diff template per the master plan. `style` fields are a referential
 /// `Option<String>` into `SemioDrawingSnapshot.styles` by name (checked by `SemioDrawingValidator`
 /// — dangling references are a real referential-invariant breach, not silently tolerated).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_node")]
 pub enum DrawNode {
     Path {
         segments: Vec<PathSegment>,
@@ -87,7 +87,7 @@ impl Default for DrawNode {
 /// (serde-derive's bound inference for `#[value(default)]` fields on a generic container reaches
 /// every type parameter, not just the immediately-defaulted field's own type).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_style")]
 pub struct DrawStyle {
     pub name: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -107,12 +107,12 @@ pub struct DrawStyle {
 /// 🩹 `Default` derived for the same reason as `DrawStyle` above (needed as the `T` of
 /// `triples::IndexedTripleDiff<DrawLayerDiff, DrawLayer>`).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_layer")]
 pub struct DrawLayer {
     pub id: String,
     pub name: String,
     pub visible: bool,
-    #[value(serialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::encode_node",deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_node",retire_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::retire_node")]
+    #[value(serialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::encode_node")]
     pub root: DrawNode,
 }
 //#endregion 🔖️Layer
@@ -141,7 +141,7 @@ pub const STDIO_SEMIODRAWING_DOCUMENT_SCHEMA: &str = "stdio.semio.drawing";
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_snapshot")]
 #[artifact_schema(id = "s.stdio.semio.drawing")]
 pub struct SemioDrawingSnapshot {
     #[state(artifact)]
@@ -328,7 +328,5 @@ pub use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 #[path="🧩️component/🦀️.rs"]
 pub mod native_binding;
 
-impl SemioDrawingSnapshot {
-    /// ♻️ Retires an owned drawing through its intrinsic bounded retirement cursor.
-    pub fn retire_owned(self){native_binding::nodes::retire_owned(self);}
-}
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                      

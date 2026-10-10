@@ -1,61 +1,37 @@
 use super::*;
 use base64::Engine;
-fn input(v:&serde_json::Value)->ImageDecodeInput{ImageDecodeInput{mime:v["mime"].as_str().unwrap().into(),data:Arc::new(v["data"].as_str().unwrap().into()),max_source_bytes:v["maxSourceBytes"].as_u64().unwrap()as usize,max_bytes:v["maxBytes"].as_u64().unwrap()as usize,max_pixels:v["maxPixels"].as_u64().unwrap()as usize,max_chunks:v["maxChunks"].as_u64().unwrap()as usize}}
-fn finish(job:&mut ImageDecodeJob,grant:usize)->Result<(),ImageDecodeError>{let(mut work,mut read,mut bytes,mut pixels)=(0,0,0,0);for _ in 0..2000000{let p=job.advance(grant)?;assert!(p.work-work<=grant as u64);assert!(p.source_completed>=read&&p.source_completed<=p.source_total);assert!(p.bytes>=bytes);assert!(p.pixels>=pixels);work=p.work;read=p.source_completed;bytes=p.bytes;pixels=p.pixels;if p.done{return Ok(());}}panic!("Image source did not finish")}
-fn oracle(text:&str)->Vec<u8>{let bytes=if text.get(..5).is_some_and(|s|s.eq_ignore_ascii_case("data:")){let (header,body)=text.split_once(',').unwrap();let bytes=percent_encoding::percent_decode_str(body).collect::<Vec<_>>();if header.to_ascii_lowercase().ends_with(";base64"){base64::engine::general_purpose::STANDARD.decode(bytes).unwrap()}else{bytes}}else{base64::engine::general_purpose::STANDARD.decode(text).unwrap()};let mut decoder=png::Decoder::new(std::io::Cursor::new(bytes));decoder.set_transformations(png::Transformations::EXPAND|png::Transformations::STRIP_16);let mut reader=decoder.read_info().unwrap();let mut bytes=vec![0;reader.output_buffer_size()];let info=reader.next_frame(&mut bytes).unwrap();let mut rgba=Vec::new();for p in bytes[..info.buffer_size()].chunks(info.color_type.samples()){match info.color_type{png::ColorType::Grayscale=>rgba.extend_from_slice(&[p[0],p[0],p[0],255]),png::ColorType::Rgb=>rgba.extend_from_slice(&[p[0],p[1],p[2],255]),png::ColorType::GrayscaleAlpha=>rgba.extend_from_slice(&[p[0],p[0],p[0],p[1]]),png::ColorType::Rgba=>rgba.extend_from_slice(p),_=>panic!("Unexpanded oracle palette")}}rgba}
+use crate::retirement::tests::{drain,observed};
+fn rows()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn input(value:&serde_json::Value)->ImageDecodeInput<'_>{ImageDecodeInput{mime:value["mime"].as_str().unwrap(),data:value["data"].as_str().unwrap(),max_source_bytes:value["maxSourceBytes"].as_u64().unwrap()as usize,max_bytes:value["maxBytes"].as_u64().unwrap()as usize,max_pixels:value["maxPixels"].as_u64().unwrap()as usize,max_chunks:value["maxChunks"].as_u64().unwrap()as usize}}
+fn funded(job:&ImageDecodeJob)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:job.next_copy_byte_demand().unwrap(),maximum_capacity_bytes:job.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:1}}
+fn finish(job:&mut ImageDecodeJob,source:&str,items:usize)->Result<(),ImageDecodeError>{let mut previous=job.progress();for _ in 0..2_000_000{let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:items*131072,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:1};let(progress,receipt)=job.advance(source,grant)?;assert!(receipt.fits(grant));assert!(progress.work-previous.work<=items as u64);assert!(progress.source_completed>=previous.source_completed&&progress.source_completed<=progress.source_total);assert!(progress.bytes>=previous.bytes&&progress.pixels>=previous.pixels);previous=progress;if progress.done{return Ok(());}}panic!("Image source did not finish")}
+fn take(job:&mut ImageDecodeJob)->RasterImage{job.take_result(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()}).unwrap().unwrap().0}
+fn oracle(text:&str)->Vec<u8>{let bytes=if text.get(..5).is_some_and(|s|s.eq_ignore_ascii_case("data:")){let(header,body)=text.split_once(',').unwrap();let bytes=percent_encoding::percent_decode_str(body).collect::<Vec<_>>();if header.to_ascii_lowercase().ends_with(";base64"){base64::engine::general_purpose::STANDARD.decode(bytes).unwrap()}else{bytes}}else{base64::engine::general_purpose::STANDARD.decode(text).unwrap()};let mut decoder=png::Decoder::new(std::io::Cursor::new(bytes));decoder.set_transformations(png::Transformations::EXPAND|png::Transformations::STRIP_16);let mut reader=decoder.read_info().unwrap();let mut bytes=vec![0;reader.output_buffer_size()];let info=reader.next_frame(&mut bytes).unwrap();let mut rgba=Vec::new();for p in bytes[..info.buffer_size()].chunks(info.color_type.samples()){match info.color_type{png::ColorType::Grayscale=>rgba.extend_from_slice(&[p[0],p[0],p[0],255]),png::ColorType::Rgb=>rgba.extend_from_slice(&[p[0],p[1],p[2],255]),png::ColorType::GrayscaleAlpha=>rgba.extend_from_slice(&[p[0],p[0],p[0],p[1]]),png::ColorType::Rgba=>rgba.extend_from_slice(p),_=>panic!("Unexpanded oracle palette")}}rgba}
 #[test]
 fn image_sources_decode_shared_rfc_transport_and_all_png_forms(){
- let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
- for row in rows.as_array().unwrap(){let expected:Vec<u8>=serde_json::from_value(row["expected"]["pixels"].clone()).unwrap();for grant in [1,7,4096]{let mut job=ImageDecodeJob::new(input(&row["input"])).unwrap();assert!(job.result().is_err());finish(&mut job,grant).unwrap();let result=job.into_result().unwrap();assert_eq!(result.width,row["expected"]["width"].as_u64().unwrap()as u32);assert_eq!(result.height,row["expected"]["height"].as_u64().unwrap()as u32);assert_eq!(result.pixels,expected,"{} grant {grant}",row["name"]);}assert_eq!(oracle(row["input"]["data"].as_str().unwrap()),expected,"{} third-party oracle",row["name"]);}
- eprintln!("[DEBUG] All 47 native encoded sources matched independent base64/percent-encoding/png under grants 1, 7 and 4096");
+ let rows=rows();for row in rows.as_array().unwrap(){let expected:Vec<u8>=serde_json::from_value(row["expected"]["pixels"].clone()).unwrap();let source=input(&row["input"]);for items in [1,7,4096]{let mut job=ImageDecodeJob::new(source).unwrap();assert!(job.result().is_err());finish(&mut job,source.data,items).unwrap();let result=take(&mut job);assert_eq!(result.width,row["expected"]["width"].as_u64().unwrap()as u32);assert_eq!(result.height,row["expected"]["height"].as_u64().unwrap()as u32);assert_eq!(result.pixels,expected,"{} grant {items}",row["name"]);drain(job);drain(result);}assert_eq!(oracle(source.data),expected,"{} third-party oracle",row["name"]);}
+ eprintln!("[DEBUG] Native encoded PNG sources matched independent base64/percent/png with independent grants");
 }
 #[test]
 fn image_sources_reject_shared_malformed_and_unsupported_sources(){
- let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️invalid/🔣️.json")).unwrap();
- for row in rows.as_array().unwrap(){if let Ok(mut job)=ImageDecodeJob::new(input(&row["input"])){assert!(finish(&mut job,7).is_err(),"{}",row["name"]);assert!(job.result().is_err());assert!(job.advance(1).is_err());}}
- eprintln!("[DEBUG] All {} malformed or unsupported native image sources refused publication",rows.as_array().unwrap().len());
-}
-#[test]
-fn image_sources_cancel_and_drop_every_preparation_stage(){
- let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
- for steps in [0,1,10,50,200,1000,3000]{let mut job=ImageDecodeJob::new(input(&rows[45]["input"])).unwrap();for _ in 0..steps{if job.advance(1).unwrap().done{break;}}job.cancel();assert!(job.advance(1).is_err());assert!(job.result().is_err());}
- for steps in [1,100,300,500,1000]{let mut job=ImageDecodeJob::new(input(&rows[37]["input"])).unwrap();job.advance(steps).unwrap();drop(job);}
- assert!(ImageDecodeJob::new(input(&rows[0]["input"])).unwrap().advance(0).is_err());
+ let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️invalid/🔣️.json")).unwrap();for row in rows.as_array().unwrap(){if let Ok(mut job)=ImageDecodeJob::new(input(&row["input"])){assert!(finish(&mut job,row["input"]["data"].as_str().unwrap(),7).is_err(),"{}",row["name"]);assert!(job.result().is_err());drain(job);}}
 }
 #[test]
 fn image_sources_exact_limits_and_live_phase_cancellation(){
- let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
- let row=&rows[37];let mut limits=input(&row["input"]);limits.max_source_bytes=limits.data.len();limits.max_bytes=base64::engine::general_purpose::STANDARD.decode(limits.data.split_once(',').unwrap().1).unwrap().len();limits.max_pixels=row["expected"]["width"].as_u64().unwrap()as usize*row["expected"]["height"].as_u64().unwrap()as usize;
- let mut job=ImageDecodeJob::new(limits.clone()).unwrap();finish(&mut job,1).unwrap();let expected:Vec<u8>=serde_json::from_value(row["expected"]["pixels"].clone()).unwrap();assert_eq!(job.into_result().unwrap().pixels,expected);
- for limit in 0..3{let mut value=limits.clone();match limit{0=>value.max_source_bytes-=1,1=>value.max_bytes-=1,_=>value.max_pixels-=1}if let Ok(mut job)=ImageDecodeJob::new(value){assert!(finish(&mut job,7).is_err());}}
- let mut seen=Vec::new();let mut probe=ImageDecodeJob::new(limits.clone()).unwrap();let mut steps=0;
- loop{let p=probe.advance(1).unwrap();steps+=1;if !p.done&&!seen.contains(&p.phase){seen.push(p.phase);let mut job=ImageDecodeJob::new(limits.clone()).unwrap();job.advance(steps).unwrap();job.cancel();assert_eq!(job.advance(1),Err(ImageDecodeError::Cancelled));assert_eq!(job.result().unwrap_err(),ImageDecodeError::Cancelled);}if p.done{break;}}
- assert_eq!(seen,["header","validate","decode","png"]);
- eprintln!("[DEBUG] Native exact source/binary/pixel caps and all live preparation phases verified");
+ let rows=rows();let row=&rows[37];let mut limits=input(&row["input"]);limits.max_source_bytes=limits.data.len();limits.max_bytes=base64::engine::general_purpose::STANDARD.decode(limits.data.split_once(',').unwrap().1).unwrap().len();limits.max_pixels=row["expected"]["width"].as_u64().unwrap()as usize*row["expected"]["height"].as_u64().unwrap()as usize;
+ let mut job=ImageDecodeJob::new(limits).unwrap();finish(&mut job,limits.data,1).unwrap();assert_eq!(job.result().unwrap().pixels,oracle(limits.data));drain(job);
+ for limit in 0..3{let mut value=limits;match limit{0=>value.max_source_bytes-=1,1=>value.max_bytes-=1,_=>value.max_pixels-=1}if let Ok(mut job)=ImageDecodeJob::new(value){assert!(finish(&mut job,value.data,7).is_err());drain(job);}}
+ let mut seen=Vec::new();let mut probe=ImageDecodeJob::new(limits).unwrap();let mut steps=0;loop{let p=probe.advance(limits.data,funded(&probe)).unwrap().0;steps+=1;if !p.done&&!seen.contains(&p.phase){seen.push(p.phase);let mut cancelled=ImageDecodeJob::new(limits).unwrap();for _ in 0..steps{cancelled.advance(limits.data,funded(&cancelled)).unwrap();}let old=cancelled.progress();cancelled.cancel();assert_eq!(cancelled.progress(),old);assert_eq!(cancelled.advance(limits.data,funded(&cancelled)),Err(ImageDecodeError::Cancelled));drain(cancelled);}if p.done{break;}}assert_eq!(seen,["header","validate","decode","source-handoff","decoder","png","image-handoff"]);drain(probe);
 }
-
-/// ♻️ Shared source cases retain real children through cancellation and explicit retirement.
 #[test]
-fn image_sources_transfer_results_and_retire_actual_child_allocations() {
- use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
- let rows:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let mut witnesses=0;
- for row in rows.as_array().unwrap().iter().step_by(7) {
-  for stop in [0,1,100,1000,usize::MAX] {
-   let mut source=input(&row["input"]);let saved=source.data.clone();let before=saved.as_str().to_string();
-   let mut job=ImageDecodeJob::new(source.clone()).unwrap();let mut done=false;
-   for at in 0..2000000 {if at==stop {break;}if job.advance(1).unwrap().done {done=true;break;}}
-   if stop==usize::MAX {assert!(done);let output=job.take_result().unwrap();assert_eq!(output.pixels,oracle(&before));}
-   job.cancel();assert!(job.result().is_err());assert!(job.advance(1).is_err());
-   assert_eq!(saved.as_str(),before);source.data=Arc::new(String::new());drop(saved);
-   let mut closing=ControlledRetirement::new(job).unwrap_or_else(|_|panic!("Image owner must support controlled retirement"));
-   assert!(matches!(closing.step(RetainedCloneGrant::default()).unwrap(),RetainedCloneStep::Progress(progress) if progress==Default::default()));
-   let mut closed=false;
-   for _ in 0..100000 {
-    let copy=closing.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:closing.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:closing.next_release_byte_demand().unwrap(),maximum_depth:closing.next_depth_demand().unwrap()};
-    match closing.step(grant).unwrap(){RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(grant));closed=true;break;},RetainedCloneStep::Progress(progress)=>assert!(progress.fits(grant))}
-   }
-   assert!(closed&&closing.terminal_is_empty());witnesses+=1;
-  }
+fn image_sources_original_funding_and_jpeg_allocator_custody(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️funding.json")).unwrap();let png=rows();let source=input(&png[0]["input"]);
+ for axis in fixture["axes"].as_array().unwrap(){let mut job=ImageDecodeJob::new(source).unwrap();let axis=axis.as_str().unwrap();if matches!(axis,"maximumCapacityBytes"|"releaseForCapacity"){while job.next_capacity_byte_demand().unwrap()==0{job.advance(source.data,funded(&job)).unwrap();}}let mut grant=funded(&job);match axis{"maximumItems"=>grant.maximum_items=0,"maximumCopyBytes"=>grant.maximum_copy_bytes-=1,"maximumCapacityBytes"=>grant.maximum_capacity_bytes-=1,"maximumDepth"=>grant.maximum_depth=0,_=>{grant.maximum_capacity_bytes=0;grant.maximum_release_bytes=536870912;}}let old=job.progress();let(step,physical)=observed(||job.advance(source.data,grant).unwrap());assert_eq!(physical,(0,0));assert_eq!(step,(old,Default::default()));let changed=format!("{}x",source.data);let(error,physical)=observed(||job.advance(&changed,funded(&job)));assert!(error.is_err());assert_eq!(physical,(0,0));drain(job);}
+ let jpeg:serde_json::Value=serde_json::from_str(include_str!("../../../📸️jpeg/📥️decode/🧫️fixtures/🔣️.json")).unwrap();let mut phases=std::collections::BTreeSet::new();
+ for index in fixture["jpegCases"].as_array().unwrap(){let row=&jpeg["cases"][index.as_u64().unwrap()as usize];let original=format!("data:image/jpeg;base64,{}",row["base64"].as_str().unwrap());let source=ImageDecodeInput{mime:"image/jpeg",data:&original,max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536};let(mut job,physical)=observed(||ImageDecodeJob::new(source).unwrap());assert_eq!(physical,(0,0));let mut born=0;
+  loop{let phase=job.progress().phase;if phases.insert(phase)&&phase!="complete"{let mut cancelled=ImageDecodeJob::new(source).unwrap();while cancelled.progress().phase!=phase{cancelled.advance(source.data,funded(&cancelled)).unwrap();}let before=cancelled.progress();let(_,physical)=observed(||cancelled.cancel());assert_eq!(physical,(0,0));assert_eq!(cancelled.progress(),before);drain(cancelled);}let grant=funded(&job);let(step,physical)=observed(||job.advance(source.data,grant).unwrap());assert_eq!(physical,(step.1.retained_capacity_bytes,step.1.released_bytes));assert!(step.1.fits(grant));born+=physical.0;if step.0.done{break;}}
+  let decoded=image::load_from_memory_with_format(&base64::engine::general_purpose::STANDARD.decode(row["base64"].as_str().unwrap()).unwrap(),image::ImageFormat::Jpeg).unwrap().into_rgba8();let output=job.result().unwrap();assert_eq!((output.width,output.height),(row["width"].as_u64().unwrap()as u32,row["height"].as_u64().unwrap()as u32));let maximum=output.pixels.iter().zip(decoded.as_raw()).map(|(left,right)|left.abs_diff(*right)).max().unwrap();assert!(maximum<=row["oracleTolerance"].as_u64().unwrap()as u8);let denied=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>()-1,maximum_depth:1,..Default::default()};assert!(job.take_result(denied).unwrap().is_none());let output=take(&mut job);let(a,r)=drain(job);let(oa,or)=drain(output);assert_eq!(born+a+oa,r+or);
  }
- eprintln!("[DEBUG] Native image source original-owner retirement witnesses={witnesses}");
+ for phase in fixture["interruptionPhases"].as_array().unwrap().iter().filter(|phase|phase.as_str()!=Some("png")){assert!(phases.contains(phase.as_str().unwrap()));}
+ eprintln!("[DEBUG] Original composed PNG/JPEG axes, cancellation child custody, seven independent decoders and actual allocator receipts passed");
 }

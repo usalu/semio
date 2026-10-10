@@ -181,7 +181,7 @@ async fn a_free_wall_footprint_equals_the_geometry_kernel_band() {
     for id in ["w-loc-center", "w-loc-interior", "w-loc-exterior", "w-loc-core", "w-up-a"] {
         let wall = &snapshot.walls[id];
         let offsets = offsets_of(&snapshot, wall);
-        let expected = band_loop(&segment_of(&wall.axis), offsets.left, offsets.right, None, None).expect("a band");
+        let expected = band_loop(&seg(&wall.axis), offsets.left, offsets.right, None, None).expect("a band");
         let found = &layouts[id].footprint;
         for (vertex, (point, bulge)) in found.iter().zip(expected) {
             assert!(close(vertex.point.x, point.x) && close(vertex.point.y, point.y) && close(vertex.bulge, bulge), "{id}: {vertex:?} vs {point:?}");

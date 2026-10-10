@@ -1,1 +1,31 @@
-{}
+{
+  "dimensions": {
+    "dim-chain": {
+      "anchors": [
+        {
+          "WallEnd": {
+            "end": "Start",
+            "wall": "w-south"
+          }
+        },
+        {
+          "OpeningCentre": {
+            "opening": "o-win"
+          }
+        },
+        {
+          "WallEnd": {
+            "end": "End",
+            "wall": "w-south"
+          }
+        }
+      ],
+      "angle": 0.0,
+      "entry": "Created",
+      "name": "Window position",
+      "offset": 0.8,
+      "storey": "st-ground",
+      "style": "as-plan"
+    }
+  }
+}

@@ -127,7 +127,7 @@ pub(crate) mod context {
     
         /// 📼️ What a renderer echoes after it applied a tool run trace delta for `window_id`.
         pub fn echo_tool_run_trace_cursor(&mut self, window_id: &str, cursor: semio_framework_tool_run::ToolRunTraceCursor) {
-            self.view.tool_run_trace_cursor_by_window_id.insert(window_id.to_string(), cursor);
+            self.view.tool_run_trace_cursor_by_window_id.cold_insert(window_id.to_string(), cursor);
         }
 
         pub fn window_view(&self, window_id: &str) -> ViewModel {
@@ -149,18 +149,18 @@ pub(crate) mod context {
                 let next = resolve_activation(self.view.active_tool_id.as_deref(), requested("toolId"));
                 self.view.active_tool_id = next.clone();
                 if next.is_some() {
-                    self.view.active_utility_by_window_id.clear();
+                    self.view.active_utility_by_window_id = Default::default();
                 }
                 return;
             }
             let window = args.and_then(|value| value.get("windowId")).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or(window_id).to_string();
             match resolve_activation(self.view.active_utility_by_window_id.get(&window).map(String::as_str), requested("utilityId")) {
                 Some(utility) => {
-                    self.view.active_utility_by_window_id.insert(window, utility);
+                    self.view.active_utility_by_window_id.cold_insert(window, utility);
                     self.view.active_tool_id = None;
                 }
                 None => {
-                    self.view.active_utility_by_window_id.remove(&window);
+                    self.view.active_utility_by_window_id.cold_remove(&window);
                 }
             }
         }
@@ -3733,7 +3733,7 @@ fn fill_tool_wins_the_world_lane_over_a_select_window_utility() {
     runtime.active_tool_id = Some(fill_tool::TOOL_ID.into());
     let mut view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view.active_utility_id = Some("select".into());
-    view.active_utility_by_window_id.insert("pane".into(), "select".into());
+    view.active_utility_by_window_id.cold_insert("pane".into(), "select".into());
     assert!(puzzle3d_fill_tool_active(&runtime), "the Fill tab arms the mode tool, not a window utility");
     assert_eq!(puzzle3d_scene_active_utility(&runtime, Some(&view), Some("pane")), fill_tool::TOOL_ID, "guest world lane must stay fill while the tool is armed");
     runtime.active_tool_id = None;

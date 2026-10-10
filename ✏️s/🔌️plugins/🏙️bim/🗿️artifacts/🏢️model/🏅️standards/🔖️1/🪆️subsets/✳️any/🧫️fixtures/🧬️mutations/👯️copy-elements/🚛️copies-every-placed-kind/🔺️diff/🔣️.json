@@ -1,1 +1,416 @@
-{}
+{
+  "beams": {
+    "cp-1-0": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.5,
+            "y": 13.0
+          },
+          "start": {
+            "x": 0.5,
+            "y": 13.0
+          }
+        }
+      },
+      "beam_type": "bt-30x50",
+      "entry": "Created",
+      "name": "B1",
+      "phase": "New",
+      "storey": "st-ground",
+      "top_offset": -0.1
+    }
+  },
+  "classifications": {
+    "cp-1-10": {
+      "cs-uniclass": "EF_25_10",
+      "entry": "Created"
+    }
+  },
+  "columns": {
+    "cp-1-1": {
+      "base_offset": 0.0,
+      "column_type": "ct-400",
+      "entry": "Created",
+      "name": "C1",
+      "phase": "New",
+      "position": {
+        "x": 4.5,
+        "y": 13.0
+      },
+      "rotation": 0.25,
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      }
+    }
+  },
+  "curtain_walls": {
+    "cp-1-2": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.5,
+            "y": 16.0
+          },
+          "start": {
+            "x": 0.5,
+            "y": 16.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "curtain_wall_type": "cwt-1",
+      "entry": "Created",
+      "name": "Facade",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      }
+    }
+  },
+  "grids": {
+    "cp-1-3": {
+      "building": "bldg-1",
+      "end": {
+        "x": 0.5,
+        "y": 17.0
+      },
+      "entry": "Created",
+      "label": "A-1",
+      "start": {
+        "x": 0.5,
+        "y": 9.0
+      }
+    }
+  },
+  "openings": {
+    "cp-1-11": {
+      "entry": "Created",
+      "flip_facing": false,
+      "flip_hand": false,
+      "host": "cp-1-10",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "name": "Window",
+      "offset": 1.0
+    }
+  },
+  "properties": {
+    "cp-1-10": {
+      "Pset_WallCommon": {
+        "FireRating": {
+          "Text": {
+            "value": "F90"
+          }
+        }
+      },
+      "entry": "Created"
+    },
+    "cp-1-11": {
+      "Pset_WindowCommon": {
+        "ThermalTransmittance": {
+          "Real": {
+            "value": 1.1
+          }
+        }
+      },
+      "entry": "Created"
+    }
+  },
+  "railings": {
+    "cp-1-4": {
+      "base_offset": 0.0,
+      "entry": "Created",
+      "height": 1.0,
+      "infill": "None",
+      "material": "m-steel",
+      "name": "Rail",
+      "path": [
+        {
+          "x": 1.5,
+          "y": 11.0
+        },
+        {
+          "x": 5.5,
+          "y": 11.0
+        }
+      ],
+      "phase": "New",
+      "post_profile": {
+        "Rectangle": {
+          "depth": 0.05,
+          "width": 0.05
+        }
+      },
+      "post_spacing": 1.2,
+      "profile": {
+        "Rectangle": {
+          "depth": 0.04,
+          "width": 0.06
+        }
+      },
+      "storey": "st-ground"
+    }
+  },
+  "roofs": {
+    "cp-1-5": {
+      "base_offset": 0.0,
+      "entry": "Created",
+      "footprint": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.5,
+            "y": 10.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.5,
+            "y": 10.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.5,
+            "y": 16.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.5,
+            "y": 16.0
+          }
+        }
+      ],
+      "name": "Roof",
+      "overhang": 0.3,
+      "phase": "New",
+      "roof_type": "rt-200",
+      "shape": {
+        "Gable": {
+          "pitch": 0.6,
+          "ridge_direction": 0.0
+        }
+      },
+      "storey": "st-first"
+    }
+  },
+  "slabs": {
+    "cp-1-7": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.5,
+            "y": 10.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.5,
+            "y": 10.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.5,
+            "y": 16.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.5,
+            "y": 16.0
+          }
+        }
+      ],
+      "entry": "Created",
+      "holes": [
+        [
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 2.5,
+              "y": 12.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 3.5,
+              "y": 12.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 3.5,
+              "y": 13.0
+            }
+          },
+          {
+            "bulge": 0.0,
+            "point": {
+              "x": 2.5,
+              "y": 13.0
+            }
+          }
+        ]
+      ],
+      "name": "Floor",
+      "offset": 0.0,
+      "phase": "New",
+      "slab_type": "slt-200",
+      "slope": {
+        "angle": 0.1,
+        "direction": 0.5
+      },
+      "storey": "st-ground"
+    }
+  },
+  "spaces": {
+    "cp-1-8": {
+      "boundary": {
+        "Explicit": {
+          "outline": [
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.5,
+                "y": 10.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 4.5,
+                "y": 10.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 4.5,
+                "y": 13.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.5,
+                "y": 13.0
+              }
+            }
+          ]
+        }
+      },
+      "entry": "Created",
+      "name": "Hall",
+      "number": "G.01-1",
+      "phase": "New",
+      "storey": "st-ground",
+      "usage": "Living"
+    }
+  },
+  "stairs": {
+    "cp-1-6": {
+      "direction": 0.5,
+      "entry": "Created",
+      "flight": "Straight",
+      "landing_depth": 1.0,
+      "max_riser": 0.18,
+      "min_tread": 0.27,
+      "name": "Stair",
+      "nosing": 0.0,
+      "phase": "New",
+      "riser": "Closed",
+      "start": {
+        "x": 1.5,
+        "y": 11.0
+      },
+      "storey": "st-ground",
+      "stringer": {
+        "depth": 0.25,
+        "kind": "None",
+        "width": 0.05
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "tread_thickness": 0.04,
+      "width": 1.0
+    }
+  },
+  "walls": {
+    "cp-1-10": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.5,
+            "y": 10.0
+          },
+          "start": {
+            "x": 0.5,
+            "y": 10.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    },
+    "cp-1-9": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.5,
+            "y": 16.0
+          },
+          "start": {
+            "x": 8.5,
+            "y": 10.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

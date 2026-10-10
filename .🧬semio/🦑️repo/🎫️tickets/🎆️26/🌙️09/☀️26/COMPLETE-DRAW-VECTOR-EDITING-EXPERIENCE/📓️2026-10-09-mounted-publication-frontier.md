@@ -29,3 +29,13 @@ The native production check failed before type checking with four parser diagnos
 ## PDF-Inclusive Whole Replay
 
 The second whole Draw replay includes the newly registered PDF writer. It actually exited 0: main 605 passed, 1 skipped, 0 failed; focused PDF 4 passed, 10,765 assertions with independent Poppler pixels and 34 cancellation phases. Other focused gates remained green. Frozen whole receipt: `🗑️generated/2026-10-09-draw-pdf-composed-current-4-owner.log`. New accepted-fault carrier and font/preparation work remain native integration changes under active execution.
+
+## Current Native Compiler Frontier
+
+The fresh production check passed the parser repair and failed in Kernel compilation with one E0432: the new Store prepared-retirement owner imported RetainedCloneGrant/Progress/Step from the Value crate root instead of its retained_clone module. The UI execution agent owns and is correcting that import. Kernel generated 768 warnings; Draw and mounted native laws have not compiled or executed. Frozen receipt: `🗑️generated/2026-10-09-native-mounted-frontier-2-owner.log`.
+
+The command lane additionally passed its latest focused gate: 18 tests, 353 assertions, strict/source/publication exit 0, including original accepted fault custody twin. An independent Low read-only agent is auditing the mounted frontier while the High UI and font execution lanes continue.
+
+## Current Production Gate After Import Repair
+
+Fresh native production replay13440 passed the preceding Kernel compiler frontier and reached Plugin compilation. It failed with 147 Plugin errors and 778 warnings; this is not a native pass. No diagnostic from that run names the new mounted-frontier or retained-command owner source, but absence of a diagnostic is not runtime or heap proof. Errors include duplicate runtime currency imports, removed extension export, disposer trait/currency migration, and remaining legacy host calls. Frozen receipt: `🗑️generated/2026-10-09-native-mounted-frontier-3-owner.log`. Independent audit P1 outcomes remain under repair; full global close-ladder integration remains required.

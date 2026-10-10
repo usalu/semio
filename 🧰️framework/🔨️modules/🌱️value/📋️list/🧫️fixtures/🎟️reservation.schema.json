@@ -1,0 +1,122 @@
+{
+  "properties": {
+    "promotionPages": {
+      "items": {
+        "minimum": 1,
+        "type": "integer"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "oracle": {
+      "const": "VecDeque"
+    },
+    "schema": {
+      "const": "https://semio.tech/framework/value/list/reservation-fixture"
+    },
+    "fanout": {
+      "const": 16
+    },
+    "count": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "phases": {
+      "minItems": 3,
+      "items": {
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "pageMoves",
+          "headerMoves",
+          "scalarMoves"
+        ],
+        "type": "object",
+        "properties": {
+          "pageMoves": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "headerMoves": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "metadata",
+              "rootPromotion",
+              "payload"
+            ]
+          },
+          "scalarMoves": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        }
+      },
+      "maxItems": 3,
+      "type": "array"
+    },
+    "deniedAxes": {
+      "items": {
+        "enum": [
+          "items",
+          "copyBytes",
+          "capacityBytes",
+          "depth"
+        ]
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "payloadBytes": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "layouts": {
+      "minItems": 2,
+      "items": {
+        "additionalProperties": false,
+        "required": [
+          "pointerBits",
+          "pageBytes",
+          "headerBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "headerBytes": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pageBytes": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pointerBits": {
+            "enum": [
+              32,
+              64
+            ]
+          }
+        }
+      },
+      "maxItems": 2,
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://semio.tech/framework/value/list/reservation-fixture",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "required": [
+    "schema",
+    "fanout",
+    "count",
+    "payloadBytes",
+    "layouts",
+    "phases",
+    "deniedAxes",
+    "oracle",
+    "promotionPages"
+  ]
+}

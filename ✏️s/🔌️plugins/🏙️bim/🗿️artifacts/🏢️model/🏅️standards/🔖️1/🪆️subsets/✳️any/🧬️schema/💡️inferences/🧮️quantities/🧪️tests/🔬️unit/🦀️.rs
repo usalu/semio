@@ -45,8 +45,8 @@ fn base() -> ModelSnapshot {
     snapshot.slab_types.insert("slt".into(), SlabType { name: "Slab 250".into(), layers: vec![layer("m-concrete", 0.25, LayerFunction::Structure)] });
     snapshot.column_types.insert("ct".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
     snapshot.beam_types.insert("bt".into(), BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
-    snapshot.window_types.insert("win".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.0, sill: 0.9, frame_width: 0.06, frame_depth: 0.1, panes: 2, material: "m-wool".into() });
-    snapshot.door_types.insert("door".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.1, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-wool".into() });
+    snapshot.window_types.insert("win".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.0, sill: 0.9, frame_width: 0.06, frame_depth: 0.1, panes: 2, material: "m-wool".into(), u_value: None, g_value: None, frame_fraction: None });
+    snapshot.door_types.insert("door".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.1, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-wool".into(), u_value: None });
     snapshot.sites.insert("site".into(), Site { name: "Site".into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
     snapshot.buildings.insert("bldg".into(), Building { site: "site".into(), name: "Building".into(), origin: point(0.0, 0.0), rotation: 0.0, elevation: 0.0 });
     snapshot.storeys.insert("st-0".into(), Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 2.5, cut_height: None });

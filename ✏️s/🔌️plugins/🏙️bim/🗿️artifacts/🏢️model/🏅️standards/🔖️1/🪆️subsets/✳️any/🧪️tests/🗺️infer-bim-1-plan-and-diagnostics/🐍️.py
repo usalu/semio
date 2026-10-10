@@ -317,8 +317,20 @@ def column_cut_area(snapshot, storey, levels, cut):
     return total, audit
 
 
+def grid_edges(extent, rule):
+    """🕸️ The cell edges `0 ..= extent` of one direction under a grid rule: equal cells of about a spacing, or the explicit lines strictly inside the extent."""
+    if rule is None:
+        return [0.0, extent]
+    kind, body = next(iter(rule.items()))
+    if kind == "Spacing":
+        count = 1 if body["spacing"] <= 1e-9 or extent <= 1e-9 else max(1, math.ceil(extent / body["spacing"] - 1e-9))
+        return [extent * k / count for k in range(count + 1)]
+    inside = sorted(line for line in body["positions"] if 1e-9 < line < extent - 1e-9)
+    return [0.0, *[line for index, line in enumerate(inside) if index == 0 or line - inside[index - 1] > 1e-9], extent]
+
+
 def mullion_area(snapshot, storey, levels, cut):
-    """🪞️ Area of the mullions of the curtain walls the plane cuts: `ceil(length / spacing) + 1` boxes each."""
+    """🪞️ Area of the mullions of the curtain walls the plane cuts: one section on every vertical grid edge, the border section on the first and the last, the interior section on the others (the grid rule of the wall over the one of its type)."""
     total = 0.0
     for curtain in snapshot["curtain_walls"].values():
         if curtain["storey"] != storey:
@@ -326,11 +338,13 @@ def mullion_area(snapshot, storey, levels, cut):
         base, top = resolved_range(curtain, levels)
         if not (base <= cut < top):
             continue
+        kind = snapshot["curtain_wall_types"][curtain["curtain_wall_type"]]
         tag, body = variant(curtain["axis"])
         length = LineString([xy(body["start"]), xy(body["end"])]).length
-        panels = max(1, math.ceil(length / curtain["u_spacing"] - 1e-9))
-        shape, _ = profile_polygon(curtain["mullion"])
-        total += (panels + 1) * shape.area
+        edges = grid_edges(length, curtain.get("u_grid") or kind["u_grid"])
+        for k in range(len(edges)):
+            shape, _ = profile_polygon(kind["border_mullion"] if k in (0, len(edges) - 1) else kind["interior_mullion"])
+            total += shape.area
     return total
 
 
@@ -360,7 +374,13 @@ def beam_outline_length(snapshot, storey):
         if beam["storey"] != storey:
             continue
         width = variant(snapshot["beam_types"][beam["beam_type"]]["profile"])[1].get("width", 0.0)
-        total += LineString([xy(beam["start"]), xy(beam["end"])]).buffer(width / 2.0, cap_style="flat").exterior.length
+        kind, body = variant(beam["axis"])
+        if kind == "Arc":
+            sweep, chord = 4.0 * math.atan(body["bulge"]), math.dist(xy(body["start"]), xy(body["end"]))
+            radius = chord / (2.0 * abs(math.sin(sweep / 2.0)))
+            total += 2.0 * abs(sweep) * radius + 2.0 * width
+        else:
+            total += LineString([xy(body["start"]), xy(body["end"])]).buffer(width / 2.0, cap_style="flat").exterior.length
     return total
 
 
@@ -386,7 +406,7 @@ def room_perimeter(snapshot, storey):
     for curtain in snapshot["curtain_walls"].values():
         if curtain["storey"] == storey:
             _, body = variant(curtain["axis"])
-            depth = variant(curtain["mullion"])[1].get("depth", 0.0)
+            depth = variant(snapshot["curtain_wall_types"][curtain["curtain_wall_type"]]["interior_mullion"])[1].get("depth", 0.0)
             shapes.append(line_band(xy(body["start"]), xy(body["end"]), depth / 2.0, depth / 2.0))
     obstacles = unary_union(shapes)
     minx, miny, maxx, maxy = unary_union([obstacles] + seeds).bounds
@@ -439,13 +459,20 @@ def bodies(snapshot, levels):
         rows.append({"id": cid, "kind": "column", "storey": column["storey"], "shape": placed, "low": base, "high": top, "axis": None, "ends": None})
     for bid, beam in snapshot["beams"].items():
         kind = snapshot["beam_types"].get(beam["beam_type"])
-        start, end = xy(beam["start"]), xy(beam["end"])
-        if kind is None or beam["storey"] not in levels or math.hypot(end[0] - start[0], end[1] - start[1]) <= 1e-6:
+        axis_kind, axis_body = variant(beam["axis"])
+        start, end = xy(axis_body["start"]), xy(axis_body["end"])
+        if kind is None or beam["storey"] not in levels or host_length(beam) <= 1e-6:
             continue
         width = variant(kind["profile"])[1].get("width", 0.0)
         depth = variant(kind["profile"])[1].get("depth", 0.0)
         top = levels[beam["storey"]][1] + beam["top_offset"]
-        rows.append({"id": bid, "kind": "beam", "storey": beam["storey"], "shape": LineString([start, end]).buffer(width / 2.0, cap_style="flat"), "low": top - depth, "high": top, "axis": None, "ends": (Point(start), Point(end))})
+        end_top = levels[beam["storey"]][1] + (beam["top_offset"] if beam.get("end_top_offset") is None else beam["end_top_offset"])
+        if axis_kind == "Arc":
+            centre, radius, first, sweep = arc_geometry(axis_body)
+            path = LineString([(centre[0] + radius * math.cos(first + sweep * i / 4096), centre[1] + radius * math.sin(first + sweep * i / 4096)) for i in range(4097)])
+        else:
+            path = LineString([start, end])
+        rows.append({"id": bid, "kind": "beam", "storey": beam["storey"], "shape": path.buffer(width / 2.0, cap_style="flat"), "low": min(top, end_top) - depth, "high": max(top, end_top), "axis": None, "ends": (Point(start), Point(end))})
     return rows
 
 
@@ -506,7 +533,7 @@ def references_and_extents(snapshot):
             if host_length(element) <= 1e-6:
                 found["degenerate.axis-length|%s" % eid] = 0.0
     for bid, beam in snapshot["beams"].items():
-        if math.hypot(beam["end"]["x"] - beam["start"]["x"], beam["end"]["y"] - beam["start"]["y"]) <= 1e-6:
+        if host_length(beam) <= 1e-6:
             found["degenerate.axis-length|%s" % bid] = 0.0
     return found
 

@@ -4,7 +4,7 @@
   "semanticKind": "restore-non-tiny",
   "displayName": "Restore Non Tiny",
   "emoji": "♻️",
-  "aggregateVariant": "ReinstateNonTiny",
+  "aggregateVariant": "RestoreNonTiny",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
   "binaryTag": null,

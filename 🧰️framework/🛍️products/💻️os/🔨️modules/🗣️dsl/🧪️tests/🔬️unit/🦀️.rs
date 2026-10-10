@@ -912,17 +912,17 @@ async fn paged_dsl_operation_keeps_exact_header_whole_8194_text_and_refused_pref
     close(&mut source);
     let mut capsule=crate::os_pack::record::BorrowedProjectedPackOperation::from_variant(&operation);
     let mut source=OwnedOperationBytes::try_new(16384,65536).unwrap();
-    struct EmissionProbe<'a>{source:&'a mut OwnedOperationBytes,entered:&'a std::cell::Cell<bool>,length:usize}
+    struct EmissionProbe<'a>{source:&'a mut OwnedOperationBytes,written:&'a std::cell::Cell<usize>}
     impl protocol::io::binary::operation_bytes::OperationByteOutput for EmissionProbe<'_>{
         fn write_bytes(&mut self,bytes:&[u8],control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),crate::os_pack::PackRefusal>{
-            if bytes.len()==self.length{self.entered.set(true);}
+            self.written.set(self.written.get()+bytes.len());
             protocol::io::binary::operation_bytes::OperationByteOutput::write_bytes(self.source,bytes,control)
         }
     }
-    let entered=std::cell::Cell::new(false);
-    let mut cancel=|progress:semio_framework_value::native_encoding::NativeEncodeProgress| !(entered.get()&&progress.total==payload.len()&&progress.completed>=256);
+    let written=std::cell::Cell::new(0);
+    let mut cancel=|progress:semio_framework_value::native_encoding::NativeEncodeProgress| !(written.get()>=256&&progress.completed>=256);
     let mut control=semio_framework_value::NativeEncodeControl::new(131072,&mut cancel);
-    let error={let mut probe=EmissionProbe{source:&mut source,entered:&entered,length:payload.len()};variants_binary::encode_op_into(&mut capsule,&Default::default(),&mut probe,&mut control).unwrap_err()};
+    let error={let mut probe=EmissionProbe{source:&mut source,written:&written};variants_binary::encode_op_into(&mut capsule,&Default::default(),&mut probe,&mut control).unwrap_err()};
     let crate::os_spr::ProtocolError::Pack(crate::os_pack::PackError::Refusal(refusal))=error else{panic!("typed cancellation cause lost")};
     assert_eq!(refusal.kind().as_str(),fixture["canceledKind"].as_str().unwrap());
     assert!(source.len()>=256&&source.len()<expected.len());

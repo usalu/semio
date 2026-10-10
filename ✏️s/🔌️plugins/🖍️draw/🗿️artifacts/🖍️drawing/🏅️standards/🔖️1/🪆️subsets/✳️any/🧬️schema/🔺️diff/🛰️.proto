@@ -47,6 +47,7 @@ message DrawingLayerPatch {
   optional DrawingPathSegments path_segments = 12;
   optional string text_content = 13;
   optional double text_size = 14;
+  optional semio.s.draw.drawing.artifact.DrawingFontFamily font_family = 16;
   optional FillRule fill_rule = 15;
 }
 message DrawingDiff {

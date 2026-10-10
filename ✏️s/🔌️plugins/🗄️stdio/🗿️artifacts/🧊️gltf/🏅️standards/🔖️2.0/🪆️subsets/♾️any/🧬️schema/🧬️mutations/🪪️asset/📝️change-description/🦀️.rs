@@ -6,7 +6,7 @@ use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMu
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-asset-descriptive-metadata.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/asset/generator", "document/asset/copyright", "document/asset/minVersion"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeAssetDescriptiveMetadataPayload {
     pub generator: Option<String>,
@@ -39,7 +39,7 @@ pub fn inverse(p: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSnapsho
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeAssetDescriptiveMetadataMutation {

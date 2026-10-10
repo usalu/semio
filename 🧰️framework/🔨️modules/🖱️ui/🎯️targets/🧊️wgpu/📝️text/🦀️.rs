@@ -139,9 +139,6 @@ const FAUX_MEDIUM_MIN_PX: f32 = 0.17;
 
 //#endregion 🅰️Weight
 
-/// 🔤️ Fixed family names every registered font is forced under via `FontInfoOverride`, so
-/// multi-file families (Noto Emoji's 12 codepoint-range buckets) merge into one fontique family
-/// regardless of what each file's own `name` table declares.
 /// 🔤️ Raster grid steps per device pixel — glyph bitmaps snap to a quarter pixel, advances never do.
 const RASTER_GRID_STEPS_PER_PX: f32 = 4.0;
 /// 🔤️ Exact-size glyph entries kept before the derived map is rebuilt — a continuous zoom must not grow it without bound.
@@ -155,26 +152,37 @@ const FAMILY_MONO: &str = "Share Tech Mono";
 const FAMILY_EMOJI: &str = "Noto Emoji";
 
 /// 🔤️ Authored Latin face requested by one text run; emoji fallback remains shared.
-#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum TextFace {
     #[default]
+    #[serde(rename="Anta")]
     Sans,
+    #[serde(rename="Kelly Slab")]
+    Serif,
+    #[serde(rename="Share Tech Mono")]
     Mono,
+    #[serde(rename="Noto Emoji")]
+    Emoji,
 }
 
-impl TextFace {
-    fn family(self) -> &'static str {
+impl TextFace {    /// 🎨️ Resolves an explicit first-party catalog family without inferring a face.
+    pub fn from_catalog_family(family:&str)->Option<Self>{match family{"Anta"=>Some(Self::Sans),"Kelly Slab"=>Some(Self::Serif),"Share Tech Mono"=>Some(Self::Mono),"Noto Emoji"=>Some(Self::Emoji),_=>None}}
+    pub fn family(self) -> &'static str {
         match self {
             TextFace::Sans => FAMILY_SANS,
+            TextFace::Serif => FAMILY_SERIF,
             TextFace::Mono => FAMILY_MONO,
+            TextFace::Emoji => FAMILY_EMOJI,
         }
     }
 }
 
-static ANTA_LATIN: &[u8] = include_bytes!("../../../../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf");
-static KELLY_SLAB_LATIN: &[u8] = include_bytes!("../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf");
-static SHARE_TECH_MONO_LATIN: &[u8] = include_bytes!("../../../../🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf");
-static NOTO_EMOJI_BUCKETS: [&[u8]; 12] = [
+pub(crate) static ANTA_LATIN: &[u8] = include_bytes!("../../../../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf");
+pub(crate) static KELLY_SLAB_LATIN: &[u8] = include_bytes!("../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf");
+pub(crate) static SHARE_TECH_MONO_LATIN: &[u8] = include_bytes!("../../../../🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf");
+const EMOJI_BUCKET_FAMILIES:[&str;12]=["Noto Emoji Regions","Noto Emoji Flags","Noto Emoji Symbols","Noto Emoji Objects","Noto Emoji Activities","Noto Emoji Travel","Noto Emoji Food","Noto Emoji Nature","Noto Emoji People","Noto Emoji Faces","Noto Emoji Joined Forms","Noto Emoji Supplement"];
+const EMOJI_BUCKET_STACK:&str="\"Noto Emoji Regions\",\"Noto Emoji Flags\",\"Noto Emoji Symbols\",\"Noto Emoji Objects\",\"Noto Emoji Activities\",\"Noto Emoji Travel\",\"Noto Emoji Food\",\"Noto Emoji Nature\",\"Noto Emoji People\",\"Noto Emoji Faces\",\"Noto Emoji Joined Forms\",\"Noto Emoji Supplement\"";
+pub(crate) static NOTO_EMOJI_BUCKETS: [&[u8]; 12] = [
     include_bytes!("../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf"),
     include_bytes!("../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf"),
     include_bytes!("../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf"),
@@ -214,7 +222,9 @@ const BITMAP_ADVANCE_EM: f32 = 0.625;
 fn authored_face_bytes(face: TextFace) -> &'static [u8] {
     match face {
         TextFace::Sans => ANTA_LATIN,
+        TextFace::Serif => KELLY_SLAB_LATIN,
         TextFace::Mono => SHARE_TECH_MONO_LATIN,
+        TextFace::Emoji => NOTO_EMOJI_BUCKETS[0],
     }
 }
 
@@ -222,6 +232,7 @@ fn authored_face_bytes(face: TextFace) -> &'static [u8] {
 #[derive(Clone,Copy)]
 pub(crate) struct PairKerning {
     sans: Option<SwashFontRef<'static>>,
+    serif: Option<SwashFontRef<'static>>,
     mono: Option<SwashFontRef<'static>>,
     sans_pairs: BorrowedFontPairSource<'static>,
     mono_pairs: BorrowedFontPairSource<'static>,
@@ -658,16 +669,12 @@ pub struct FontAtlas {
     color_dirty: bool,
 }
 
-/// 🗂️ A `fontique::Collection` with no system-font scanning (deterministic, self-contained —
-/// every family this atlas ever shapes with is one of the four `FAMILY_*` names registered from
-/// `include_bytes!`-embedded assets).
+/// 🗂️ Shapes only the embedded catalog faces and their explicitly registered emoji subsets.
 fn empty_font_context() -> FontContext {
     FontContext { collection: Collection::new(CollectionOptions { shared: false, system_fonts: false }), source_cache: SourceCache::default() }
 }
 
-/// 📥️ Registers `bytes` into `collection` under a forced `family` name (ignoring whatever family
-/// name the font file's own `name` table declares), so multi-file families like Noto Emoji's 12
-/// codepoint-range buckets always merge into one fontique family.
+/// 📥️ Registers an original embedded font under its explicit catalog or private subset identity.
 fn register_family(collection: &mut Collection, bytes: &[u8], family: &'static str) -> Option<FamilyId> {
     let over = FontInfoOverride { family_name: Some(family), ..Default::default() };
     collection.register_fonts(Blob::new(Arc::new(bytes.to_vec())), Some(over)).into_iter().next().map(|(id, _)| id)
@@ -732,15 +739,9 @@ impl FontAtlas {
         let sans_id = register_family(&mut collection, sans_bytes, FAMILY_SANS).or_else(|| register_family(&mut collection, ANTA_LATIN, FAMILY_SANS)).expect("embedded Anta font asset must register");
         let serif_id = register_family(&mut collection, KELLY_SLAB_LATIN, FAMILY_SERIF).expect("embedded Kelly Slab font asset must register");
         let mono_id = register_family(&mut collection, SHARE_TECH_MONO_LATIN, FAMILY_MONO).expect("embedded Share Tech Mono font asset must register");
-        let mut emoji_id: Option<FamilyId> = None;
-        for bucket in NOTO_EMOJI_BUCKETS {
-            if let Some(id) = register_family(&mut collection, bucket, FAMILY_EMOJI) {
-                emoji_id.get_or_insert(id);
-            }
-        }
-        let emoji_id = emoji_id.expect("embedded Noto Emoji font assets must register");
-        collection.set_generic_families(GenericFamily::Emoji, std::iter::once(emoji_id));
-        collection.set_generic_families(GenericFamily::SansSerif, std::iter::once(sans_id));
+        let emoji_ids=NOTO_EMOJI_BUCKETS.into_iter().zip(EMOJI_BUCKET_FAMILIES).filter_map(|(bytes,family)|register_family(&mut collection,bytes,family)).collect::<Vec<_>>();
+        assert!(!emoji_ids.is_empty(),"embedded Noto Emoji sources must register");
+        collection.set_generic_families(GenericFamily::Emoji,emoji_ids.into_iter());        collection.set_generic_families(GenericFamily::SansSerif, std::iter::once(sans_id));
         collection.set_generic_families(GenericFamily::Serif, std::iter::once(serif_id));
         collection.set_generic_families(GenericFamily::Monospace, std::iter::once(mono_id));
         Self {
@@ -932,7 +933,7 @@ impl FontAtlas {
     fn shape_single_char(&mut self, face: TextFace, ch: char, size_px: f32) -> Option<ResolvedGlyph> {
         let text = ch.to_string();
         let mut builder = self.layout_cx.ranged_builder(&mut self.font_cx, &text, 1.0, true);
-        builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(face.family()))));
+        builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(if face==TextFace::Emoji{EMOJI_BUCKET_STACK}else{face.family()}))));
         builder.push_default(StyleProperty::FontSize(size_px));
         let mut layout: parley::Layout<[u8; 4]> = builder.build(&text);
         layout.break_all_lines(None);

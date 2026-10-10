@@ -90,6 +90,12 @@ pub fn kind_class(kind: PlanKind) -> &'static str {
         PlanKind::DatumLabel => "datum-label",
         PlanKind::CeilingEdge => "ceiling-edge",
         PlanKind::CeilingHole => "ceiling-hole",
+        PlanKind::ComponentOutline => "component-outline",
+        PlanKind::ComponentFront => "component-front",
+        PlanKind::ComponentConnector => "component-connector",
+        PlanKind::MepAxis => "mep-axis",
+        PlanKind::MepBand => "mep-band",
+        PlanKind::MepDrop => "mep-drop",
     }
 }
 

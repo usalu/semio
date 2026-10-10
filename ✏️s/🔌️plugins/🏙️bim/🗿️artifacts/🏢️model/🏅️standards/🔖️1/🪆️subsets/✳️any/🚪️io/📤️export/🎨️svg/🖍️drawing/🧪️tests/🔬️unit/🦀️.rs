@@ -11,7 +11,7 @@ fn view(id: &str) -> (SvgElement, PlanLinework, Slot) {
     let drawings = compute_view_linework(&model);
     let slot = layout(&model, &drawings).slots.into_iter().find(|slot| slot.view == id).expect("the slot of the view");
     let plan = drawings[id].lines.clone();
-    (view_group(&slot, &plan), plan, slot)
+    (view_group(&model, &slot, &plan), plan, slot)
 }
 
 fn ground() -> (SvgElement, PlanLinework, Slot) {

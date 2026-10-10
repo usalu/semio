@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// 🧵 Which wire dialect a snapshot was last parsed from -- drives [`serialize_gltf_document`]'s
 /// choice of whether a no-`uri` buffer needs re-embedding as a data uri (a `.glb`-sourced buffer
 /// serialized back out as plain `.gltf` JSON text has no BIN chunk to lean on).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -36,7 +36,7 @@ pub enum GltfSourceForm {
 /// order survives decode->encode exactly. `Number` widens to `f64` (glTF extras/extensions are
 /// free-form JSON with no `bufferView`-precision requirement, unlike `stdio.json`'s own
 /// arbitrary-precision lexeme retention).
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Default)]
 pub enum GltfJson {
     #[default]
     Null,
@@ -215,7 +215,7 @@ fn is_false(v: &bool) -> bool {
 //#region 🔖️Asset
 /// 📛 `asset` (§3.9) — the one universally mandatory glTF object; `version` is the one mandatory
 /// field on it.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -248,7 +248,7 @@ impl Default for GltfAsset {
 
 //#region 🔖️Scene
 /// 🎬 `scenes[i]` (§5.26).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -275,7 +275,7 @@ pub struct GltfScene {
 /// (incorrectly) carries both should still round-trip losslessly, and this shape keeps the diff
 /// symmetric with every other nullable field instead of needing a `Replace`-only whole-transform
 /// diff.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -326,7 +326,7 @@ pub struct GltfNode {
 /// forwards straight to the raw `Vec<(String, usize)>` field's OWN `ToValue`/`FromValue` (a
 /// 2-element-array-per-entry encoding), bypassing the `ordered_attr_map` object-shaped encoding
 /// this type actually needs — same wire shape [`GltfPrimitive::attributes`] uses below.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(transparent))]
 pub struct GltfMorphTarget(#[cfg_attr(test, serde(with = "ordered_attr_map"))] pub Vec<(String, usize)>);
@@ -344,7 +344,7 @@ impl semio_framework_value::FromValue for GltfMorphTarget {
 }
 
 /// 🔺 `meshes[i].primitives[j]` (§5.19.4).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -373,7 +373,7 @@ pub struct GltfPrimitive {
 }
 
 /// 🕸️ `meshes[i]` (§5.19).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -399,7 +399,7 @@ pub struct GltfMesh {
 
 //#region 🔖️Accessor
 /// 🧩️ `accessors[i].sparse.indices` (§5.1.3).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -413,7 +413,7 @@ pub struct GltfSparseIndices {
 }
 
 /// 🧩️ `accessors[i].sparse.values` (§5.1.3).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -427,7 +427,7 @@ pub struct GltfSparseValues {
 
 /// 🧩️ `accessors[i].sparse` (§5.1.3) -- sparse-storage substitution over a (possibly absent, then
 /// zero-filled) dense base.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -439,7 +439,7 @@ pub struct GltfSparseAccessor {
 }
 
 /// 🔢️ `accessors[i]` (§5.1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -482,7 +482,7 @@ pub struct GltfAccessor {
 
 //#region 🔖️BufferView
 /// 🪟️ `bufferViews[i]` (§5.7).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -514,7 +514,7 @@ pub struct GltfBufferView {
 //#region 🔖️Buffer
 /// 📦️ `buffers[i]` (§5.6) -- JSON-level metadata only; the resolved raw bytes live index-aligned
 /// in `GltfSnapshot::buffers` (the legitimate bytes-payload exception).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -539,7 +539,7 @@ pub struct GltfBuffer {
 //#region 🔖️Material
 /// 🖼️ A texture reference (§5.20 `textureInfo`) shared by `baseColorTexture` /
 /// `metallicRoughnessTexture` / `emissiveTexture`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -558,7 +558,7 @@ pub struct GltfTextureInfo {
 }
 
 /// 🖼️ `material.normalTexture` (§5.21) -- adds `scale` (default 1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -580,7 +580,7 @@ pub struct GltfNormalTextureInfo {
 }
 
 /// 🖼️ `material.occlusionTexture` (§5.22) -- adds `strength` (default 1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -602,7 +602,7 @@ pub struct GltfOcclusionTextureInfo {
 }
 
 /// 🎨️ `material.pbrMetallicRoughness` (§5.23).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -638,7 +638,7 @@ impl Default for GltfPbrMetallicRoughness {
 }
 
 /// 🔀️ `material.alphaMode` (§5.23.1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfAlphaMode {
@@ -660,7 +660,7 @@ fn is_opaque(v: &GltfAlphaMode) -> bool {
 }
 
 /// 🎨️ `materials[i]` (§5.23).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -722,7 +722,7 @@ impl Default for GltfMaterial {
 
 //#region 🔖️TextureImageSampler
 /// 🧵️ `textures[i]` (§5.30).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -746,7 +746,7 @@ pub struct GltfTexture {
 
 /// 🖼️ `images[i]` (§5.15) -- image bytes are addressed EITHER by `uri` (external/data-uri) OR by
 /// `bufferView` (embedded), never both.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -772,7 +772,7 @@ pub struct GltfImage {
 }
 
 /// 🧲️ `samplers[i]` (§5.27) -- `wrapS`/`wrapT` both default to `10497` (`REPEAT`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -810,7 +810,7 @@ impl Default for GltfSampler {
 
 //#region 🔖️Skin
 /// 🦴️ `skins[i]` (§5.28).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -840,7 +840,7 @@ pub struct GltfSkin {
 //#region 🔖️Animation
 /// 🎞️ `animations[i].channels[j].target.path` (§5.5.2) -- the 4 spec-defined animatable
 /// properties.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfAnimationPath {
@@ -859,7 +859,7 @@ pub enum GltfAnimationPath {
 }
 
 /// 🎯️ `animations[i].channels[j].target` (§5.5.2).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -878,7 +878,7 @@ pub struct GltfAnimationChannelTarget {
 }
 
 /// 🔗️ `animations[i].channels[j]` (§5.5.1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -895,7 +895,7 @@ pub struct GltfAnimationChannel {
 }
 
 /// 📈️ `animations[i].samplers[j].interpolation` (§5.5.3), default `LINEAR`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfInterpolation {
@@ -917,7 +917,7 @@ fn is_linear(v: &GltfInterpolation) -> bool {
 }
 
 /// 📈️ `animations[i].samplers[j]` (§5.5.3).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -937,7 +937,7 @@ pub struct GltfAnimationSampler {
 }
 
 /// 🎬️ `animations[i]` (§5.5).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -963,7 +963,7 @@ pub struct GltfAnimation {
 
 //#region 🔖️Camera
 /// 📷️ `cameras[i].orthographic` (§5.10.1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -982,7 +982,7 @@ pub struct GltfOrthographic {
 }
 
 /// 📷️ `cameras[i].perspective` (§5.10.2).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1006,7 +1006,7 @@ pub struct GltfPerspective {
 
 /// 🔀️ A camera is EITHER `perspective` OR `orthographic` (§5.10) -- modeled as a tagged union on
 /// the sibling `type` string field.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub enum GltfCameraProjection {
     Perspective(GltfPerspective),
     Orthographic(GltfOrthographic),
@@ -1016,7 +1016,7 @@ pub enum GltfCameraProjection {
 
 
 /// 📷️ `cameras[i]` (§5.10).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfCamera {
     pub projection: GltfCameraProjection,
@@ -1109,7 +1109,7 @@ impl semio_framework_value::FromValue for GltfCamera {
 //#region 🔖️Document
 /// 🌍 The full glTF 2.0 JSON document (§5), fully typed -- one field per spec top-level array/
 /// object, `extras`/`extensions` typed via [`GltfJson`], never `serde_json::Value`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1179,7 +1179,7 @@ pub struct GltfDocument {
 /// 📸️ Persisted `stdio.gltf` snapshot: the fully typed [`GltfDocument`] plus `buffers`: the
 /// resolved raw bytes for each `document.buffers[i]` (index-aligned), since a `.glb`-sourced
 /// buffer may have no `uri` at all and its bytes must live somewhere other than the JSON.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1209,7 +1209,7 @@ impl Default for GltfSnapshot {
 //#endregion 🔖️Snapshot
 
 /// 🔢️ `accessor.componentType` — the 6 values glTF 2.0 permits (§5.1.1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq)]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfComponentType {
     Byte,
@@ -1220,7 +1220,7 @@ pub enum GltfComponentType {
     Float,
 }
 /// 🔢️ `accessor.type` — the 7 shapes glTF 2.0 permits (§5.1.2).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq)]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfAccessorType {
     Scalar,
@@ -1257,7 +1257,7 @@ impl GltfAccessorType {
 
 /// 📦️ One decoded accessor: flat row-major `count * accessor_type.components()` values, widened
 /// to `f64` and normalized when requested by the accessor before any consumer observes them.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub struct GltfDecodedAccessor {
     pub component_type: GltfComponentType,
     pub accessor_type: GltfAccessorType,

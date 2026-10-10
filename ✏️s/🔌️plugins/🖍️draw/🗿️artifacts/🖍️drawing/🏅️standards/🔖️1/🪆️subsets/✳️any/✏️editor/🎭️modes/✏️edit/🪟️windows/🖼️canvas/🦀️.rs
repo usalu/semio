@@ -75,7 +75,7 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
             ("opacity".to_string(), semio_framework_value::DslValue::float(1.0)),
             ("blendMode".to_string(), semio_framework_value::DslValue::String("normal".to_string())),
             ("visible".to_string(), semio_framework_value::DslValue::Bool(true)),
-            ("text".to_string(), semio_framework_value::DslValue::object([("content".to_string(), semio_framework_value::DslValue::String(label)), ("size".to_string(), semio_framework_value::DslValue::float(label_size))])),
+            ("text".to_string(), semio_framework_value::DslValue::object([("content".to_string(), semio_framework_value::DslValue::String(label)), ("size".to_string(), semio_framework_value::DslValue::float(label_size)), ("fontFamily".to_string(), semio_framework_value::DslValue::String(crate::DrawingFontFamily::Anta.catalog_family().to_string()))])),
         ]),
     ]
 }

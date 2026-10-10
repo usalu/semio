@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "layoutPolicy": "command-value-layout-excludes-allocator-overhead",
   "cases": [
     {
@@ -7,15 +7,15 @@
       "beginClose": false,
       "command": "increment",
       "completion": "empty",
-      "grant": {
+      "advance": "none",
+      "probe": {
         "items": 1,
-        "bytes": "exact-command"
+        "axis": "exact-quote"
       },
       "expected": {
         "step": "blocked",
         "command": "retained",
         "completion": "retained",
-        "releasedItems": 0,
         "releasedBytes": "zero"
       }
     },
@@ -24,49 +24,49 @@
       "beginClose": true,
       "command": "increment",
       "completion": "empty",
-      "grant": {
+      "advance": "none",
+      "probe": {
         "items": 0,
-        "bytes": "exact-command"
+        "axis": "exact-quote"
       },
       "expected": {
-        "step": "blocked",
+        "step": "pending",
         "command": "retained",
         "completion": "retained",
-        "releasedItems": 0,
         "releasedBytes": "zero"
       }
     },
     {
-      "id": "zero-bytes",
+      "id": "short-depth",
       "beginClose": true,
       "command": "streamed-increment",
       "completion": "empty",
-      "grant": {
+      "advance": "none",
+      "probe": {
         "items": 1,
-        "bytes": "zero"
+        "axis": "depth-minus-one"
       },
       "expected": {
-        "step": "blocked",
+        "step": "refused",
         "command": "retained",
         "completion": "retained",
-        "releasedItems": 0,
         "releasedBytes": "zero"
       }
     },
     {
-      "id": "short-bytes",
+      "id": "short-release",
       "beginClose": true,
       "command": "increment",
       "completion": "empty",
-      "grant": {
+      "advance": "until-release-quote",
+      "probe": {
         "items": 1,
-        "bytes": "command-minus-one"
+        "axis": "release-minus-one"
       },
       "expected": {
-        "step": "blocked",
-        "command": "retained",
+        "step": "pending",
+        "command": "framed",
         "completion": "retained",
-        "releasedItems": 0,
         "releasedBytes": "zero"
       }
     },
@@ -75,16 +75,13 @@
       "beginClose": true,
       "command": "increment-and-notify",
       "completion": "pending-external",
-      "grant": {
-        "items": 1,
-        "bytes": "exact-command"
-      },
+      "advance": "until-command-released",
+      "probe": null,
       "expected": {
         "step": "pending",
         "command": "released",
         "completion": "retained",
-        "releasedItems": 1,
-        "releasedBytes": "command-layout"
+        "releasedBytes": "command-layout-at-least"
       }
     },
     {
@@ -92,16 +89,13 @@
       "beginClose": true,
       "command": "increment",
       "completion": "pending-owner",
-      "grant": {
-        "items": 1,
-        "bytes": "exact-command"
-      },
+      "advance": "until-command-released",
+      "probe": null,
       "expected": {
         "step": "pending",
         "command": "released",
         "completion": "retained",
-        "releasedItems": 1,
-        "releasedBytes": "command-layout"
+        "releasedBytes": "command-layout-at-least"
       }
     }
   ]

@@ -804,7 +804,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
 
 impl<P, M> Drop for ArtifactStoreOneItemSealer<P, M> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "canonical edit sealer dropped before exact owners were transferred or retired");
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "canonical edit sealer dropped before exact owners were transferred or retired");
     }
 }
 //#endregion 🔏️Sealing

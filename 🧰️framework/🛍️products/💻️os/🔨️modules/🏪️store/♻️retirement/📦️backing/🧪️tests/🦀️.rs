@@ -133,7 +133,7 @@ fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut owner = SnapshotReadLeaseRegistryOwner::new();
     let original = owner.0.as_ref().unwrap().identity();
-    let alias = owner.0.as_ref().unwrap().clone();
+    let alias = owner.0.as_ref().unwrap().alias_handle().clone();
     assert_eq!(alias.strong_count(), 1 + fixture["registryExternalAliases"].as_u64().unwrap() as usize);
     let slots = owner.empty_backing_demands().unwrap();
     assert_eq!(owner.close_empty_backing_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: slots.release_bytes, maximum_depth: slots.depth, ..Default::default() }).unwrap(), released(slots.release_bytes, true));

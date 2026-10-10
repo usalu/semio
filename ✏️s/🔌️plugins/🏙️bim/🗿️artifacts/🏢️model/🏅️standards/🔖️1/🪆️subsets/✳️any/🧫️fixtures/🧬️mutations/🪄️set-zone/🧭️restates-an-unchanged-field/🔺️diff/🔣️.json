@@ -1,1 +1,8 @@
-{}
+{
+  "zones": {
+    "z-day": {
+      "entry": "Patched",
+      "occupancy_density": 0.08
+    }
+  }
+}

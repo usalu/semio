@@ -32,6 +32,7 @@ type ModelArtifact {
   ceilings: [CeilingRow!]! @state(class: ARTIFACT)
   zones: [ZoneRow!]! @state(class: ARTIFACT)
   area_schemes: [AreaSchemeRow!]! @state(class: ARTIFACT)
+  space_conditions: [SpaceConditionsRow!]! @state(class: ARTIFACT)
   views: [ViewRow!]! @state(class: ARTIFACT)
   sheets: [SheetRow!]! @state(class: ARTIFACT)
   viewports: [ViewportRow!]! @state(class: ARTIFACT)
@@ -44,6 +45,13 @@ type ModelArtifact {
   families: [FamilyRow!]! @state(class: ARTIFACT)
   family_parameters: [FamilyParameterRow!]! @state(class: ARTIFACT)
   family_solids: [FamilySolidRow!]! @state(class: ARTIFACT)
+  components: [ComponentRow!]! @state(class: ARTIFACT)
+  component_overrides: [ComponentOverrideRow!]! @state(class: ARTIFACT)
+  mep_elements: [MepElementRow!]! @state(class: ARTIFACT)
+  clash_sets: [ClashSetRow!]! @state(class: ARTIFACT)
+  rules: [RuleRow!]! @state(class: ARTIFACT)
+  issues: [IssueRow!]! @state(class: ARTIFACT)
+  issue_comments: [IssueCommentRow!]! @state(class: ARTIFACT)
   wall_sweeps: [WallSweepRow!]! @state(class: ARTIFACT)
   schedules: [ScheduleRow!]! @state(class: ARTIFACT)
   property_templates: [PropertyTemplateRow!]! @state(class: ARTIFACT)
@@ -147,6 +155,67 @@ enum SolidAxis {
   X
   Y
   Z
+}
+
+enum MepSystem {
+  Supply
+  Return
+  Exhaust
+  DomesticWater
+  Waste
+  Gas
+  Power
+  Data
+  Lighting
+}
+
+enum ElementClass {
+  Wall
+  CurtainWall
+  Window
+  Door
+  Column
+  Beam
+  Slab
+  Ceiling
+  Roof
+  Stair
+  Ramp
+  Railing
+  WallSweep
+  Component
+  Mep
+}
+
+enum RuleKind {
+  MinClearHeight
+  MaxRiser
+  MinTread
+  MinStairWidth
+  MinDoorWidth
+  MaxRampSlope
+  MinCorridorWidth
+  MaxCompartmentArea
+}
+
+enum RuleSeverity {
+  Error
+  Warning
+  Note
+}
+
+enum IssueStatus {
+  Open
+  InProgress
+  Resolved
+  Closed
+}
+
+enum IssuePriority {
+  Low
+  Normal
+  High
+  Critical
 }
 
 enum IsoSize {
@@ -277,6 +346,8 @@ enum ScheduleField {
   LayerVolume
   LayerMass
   FinishArea
+  UValue
+  GValue
 }
 
 enum ScheduleOp {
@@ -437,6 +508,27 @@ type SolidShapeCuboid {
   width: String!
   depth: String!
   height: String!
+}
+
+# externally tagged: exactly one member is present
+type MepShape {
+  [object Object]: MepShapeDuct
+  [object Object]: MepShapePipe
+  [object Object]: MepShapeTray
+}
+
+type MepShapeDuct {
+  width: Float!
+  height: Float!
+}
+
+type MepShapePipe {
+  diameter: Float!
+}
+
+type MepShapeTray {
+  width: Float!
+  height: Float!
 }
 
 # externally tagged: exactly one member is present
@@ -767,6 +859,17 @@ type ClassificationSystem {
   entries: [ClassificationItem!]!
 }
 
+type SpaceConditions {
+  occupancy: String
+  occupancy_density: Float
+  heating_setpoint: Float
+  cooling_setpoint: Float
+  ventilation_rate: Float
+  lighting_power_density: Float
+  equipment_power_density: Float
+  schedule: String
+}
+
 type Dimension {
   storey: String!
   anchors: [AnnotationAnchor!]!
@@ -842,6 +945,106 @@ type FamilySolid {
   material: String!
   visible: String!
   offset: ExprPoint3!
+}
+
+type Point3 {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type Component {
+  storey: String!
+  family: String!
+  position: Point2!
+  elevation: Float!
+  rotation: Float!
+  mirrored: Boolean!
+  host: String
+  system: MepSystem
+  name: String!
+}
+
+type ComponentOverride {
+  component: String!
+  name: String!
+  value: String!
+}
+
+type MepElement {
+  storey: String!
+  system: MepSystem!
+  shape: MepShape!
+  path: [Point3!]!
+  name: String!
+}
+
+type ElementSelector {
+  classes: [ElementClass!]!
+  storeys: [String!]!
+  phases: [Phase!]!
+  ids: [String!]!
+}
+
+type RuleScope {
+  storeys: [String!]!
+  phases: [Phase!]!
+  ids: [String!]!
+  filter: String!
+}
+
+type ClashRef {
+  set: String!
+  first: String!
+  second: String!
+}
+
+type SectionBox {
+  min: Point3!
+  max: Point3!
+}
+
+type IssueViewpoint {
+  camera: ViewCamera!
+  section: SectionBox
+  isolate: [String!]!
+}
+
+type ClashSet {
+  name: String!
+  a: ElementSelector!
+  b: ElementSelector!
+  tolerance: Float!
+  clearance: Float!
+}
+
+type Rule {
+  name: String!
+  kind: RuleKind!
+  limit: Float!
+  severity: RuleSeverity!
+  scope: RuleScope!
+}
+
+type Issue {
+  title: String!
+  description: String!
+  status: IssueStatus!
+  priority: IssuePriority!
+  assignee: String!
+  author: String!
+  created: String!
+  labels: [String!]!
+  elements: [String!]!
+  clash: ClashRef
+  viewpoint: IssueViewpoint
+}
+
+type IssueComment {
+  issue: String!
+  author: String!
+  date: String!
+  text: String!
 }
 
 type Sheet {
@@ -987,6 +1190,9 @@ type WindowType {
   frame_depth: Float!
   panes: Int!
   material: String!
+  u_value: Float
+  g_value: Float
+  frame_fraction: Float
 }
 
 type DoorType {
@@ -998,6 +1204,7 @@ type DoorType {
   leaves: DoorLeaves!
   swing: Swing!
   material: String!
+  u_value: Float
 }
 
 type Site {
@@ -1055,6 +1262,9 @@ type CurtainWallType {
   panel: CurtainPanel!
   panel_material: String!
   mullion_material: String!
+  u_value: Float
+  g_value: Float
+  frame_fraction: Float
 }
 
 type CurtainPanelOverride {
@@ -1433,6 +1643,11 @@ type AreaSchemeRow {
   value: AreaScheme!
 }
 
+type SpaceConditionsRow {
+  id: String!
+  value: SpaceConditions!
+}
+
 type ViewRow {
   id: String!
   value: View!
@@ -1493,6 +1708,41 @@ type FamilySolidRow {
   value: FamilySolid!
 }
 
+type ComponentRow {
+  id: String!
+  value: Component!
+}
+
+type ComponentOverrideRow {
+  id: String!
+  value: ComponentOverride!
+}
+
+type MepElementRow {
+  id: String!
+  value: MepElement!
+}
+
+type ClashSetRow {
+  id: String!
+  value: ClashSet!
+}
+
+type RuleRow {
+  id: String!
+  value: Rule!
+}
+
+type IssueRow {
+  id: String!
+  value: Issue!
+}
+
+type IssueCommentRow {
+  id: String!
+  value: IssueComment!
+}
+
 type WallSweepRow {
   id: String!
   value: WallSweep!
@@ -1542,3 +1792,16 @@ type ClassificationRow {
   code: String!
 }
 
+
+# 🦴️ Authored structural analysis schema
+type StructuralLocation { Point: PointLocation, Line: LineLocation, Area: Boolean }
+type PointLocation { station: Float! }
+type LineLocation { start: Float!, end: Float! }
+type Restraints { x:Boolean!, y:Boolean!, z:Boolean!, rx:Boolean!, ry:Boolean!, rz:Boolean! }
+type StructuralSupport { name: String! member: String! location: StructuralLocation! offset: Point3! restraints: Restraints! }
+type StructuralSupportRow { id:String!, value:StructuralSupport! }
+type LoadCase { name: String! category: String! factor: Float! }
+type LoadCaseRow { id:String!, value:LoadCase! }
+type StructuralLoad { name: String! load_case: String! member: String! location: StructuralLocation! force: Point3! moment: Point3! }
+type StructuralLoadRow { id:String!, value:StructuralLoad! }
+extend type ModelArtifact { supports: [StructuralSupportRow!]! @state(class: ARTIFACT), load_cases:[LoadCaseRow!]! @state(class: ARTIFACT), loads:[StructuralLoadRow!]! @state(class: ARTIFACT) }

@@ -437,6 +437,14 @@
               }
             }
           }
+        },
+        "fontFamily": {
+          "enum": [
+            "anta",
+            "kellySlab",
+            "shareTechMono",
+            "notoEmoji"
+          ]
         }
       }
     },

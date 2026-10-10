@@ -141,6 +141,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 # 🔮 Test-only geometry ORACLE (never a `[dependencies]` entry, never reachable from a
@@ -209,3 +210,19 @@ manifest = "../../🧩️composition/🔣️.json"
 [package.metadata.semio.preparation]
 script = "📜️script.ts"
 command = ["composition", "prepare"]
+
+[[test]]
+name = "drawing_original_prefix"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value_path_frames"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/💾️binary/🧬️mutations/🧭️path/🧪️tests/🔗️native/🦀️.rs"
+
+[[test]]
+name = "flow_original_close"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧪️tests/🧾️original/🦀️.rs"
+
+[[test]]
+name = "native_prefix"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🦀️.rs"

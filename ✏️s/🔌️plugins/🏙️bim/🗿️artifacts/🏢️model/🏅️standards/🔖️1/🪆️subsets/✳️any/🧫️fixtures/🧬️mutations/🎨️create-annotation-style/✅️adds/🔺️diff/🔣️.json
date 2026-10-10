@@ -1,1 +1,15 @@
-{}
+{
+  "annotation_styles": {
+    "as-plan": {
+      "entry": "Created",
+      "gap": 0.1,
+      "mark_size": 0.15,
+      "name": "Plan 1:50",
+      "overshoot": 0.2,
+      "precision": 2,
+      "terminator": "Tick",
+      "text_height": 0.25,
+      "unit": "Metre"
+    }
+  }
+}

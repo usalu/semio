@@ -1,0 +1,27 @@
+{
+  "mutation": "createClashSet",
+  "id": "cs-1",
+  "clash_set": {
+    "name": "Service clearance",
+    "a": {
+      "classes": [
+        "Mep"
+      ],
+      "storeys": [],
+      "phases": [],
+      "ids": []
+    },
+    "b": {
+      "classes": [
+        "Beam",
+        "Column",
+        "Slab"
+      ],
+      "storeys": [],
+      "phases": [],
+      "ids": []
+    },
+    "tolerance": 0.005,
+    "clearance": 0.05
+  }
+}

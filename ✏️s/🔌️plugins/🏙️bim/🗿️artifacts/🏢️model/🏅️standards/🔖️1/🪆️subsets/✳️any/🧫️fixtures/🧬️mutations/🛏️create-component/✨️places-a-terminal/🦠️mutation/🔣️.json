@@ -1,0 +1,17 @@
+{
+  "mutation": "createComponent",
+  "id": "cmp-new",
+  "component": {
+    "storey": "st-ground",
+    "family": "fam-lamp",
+    "position": {
+      "x": 1,
+      "y": 1
+    },
+    "elevation": 2.4,
+    "rotation": 1.57,
+    "mirrored": true,
+    "system": "Supply",
+    "name": "Lamp 2"
+  }
+}

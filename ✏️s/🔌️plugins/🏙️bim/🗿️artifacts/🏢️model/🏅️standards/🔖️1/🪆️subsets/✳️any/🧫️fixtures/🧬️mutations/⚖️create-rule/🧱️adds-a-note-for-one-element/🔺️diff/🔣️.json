@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "r-1": {
+      "entry": "Created",
+      "kind": "MinClearHeight",
+      "limit": 2.4,
+      "name": "Clear height",
+      "scope": {
+        "filter": "",
+        "ids": [],
+        "phases": [
+          "New"
+        ],
+        "storeys": []
+      },
+      "severity": "Note"
+    }
+  }
+}

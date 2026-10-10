@@ -1,1 +1,23 @@
-{}
+{
+  "families": {
+    "fam-table": {
+      "entry": "Deleted"
+    }
+  },
+  "family_parameters": {
+    "fam-table.depth": {
+      "entry": "Deleted"
+    },
+    "fam-table.double": {
+      "entry": "Deleted"
+    },
+    "fam-table.width": {
+      "entry": "Deleted"
+    }
+  },
+  "family_solids": {
+    "s-top": {
+      "entry": "Deleted"
+    }
+  }
+}

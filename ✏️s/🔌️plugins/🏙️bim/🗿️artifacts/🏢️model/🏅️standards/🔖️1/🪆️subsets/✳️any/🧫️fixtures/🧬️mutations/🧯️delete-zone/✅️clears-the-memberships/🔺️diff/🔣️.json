@@ -1,1 +1,21 @@
-{}
+{
+  "spaces": {
+    "sp-1": {
+      "entry": "Patched",
+      "zone": {
+        "value": null
+      }
+    },
+    "sp-2": {
+      "entry": "Patched",
+      "zone": {
+        "value": null
+      }
+    }
+  },
+  "zones": {
+    "z-day": {
+      "entry": "Deleted"
+    }
+  }
+}

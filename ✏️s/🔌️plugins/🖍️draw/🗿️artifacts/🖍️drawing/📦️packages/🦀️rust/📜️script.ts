@@ -4,7 +4,7 @@ import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphP
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runCargo, runVitest, runRepositoryExactCargoLaws } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 
@@ -29,4 +29,24 @@ if (segments[0] === "drawing-canvas-window-ownership") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-draw-drawing", { commands: { "graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript, verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+/** 🎛️ Executes actual bilingual selection projection and original command eligibility regressions. */
+class InspectorSelectionActionsScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-inspector-selection-actions accepts no arguments");
+  if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned generated output");
+  const receipts=await runRepositoryExactCargoLaws({
+   cwd:this.repoRoot,env:process.env,artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,
+   groups:[{package:"semio-s-artifact-draw-drawing",target:{kind:"lib"},laws:[
+    "editor::drawing::panels::properties::tests::inspector_actions_respect_selection_eligibility",
+    "editor::drawing::panels::properties::tests::inspector_selection_fixtures",
+    "editor::drawing::panels::properties::tests::inspector_stroke_controls_are_localized",
+    "editor::drawing::panels::properties::tests::inspector_path_nodes_publish_localized_edit_actions",
+    "editor::drawing::panels::properties::tests::inspector_controls_bind_the_events_the_host_dispatches",
+    "editor::drawing::panels::properties::tests::authored_geometry_controls_match_shared_inspector_contract",
+   ]}],buildBudgetMs:Number(process.env.SEMIO_BUILD_BUDGET_MS??3_600_000),listBudgetMs:60_000,lawBudgetMs:120_000,
+   progress(event){console.log(`[DEBUG] Inspector selection actions ${event.stage}: ${event.law??""} artifacts=${event.artifactDir}`);},
+  });
+  for(const receipt of receipts)console.log(`[DEBUG] Inspector selection action receipt ${JSON.stringify(receipt)}`);
+ }
+}
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-draw-drawing", { commands: { "test-inspector-selection-actions":InspectorSelectionActionsScript,"graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript, verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

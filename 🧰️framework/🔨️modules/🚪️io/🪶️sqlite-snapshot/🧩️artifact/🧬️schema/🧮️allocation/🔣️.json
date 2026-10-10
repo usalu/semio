@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaSql",
+    "ownerTable",
+    "relationTable",
+    "owners",
+    "ordinalInput",
+    "ordinalExpectedIds",
+    "duplicateOrdinals",
+    "textUnit",
+    "textRepeats",
+    "textBytes",
+    "blobUnit",
+    "blobRepeats",
+    "blobBytes",
+    "copyFrontier",
+    "tinyAllocationBytes",
+    "repeatedText",
+    "repeatedAllocationBytes",
+    "orderedCancellationRows",
+    "orderedCancelAt",
+    "semanticBytes",
+    "fileBytes",
+    "schemaBytes",
+    "allocationBytes",
+    "expectedOwnershipKind",
+    "expectedCancellationKind",
+    "cancellationDiagnostics"
+  ],
+  "properties": {
+    "schemaSql": {
+      "type": "string"
+    },
+    "ownerTable": {
+      "type": "string"
+    },
+    "relationTable": {
+      "type": "string"
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "blob",
+          "binary64Bits",
+          "numericClass"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "label": {
+            "type": "string"
+          },
+          "blob": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "binary64Bits": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "numericClass": {
+            "enum": [
+              "finite",
+              "nan"
+            ]
+          }
+        }
+      }
+    },
+    "ordinalInput": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "ordinalExpectedIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "duplicateOrdinals": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "textUnit": {
+      "type": "string"
+    },
+    "textRepeats": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "textBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "blobUnit": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "blobRepeats": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "blobBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "copyFrontier": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tinyAllocationBytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "repeatedText": {
+      "type": "string"
+    },
+    "repeatedAllocationBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "orderedCancellationRows": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "orderedCancelAt": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "semanticBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fileBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "schemaBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "allocationBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expectedOwnershipKind": {
+      "const": "ownershipLimit"
+    },
+    "expectedCancellationKind": {
+      "const": "canceled"
+    },
+    "cancellationDiagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parentMessage",
+        "parentStorage",
+        "childMessage",
+        "childStorage",
+        "cases"
+      ],
+      "properties": {
+        "parentMessage": {
+          "type": "string"
+        },
+        "parentStorage": {
+          "enum": [
+            "borrowed",
+            "owned"
+          ]
+        },
+        "childMessage": {
+          "type": "string"
+        },
+        "childStorage": {
+          "enum": [
+            "borrowed",
+            "owned"
+          ]
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "parent",
+              "child",
+              "requestedBytes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "parent": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "child": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "requestedBytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

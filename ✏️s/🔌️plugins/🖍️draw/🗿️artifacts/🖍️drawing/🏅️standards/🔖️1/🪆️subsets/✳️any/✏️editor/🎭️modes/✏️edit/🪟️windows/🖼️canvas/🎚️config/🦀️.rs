@@ -2,7 +2,7 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.draw.drawing.canvas-window.config", extension = "drawingcanvaswindowcfg")]
@@ -53,7 +53,7 @@ impl protocol::DiffAlgebra<DrawingCanvasWindowConfig> for DrawingCanvasWindowCon
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum DrawingCanvasWindowConfigMutation {
     Set { viewport: store::Viewport2d, framed: bool },

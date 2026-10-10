@@ -1,0 +1,15 @@
+[workspace]
+
+[package]
+name = "w2-wp20-energy-loader"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "w2-wp20-energy-loader"
+path = "main.rs"
+
+[dependencies]
+semio-s-artifact-energy-model = { path = "../../../../../../../../../✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }

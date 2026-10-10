@@ -1,1 +1,14 @@
-{}
+{
+  "stairs": {
+    "s-l": {
+      "direction": 1.070796326795,
+      "entry": "Patched",
+      "flight": {
+        "LTurn": {
+          "split": 0.5,
+          "turn": "Right"
+        }
+      }
+    }
+  }
+}

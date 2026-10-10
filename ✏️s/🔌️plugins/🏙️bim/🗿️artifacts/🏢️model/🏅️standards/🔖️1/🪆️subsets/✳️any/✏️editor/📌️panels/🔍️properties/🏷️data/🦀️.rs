@@ -165,3 +165,7 @@ pub fn entry_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Vec
     ]
 }
 //#endregion 🔖️Entries
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

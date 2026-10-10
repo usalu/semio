@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import factorySelectorSchema from "../🧬️schema/🎯️factory-selector/🔣️.json";
 
 export interface NativeCodecPublicationReceiptV1 {
   schemaVersion: 1;
@@ -8,6 +9,20 @@ export interface NativeCodecPublicationReceiptV1 {
   extension: string;
   packSchemaHash: string;
   protocolSourceSha256: string;
+}
+export interface NativeCodecPublicationFactoryV1 {
+  artifact: string;
+  factory_id: string;
+  definition_path: string;
+  protocol_path: string;
+}
+
+/** 🎯️ Selects one authored native factory without collapsing independent artifact standards. */
+export function selectNativeCodecPublicationFactoryV1(rows: readonly NativeCodecPublicationFactoryV1[], factoryId: string): NativeCodecPublicationFactoryV1 {
+  if (!Array.isArray(rows) || factoryId.length > factorySelectorSchema.maxLength || !new RegExp(factorySelectorSchema.pattern).test(factoryId)) throw new Error("native-codec.publication.factory-selector");
+  const selected = rows.filter(row => row.factory_id === factoryId);
+  if (selected.length !== 1 || !/^[a-z][a-z0-9-]*$/.test(selected[0].artifact)) throw new Error("native-codec.publication.factory-selector");
+  return selected[0];
 }
 type Document = Record<string, any>;
 export interface NativeCodecPublicationInputV1 {

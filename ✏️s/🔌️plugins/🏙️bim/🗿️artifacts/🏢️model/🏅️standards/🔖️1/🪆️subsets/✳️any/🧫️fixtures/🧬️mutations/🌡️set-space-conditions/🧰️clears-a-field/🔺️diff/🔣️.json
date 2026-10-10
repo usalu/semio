@@ -1,0 +1,10 @@
+{
+  "space_conditions": {
+    "sp-1": {
+      "cooling_setpoint": {
+        "value": null
+      },
+      "entry": "Patched"
+    }
+  }
+}

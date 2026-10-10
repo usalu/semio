@@ -4,7 +4,7 @@
 use super::anchors::{reference_point, resolve, Reason};
 use super::{marks_of, print, text_width, Inputs, LeaderLayout, NoteLayout, StyleMarks, TagLayout, TextAnchor};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::extents_of;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::resolve_size;
+use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
 use crate::{Leader, ModelSnapshot, OpeningKind, Point2, Tag, TagCategory, TextNote};
 

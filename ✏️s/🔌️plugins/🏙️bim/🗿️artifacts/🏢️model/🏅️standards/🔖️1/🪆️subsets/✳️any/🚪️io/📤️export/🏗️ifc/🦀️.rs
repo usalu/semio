@@ -1,7 +1,11 @@
-//! 🏗️ `s.bim.model@1/*` → `s.stdio.ifc@2x3/*`: the spatial structure, walls with openings, slabs, roofs, frames, stairs, railings, spaces, curtain walls, grids,
-//! materials, property sets, classifications, base quantities and annotations (`IfcAnnotation`) of a [`ModelSnapshot`] as an IFC 2x3 Part-21 file.
-//! 🔖 `IoFidelity::Lossy`: IFC 2x3 has no slot for parametric constraints (top constraints, joins, derived inferences); geometry and identity are exact.
-//! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/
+//! 🏗️ `s.bim.model@1/*` → `s.stdio.ifc@2x3/*` and `s.stdio.ifc@4/*`: the spatial structure, walls with openings, slabs, roofs, frames, stairs, railings, spaces, curtain walls, grids,
+//! materials, property sets (own sets of elements, authored sets of types in the `HasPropertySets` of their type object; defaults and inherited values are inferred, never written), classification systems (one
+//! `IfcClassification` per system, one `IfcClassificationReference` per table row, one `IfcRelAssociatesClassification` per used code listing every element and type that carries it, the parent column in the
+//! `Semio_ClassificationParents` set of the project), base quantities and annotations (`IfcAnnotation`) of a [`ModelSnapshot`] as an IFC Part-21 file of the [`Schema`] asked for.
+//! 🔖 `IoFidelity::Lossy`: IFC has no slot for parametric constraints (top constraints, joins, derived inferences); geometry and identity are exact. IFC 2x3 has also no slot for property set templates or for the parent of a classification
+//! row (a foreign reader sees the flat reference rows); IFC4 writes them as the `IfcProjectLibrary` of the project ([`ifc4`]), its bodies as `IfcTriangulatedFaceSet`s, its windows and doors with their `IfcWindowType` / `IfcDoorType` operation and
+//! no owner history. The file is written in stages ([`STAGES`]) so a job can report progress and stop between two of them.
+//! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
@@ -28,6 +32,8 @@ pub mod spatial;
 pub mod data;
 #[path = "🏰️walls/🦀️.rs"]
 pub mod walls;
+#[path = "🧷️wall-sweeps/🦀️.rs"]
+pub mod wall_sweeps;
 #[path = "🏗️frame/🦀️.rs"]
 pub mod frame;
 #[path = "⬜️horizontal/🦀️.rs"]
@@ -38,10 +44,16 @@ pub mod ceilings;
 pub mod circulation;
 #[path = "🛝️ramps/🦀️.rs"]
 pub mod ramps;
+#[path = "🪑️components/🦀️.rs"]
+pub mod components;
+#[path = "🌀️mep/🦀️.rs"]
+pub mod mep;
 #[path = "🏠️spaces/🦀️.rs"]
 pub mod spaces;
 #[path = "🏘️zoning/🦀️.rs"]
 pub mod zoning;
+#[path = "🧭️options/🦀️.rs"]
+pub mod options;
 #[path = "🪟️curtain/🦀️.rs"]
 pub mod curtain;
 #[path = "📏️grids/🦀️.rs"]
@@ -50,7 +62,12 @@ pub mod grids;
 pub mod annotations;
 #[path = "🔬️projection/🦀️.rs"]
 pub mod projection;
+#[path = "📚️ifc4/🦀️.rs"]
+pub mod ifc4;
+#[path = "🔥️energy/🦀️.rs"]
+pub mod energy;
 
+pub use writer::Schema;
 use writer::{opt_text, rf, unset, Ifc, V};
 
 /// 🪪️ The IFC 2x3 dialect this leaf writes.
@@ -95,6 +112,30 @@ pub struct Links {
     pub types: BTreeMap<(&'static str, String), u64>,
     pub material_defs: BTreeMap<String, u64>,
     pub layer_sets: BTreeMap<(&'static str, String), u64>,
+    pub connections: Vec<(String, String, &'static str)>,
+    pub library: Option<u64>,
+    pub templates: BTreeMap<String, u64>,
+    pub templated: BTreeMap<u64, Vec<u64>>,
+    pub sources: BTreeMap<String, u64>,
+    pub references: BTreeMap<(String, String), u64>,
+    pub derived: BTreeMap<String, Vec<(&'static str, Vec<(&'static str, V)>)>>,
+}
+
+/// 🧳️ Everything an export keeps between two stages: it owns no borrow, so a job can drop the inference between steps and read it again.
+pub struct Staged {
+    pub ifc: Ifc,
+    pub storeys: BTreeMap<String, StoreyRef>,
+    pub buildings: BTreeMap<String, BuildingRef>,
+    pub links: Links,
+    pub notes: Vec<String>,
+}
+
+impl Staged {
+    /// 🌱️ The empty state of an export of `model` in `schema`.
+    pub fn new(schema: Schema, model: &ModelSnapshot) -> Self {
+        let true_north = model.sites.values().next().map_or(0.0, |site| site.true_north);
+        Self { ifc: Ifc::in_schema(schema, &model.project.author, &model.project.organization, true_north), storeys: BTreeMap::new(), buildings: BTreeMap::new(), links: Links::default(), notes: Vec::new() }
+    }
 }
 
 /// 🏗️ The export under construction: the model, the one inference of it every family reads, the writer and the recorded links.
@@ -109,10 +150,29 @@ pub struct Export<'a> {
 }
 
 impl<'a> Export<'a> {
-    /// 🌱️ Starts an export of `model` that reads its already inferred fields.
-    pub fn new(model: &'a ModelSnapshot, inferred: &'a ModelInference) -> Self {
-        let true_north = model.sites.values().next().map_or(0.0, |site| site.true_north);
-        Self { model, inferred, ifc: Ifc::new(&model.project.author, &model.project.organization, true_north), storeys: BTreeMap::new(), buildings: BTreeMap::new(), links: Links::default(), notes: Vec::new() }
+    /// 🌱️ Starts an export of `model` in `schema` that reads its already inferred fields.
+    pub fn new(schema: Schema, model: &'a ModelSnapshot, inferred: &'a ModelInference) -> Self {
+        Self::resume(model, inferred, Staged::new(schema, model))
+    }
+
+    /// ▶️ Continues an export from the state a stage left.
+    pub fn resume(model: &'a ModelSnapshot, inferred: &'a ModelInference, staged: Staged) -> Self {
+        Self { model, inferred, ifc: staged.ifc, storeys: staged.storeys, buildings: staged.buildings, links: staged.links, notes: staged.notes }
+    }
+
+    /// ⏸️ Gives the state back so the borrows end.
+    pub fn suspend(self) -> Staged {
+        Staged { ifc: self.ifc, storeys: self.storeys, buildings: self.buildings, links: self.links, notes: self.notes }
+    }
+
+    /// 🔖️ The schema of the file.
+    pub fn schema(&self) -> Schema {
+        self.ifc.schema
+    }
+
+    /// 🎚️ `v2x3` for an IFC 2x3 file, `v4` for an IFC4 file.
+    pub fn by<T>(&self, v2x3: T, v4: T) -> T {
+        self.ifc.schema.pick(v2x3, v4)
     }
 
     /// 🧊️ The inferred solid of an element.
@@ -176,9 +236,9 @@ impl<'a> Export<'a> {
 //#endregion 🔖️Context
 
 //#region 🔖️Document
-fn header(model: &ModelSnapshot) -> Part21Header {
+fn header(model: &ModelSnapshot, schema: Schema) -> Part21Header {
     let mut header = Part21Header::iso_10303_21_minimum();
-    header.file_description = vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [CoordinationView_V2.0]".into())]), Part21Value::Str("2;1".into())];
+    header.file_description = vec![Part21Value::List(vec![Part21Value::Str(schema.pick("ViewDefinition [CoordinationView_V2.0]", "ViewDefinition []").into())]), Part21Value::Str("2;1".into())];
     header.file_name = vec![
         Part21Value::Str(format!("{}.ifc", model.project.name)),
         Part21Value::Str(String::new()),
@@ -188,42 +248,116 @@ fn header(model: &ModelSnapshot) -> Part21Header {
         Part21Value::Str("semio BIM".into()),
         Part21Value::Str(String::new()),
     ];
-    header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC2X3".into())])];
+    header.file_schema = vec![Part21Value::List(vec![Part21Value::Str(schema.id().into())])];
     header
 }
 
-/// 🏗️ The Part-21 document of `model` from its inference, plus a note per item that could not be written.
-pub fn inferred_to_part21(model: &ModelSnapshot, inferred: &ModelInference) -> (Part21Document, Vec<String>) {
-    let mut export = Export::new(model, inferred);
-    data::emit_types(&mut export);
-    spatial::emit(&mut export);
-    walls::emit(&mut export);
-    curtain::emit(&mut export);
-    frame::emit(&mut export);
-    horizontal::emit(&mut export);
-    ceilings::emit(&mut export);
-    circulation::emit(&mut export);
-    ramps::emit(&mut export);
-    spaces::emit(&mut export);
-    zoning::emit(&mut export);
-    grids::emit(&mut export);
-    annotations::emit(&mut export);
-    data::emit_links(&mut export);
+/// 🪜️ One stage of the export: the name of the family it writes and the function that writes it.
+pub type Stage = (&'static str, fn(&mut Export<'_>));
+
+/// 🪜️ The stages of an export in the order they run; each reads the inference and the records of the stages before it.
+pub const STAGES: &[Stage] = &[
+    ("library", ifc4::emit_library),
+    ("types", data::emit_types),
+    ("spatial", spatial::emit),
+    ("walls", walls::emit),
+    ("wall-sweeps", wall_sweeps::emit),
+    ("curtain-walls", curtain::emit),
+    ("frames", frame::emit),
+    ("slabs-and-roofs", horizontal::emit),
+    ("ceilings", ceilings::emit),
+    ("stairs-and-railings", circulation::emit),
+    ("ramps", ramps::emit),
+    ("components", components::emit),
+    ("mep", mep::emit),
+    ("systems", mep::emit_systems),
+    ("spaces", spaces::emit),
+    ("zones", zoning::emit),
+    ("options", options::emit),
+    ("grids", grids::emit),
+    ("annotations", annotations::emit),
+    ("energy", energy::emit),
+    ("structure", structure::emit),
+    ("links", data::emit_links),
+    ("connections", walls::connect),
+];
+
+/// 🏗️ The Part-21 document of `model` in `schema` from its inference, plus a note per item that could not be written.
+pub fn inferred_to_part21(schema: Schema, model: &ModelSnapshot, inferred: &ModelInference) -> (Part21Document, Vec<String>) {
+    let mut export = Export::new(schema, model, inferred);
+    for (_, stage) in STAGES {
+        stage(&mut export);
+    }
+    finish(export, model)
+}
+
+/// 🏁️ Seals an export whose stages have all run: the document with its header and the notes.
+pub fn finish(mut export: Export<'_>, model: &ModelSnapshot) -> (Part21Document, Vec<String>) {
     let notes = std::mem::take(&mut export.notes);
-    let head = header(model);
+    let head = header(model, export.ifc.schema);
     (export.ifc.finish(head), notes)
 }
 
-/// 🏗️ The Part-21 document of `model` plus a note per item that could not be written: the inference comes from the shared session, so an export after an edit recomputes only what the edit touched.
-pub fn model_to_part21(model: &ModelSnapshot) -> Result<(Part21Document, Vec<String>), String> {
-    registry::try_with_inference(None, model, |inferred| inferred_to_part21(model, inferred)).map_err(|error| error.to_string())
+/// 🏗️ The Part-21 document of `model` in `schema` plus a note per item that could not be written: the inference comes from the shared session, so an export after an edit recomputes only what the edit touched.
+pub fn model_to_part21(schema: Schema, model: &ModelSnapshot) -> Result<(Part21Document, Vec<String>), String> {
+    registry::try_with_inference(None, model, |inferred| inferred_to_part21(schema, model, inferred)).map_err(|error| error.to_string())
 }
 
 /// 📤️ The IFC 2x3 file bytes of `model` plus a note per item that could not be written.
 pub fn export_ifc2x3(model: &ModelSnapshot) -> Result<(Vec<u8>, Vec<String>), String> {
-    let (document, notes) = model_to_part21(model)?;
-    let bytes = codec::encode_document(document)?;
-    Ok((bytes, notes))
+    let (document, notes) = model_to_part21(Schema::Ifc2x3, model)?;
+    Ok((encode(Schema::Ifc2x3, document)?, notes))
+}
+
+/// 📤️ The IFC4 file bytes of `model` plus a note per item that could not be written.
+pub fn export_ifc4(model: &ModelSnapshot) -> Result<(Vec<u8>, Vec<String>), String> {
+    let (document, notes) = model_to_part21(Schema::Ifc4, model)?;
+    Ok((encode(Schema::Ifc4, document)?, notes))
+}
+
+/// 📤️ The file bytes of an already written document in `schema`.
+pub fn encode(schema: Schema, document: Part21Document) -> Result<Vec<u8>, String> {
+    match schema {
+        Schema::Ifc2x3 => codec::encode_document(document),
+        Schema::Ifc4 => codec::encode_ifc4(&document),
+    }
+}
+
+/// 🧵️ An export that runs one [`STAGES`] entry per step, so a job can report how far it is and stop between two stages; it owns no borrow of the inference.
+pub struct StagedExport {
+    staged: Option<Staged>,
+    next: usize,
+}
+
+impl StagedExport {
+    /// 🌱️ An export of `model` in `schema` that has not run a stage yet.
+    pub fn new(schema: Schema, model: &ModelSnapshot) -> Self {
+        Self { staged: Some(Staged::new(schema, model)), next: 0 }
+    }
+
+    /// 📈️ How far the stages are, from zero to one.
+    pub fn fraction(&self) -> f32 {
+        self.next as f32 / STAGES.len() as f32
+    }
+
+    /// 🏷️ The name of the stage the next step runs, `None` once all have run.
+    pub fn stage(&self) -> Option<&'static str> {
+        STAGES.get(self.next).map(|(name, _)| *name)
+    }
+
+    /// ⏩️ Runs the next stage; the document and its notes once the last has run, `None` before.
+    pub fn step(&mut self, model: &ModelSnapshot, inferred: &ModelInference) -> Option<(Part21Document, Vec<String>)> {
+        let mut export = Export::resume(model, inferred, self.staged.take()?);
+        if let Some((_, stage)) = STAGES.get(self.next) {
+            stage(&mut export);
+            self.next += 1;
+        }
+        if self.next < STAGES.len() {
+            self.staged = Some(export.suspend());
+            return None;
+        }
+        Some(finish(export, model))
+    }
 }
 //#endregion 🔖️Document
 
@@ -252,3 +386,10 @@ pub mod testkit;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔭️schema4/🦀️.rs"]
+mod schema4_tests;
+
+#[path = "🦴️structure/🦀️.rs"]
+pub mod structure;

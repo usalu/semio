@@ -2288,7 +2288,7 @@ fn retained_text_edit_preserves_identity_and_appearance() {
     crate::schema::layer_base_mut(&mut layer).opacity = 0.4;
     let id = crate::schema::layer_id(&layer).clone();
     let source = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
-    let mutation = crate::mutations::update_text(id.clone(), "Grüße 🌍\n123".into(), 36.0);
+    let mutation = crate::mutations::update_text(id.clone(), "Grüße 🌍\n123".into(), 36.0,crate::DrawingFontFamily::Anta);
     let result = apply(source, &mutation).expect("retained text mutation applies");
     let DrawingLayerNode::Text(text) = &result.layers[0] else { panic!("Expected text") };
     assert_eq!(text.content, "Grüße 🌍\n123");
@@ -2301,8 +2301,8 @@ fn retained_text_edit_preserves_identity_and_appearance() {
 
 #[test]
 fn retained_text_digest_distinguishes_content_and_size() {
-    assert_mutation_digest_distinct(crate::mutations::update_text("text".into(), "A".into(), 24.0), crate::mutations::update_text("text".into(), "B".into(), 24.0));
-    assert_mutation_digest_distinct(crate::mutations::update_text("text".into(), "A".into(), 24.0), crate::mutations::update_text("text".into(), "A".into(), 36.0));
+    assert_mutation_digest_distinct(crate::mutations::update_text("text".into(), "A".into(), 24.0,crate::DrawingFontFamily::Anta), crate::mutations::update_text("text".into(), "B".into(), 24.0,crate::DrawingFontFamily::Anta));
+    assert_mutation_digest_distinct(crate::mutations::update_text("text".into(), "A".into(), 24.0,crate::DrawingFontFamily::Anta), crate::mutations::update_text("text".into(), "A".into(), 36.0,crate::DrawingFontFamily::Anta));
 }
 
 #[test]
@@ -2312,7 +2312,7 @@ fn retained_text_edit_cancellation_keeps_the_complete_document() {
     let id = crate::schema::layer_id(&layer).clone();
     let mut source = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let expected = source.clone();
-    let mutation = crate::mutations::update_text(id, "😀🙂Grüße".into(), 36.0);
+    let mutation = crate::mutations::update_text(id, "😀🙂Grüße".into(), 36.0,crate::DrawingFontFamily::Anta);
     let operation = semio_framework_job::OperationId(8_091);
     let generation = semio_framework_job::Generation(91);
     let mut authority = borrowed_candidate(operation, generation).unwrap();

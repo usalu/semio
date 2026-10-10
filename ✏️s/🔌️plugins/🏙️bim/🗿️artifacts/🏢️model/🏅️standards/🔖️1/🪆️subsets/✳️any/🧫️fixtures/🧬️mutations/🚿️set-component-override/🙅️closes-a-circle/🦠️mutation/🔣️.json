@@ -1,0 +1,6 @@
+{
+  "mutation": "setComponentOverride",
+  "component": "cmp-table",
+  "name": "width",
+  "value": "double"
+}

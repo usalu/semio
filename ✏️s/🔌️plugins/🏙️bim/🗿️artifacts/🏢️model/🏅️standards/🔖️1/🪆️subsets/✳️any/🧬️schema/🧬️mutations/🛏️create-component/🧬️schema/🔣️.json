@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-component/schema.json",
+  "title": "CreateComponent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "component"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createComponent"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Component id",
+          "de": "Komponenten-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "component": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Component",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Component",
+          "de": "Komponente"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -29,7 +29,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: crate::editor::bim::utilities::initial(),
         id: WINDOW_KIND_ID.into(),
-        label: LocalizedLabel::native(BimLabels::NATIVE_EN.window_section.as_str(), BimLabels::NATIVE_DE.window_section.as_str()),
+        label: BimLabels::localized(|labels| labels.window_section),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "scissors".into(),

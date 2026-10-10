@@ -3,7 +3,7 @@
 use neural_engine as neural;
 use protocol::causal::transition::HistoryFoldIndex;
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::BTreeSet;
 
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Neuron, OperatorInfo, Value as NeuralValue, INPUT_KIND, OUTPUT_KIND};
 
@@ -64,14 +64,14 @@ fn output_ports_json(dict: &Dictionary) -> semio_framework_pack_json::Object {
     ports
 }
 
-pub(crate) fn outputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dictionary> {
+pub(crate) fn outputs_from_channel_eval_json(json: &str) -> HistoryFoldIndex<String, Dictionary> {
     let Ok(parsed) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-        return BTreeMap::new();
+        return HistoryFoldIndex::new();
     };
     let Some(parsed) = parsed.as_object() else {
-        return BTreeMap::new();
+        return HistoryFoldIndex::new();
     };
-    let mut outputs = BTreeMap::new();
+    let mut outputs = HistoryFoldIndex::new();
     for (widget_id, entry) in parsed.iter() {
         let Some(out_ports) = entry.get("out").and_then(|value| value.as_object()) else {
             continue;
@@ -89,14 +89,14 @@ pub(crate) fn outputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dic
     outputs
 }
 
-pub(crate) fn inputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dictionary> {
+pub(crate) fn inputs_from_channel_eval_json(json: &str) -> HistoryFoldIndex<String, Dictionary> {
     let Ok(parsed) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-        return BTreeMap::new();
+        return HistoryFoldIndex::new();
     };
     let Some(parsed) = parsed.as_object() else {
-        return BTreeMap::new();
+        return HistoryFoldIndex::new();
     };
-    let mut inputs = BTreeMap::new();
+    let mut inputs = HistoryFoldIndex::new();
     for (widget_id, entry) in parsed.iter() {
         let Some(in_ports) = entry.get("in").and_then(|value| value.as_object()) else {
             continue;
@@ -293,7 +293,12 @@ pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels
         let operator_info = widget_operator_info(widget, kind_infos);
         let kind_info = operator_info.as_ref();
         let input_dict = match widget {
-            Widget::Neuron { params, .. } => channels.inputs.get(id).cloned().unwrap_or_default().merge(params),
+            Widget::Neuron { params, .. } => {
+                let supplied = channels.inputs.get(id).cloned().unwrap_or_default();
+                let merged = supplied.merge(params);
+                neural::ColdRetire::retire_cold(supplied);
+                merged
+            }
             _ => channels.inputs.get(id).cloned().unwrap_or_default(),
         };
         let output_dict = channels.outputs.get(id);
@@ -312,6 +317,9 @@ pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels
         // trapped the guest on any graph whose neurons carry inline params
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         neural::ColdRetire::retire_cold(input_dict);
+        if let Some(operator_info) = operator_info {
+            neural::ColdRetire::retire_cold(operator_info);
+        }
     }
     semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(widgets))
 }

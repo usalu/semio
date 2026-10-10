@@ -30,19 +30,14 @@
     "terminalReceipts": 1,
     "operationCompletions": 1,
     "closeItems": 1,
-    "closeBytes": 4096
+    "closeBodyBytes": 4096
   },
   "transientClose": {
     "initiallyTerminal": false,
-    "shortBytes": 4095,
-    "originalAliveAfterHandoff": true,
-    "originalAliveAfterRelease": false,
-    "phases": [
-      "retained",
-      "released",
-      "complete"
-    ],
-    "foreignTerminal": false
+    "sourceRevision": 9,
+    "deniedAxes": ["items", "copy", "capacity", "release", "depth"],
+    "foreignTerminal": false,
+    "expected": { "terminal": true, "detachesWithoutReplacement": true }
   },
   "ownerReturningRejection": {
     "schema": "semio.plugin.artifact-tool-completion-rejection/v1",

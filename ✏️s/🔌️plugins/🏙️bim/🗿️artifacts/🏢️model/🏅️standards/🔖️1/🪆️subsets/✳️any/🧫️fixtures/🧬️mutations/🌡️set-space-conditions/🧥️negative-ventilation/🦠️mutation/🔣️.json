@@ -1,0 +1,7 @@
+{
+  "mutation": "setSpaceConditions",
+  "id": "sp-1",
+  "ventilation_rate": {
+    "value": -1
+  }
+}

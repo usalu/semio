@@ -10,10 +10,10 @@
 //! layers (else the `Structure` layers, else the mid plane). Faces are offset curves of the axis (parallel lines, or concentric arcs with
 //! the same bulge); joins trim them as described in [`joins`]. Z values: see `storey-levels`.
 
-pub use super::super::element_solids::plan_kit::seg as segment_of;
 pub use super::super::storey_levels::top_of;
 
-use super::super::element_solids::plan_kit::{mark, seg};
+use crate::standards::v1::subsets::any::schema::authored::plan::{axis_length, segment_of as seg};
+use super::super::element_solids::plan_kit::mark;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
 use crate::{Axis, LocationLine, ModelSnapshot, Point2, Vertex, Wall};
 use semio_framework_geometry::bulge::BulgeSeg;
@@ -25,14 +25,14 @@ use std::collections::BTreeMap;
 
 #[path = "🔗️joins/🦀️.rs"]
 pub mod joins;
-#[path = "🔗️attach/🦀️.rs"]
+#[path = "🧲️attach/🦀️.rs"]
 pub mod attach;
 
 use joins::{Band, JOIN_TOLERANCE};
 
 //#region 🔖️Values
 /// 🔗️ Where on a wall a join sits: at its axis start, at its axis end, or along its interior.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum JoinEnd {
     Start,
     End,
@@ -40,7 +40,7 @@ pub enum JoinEnd {
 }
 
 /// 🔗️ How two walls meet: `Miter` end to end (2 or more walls around a node), `Butt` this wall's end against the face of the other, `Through` the other wall's end against this wall, `Cross` both axes crossing in their interiors.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum JoinKind {
     Miter,
     Butt,
@@ -49,7 +49,7 @@ pub enum JoinKind {
 }
 
 /// 🔗️ One edge of the join graph, as seen from one wall: `end` is the site on this wall, `other_end` the site on `other`. `overlap_area` is the area both bodies cover at a `Cross` (otherwise 0).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct WallJoin {
     pub kind: JoinKind,
     pub end: JoinEnd,
@@ -60,7 +60,7 @@ pub struct WallJoin {
 }
 
 /// 〰️ A join-trimmed face: a line (`bulge == 0`) or an arc from `start` to `end`, `bulge = tan(sweep / 4)`.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FaceCurve {
     pub start: Point2,
     pub end: Point2,
@@ -79,7 +79,7 @@ impl Default for FaceCurve {
 /// join-trimmed; `footprint` is the counter-clockwise loop `[right.start, right.end, left.end, left.start]` (bulge of the edge to the
 /// next vertex), empty when a face collapses. Side areas are face length times height before openings; `footprint_area` is the exact
 /// loop area, `volume` the footprint area times height. `joins` lists every contact with a neighbour.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct WallLayout {
     pub base_z: f64,
     pub top_z: f64,
@@ -154,11 +154,6 @@ impl FaceEnds {
 //#endregion 🔖️Values
 
 //#region 🔖️Geometry
-/// 📏️ Arc length of a bulged segment: `bulge = tan(sweep / 4)`.
-pub fn axis_length(axis: &Axis) -> f64 {
-    seg(axis).length()
-}
-
 /// 🍰️ Total thickness of the layers of a wall type.
 pub fn thickness_of(snapshot: &ModelSnapshot, wall: &Wall) -> f64 {
     snapshot.wall_types.get(&wall.wall_type).map_or(0.0, |kind| kind.layers.iter().map(|layer| layer.thickness).sum())

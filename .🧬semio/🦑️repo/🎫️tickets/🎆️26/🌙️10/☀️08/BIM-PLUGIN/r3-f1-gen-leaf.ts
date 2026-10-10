@@ -84,7 +84,7 @@ export function emitLeaf(leaf: Leaf): string {
 use crate::{${["ModelDiff", "ModelMutation", "ModelSnapshot", ...new Set(leaf.props.map((p) => p.rust).filter((name) => /^[A-Z]\w*$/.test(name) && name !== "String"))].sort().join(", ")}};
 use protocol::{MutationKind, SemanticDescriptor};
 ${(leaf.uses ?? []).map((line) => line + "\n").join("")}
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ${leaf.variant} {
 ${fields}

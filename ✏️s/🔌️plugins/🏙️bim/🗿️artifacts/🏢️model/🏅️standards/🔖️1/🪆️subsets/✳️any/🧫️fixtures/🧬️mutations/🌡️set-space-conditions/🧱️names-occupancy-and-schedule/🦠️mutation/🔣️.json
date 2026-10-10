@@ -1,0 +1,10 @@
+{
+  "mutation": "setSpaceConditions",
+  "id": "sp-1",
+  "occupancy": {
+    "value": "Office"
+  },
+  "schedule": {
+    "value": "Office 08-18"
+  }
+}

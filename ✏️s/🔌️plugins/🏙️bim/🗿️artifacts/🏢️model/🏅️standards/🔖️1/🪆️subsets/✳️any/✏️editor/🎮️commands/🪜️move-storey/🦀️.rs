@@ -19,7 +19,7 @@ pub trait Shifts {
 macro_rules! shifts {
     ($($payload:ident => $keyword:literal, $steps:literal;)+) => {
         $(
-            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+            #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
             #[dsl(keyword = $keyword)]
             pub struct $payload {
                 pub ids: Vec<String>,

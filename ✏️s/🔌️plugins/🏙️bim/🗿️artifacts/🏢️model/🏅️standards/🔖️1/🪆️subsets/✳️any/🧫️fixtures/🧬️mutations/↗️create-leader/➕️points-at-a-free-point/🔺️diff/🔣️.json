@@ -1,1 +1,22 @@
-{}
+{
+  "leaders": {
+    "lead-2": {
+      "anchor": {
+        "Point": {
+          "point": {
+            "x": 4.0,
+            "y": 3.0
+          }
+        }
+      },
+      "entry": "Created",
+      "offset": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "storey": "st-ground",
+      "style": "as-plan",
+      "text": "Shaft"
+    }
+  }
+}

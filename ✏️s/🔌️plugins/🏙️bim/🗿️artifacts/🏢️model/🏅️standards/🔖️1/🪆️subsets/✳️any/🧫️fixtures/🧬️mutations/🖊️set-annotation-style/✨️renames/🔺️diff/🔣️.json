@@ -1,1 +1,8 @@
-{}
+{
+  "annotation_styles": {
+    "as-plan": {
+      "entry": "Patched",
+      "name": "Plan 1:50 (renamed)"
+    }
+  }
+}

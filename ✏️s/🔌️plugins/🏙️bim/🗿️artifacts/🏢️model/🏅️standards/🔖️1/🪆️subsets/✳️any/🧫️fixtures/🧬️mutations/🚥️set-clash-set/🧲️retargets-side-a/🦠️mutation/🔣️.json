@@ -1,0 +1,13 @@
+{
+  "mutation": "setClashSet",
+  "id": "cs-1",
+  "a": {
+    "classes": [
+      "Beam",
+      "Column"
+    ],
+    "storeys": [],
+    "phases": [],
+    "ids": []
+  }
+}

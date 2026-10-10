@@ -847,7 +847,7 @@ where
     retirement.applied = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty())));
     retirement.redo = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty())));
     retirement.revision = root.revision_accumulator.take().map(super::ArtifactStoreRevisionAccumulatorRetirement::new);
-    if let Some((edit_id, snapshot)) = root.tail_undo_cache.take() { retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id)); if !Arc::ptr_eq(&snapshot, &store.current) { retirement.snapshots[1] = Some(snapshot); } }
+    if let Some((edit_id, snapshot)) = root.tail_undo_cache.take() { retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id)); if !Arc::ptr_eq(&snapshot, &store.current) && !std::ptr::eq(snapshot.as_ref(), store.envelope.vcs.genesis.facts().snapshot()) { retirement.snapshots[1] = Some(snapshot); } }
     retirement.authority = root.authority.take().map(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new);
     retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement);
     store.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
@@ -885,14 +885,14 @@ where
     retirement.revision = Some(super::ArtifactStoreRevisionAccumulatorRetirement::new(std::mem::replace(&mut *store.revision_accumulator, next_revision)));
     let previous_current = std::mem::replace(&mut *store.current, root.current.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?);
     let next_tail = root.tail_undo_cache.take();
-    if next_tail.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &previous_current)) {
+    if next_tail.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &previous_current)) || std::ptr::eq(previous_current.as_ref(), store.envelope.vcs.genesis.facts().snapshot()) {
         drop(previous_current);
     } else {
         retirement.snapshots[0] = Some(previous_current);
     }
     if let Some((edit_id, snapshot)) = store.tail_undo_cache.take() {
         retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id));
-        if !Arc::ptr_eq(&snapshot, &store.current) {
+        if !Arc::ptr_eq(&snapshot, &store.current) && !std::ptr::eq(snapshot.as_ref(), store.envelope.vcs.genesis.facts().snapshot()) {
             retirement.snapshots[1] = Some(snapshot);
         }
     }

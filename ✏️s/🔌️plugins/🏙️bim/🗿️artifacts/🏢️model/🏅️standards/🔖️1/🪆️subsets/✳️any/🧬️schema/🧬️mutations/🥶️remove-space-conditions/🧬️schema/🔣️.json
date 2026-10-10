@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/remove-space-conditions/schema.json",
+  "title": "RemoveSpaceConditions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeSpaceConditions"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space",
+          "de": "Raum"
+        },
+        "ref": {
+          "kind": "space"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

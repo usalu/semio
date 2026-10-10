@@ -168,7 +168,7 @@ pub fn lift_document_with<'s>(trailer: &[PdfDictEntry], declared_version: &str, 
     lifter.lift_catalog(&catalog);
     lifter.snapshot.admitted_stream_roles = lifter.source.admitted_roles().to_vec();
     lifter.snapshot.admitted_stream_roles.extend(lifter.admitted_stream_roles.clone());
-    lifter.snapshot.objects=lifter.artifacts.into_objects();
+    lifter.snapshot.objects=std::mem::take(&mut lifter.artifacts).into_objects();
     lifter
 }
 

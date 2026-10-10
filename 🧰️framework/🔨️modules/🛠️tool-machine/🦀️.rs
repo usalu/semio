@@ -596,7 +596,7 @@ impl GestureHostEvent {
 /// stable ids, the verb, the host press that opened it (empty: none named; stamped by the slot — [`drive_press`] — never by
 /// the tool), the admission's authoring seed and the document revision it opened on (empty: pinned to none), the open
 /// transaction with its keyed provisional mutations, and the tool context its entries do not already say (`Null`: none).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct GestureState<M> {
     pub states: Vec<String>,
     pub verb: String,

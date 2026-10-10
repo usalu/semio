@@ -73,7 +73,7 @@ pub mod set_file_schema;
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = IfcSnapshot, diff = IfcDiff, schema = "IfcMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum IfcMutation {

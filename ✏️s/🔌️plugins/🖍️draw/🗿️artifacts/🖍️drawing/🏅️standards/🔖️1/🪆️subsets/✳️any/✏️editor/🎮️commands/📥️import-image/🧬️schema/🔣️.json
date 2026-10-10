@@ -11,7 +11,7 @@
       "type": "string",
       "minLength": 23,
       "maxLength": 89478512,
-      "pattern": "^data:image/png;base64,"
+      "pattern": "^data:image/(png|jpeg);base64,"
     },
     "name": {
       "type": [

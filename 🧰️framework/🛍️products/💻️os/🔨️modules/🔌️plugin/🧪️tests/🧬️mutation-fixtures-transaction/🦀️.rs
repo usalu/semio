@@ -1,6 +1,7 @@
 #[path = "../../🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetTransactionCount, SetTransactionCountAndNotify, SetTransactionCountWithoutPreflight, TxnMutation};
+crate::app::mutation_fixture::wire::fixture_operation_text!(TxnMutation);
 
 #[cfg(test)]
 #[path = "../🧬️mutation-fixtures-transaction-unit-command-close/🦀️.rs"]
@@ -22,7 +23,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[artifact(extension = "testkit-txn")]
 pub(crate) struct TxnSnapshot {
     count: i32,
@@ -111,7 +112,7 @@ impl MutationDiff<TxnSnapshot> for TxnDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 enum TxnCommand {
     #[dsl(key = "increment")]
     Increment,
@@ -168,16 +169,13 @@ const TXN_PAYLOAD_SCHEMA: &str = "semio.testkit-txn.command.v1";
 const TXN_TOOL_IDS: [&str; 3] = ["increment", "streamed-increment", "increment-and-notify"];
 
 struct TxnFixtureJob {
-    command: Option<Box<TxnCommand>>,
-    completion: Option<ArtifactToolCompletion<TxnApp>>,
+    /// 📄️ The admitted retained wire pages this job owns beside its command and completion.
+    /// `admit_exact_wire` hands every typed dispatch its own paged raw input, and a factory that
+    /// declines to take it is refused with `interactive-job.dispatch` ("tool factory does not own
+    /// retained wire pages alongside its typed payload") before the reducer runs.
+    owners: crate::app::mutation_fixture::job_close::FixtureJobOwners<TxnApp>,
     count: i32,
-    /// 📄️ The admitted retained wire pages this job owns. `admit_exact_wire` hands every typed
-    /// dispatch its own paged raw input, and a factory that declines to take it is refused with
-    /// `interactive-job.dispatch` ("tool factory does not own retained wire pages alongside its
-    /// typed payload") before the reducer runs.
-    raw: Option<action_bus::RetainedToolWireInput>,
     page: usize,
-    closing: bool,
 }
 
 impl semio_framework_job::InteractiveJob for TxnFixtureJob {
@@ -188,11 +186,11 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
         if cx.should_yield() {
             return semio_framework_job::StepOutcome::Yield;
         }
-        if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
+        if self.owners.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
             self.page += 1;
             return semio_framework_job::StepOutcome::Yield;
         }
-        let Some(command) = self.command.as_deref() else {
+        let Some(command) = self.owners.command.as_deref() else {
             return semio_framework_job::StepOutcome::Cancelled;
         };
         let value = self.count + 1;
@@ -201,7 +199,7 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
             TxnCommand::StreamedIncrement => Emit::stream_transaction(txn_stream_transaction(), vec![SetTransactionCountWithoutPreflight { value }.into()]),
             TxnCommand::IncrementAndNotify => Emit { artifact_mutations: vec![SetTransactionCountAndNotify { value }.into()], ..Default::default() },
         };
-        self.completion.as_ref().expect("transaction fixture completion").complete(Ok(emit), crate::app::EphemeralEmit::default()).expect("one exact transaction completion");
+        self.owners.completion.as_ref().expect("transaction fixture completion").complete(Ok(emit), crate::app::EphemeralEmit::default()).expect("one exact transaction completion");
         semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
             state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
             output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
@@ -209,36 +207,31 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(raw) = self.raw.as_mut() {
-            if raw.terminal_is_empty() {
-                self.raw = None;
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-            return raw.close_step(1, maximum_bytes);
-        }
-        if let Some(command) = self.command.as_deref() {
-            let released_bytes = size_of_val(command);
-            if maximum_bytes < released_bytes {
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
-            }
-            drop(self.command.take());
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-        }
-        if self.completion.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.owners.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(body)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.demand(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.raw.is_none() && self.command.is_none() && self.completion.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 
@@ -274,7 +267,7 @@ impl ToolJobFactory for TxnFixtureFactory {
         if checkpoint.is_some() {
             return Err((semio_framework::ToolJobFactoryError::new("transaction fixture resume starts a fresh command owner"), input, checkpoint));
         }
-        payload.raw = Some(input);
+        payload.owners.raw = Some(input);
         Ok(payload)
     }
 }
@@ -341,7 +334,7 @@ impl ArtifactApp for TxnApp {
     }
 
     async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = TxnFixtureJob { command: Some(request.command), completion: Some(request.completion), count: request.snapshot.count, raw: None, page: 0, closing: false };
+        let job = TxnFixtureJob { owners: crate::app::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
     }
 
@@ -381,20 +374,13 @@ impl ArtifactApp for TxnApp {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::app::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained", 4_096))
+        Some(crate::app::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained"))
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
+        Some(crate::app::mutation_fixture::wire::funded_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained"))
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
-    }
     fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }

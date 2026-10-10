@@ -1,3 +1,4 @@
+import {parseDrawingFontFamily,type DrawingFontFamily} from "./📝️text/🔤️family/🟦️.ts";
 import { binary64, type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import { parseBinary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseFillRule,type FillRule} from "./🎨️fill/🌀️rule/🟦️.ts";
@@ -49,7 +50,7 @@ export type DrawingPathSegment =
 export type DrawingLayerNode =
  | (DrawingLayerBase & {kind:"shape";shapeKind:string;rect?:DrawingRect;ellipse?:DrawingEllipse;circle?:DrawingCircle;line?:DrawingLine;polygon?:{points:DrawingPoint[]}})
  | (DrawingLayerBase & {kind:"path";segments:DrawingPathSegment[]})
- | (DrawingLayerBase & {kind:"text";x:Binary64;y:Binary64;content:string;size:Binary64})
+ | (DrawingLayerBase & {kind:"text";x:Binary64;y:Binary64;content:string;size:Binary64;fontFamily:DrawingFontFamily})
  | (DrawingLayerBase & {kind:"image";imageKey:string;width:Binary64;height:Binary64})
  | (DrawingLayerBase & {kind:"group";isolation:boolean;children:DrawingLayerNode[]})
  | (DrawingLayerBase & {kind:"boolean";operation:string;children:string[]})
@@ -135,7 +136,7 @@ export function parseDrawingLayerNode(value:unknown,at='$'):DrawingLayerNode{
  switch(kind){
  case'shape':{const node:Extract<DrawingLayerNode,{kind:'shape'}>={...base,kind,shapeKind:ownedText(v.shapeKind,path+'.shapeKind')};if(v.rect!==undefined){const p=ownedRecord(v.rect,path+'.rect');node.rect={x:ownedWord(p.x,path+'.rect.x'),y:ownedWord(p.y,path+'.rect.y'),width:ownedWord(p.width,path+'.rect.width'),height:ownedWord(p.height,path+'.rect.height')};}if(v.ellipse!==undefined){const p=ownedRecord(v.ellipse,path+'.ellipse');node.ellipse={cx:ownedWord(p.cx,path+'.ellipse.cx'),cy:ownedWord(p.cy,path+'.ellipse.cy'),rx:ownedWord(p.rx,path+'.ellipse.rx'),ry:ownedWord(p.ry,path+'.ellipse.ry')};}if(v.circle!==undefined){const p=ownedRecord(v.circle,path+'.circle');node.circle={cx:ownedWord(p.cx,path+'.circle.cx'),cy:ownedWord(p.cy,path+'.circle.cy'),r:ownedWord(p.r,path+'.circle.r')};}if(v.line!==undefined){const p=ownedRecord(v.line,path+'.line');node.line={x1:ownedWord(p.x1,path+'.line.x1'),y1:ownedWord(p.y1,path+'.line.y1'),x2:ownedWord(p.x2,path+'.line.x2'),y2:ownedWord(p.y2,path+'.line.y2')};}if(v.polygon!==undefined){const p=ownedRecord(v.polygon,path+'.polygon');node.polygon={points:ownedArray(p.points,path+'.polygon.points').map((p,i)=>ownedPoint(p,path+'.polygon.points['+i+']'))};}out.push(node);break;}
  case'path':out.push({...base,kind,segments:ownedArray(v.segments,path+'.segments').map((s,i)=>parseDrawingPathSegment(s,path+'.segments['+i+']'))});break;
- case'text':out.push({...base,kind,x:ownedWord(v.x,path+'.x'),y:ownedWord(v.y,path+'.y'),content:ownedText(v.content,path+'.content'),size:ownedWord(v.size,path+'.size')});break;
+ case'text':out.push({...base,kind,x:ownedWord(v.x,path+'.x'),y:ownedWord(v.y,path+'.y'),content:ownedText(v.content,path+'.content'),size:ownedWord(v.size,path+'.size'),fontFamily:parseDrawingFontFamily(v.fontFamily)});break;
  case'image':out.push({...base,kind,imageKey:ownedText(v.imageKey,path+'.imageKey'),width:ownedWord(v.width,path+'.width'),height:ownedWord(v.height,path+'.height')});break;
  case'group':{const children:DrawingLayerNode[]=[];out.push({...base,kind,isolation:v.isolation===undefined?false:ownedBool(v.isolation,path+'.isolation'),children});const items=ownedArray(v.children,path+'.children');for(let i=items.length-1;i>=0;i--)pending.push([items[i],path+'.children['+i+']',children]);break;}
  case'boolean':out.push({...base,kind,operation:ownedText(v.operation,path+'.operation'),children:ownedArray(v.children,path+'.children').map((s,i)=>ownedText(s,path+'.children['+i+']'))});break;

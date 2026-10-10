@@ -2016,6 +2016,7 @@ mod tests;
 /// used by anything above this region) — never collide names with them in the same scope. D2: the
 /// OLD registry above (`ComposerEntry`/`IoKey`/`io_dispatch`/`SubsetValidator`/`FormatCatalog`)
 /// is untouched and keeps working; this region is purely additive until W6 deletes the old one.
+#[path="."]
 pub mod io_mechanism {
     pub use super::control::{IoRunControl,IoNativeDirection};
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
@@ -2025,6 +2026,11 @@ pub mod io_mechanism {
     use semio_framework_value::{ValueError, ValueRefusalKind};
     use std::collections::{BTreeMap, BTreeSet};
     use std::sync::RwLock;
+
+    #[path="📤️serialization/📦️owned/🦀️.rs"]
+    pub mod owned_serialization;
+    pub use owned_serialization::{io_begin_owned_serialization,OwnedSerializerAdmission,OwnedSerializerChildren,OwnedSerializerFactory,OwnedSerializerJob,OwnedSerializerOutput,OwnedSerializerOutputHandoff,OwnedSerializerFaultHandoff,OwnedSerializerRefusal,OwnedSerializerRequest};
+    use owned_serialization::same_owned_serializer;
 
     //#region 🔖️Traits
     /// 🎹️ A typed native-value → foreign-payload encoder. `INTO`/`FIDELITY` are the foreign
@@ -2141,7 +2147,7 @@ pub mod io_mechanism {
             (None, None) => true,
             _ => false,
         };
-        ArtifactDialect::from(left.from) == ArtifactDialect::from(right.from) && ArtifactDialect::from(left.into) == ArtifactDialect::from(right.into) && left.fidelity == right.fidelity && left.direction == right.direction && same_sniff && std::ptr::fn_addr_eq(left.run, right.run)
+        ArtifactDialect::from(left.from) == ArtifactDialect::from(right.from) && ArtifactDialect::from(left.into) == ArtifactDialect::from(right.into) && left.fidelity == right.fidelity && left.direction == right.direction && same_sniff && std::ptr::fn_addr_eq(left.run, right.run) && same_owned_serializer(left.owned_serializer,right.owned_serializer)
     }
 
     fn descriptor_of(entry: &IoEntry) -> IoEntryDescriptor {
@@ -2793,7 +2799,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let value = S::decode_native_snapshot(store::NativeSnapshotInput::Binary(&parent), control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?;
             ::semio_framework_async::poll::resolve_ready(T::serialize(&value, &children, control))
         }
-        IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<S, T> }
+        IoEntry { owned_serializer: T::OWNED_FACTORY, from: own, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<S, T> }
     }
 
     /// 📝️ Runs the exact text-native owner under the original native decoder.
@@ -2811,7 +2817,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             };
             ::semio_framework_async::poll::resolve_ready(T::serialize(&value, &children, control))
         }
-        IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<S, T> }
+        IoEntry { owned_serializer: T::OWNED_FACTORY, from: own, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<S, T> }
     }
 
     // 🚫️async: E4 fn-pointer slot — `IoEntry.sniff` is a bare `fn` pointer; `Deserializer::sniff`
@@ -2837,7 +2843,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             Ok(IoOutcome { value: outcome.value.encode_native_snapshot(store::NativeSnapshotEncoding::Binary, control.encode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, diagnostics })
         }
-        IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
+        IoEntry { owned_serializer: None, from: T::FROM, into: own, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
 
     /// 🎹️ `deserializer_entry`'s twin for a DSL-text-native `S`.
@@ -2851,7 +2857,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             Ok(IoOutcome { value: outcome.value.encode_native_snapshot(store::NativeSnapshotEncoding::Text, control.encode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, diagnostics })
         }
-        IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
+        IoEntry { owned_serializer: None, from: T::FROM, into: own, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
     //#endregion 🔖️Constructors
 

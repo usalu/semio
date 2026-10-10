@@ -118,3 +118,25 @@ fn the_document_text_survives_a_reparse() {
     let reparsed = semio_s_artifact_stdio_ifc::part21::parse_part21(&write_part21(&document)).expect("the text parses");
     assert_eq!(reparsed.instances, document.instances);
 }
+
+#[test]
+fn an_ifc2x3_file_has_an_owner_history_and_an_ifc4_file_none() {
+    let history = |ifc: Ifc| finished(ifc).by_type("IFCOWNERHISTORY").count();
+    assert_eq!(history(Ifc::new("a", "o", 0.0)), 1);
+    assert_eq!(history(Ifc::in_schema(Schema::Ifc2x3, "a", "o", 0.0)), 1);
+    assert_eq!(history(Ifc::in_schema(Schema::Ifc4, "a", "o", 0.0)), 0);
+    let mut ifc = Ifc::in_schema(Schema::Ifc4, "a", "o", 0.0);
+    let id = ifc.rooted("IFCWALL", "w-1", "Wall", "", vec![unset()]);
+    let document = finished(ifc);
+    assert!(document.instance(id).and_then(|instance| instance.entity("IFCWALL")).is_some_and(|args| args[1].is_unset()), "IFC4 writes no owner history");
+}
+
+#[test]
+fn the_units_are_the_four_si_units_of_the_model_in_one_assignment() {
+    let mut ifc = Ifc::new("a", "o", 0.0);
+    let assignment = ifc.units();
+    let document = finished(ifc);
+    let units = document.instance(assignment).and_then(|instance| instance.entity("IFCUNITASSIGNMENT")).expect("the assignment");
+    let names: Vec<(String, String)> = units[0].as_list().expect("units").iter().filter_map(|unit| document.resolve(unit)).filter_map(|unit| unit.entity("IFCSIUNIT")).map(|args| (args[1].as_enum().unwrap_or_default().to_string(), args[3].as_enum().unwrap_or_default().to_string())).collect();
+    assert_eq!(names, [("LENGTHUNIT".to_string(), "METRE".to_string()), ("AREAUNIT".to_string(), "SQUARE_METRE".to_string()), ("VOLUMEUNIT".to_string(), "CUBIC_METRE".to_string()), ("PLANEANGLEUNIT".to_string(), "RADIAN".to_string())]);
+}

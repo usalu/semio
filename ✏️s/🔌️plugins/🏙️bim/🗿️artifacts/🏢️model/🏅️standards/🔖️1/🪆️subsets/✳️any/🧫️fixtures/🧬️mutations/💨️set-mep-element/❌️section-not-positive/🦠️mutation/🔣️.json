@@ -1,0 +1,10 @@
+{
+  "mutation": "setMepElement",
+  "id": "mep-duct",
+  "shape": {
+    "Duct": {
+      "width": 0.3,
+      "height": 0
+    }
+  }
+}

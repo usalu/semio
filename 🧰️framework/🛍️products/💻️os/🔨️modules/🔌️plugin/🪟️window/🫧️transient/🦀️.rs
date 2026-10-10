@@ -5,11 +5,32 @@ use super::window_config::{WindowRegistry, registry::fits};
 use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress};
 use super::transient_publication::transient_store_disposer;
 use crate::{protocol, store};
-use semio_framework::{Fault, FaultCode, FaultOrigin, ViewModel};
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
 use std::any::Any;
 use super::window_mutation::ErasedWindowMutationValue;
 use semio_framework_value::{FactoryBoxedValue,FactoryBoxedPublication,retirement::controlled::ControlledRetirement};
+use std::collections::BTreeMap;
 use std::sync::Arc;
+
+fn next_key<K: Ord + Clone, V>(map: &BTreeMap<K, V>, cursor: Option<&K>) -> Option<K> {
+    cursor.and_then(|cursor| map.range((std::ops::Bound::Excluded(cursor), std::ops::Bound::Unbounded)).next().map(|(key, _)| key.clone())).or_else(|| map.keys().next().cloned())
+}
+
+fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
+    demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "window transient retirement depth overflow"))?;
+    Ok(demand)
+}
+
+fn demand_refusal(demand: RetirementDemand, grant: RetainedCloneGrant) -> Result<bool, Fault> {
+    if grant.maximum_depth < demand.depth {
+        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.depth"), "window transient retirement exceeds its admitted depth"));
+    }
+    Ok(grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes)
+}
+
+fn demand_fault(error: ValueError) -> Fault {
+    error.into_fault()
+}
 
 /// 🪟️ Declares the transient schema and bounded owners of one concrete window kind.
 pub trait WindowTransientOwner: Send + Sync + 'static {
@@ -75,14 +96,16 @@ impl WindowTransientMutation {
     }
 }
 
+impl super::window_mutation::WindowRefreshSnapshot for WindowTransientSnapshot{fn swap_address(&mut self,other:&mut Self){std::mem::swap(&mut self.window_id,&mut other.window_id);}}
+impl WindowTransientSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{Ok(Self{window_id:self.window_id.clone(),window_kind_id:self.window_kind_id,generation:self.generation,document_generation:self.document_generation,snapshot:self.snapshot.try_duplicate()?})}}
 /// 📖️ Immutable snapshot of one exact window-owned transient partition.
-#[derive(Clone)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct WindowTransientSnapshot {
     window_id: String,
     window_kind_id: &'static str,
     generation: u64,
     document_generation: u64,
-    snapshot: Arc<store::ErasedSnapshotRead>,
+    snapshot: store::ErasedSnapshotRead,
 }
 
 impl WindowTransientSnapshot {
@@ -107,12 +130,14 @@ impl WindowTransientSnapshot {
     }
 }
 
-#[derive(Clone)]
+#[derive(semio_framework_value::RetireOwned)]
 pub(crate) struct WindowTransientAuthority {
     pub window_id: String,
     pub window_kind_id: String,
     pub generation: u64,
     pub snapshot: WindowTransientSnapshot,
+    pending_snapshot:Option<WindowTransientSnapshot>,
+    retired_snapshots:semio_framework_value::retirement::queue::RetirementQueue,
 }
 
 pub(crate) trait ErasedWindowTransientPublication: Send {
@@ -124,7 +149,7 @@ pub(crate) trait ErasedWindowTransientPublication: Send {
     fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError>;
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>;
     fn ingress_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
     fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
     fn close_ingress(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>;
@@ -132,6 +157,7 @@ pub(crate) trait ErasedWindowTransientPublication: Send {
 }
 
 struct TypedWindowTransientPublication<O: WindowTransientOwner> {
+    address_retirement:Option<ControlledRetirement<String>>,
     window_id: String,
     document_generation: u64,
     publication: store::ArtifactEphemeralOneItemPublication<O::State, O::Mutation>,
@@ -175,9 +201,9 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
 
     fn ingress_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:self.ingress.next_copy_byte_demand()?,capacity_bytes:self.ingress.next_capacity_byte_demand(body)?,release_bytes:self.ingress.next_release_byte_demand()?,depth:self.ingress.next_depth_demand()?})}
     fn close_ingress(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.ingress.step(grant)}
-    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if !self.ingress.terminal_is_empty(){self.ingress_demands(body)}else{self.publication.retirement_demands(body)}}
+    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if !self.ingress.terminal_is_empty(){self.ingress_demands(body)}else if !self.publication.terminal_is_empty(){self.publication.retirement_demands(body)}else{super::window_mutation::address_demands(&self.window_id,&self.address_retirement,body)}}
     fn terminal_is_empty(&self) -> bool {
-        self.publication.terminal_is_empty()&&self.ingress.terminal_is_empty()
+        self.publication.terminal_is_empty()&&self.ingress.terminal_is_empty()&&super::window_mutation::address_terminal(&self.window_id,&self.address_retirement)
     }
 }
 
@@ -196,7 +222,8 @@ impl<O: WindowTransientOwner> WindowTransientPartition<O> {
 
 trait ErasedWindowTransientStoreOwner: Send {
     fn capture(&mut self, window_id: &str, document_generation: u64) -> Result<WindowTransientAuthority, Fault>;
-    fn refresh(&mut self, authority: &mut WindowTransientAuthority) -> Result<(), Fault>;
+    fn refresh_demands(&self,authority:&WindowTransientAuthority,body:usize)->Result<RetirementDemand,ValueError>;
+    fn refresh(&mut self,authority:&mut WindowTransientAuthority,grant:RetainedCloneGrant)->Result<super::window_mutation::WindowAuthorityRefreshStep,Fault>;
     fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission>;
     fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
     fn maintenance_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
@@ -234,19 +261,19 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
             window_id: window_id.to_string(),
             window_kind_id: O::WINDOW_KIND_ID.to_string(),
             generation: partition.store.generation_now(),
-            snapshot: WindowTransientSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation_now(), document_generation, snapshot: Arc::new(snapshot) },
+            pending_snapshot:None,retired_snapshots:Default::default(),
+            snapshot: WindowTransientSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation_now(), document_generation, snapshot },
         })
     }
 
-    fn refresh(&mut self, authority: &mut WindowTransientAuthority) -> Result<(), Fault> {
-        let partition = self.partition(&authority.window_id);
-        authority.generation = partition.store.generation_now();
-        let snapshot = partition.store.current_read_erased().map_err(Fault::from)?;
-        authority.snapshot =
-            WindowTransientSnapshot { window_id: authority.window_id.clone(), window_kind_id: O::WINDOW_KIND_ID, generation: authority.generation, document_generation: authority.snapshot.document_generation, snapshot: Arc::new(snapshot) };
-        Ok(())
+    fn refresh_demands(&self,authority:&WindowTransientAuthority,_body:usize)->Result<RetirementDemand,ValueError>{super::window_mutation::refresh_demands(&authority.pending_snapshot,&authority.retired_snapshots)}
+    fn refresh(&mut self,authority:&mut WindowTransientAuthority,grant:RetainedCloneGrant)->Result<super::window_mutation::WindowAuthorityRefreshStep,Fault>{
+        let demand=self.refresh_demands(authority,grant.maximum_copy_bytes).map_err(demand_fault)?;
+        if demand_refusal(demand,grant)?{return Ok(super::window_mutation::WindowAuthorityRefreshStep::Pending(Default::default()));}
+        if authority.pending_snapshot.is_none(){let partition=self.partition(&authority.window_id);let snapshot=partition.store.current_read_erased().map_err(Fault::from)?;authority.pending_snapshot=Some(WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation:partition.store.generation_now(),document_generation:authority.snapshot.document_generation,snapshot});return Ok(super::window_mutation::WindowAuthorityRefreshStep::Pending(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+        let step=super::window_mutation::refresh_transfer(&mut authority.snapshot,&mut authority.pending_snapshot,&mut authority.retired_snapshots,grant).map_err(demand_fault)?;
+        if matches!(step,super::window_mutation::WindowAuthorityRefreshStep::Ready(_)){authority.generation=authority.snapshot.generation;}Ok(step)
     }
-
     fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission> {
         let WindowTransientMutation { window_id, window_kind_id, mutation } = mutation;
         if !mutation.as_any().is::<O::Mutation>(){return Err(RejectedWindowTransientEmission{mutation:WindowTransientMutation{window_id,window_kind_id,mutation},fault:Fault::new(FaultOrigin::Framework,FaultCode::new("window-transient.mutation-type"),"window transient mutation did not match its registered window owner")});}
@@ -256,7 +283,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         let retirement = self.owners.as_ref().expect("live transient issuers remain").state_retirement.clone();
         let partition = self.partition(&window_id);
         match partition.store.begin_publish_one_leased(operation, expected_generation, typed, preparation.as_ref(), retirement) {
-            Ok(publication) => Ok(Box::new(TypedWindowTransientPublication::<O> { window_id, document_generation, publication,ingress:ControlledRetirement::new(ingress).map_err(|(error,_)|error).expect("typed ingress owns genuine facets") })),
+            Ok(publication) => Ok(Box::new(TypedWindowTransientPublication::<O> { window_id, document_generation, publication,address_retirement:None,ingress:ControlledRetirement::new(ingress).map_err(|(error,_)|error).expect("typed ingress owns genuine facets") })),
             Err(rejected) => {
                 let (reason, mutation) = rejected.into_owners();
                 let fault = Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.admission"), reason);

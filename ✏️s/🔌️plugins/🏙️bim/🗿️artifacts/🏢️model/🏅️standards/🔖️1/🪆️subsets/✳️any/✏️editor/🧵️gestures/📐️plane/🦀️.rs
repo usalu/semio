@@ -1,7 +1,7 @@
 //! 📐️ Plan geometry of the authoring tools: points, directions, arc bulges and projections onto wall axes, all in model metres. Pure functions over `[x, y]` pairs; the segment
 //! kernel (`BulgeSeg`) is the framework's, never re-derived here.
 
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::segment_of;
+use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use crate::{Axis, Point2, Vertex};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;

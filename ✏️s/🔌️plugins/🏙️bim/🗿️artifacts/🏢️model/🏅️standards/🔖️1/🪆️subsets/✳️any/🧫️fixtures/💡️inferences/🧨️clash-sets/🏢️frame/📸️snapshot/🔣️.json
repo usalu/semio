@@ -1,0 +1,374 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Frame",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-concrete": {
+      "name": "Concrete",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt-200": {
+      "name": "Wall 200",
+      "layers": [
+        {
+          "material": "m-concrete",
+          "thickness": 0.2,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {
+    "st-300": {
+      "name": "Slab 300",
+      "layers": [
+        {
+          "material": "m-concrete",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "roof_types": {},
+  "column_types": {
+    "ct-50": {
+      "name": "Column 50",
+      "profile": {
+        "Rectangle": {
+          "width": 0.5,
+          "depth": 0.5
+        }
+      },
+      "material": "m-concrete"
+    }
+  },
+  "beam_types": {
+    "bt-40x60": {
+      "name": "Beam 40x60",
+      "profile": {
+        "Rectangle": {
+          "width": 0.4,
+          "depth": 0.6
+        }
+      },
+      "material": "m-concrete"
+    }
+  },
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "Frame",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-0": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 4
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-1": {
+      "storey": "st-0",
+      "wall_type": "wt-200",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 3,
+            "y": 2
+          },
+          "end": {
+            "x": 3,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Wall"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {
+    "c-1": {
+      "storey": "st-0",
+      "column_type": "ct-50",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "name": "C1",
+      "phase": "New"
+    },
+    "c-2": {
+      "storey": "st-0",
+      "column_type": "ct-50",
+      "position": {
+        "x": 6,
+        "y": 0
+      },
+      "rotation": 0,
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "name": "C2",
+      "phase": "New"
+    }
+  },
+  "beams": {
+    "b-1": {
+      "storey": "st-0",
+      "beam_type": "bt-40x60",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 6,
+            "y": 0
+          }
+        }
+      },
+      "top_offset": -0.36,
+      "name": "B1",
+      "phase": "New"
+    },
+    "b-2": {
+      "storey": "st-0",
+      "beam_type": "bt-40x60",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 1,
+            "y": 3
+          },
+          "end": {
+            "x": 5,
+            "y": 3
+          }
+        }
+      },
+      "top_offset": -0.36,
+      "name": "B2",
+      "phase": "New"
+    }
+  },
+  "slabs": {
+    "sl-1": {
+      "storey": "st-0",
+      "slab_type": "st-300",
+      "boundary": [
+        {
+          "point": {
+            "x": -1,
+            "y": -1
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 7,
+            "y": -1
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 7,
+            "y": 7
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": -1,
+            "y": 7
+          },
+          "bulge": 0
+        }
+      ],
+      "holes": [],
+      "offset": 0,
+      "name": "Slab",
+      "phase": "New"
+    }
+  },
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {},
+  "mep_elements": {
+    "d-1": {
+      "storey": "st-0",
+      "system": "Supply",
+      "shape": {
+        "Duct": {
+          "width": 0.4,
+          "height": 0.25
+        }
+      },
+      "path": [
+        {
+          "x": 0.5,
+          "y": 3.5,
+          "z": 3
+        },
+        {
+          "x": 5.5,
+          "y": 3.5,
+          "z": 3
+        }
+      ],
+      "name": "Supply"
+    },
+    "d-2": {
+      "storey": "st-0",
+      "system": "Return",
+      "shape": {
+        "Duct": {
+          "width": 0.4,
+          "height": 0.25
+        }
+      },
+      "path": [
+        {
+          "x": 0.5,
+          "y": 5.5,
+          "z": 3
+        },
+        {
+          "x": 5.5,
+          "y": 5.5,
+          "z": 3
+        }
+      ],
+      "name": "Return"
+    }
+  },
+  "clash_sets": {
+    "cs-structure": {
+      "name": "Structure against walls",
+      "a": {
+        "classes": [
+          "Column",
+          "Beam",
+          "Slab"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "b": {
+        "classes": [
+          "Wall"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "tolerance": 0.002,
+      "clearance": 0
+    },
+    "cs-services": {
+      "name": "Services against structure",
+      "a": {
+        "classes": [
+          "Mep"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "b": {
+        "classes": [
+          "Beam",
+          "Column",
+          "Wall"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "tolerance": 0.005,
+      "clearance": 0.15
+    },
+    "cs-frame": {
+      "name": "Beams against columns",
+      "a": {
+        "classes": [
+          "Beam"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "b": {
+        "classes": [
+          "Column"
+        ],
+        "storeys": [],
+        "phases": [],
+        "ids": []
+      },
+      "tolerance": 0.001,
+      "clearance": 0
+    }
+  }
+}

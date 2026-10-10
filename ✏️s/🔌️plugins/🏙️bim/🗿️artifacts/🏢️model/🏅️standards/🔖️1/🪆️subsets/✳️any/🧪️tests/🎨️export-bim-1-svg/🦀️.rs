@@ -27,6 +27,11 @@ mod subject {
         export(ctx)
     }
 
+    /// 🪑️ The same report for the components room, with the symbols of every component and routed element by model id.
+    pub fn export_svg_components(ctx: &Context) -> Result<Outcome, String> {
+        export(ctx)
+    }
+
     /// 🪧️ The same report for the annotated room, with its annotation layer counted and measured per kind.
     pub fn export_svg_notated(ctx: &Context) -> Result<Outcome, String> {
         export(ctx)
@@ -41,7 +46,7 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        built = built.subject("export-svg-house", subject::export_svg_house).subject("export-svg-notated", subject::export_svg_notated);
+        built = built.subject("export-svg-house", subject::export_svg_house).subject("export-svg-notated", subject::export_svg_notated).subject("export-svg-components", subject::export_svg_components);
     }
     built
 }

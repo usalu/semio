@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-load-case/schema.json",
+  "title": "CreateLoadCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "load_case"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createLoadCase"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "load_case": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/LoadCase"
+    }
+  }
+}

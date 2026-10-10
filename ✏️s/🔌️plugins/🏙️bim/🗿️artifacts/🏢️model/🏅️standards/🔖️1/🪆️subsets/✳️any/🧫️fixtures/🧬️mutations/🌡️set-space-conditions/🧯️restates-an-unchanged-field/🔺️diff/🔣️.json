@@ -1,0 +1,10 @@
+{
+  "space_conditions": {
+    "sp-1": {
+      "entry": "Patched",
+      "ventilation_rate": {
+        "value": 0.5
+      }
+    }
+  }
+}

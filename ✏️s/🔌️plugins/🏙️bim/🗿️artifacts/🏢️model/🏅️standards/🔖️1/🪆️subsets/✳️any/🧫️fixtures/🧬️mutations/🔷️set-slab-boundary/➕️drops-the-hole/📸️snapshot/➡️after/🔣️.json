@@ -134,9 +134,9 @@
         }
       ],
       "holes": [],
-      "phase": "New",
       "name": "Ground slab",
       "offset": 0.0,
+      "phase": "New",
       "slab_type": "stt-22",
       "storey": "st-ground"
     }

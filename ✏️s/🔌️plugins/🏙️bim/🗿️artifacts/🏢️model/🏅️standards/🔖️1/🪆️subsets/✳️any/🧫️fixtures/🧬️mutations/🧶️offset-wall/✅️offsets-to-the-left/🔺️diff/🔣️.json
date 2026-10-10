@@ -1,1 +1,30 @@
-{}
+{
+  "walls": {
+    "w-offset": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 2.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 2.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

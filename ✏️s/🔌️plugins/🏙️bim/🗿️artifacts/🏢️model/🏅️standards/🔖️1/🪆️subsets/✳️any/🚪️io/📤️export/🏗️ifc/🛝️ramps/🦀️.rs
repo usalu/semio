@@ -65,7 +65,7 @@ fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
         return;
     }
     let placement = x.ifc.place(Some(storey.placement), x.ifc.origin);
-    let entity = x.product("IFCRAMP", id, &row.name, placement, None, vec![en(ramp_type(row, run))]);
+    let entity = x.product("IFCRAMP", id, &row.name, placement, None, vec![en(match (ramp_type(row, run), x.schema()) { ("USERDEFINED", super::writer::Schema::Ifc4) => "NOTDEFINED", (kind, _) => kind })]);
     x.contain(&row.storey, id, entity);
     let body = |part: &str| part == parts::BODY;
     let mut components = Vec::new();
@@ -76,7 +76,8 @@ fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
         x.product(entity, &key, &row.name, place, shape, tail)
     };
     for (index, flight) in run.flights.iter().enumerate() {
-        let part = part_of(x, "IFCRAMPFLIGHT", format!("{id}:flight{index}"), Piece::Flight(index), Vec::new());
+        let flight_tail = x.by(Vec::new(), vec![en(if row.path.iter().take(row.path.len().saturating_sub(1)).any(|vertex| vertex.bulge != 0.0) { "SPIRAL" } else { "STRAIGHT" })]);
+        let part = part_of(x, "IFCRAMPFLIGHT", format!("{id}:flight{index}"), Piece::Flight(index), flight_tail);
         x.links.quantities.push((part, "Qto_RampFlightBaseQuantities", vec![Quantity::Length("Length", flight.length), Quantity::Length("Width", run.width)]));
         components.push(part);
     }
@@ -95,7 +96,8 @@ fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
     if let Some(definition) = x.links.material_defs.get(&row.material).copied() {
         x.links.materials.entry(definition).or_default().push(entity);
     }
-    x.quantify(entity, "Qto_RampBaseQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Length("Width", row.width), Quantity::Length("Height", row.height), Quantity::Area("GrossArea", row.gross_area), Quantity::Volume("GrossVolume", row.gross_volume)]);
+    let v4 = x.schema() == super::writer::Schema::Ifc4;
+    x.quantify(entity, "Qto_RampBaseQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Length("Width", row.width), Quantity::Length("Height", if v4 { row.height.abs() } else { row.height }), Quantity::Area("GrossArea", row.gross_area), Quantity::Volume("GrossVolume", row.gross_volume)]);
     x.links.authoring.push((entity, vec![(RECORD_ROW, label(&semio_framework_pack_json::to_json_string(row)))]));
 }
 

@@ -9,64 +9,25 @@ struct Row { label: PagedUtf8<{usize::MAX}>, choice: Option<PagedUtf8<{usize::MA
 struct Root { rows: PagedList<Row, {usize::MAX}> }
 
 #[test]
-fn paged_native_owned_projection_retains_root_and_closes_one_actual_alias() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
-    let law = &corpus["ownedProjection"];
-    let root: Root = serde_json::from_value(law["input"].clone()).unwrap();
-    let owner = Arc::new(root);
-    let mut weak = Some(Arc::downgrade(&owner));
-    let source = RetainedCloneSource::fixture_from_authority(owner, ());
-    let before = serde_json::to_value(source.borrow().get()).unwrap();
-    for (index, vector) in law["paths"].as_array().unwrap().iter().enumerate() {
-        let (mut parent, allocation) = observe_retirement_allocations(|| source.project_owned(1, |root| &root.rows));
-        assert_eq!(allocation, (0, 0));
-        let (child, allocation) = observe_retirement_allocations(|| parent.project(index, |rows| if index == 0 { &rows[index].label } else { rows[index].choice.as_ref().unwrap() }));
-        assert_eq!(allocation, (0, 0));
-        let mut child = child.unwrap();
-        fn shared_owner<T: Send + Sync>() {}
-        shared_owner::<RetainedOwnedProjection<PagedUtf8<{usize::MAX}>>>();
-        let (same, allocation) = observe_retirement_allocations(|| child.borrow().unwrap().get().eq_str(vector["value"].as_str().unwrap()));
-        assert!(same);
-        assert_eq!(allocation, (0, 0));
-        for action in law["closeSequence"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()) {
-            let (step, allocation) = observe_retirement_allocations(|| match action {
-                "zero" => child.close_step(Default::default()).unwrap(),
-                "parent" => parent.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:parent.next_close_release_byte_demand().unwrap(),maximum_depth:parent.next_close_depth_demand().unwrap(),..Default::default()}).unwrap(),
-                "child"|"complete" => child.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:child.next_close_release_byte_demand().unwrap(),maximum_depth:child.next_close_depth_demand().unwrap(),..Default::default()}).unwrap(),
-                _ => panic!("unknown native projection closure intent"),
-            });
-            assert_eq!(allocation, (0, 0));
-            match action {
-                "zero" => assert_eq!(step, RetainedCloneStep::Progress(Default::default())),
-                "complete" => assert_eq!(step, RetainedCloneStep::Complete(Default::default())),
-                _ => assert_eq!(step, RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()})),
-            }
-            assert!(weak.as_ref().unwrap().upgrade().is_some());
-        }
-        assert!(parent.terminal_is_empty() && child.terminal_is_empty());
-        assert!(parent.borrow().is_err() && child.borrow().is_err());
-        let (_, allocation) = observe_retirement_allocations(|| { drop(parent); drop(child); });
-        assert_eq!(allocation, (0, 0));
-        assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(), before);
-    }
-    assert!(weak.as_ref().unwrap().upgrade().is_some());
-    let (_,allocation)=observe_retirement_allocations(||drop(weak.take()));
-    assert_eq!(allocation,(0,0));
-    let owner = source.into_owner();
-    let (retirement, allocation) = observe_retirement_allocations(|| crate::retirement::shared::SharedControlledRetirement::new(owner));
-    assert_eq!(allocation, (0, 0));
-    let mut retirement = retirement;
-    for turn in 0..100000 {
-        let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(4096, usize::MAX), _ => RetainedCloneGrant::one_release_turn(4096, usize::MAX) };
-        let (step, allocation) = observe_retirement_allocations(|| retirement.step(grant).unwrap());
-        let progress = step.progress();
-        assert!(progress.fits(grant));
-        assert!(allocation.0 <= progress.retained_capacity_bytes && allocation.1 <= progress.released_bytes);
-        if matches!(step, RetainedCloneStep::Complete(_)) { break; }
-    }
-    assert!(retirement.terminal_is_empty());
-    assert!(weak.as_ref().and_then(|weak|weak.upgrade()).is_none());
-    let (_, allocation) = observe_retirement_allocations(|| drop(retirement));
-    assert_eq!(allocation, (0, 0));
-    eprintln!("[DEBUG] owned native projections matched RFC6902 value paths, retained immutable root, born/read/closed aliases with0heap, transferred root into actual granted retirement");
+fn paged_native_owned_projection_retains_root_and_closes_one_actual_alias(){
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();let law=&corpus["ownedProjection"];
+ let(root,heap)=observe_retirement_allocations(||serde_json::from_value::<Root>(law["input"].clone()).unwrap());let original=heap.0-heap.1;let pointer=root.rows.get(0).unwrap().label.chunks().next().unwrap().as_ptr();
+ let birth=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<Root>::constructor_copy_bytes(),maximum_capacity_bytes:RetainedCloneSource::<Root>::constructor_capacity_bytes::<()>(),maximum_depth:1,..Default::default()};
+ let(result,heap)=observe_retirement_allocations(||RetainedCloneSource::admit_owned(root,(),birth));let(mut source,p)=result.unwrap_or_else(|_|panic!("original root birth"));assert_eq!(heap,(p.retained_capacity_bytes,0));let(mut born,mut freed)=(heap.0,0);let before=serde_json::to_value(source.borrow().get()).unwrap();
+ for(index,vector)in law["paths"].as_array().unwrap().iter().enumerate(){
+  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_depth:1,..Default::default()};
+  let(result,heap)=observe_retirement_allocations(||source.project_owned(1,|root|&root.rows,grant));let(mut parent,p)=result.unwrap();assert_eq!(heap,(0,0));assert!(p.fits(grant));
+  let(result,heap)=observe_retirement_allocations(||parent.project(index,|rows|if index==0{&rows[index].label}else{rows[index].choice.as_ref().unwrap()},grant));let(mut child,p)=result.unwrap();assert_eq!(heap,(0,0));assert!(p.fits(grant));assert!(child.borrow().unwrap().get().eq_str(vector["value"].as_str().unwrap()));
+  assert_eq!(child.close_step(Default::default()).unwrap().progress(),Default::default());
+  for owner in [&mut parent as &mut dyn ProjectionClose,&mut child as &mut dyn ProjectionClose]{
+   for _ in 0..10000{if owner.empty(){break;}let grant=owner.grant();let(step,heap)=observe_retirement_allocations(||owner.step(grant));assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}assert!(owner.empty());
+  }
+  assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),before);
+ }
+ let root=loop{let copy=source.next_take_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:source.next_take_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:source.next_take_release_byte_demand().unwrap(),maximum_depth:source.next_take_depth_demand().unwrap()};let(step,heap)=observe_retirement_allocations(||source.take_authority(grant).unwrap());born+=heap.0;freed+=heap.1;match step{crate::retained_clone::RetainedCloneSourceTake::Pending(p)=>assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes)),crate::retained_clone::RetainedCloneSourceTake::Ready(root,p)=>{assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));break root;}}};
+ assert_eq!(root.rows.get(0).unwrap().label.chunks().next().unwrap().as_ptr(),pointer);let mut close=ControlledRetirement::new(root).unwrap_or_else(|_|panic!("root closure"));
+ for _ in 0..100000{if close.terminal_is_empty(){break;}let copy=close.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};let(step,heap)=observe_retirement_allocations(||close.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
+ assert!(close.terminal_is_empty());assert_eq!(original+born,freed);assert_eq!(observe_retirement_allocations(||{drop(close);drop(source);}).1,(0,0));println!("[DEBUG] owned projections same original paged root original={original} born={born} release={freed}");
 }
+trait ProjectionClose{fn grant(&self)->RetainedCloneGrant;fn step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep;fn empty(&self)->bool;}
+impl<T:?Sized+Sync> ProjectionClose for RetainedOwnedProjection<T>{fn grant(&self)->RetainedCloneGrant{let copy=self.next_close_copy_byte_demand().unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:self.next_close_release_byte_demand().unwrap(),maximum_depth:self.next_close_depth_demand().unwrap()}}fn step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{self.close_step(grant).unwrap()}fn empty(&self)->bool{self.terminal_is_empty()}}

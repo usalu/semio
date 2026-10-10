@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-mep-element/schema.json",
+  "title": "CreateMepElement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "mep"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createMepElement"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "MEP element id",
+          "de": "TGA-Element-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "mep": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/MepElement",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "MEP element",
+          "de": "TGA-Element"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

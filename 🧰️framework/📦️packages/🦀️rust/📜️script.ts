@@ -50,7 +50,7 @@ class WireRetirementSourceScript extends BundleScript {
 class WireRetirementNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest.length ? rest : ["--lib", "retained_wire_input_small_grants_retire_initialized_bytes_and_backing_allocation"]);
+    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest.length ? rest : ["--lib", "action_bus::tests", "--", "--nocapture"]);
   }
 }
 /** ♻️ Runs the original typed argument owners under the owning protocol package policy. */
@@ -274,9 +274,22 @@ class SourceProjectionScript extends BundleScript {
  }
 }
 
+/** 🪟️ Proves original complete view contexts and their exact physical dictionary retirement. */
+class ViewModelOriginalScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!['source','native'].includes(segments[0]!))throw Error("test-view-model-original requires source or native");
+  if(segments[0]==="source"){
+   const source=resolve(this.root,"../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/♻️original/🟦️.ts");
+   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
+   await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"../node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",source],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});return;
+  }
+  await testCargo(this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],["--lib","action_bus::tests","--","--nocapture"]);
+    await testCargo(this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],["--lib","manifest::resolved_host_context_tests::view_model_original_retirement","--","--nocapture"]);
+ }
+}
 const workspace=process.env.SEMIO_COMMAND_WORKSPACE;
 if(!workspace||!isAbsolute(workspace))throw Error("Explicit General command workspace required");
-const router = new ScriptRouter(import.meta.dir,workspace).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("test-argument-retirement-native",ArgumentRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir,workspace).register("test-view-model-original",ViewModelOriginalScript).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("test-argument-retirement-native",ArgumentRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 router.register("test-snapshot-receiving-source",SnapshotReceivingSourceScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

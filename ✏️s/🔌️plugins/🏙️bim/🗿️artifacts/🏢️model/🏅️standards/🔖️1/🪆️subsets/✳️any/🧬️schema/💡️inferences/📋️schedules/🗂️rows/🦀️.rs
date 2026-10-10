@@ -88,7 +88,7 @@ pub fn candidates(snapshot: &ModelSnapshot, schedule: &Schedule) -> Vec<String> 
 
 //#region 🔖️Facts
 /// 🧾️ The authored facts of one element a schedule can show: every cell is already a [`ScheduleCell`], so the table never reads the snapshot again.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Facts {
     pub name: ScheduleCell,
     pub storey: ScheduleCell,
@@ -101,11 +101,13 @@ pub struct Facts {
     pub swing: ScheduleCell,
     pub leaves: ScheduleCell,
     pub panes: ScheduleCell,
+    pub u_value: ScheduleCell,
+    pub g_value: ScheduleCell,
     pub properties: Vec<ScheduleCell>,
 }
 
 /// 🧾️ The authored facts of the candidate elements of one schedule and the names of the materials: everything besides the quantities that decides a cell.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct AuthoredView {
     pub elements: BTreeMap<String, Facts>,
     pub materials: BTreeMap<String, String>,
@@ -149,6 +151,9 @@ fn or_id(name: Option<&String>, id: &str) -> String {
 fn type_name_of(snapshot: &ModelSnapshot, id: &str) -> String {
     if let Some(wall) = snapshot.walls.get(id) {
         return or_id(snapshot.wall_types.get(&wall.wall_type).map(|row| &row.name), &wall.wall_type);
+    }
+    if let Some(curtain) = snapshot.curtain_walls.get(id) {
+        return or_id(snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).map(|row| &row.name), &curtain.curtain_wall_type);
     }
     if let Some(slab) = snapshot.slabs.get(id) {
         return or_id(snapshot.slab_types.get(&slab.slab_type).map(|row| &row.name), &slab.slab_type);
@@ -235,6 +240,8 @@ impl Facts {
             swing: door.map_or(ScheduleCell::Empty, |(opening, kind)| ScheduleCell::text(hand_token(kind.swing, opening.flip_hand))),
             leaves: door.map_or(ScheduleCell::Empty, |(_, kind)| ScheduleCell::text(if kind.leaves == DoorLeaves::Double { "double" } else { "single" })),
             panes: window.map_or(ScheduleCell::Empty, |kind| ScheduleCell::number(f64::from(kind.panes))),
+            u_value: window.map(|kind| kind.u_value).or_else(|| door.map(|(_, kind)| kind.u_value)).flatten().map_or(ScheduleCell::Empty, ScheduleCell::number),
+            g_value: window.and_then(|kind| kind.g_value).map_or(ScheduleCell::Empty, ScheduleCell::number),
             properties: properties.iter().map(|(set, name)| property_cell(snapshot, id, set, name)).collect(),
         }
     }
@@ -331,6 +338,8 @@ impl<'a> Reader<'a> {
             ScheduleField::Swing => fact(|row| &row.swing),
             ScheduleField::Leaves => fact(|row| &row.leaves),
             ScheduleField::Panes => fact(|row| &row.panes),
+            ScheduleField::UValue => fact(|row| &row.u_value),
+            ScheduleField::GValue => fact(|row| &row.g_value),
             ScheduleField::Count => ScheduleCell::number(f64::from(quantity.count)),
             ScheduleField::Length => ScheduleCell::number(quantity.length),
             ScheduleField::Width => ScheduleCell::number(quantity.width),

@@ -13,7 +13,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
             captured_child_content: Some(std::sync::Arc::new(ChildContentView::clone(&app.child_content_root))), captured_child_content_generation: app.child_content_generation,
             result_page: None, result_page_presented: false, result_sequence: 0, publication_progress: 0, publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None, publication_attempt: 0,
             ui_pending: true, progress: None, progress_pending: false, user_cancel_requested: false, published_artifact: false, published_config: false, published_window_config: false,
-            command_logged: false, interaction_revalidated: false, terminal_fault: None, stage: MountedTypedCommandFullOperationStage::Publishing,
+            command_logged: false, interaction_revalidated: false, retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None, stage: MountedTypedCommandFullOperationStage::Publishing,
         };
         let started = std::time::Instant::now();
         let mut child_page = false;
@@ -54,7 +54,10 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
     for _ in 0..100000 { if mounted.owned_child_group.is_none() { break; } app.publish_mounted_owned_child_operation_unit(&mut mounted).await.unwrap(); }
     assert!(mounted.owned_child_group.is_none(), "actual private group registry closes before the mounted original owner");
     let mut retired = false;
-    for _ in 0..100000 { if mounted.retirement_step(1, 262144).unwrap() == PluginCloseStep::Complete { retired=true; break; } }
+    for _ in 0..100000 {
+        let grant = crate::app::retirement_self_grant(|body| mounted.retirement_demands(body), 262144).unwrap();
+        if matches!(mounted.retirement_step(grant).unwrap(), crate::app::PluginLifecycleStep::Complete(_)) { retired=true; break; }
+    }
     assert!(retired, "mounted original owner reaches its complete terminal retirement");
     assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::Retiring);
     (result.mutations, result.inverse_group, operation.operation.0)

@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"name": "owned source with distinct authority", "owner": "original-source", "metadata": "original-authority", "denied": ["items", "copy", "capacity", "release", "depth"], "expected": {"originalRetained": true, "aliasRetained": true, "terminal": true, "source": "owned"}},
+    {"name": "borrowed source keeps actual issuer", "owner": "actual read", "metadata": "original registry", "denied": ["items", "copy", "capacity", "release", "depth"], "expected": {"originalRetained": true, "aliasRetained": true, "terminal": true, "source": "borrowed"}},
+    {"name": "unicode field projection", "owner": "Pfad 🎨 中文", "metadata": "Fenster 🪟️", "denied": ["items", "copy", "capacity", "release", "depth"], "expected": {"originalRetained": true, "aliasRetained": true, "terminal": true, "source": "borrowed"}}
+  ]
+}

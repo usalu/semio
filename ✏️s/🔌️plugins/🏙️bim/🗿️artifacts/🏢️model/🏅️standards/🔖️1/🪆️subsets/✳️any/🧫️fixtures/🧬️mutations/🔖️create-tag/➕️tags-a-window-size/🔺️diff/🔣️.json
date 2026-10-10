@@ -1,1 +1,15 @@
-{}
+{
+  "tags": {
+    "tag-win": {
+      "category": "Size",
+      "element": "o-win",
+      "entry": "Created",
+      "offset": {
+        "x": 0.0,
+        "y": 0.6
+      },
+      "storey": "st-ground",
+      "style": "as-plan"
+    }
+  }
+}

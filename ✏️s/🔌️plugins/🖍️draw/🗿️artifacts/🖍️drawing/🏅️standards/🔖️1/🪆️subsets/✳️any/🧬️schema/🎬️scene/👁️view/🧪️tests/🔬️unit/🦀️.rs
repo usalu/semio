@@ -10,12 +10,12 @@ fn mounted_vector_view_refuses_missing_assets_and_unresolved_algorithms(){let in
 #[test]
 fn mounted_vector_view_bounds_share_affine_stroke_image_text_and_curve_cases(){
  let rows:Value=serde_json::from_str(include_str!("../../🧫️fixtures/📐️bounds/🔣️.json")).unwrap();
- for row in rows.as_array().unwrap(){let record=&row["record"];let segments:Vec<PathSegment>=serde_json::from_value(record["segments"].clone()).unwrap();let transform=serde_json::from_value(record["transform"].clone()).unwrap();let stroke:Option<StrokeStyle>=record.get("stroke").map(|value|serde_json::from_value(value.clone()).unwrap());let asset=RasterSceneAsset{id:"bounds-asset".into(),image:std::sync::Arc::new(semio_framework_pixels::RasterImage{width:1,height:1,pixels:vec![0,0,0,0]})};let text=record.get("text").map(|value|(value["content"].as_str().unwrap(),value["size"].as_f64().unwrap()));let image=record.get("image").map(|value|(&asset,value["width"].as_f64().unwrap(),value["height"].as_f64().unwrap()));
- let node=PreparedSceneNode{id:"bounds",groups:&[],transform,segments:Cow::Borrowed(&segments),fill:None,stroke:stroke.as_ref(),opacity:1.0,blend_mode:"normal",visible:true,fill_rule:None,text,image};
+ for row in rows.as_array().unwrap(){let record=&row["record"];let segments:Vec<PathSegment>=serde_json::from_value(record["segments"].clone()).unwrap();let transform=serde_json::from_value(record["transform"].clone()).unwrap();let stroke:Option<StrokeStyle>=record.get("stroke").map(|value|serde_json::from_value(value.clone()).unwrap());let asset=RasterSceneAsset{id:"bounds-asset".into(),image:std::sync::Arc::new(semio_framework_pixels::RasterImage{width:1,height:1,pixels:vec![0,0,0,0]})};let image=record.get("image").map(|value|(&asset,value["width"].as_f64().unwrap(),value["height"].as_f64().unwrap()));
+ let node=PreparedSceneNode{id:"bounds",groups:&[],transform,segments:Cow::Borrowed(&segments),fill:None,stroke:stroke.as_ref(),opacity:1.0,blend_mode:"normal",visible:true,fill_rule:None,image};
  let actual=node.bounds();if row["bounds"].is_null(){assert!(actual.is_none());}else{for (index,value) in actual.unwrap().iter().enumerate(){assert!((*value-row["bounds"][index].as_f64().unwrap()).abs()<1e-10,"{}",row["name"]);}}
  }
- let node=PreparedSceneNode{id:"hidden",groups:&[],transform:[1.0,0.0,0.0,1.0,0.0,0.0],segments:Cow::Borrowed(&[]),fill:None,stroke:None,opacity:1.0,blend_mode:"normal",visible:false,fill_rule:None,text:None,image:None};
- assert_eq!(bounds(None,&[node]),[0.0,0.0,1024.0,1024.0]);eprintln!("[DEBUG] Native complete-picture bounds matched shared affine stroke, image, Unicode multiline fallback and cubic-extrema cases");
+ let node=PreparedSceneNode{id:"hidden",groups:&[],transform:[1.0,0.0,0.0,1.0,0.0,0.0],segments:Cow::Borrowed(&[]),fill:None,stroke:None,opacity:1.0,blend_mode:"normal",visible:false,fill_rule:None,image:None};
+ assert_eq!(bounds(None,&[node]),[0.0,0.0,1024.0,1024.0]);eprintln!("[DEBUG] Native complete-picture bounds matched shared affine stroke, image and cubic-extrema cases");
 }
 
 #[test]

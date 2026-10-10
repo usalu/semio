@@ -1,0 +1,6 @@
+{
+  "mutation": "setComponentOverride",
+  "component": "cmp-lamp",
+  "name": "size",
+  "value": "0.4 m"
+}

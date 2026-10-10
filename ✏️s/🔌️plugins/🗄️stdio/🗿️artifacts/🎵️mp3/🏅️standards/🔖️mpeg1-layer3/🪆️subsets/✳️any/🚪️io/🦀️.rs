@@ -279,8 +279,9 @@ impl Mp3EncodeCursor {
                 Mp3EncodePhase::MeasureId3v2 => {
                     let tag = snapshot.id3v2.as_ref().ok_or("mp3.encode.id3v2-owner-missing")?;
                     if let Some(frame) = tag.frames.get(self.index) {
-                        u32::try_from(id3_frame_body_len(frame)?).map_err(|_| "mp3.encode.id3v2-frame-too-large")?;
-                        self.id3v2_body_bytes = self.id3v2_body_bytes.checked_add(10).and_then(|bytes| bytes.checked_add(id3_frame_body_len(frame)?)).ok_or("mp3.encode.id3v2-size-overflow")?;
+                        let body_bytes = id3_frame_body_len(frame)?;
+                        u32::try_from(body_bytes).map_err(|_| "mp3.encode.id3v2-frame-too-large")?;
+                        self.id3v2_body_bytes = self.id3v2_body_bytes.checked_add(10).and_then(|bytes| bytes.checked_add(body_bytes)).ok_or("mp3.encode.id3v2-size-overflow")?;
                         self.index += 1;
                         return Ok(Mp3EncodeAdvance::Progress);
                     }
@@ -401,8 +402,8 @@ pub mod playback {
     use super::{Mp3EncodeAdvance, Mp3EncodeCursor, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
     use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
     use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
-    use semio_framework_plugin::app::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactSnapshotCloseLease};
-    use semio_framework_plugin::{ArtifactApp, ArtifactMediaExportJobRequest, ArtifactOwnedToolJobFactory, ArtifactReservedJob, ArtifactReservedToolJob, ArtifactSnapshotDisposer, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PluginCloseStep, PortMultiplicity};
+    use semio_framework_plugin::app::{ArtifactMediaExportResult, ArtifactOutputChunks};
+    use semio_framework_plugin::{ArtifactApp, ArtifactMediaExportJobRequest, ArtifactOwnedToolJobFactory, ArtifactReservedJob, ArtifactReservedToolJob, ArtifactSnapshotDisposer, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity};
     use std::marker::PhantomData;
     use std::sync::Arc;
 
@@ -433,41 +434,25 @@ pub mod playback {
         }
     }
 
-    pub struct Mp3PlaybackExportJob {
+    pub struct Mp3PlaybackExportJob<A: ArtifactApp<Snapshot = Mp3Snapshot>> {
         operation: Operation,
-        snapshot: Option<Arc<Mp3Snapshot>>,
-        snapshot_close: Option<ArtifactSnapshotCloseLease<Mp3Snapshot>>,
-        cursor: Option<Mp3EncodeCursor>,
-        page: Vec<u8>,
-        chunks: Option<ArtifactOutputChunks>,
-        credit: Option<ArtifactMediaExportCredit>,
-        completion: Option<ArtifactMediaExportCompletion>,
+        request: std::mem::ManuallyDrop<Option<ArtifactMediaExportJobRequest<A>>>,
+
+        cursor: std::mem::ManuallyDrop<Option<Mp3EncodeCursor>>,
+        page: std::mem::ManuallyDrop<Vec<u8>>,
+
+
+
         progress: u64,
         completed: bool,
         closing: bool,
     }
 
-    impl Mp3PlaybackExportJob {
-        pub fn new<A>(request: ArtifactMediaExportJobRequest<A>) -> Self
-        where
-            A: ArtifactApp<Snapshot = Mp3Snapshot>,
-        {
+    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> Mp3PlaybackExportJob<A> {
+        pub fn new(request: ArtifactMediaExportJobRequest<A>) -> Self {
             let cursor = Mp3EncodeCursor::new(&request.snapshot);
-            Self {
-                operation: request.operation,
-                snapshot: Some(request.snapshot),
-                snapshot_close: Some(request.snapshot_close),
-                cursor: Some(cursor),
-                page: Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES),
-                chunks: Some(request.output_chunks),
-                credit: Some(request.output_credit),
-                completion: Some(request.completion),
-                progress: 0,
-                completed: false,
-                closing: false,
-            }
+            Self { operation: request.operation, request: std::mem::ManuallyDrop::new(Some(request)), cursor: std::mem::ManuallyDrop::new(Some(cursor)), page: std::mem::ManuallyDrop::new(Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES)), progress: 0, completed: false, closing: false }
         }
-
         fn fault(context: &mut StepContext<'_>, message: &str) -> StepOutcome {
             let bytes = message.as_bytes();
             let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
@@ -479,11 +464,12 @@ pub mod playback {
         }
 
         fn advance(&mut self) -> Result<bool, Fault> {
-            let snapshot = self.snapshot.as_deref().ok_or_else(|| Fault::from("mp3.export.snapshot-missing"))?;
+            let request = self.request.as_ref().ok_or_else(|| Fault::from("mp3.export.request-missing"))?;
+            let snapshot = request.snapshot.as_ref();
             if self.page.len() == ArtifactOutputChunks::CHUNK_BYTES {
-                let page = std::mem::replace(&mut self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
-                self.credit.as_ref().ok_or_else(|| Fault::from("mp3.export.credit-missing"))?.credit(page.len())?;
-                self.chunks.as_ref().ok_or_else(|| Fault::from("mp3.export.chunks-missing"))?.push(page)?;
+                let page = std::mem::replace(&mut *self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
+                request.output_credit.credit(page.len())?;
+                request.output_chunks.push(page)?;
                 self.progress = self.progress.checked_add(1).ok_or_else(|| Fault::from("mp3.export.progress-overflow"))?;
                 return Ok(false);
             }
@@ -498,16 +484,16 @@ pub mod playback {
                 }
                 Mp3EncodeAdvance::Complete => {
                     if !self.page.is_empty() {
-                        let page = std::mem::replace(&mut self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
-                        self.credit.as_ref().ok_or_else(|| Fault::from("mp3.export.credit-missing"))?.credit(page.len())?;
-                        self.chunks.as_ref().ok_or_else(|| Fault::from("mp3.export.chunks-missing"))?.push(page)?;
+                        let page = std::mem::replace(&mut *self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
+                        request.output_credit.credit(page.len())?;
+                        request.output_chunks.push(page)?;
                         return Ok(false);
                     }
-                    let chunks = self.chunks.take().ok_or_else(|| Fault::from("mp3.export.chunks-missing"))?;
+                    let chunks = request.output_chunks.clone();
                     chunks.seal()?;
-                    self.credit.as_ref().ok_or_else(|| Fault::from("mp3.export.credit-missing"))?.credit(MEDIA_SCHEMA.len())?;
+                    request.output_credit.credit(MEDIA_SCHEMA.len())?;
                     let result = ArtifactMediaExportResult::structured(MEDIA_TYPE, MEDIA_SCHEMA, MIME_TYPE, chunks)?;
-                    self.completion.as_ref().ok_or_else(|| Fault::from("mp3.export.completion-missing"))?.complete(Ok(result))?;
+                    request.completion.complete(Ok(result))?;
                     self.completed = true;
                     Ok(true)
                 }
@@ -515,7 +501,7 @@ pub mod playback {
         }
     }
 
-    impl InteractiveJob for Mp3PlaybackExportJob {
+    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> InteractiveJob for Mp3PlaybackExportJob<A> {
         fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
             if self.closing || context.is_cancelled() {
                 return StepOutcome::Cancelled;
@@ -539,61 +525,27 @@ pub mod playback {
             self.closing = true;
         }
 
-        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-            match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
-                Ok(PluginCloseStep::Complete) => InteractiveJobCloseStep::Complete,
-                Ok(PluginCloseStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                _ => InteractiveJobCloseStep::Blocked,
-            }
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            ArtifactReservedJob::terminal_is_empty(self)
-        }
+        fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep { self.begin_close(); InteractiveJobCloseStep::Blocked }
+        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.original_request_retirement_demand() }
+        fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, semio_framework_value::ValueError> { self.original_request_retirement_demand() }
+        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.original_request_retirement_demand() }
+        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.original_request_retirement_demand() }
+        fn terminal_is_empty(&self) -> bool { self.request.is_none() && self.cursor.is_none() && self.page.capacity() == 0 }
     }
 
-    impl ArtifactReservedJob for Mp3PlaybackExportJob {
-        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            self.begin_close();
-            if maximum_items == 0 {
-                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            if self.cursor.take().is_some() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if self.page.capacity() != 0 {
-                if maximum_bytes < self.page.capacity() {
-                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                }
-                let released_bytes = self.page.capacity();
-                self.page = Vec::new();
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes });
-            }
-            if self.chunks.take().is_some() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if self.completion.take().is_some() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if self.credit.take().is_some() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if let Some(snapshot) = self.snapshot.as_ref() {
-                if !self.snapshot_close.as_ref().is_some_and(|lease| lease.can_release(snapshot)) {
-                    return Err(Fault::from("mp3.export.snapshot-unwitnessed"));
-                }
-                self.snapshot = None;
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            self.snapshot_close = None;
-            Ok(PluginCloseStep::Complete)
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.cursor.is_none() && self.page.capacity() == 0 && self.chunks.is_none() && self.completion.is_none() && self.credit.is_none() && self.snapshot.is_none() && self.snapshot_close.is_none()
+    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> Mp3PlaybackExportJob<A> {
+        fn original_request_retirement_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "MP3 original media request completion, credit and snapshot lease require issuer retirement authority"))
         }
     }
-
+    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> ArtifactReservedJob for Mp3PlaybackExportJob<A> {}
+    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> Drop for Mp3PlaybackExportJob<A> {
+        fn drop(&mut self) {
+            let empty = InteractiveJob::terminal_is_empty(self);
+            assert!(std::thread::panicking() || empty, "MP3 media producer abandoned original request ownership");
+            if empty { unsafe { std::mem::ManuallyDrop::drop(&mut self.request); std::mem::ManuallyDrop::drop(&mut self.cursor); std::mem::ManuallyDrop::drop(&mut self.page); } }
+        }
+    }
     pub struct Mp3MediaExportJobFactory<A: ArtifactApp<Snapshot = Mp3Snapshot>> {
         keys: [ToolFactoryKey; 1],
         owner: PhantomData<fn() -> A>,
@@ -639,133 +591,54 @@ pub mod playback {
 
     #[derive(Default)]
     pub struct Mp3ExportSnapshotDisposer {
-        retirement: Option<Mp3SnapshotRetirement>,
+        pending: std::mem::ManuallyDrop<Option<Mp3Snapshot>>,
+        retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Mp3Snapshot>>>,
     }
 
     impl ArtifactSnapshotDisposer<Mp3Snapshot> for Mp3ExportSnapshotDisposer {
-        fn close_step(&mut self, snapshot: &mut Option<Arc<Mp3Snapshot>>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            if maximum_items == 0 {
-                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        fn retirement_demands(&self, snapshot: &Option<Arc<Mp3Snapshot>>, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+            if let Some(owner) = self.retirement.as_ref() {
+                if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Mp3Snapshot>>>(), depth: 1, ..Default::default() }); }
+                let copy = owner.next_copy_byte_demand()?;
+                let release = owner.next_release_byte_demand()?;
+                return Ok(semio_framework_value::RetirementDemand { copy_bytes: copy, capacity_bytes: owner.next_capacity_byte_demand(body.max(copy).max(release))?, release_bytes: release, depth: owner.next_depth_demand()? });
             }
-            if let Some(retirement) = self.retirement.as_mut() {
-                let step = retirement.close_step(maximum_bytes);
-                if retirement.terminal_is_empty() {
-                    self.retirement = None;
-                }
-                return Ok(step);
-            }
-            let Some(owner) = snapshot.take() else {
-                return Ok(PluginCloseStep::Complete);
-            };
-            if let Some(value) = Arc::into_inner(owner) {
-                self.retirement = Some(Mp3SnapshotRetirement::new(value));
-                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+            Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.pending.is_some() || snapshot.is_some() { std::mem::size_of::<Mp3Snapshot>() } else { 0 }, capacity_bytes: 0, release_bytes: if snapshot.is_some() { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Mp3Snapshot>() } else { 0 }, depth: usize::from(self.pending.is_some() || snapshot.is_some()) })
         }
 
-        fn terminal_is_empty(&self, snapshot: &Option<Arc<Mp3Snapshot>>) -> bool {
-            snapshot.is_none() && self.retirement.is_none()
+        fn close_step(&mut self, snapshot: &mut Option<Arc<Mp3Snapshot>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+            use semio_framework_plugin::PluginLifecycleStep;
+            use semio_framework_value::retained_clone::RetainedCloneProgress;
+            if self.terminal_is_empty(snapshot) { return Ok(PluginLifecycleStep::Complete(Default::default())); }
+            let demand = self.retirement_demands(snapshot, grant.maximum_copy_bytes).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))?;
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(PluginLifecycleStep::Progress(Default::default())); }
+            if let Some(owner) = self.retirement.as_mut() {
+                if owner.terminal_is_empty() { *self.retirement = None; return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
+                let step = owner.step(grant).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))?;
+                return Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty(snapshot)));
+            }
+            if let Some(value) = self.pending.take() {
+                match semio_framework_value::retirement::controlled::ControlledRetirement::new(value) {
+                    Ok(owner) => { *self.retirement = Some(owner); return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
+                    Err((error, value)) => { *self.pending = Some(value); return Err(Fault::new(semio_framework_plugin::FaultOrigin::Framework, error.kind.as_str(), error.into_message())); }
+                }
+            }
+            let Some(owner) = snapshot.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())); };
+            if Arc::get_mut(owner).is_none() { return Ok(PluginLifecycleStep::AwaitingInput { reason: "MP3 original snapshot observers must return before retirement" }); }
+            match Arc::try_unwrap(snapshot.take().unwrap()) {
+                Ok(value) => { *self.pending = Some(value); Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() })) }
+                Err(owner) => { *snapshot = Some(owner); Ok(PluginLifecycleStep::AwaitingInput { reason: "MP3 original snapshot custody remains shared" }) }
+            }
         }
+
+        fn terminal_is_empty(&self, snapshot: &Option<Arc<Mp3Snapshot>>) -> bool { snapshot.is_none() && self.pending.is_none() && self.retirement.is_none() }
     }
 
-    struct Mp3SnapshotRetirement {
-        schema: Option<Vec<u8>>,
-        id3_frames: Vec<super::Id3Frame>,
-        audio_frames: Vec<super::Mp3Frame>,
-        metadata_fixed: [Option<Vec<u8>>; 5],
-        metadata_values: Vec<String>,
-        metadata_values_debt: usize,
-        pending: Option<Vec<u8>>,
-        pending_debt: usize,
-        outer_debt: usize,
-    }
-
-    impl Mp3SnapshotRetirement {
-        fn new(snapshot: Mp3Snapshot) -> Self {
-            let id3_frames = snapshot.id3v2.map_or_else(Vec::new, |tag| tag.frames);
-            let audio_frames = snapshot.frames;
-            let outer_debt = id3_frames.capacity().saturating_mul(std::mem::size_of::<super::Id3Frame>()).saturating_add(audio_frames.capacity().saturating_mul(std::mem::size_of::<super::Mp3Frame>()));
-            Self {
-                schema: Some(snapshot.schema.into_bytes()),
-                id3_frames,
-                audio_frames,
-                metadata_fixed: snapshot.id3v1.map_or_else(||[None,None,None,None,None], |tag| [Some(tag.title.into_bytes()),Some(tag.artist.into_bytes()),Some(tag.album.into_bytes()),Some(tag.year.into_bytes()),Some(tag.comment.into_bytes())]),
-                metadata_values: Vec::new(),
-                metadata_values_debt: 0,
-                pending: None,
-                pending_debt: 0,
-                outer_debt,
-            }
-        }
-
-        fn close_step(&mut self, maximum_bytes: usize) -> PluginCloseStep {
-            if self.pending.is_some() {
-                let released_bytes = maximum_bytes.min(self.pending_debt);
-                self.pending_debt -= released_bytes;
-                if self.pending_debt == 0 {
-                    self.pending = None;
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes };
-                }
-                return PluginCloseStep::Pending { released_items: 0, released_bytes };
-            }
-            if let Some(bytes) = self.schema.take() {
-                self.set_pending(bytes);
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            if let Some(value) = self.metadata_values.pop() {
-                self.set_pending(value.into_bytes());
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            if self.metadata_values_debt != 0 || self.metadata_values.capacity() != 0 {
-                let released_bytes = maximum_bytes.min(self.metadata_values_debt);
-                self.metadata_values_debt -= released_bytes;
-                let released_items = usize::from(self.metadata_values_debt == 0);
-                if released_items != 0 { self.metadata_values = Vec::new(); }
-                return PluginCloseStep::Pending { released_items, released_bytes };
-            }
-            if let Some(bytes) = self.metadata_fixed.iter_mut().find_map(Option::take) {
-                self.set_pending(bytes);
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            if let Some(frame) = self.id3_frames.pop() {
-                match frame.content {
-                    super::Id3Content::Text{values} => self.metadata_values=values,
-                    super::Id3Content::UserText{description,values} => {self.metadata_fixed[0]=Some(description.into_bytes());self.metadata_values=values;},
-                    super::Id3Content::Comment{language,description,text}|super::Id3Content::Lyrics{language,description,text} => {self.metadata_fixed[0]=Some(language.into_bytes());self.metadata_fixed[1]=Some(description.into_bytes());self.metadata_fixed[2]=Some(text.into_bytes());},
-                    super::Id3Content::Url{url} => self.metadata_fixed[0]=Some(url.into_bytes()),
-                    super::Id3Content::UserUrl{description,url} => {self.metadata_fixed[0]=Some(description.into_bytes());self.metadata_fixed[1]=Some(url.into_bytes());},
-                    super::Id3Content::Picture{mime,description,payload,..} => {self.metadata_fixed[0]=Some(mime.into_bytes());self.metadata_fixed[1]=Some(description.into_bytes());self.metadata_fixed[2]=Some(payload);},
-                    super::Id3Content::Opaque{bytes} => self.metadata_fixed[0]=Some(bytes),
-                }
-                self.metadata_values_debt=self.metadata_values.capacity().saturating_mul(std::mem::size_of::<String>());
-                self.set_pending(frame.id.into_bytes());
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            if let Some(frame) = self.audio_frames.pop() {
-                self.set_pending(frame.payload);
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            if self.outer_debt != 0 {
-                let released_bytes = maximum_bytes.min(self.outer_debt);
-                self.outer_debt -= released_bytes;
-                if self.outer_debt == 0 {
-                    self.id3_frames = Vec::new();
-                    self.audio_frames = Vec::new();
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes };
-                }
-                return PluginCloseStep::Pending { released_items: 0, released_bytes };
-            }
-            PluginCloseStep::Complete
-        }
-
-        fn set_pending(&mut self, bytes: Vec<u8>) {
-            self.pending_debt = bytes.capacity();
-            self.pending = Some(bytes);
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.schema.is_none() && self.id3_frames.capacity() == 0 && self.audio_frames.capacity() == 0 && self.metadata_fixed.iter().all(Option::is_none) && self.metadata_values.capacity()==0 && self.metadata_values_debt==0 && self.pending.is_none() && self.pending_debt == 0 && self.outer_debt == 0
+    impl Drop for Mp3ExportSnapshotDisposer {
+        fn drop(&mut self) {
+            let empty = self.pending.is_none() && self.retirement.is_none();
+            assert!(std::thread::panicking() || empty, "MP3 snapshot disposer abandoned original ownership");
+            if empty { unsafe { std::mem::ManuallyDrop::drop(&mut self.pending); std::mem::ManuallyDrop::drop(&mut self.retirement); } }
         }
     }
 }
@@ -801,7 +674,8 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
-    use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{Mp3Mutation};
+    use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
+    use crate::apply_mutation;
 
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
     use semio_framework_plugin::ArtifactBuilder;

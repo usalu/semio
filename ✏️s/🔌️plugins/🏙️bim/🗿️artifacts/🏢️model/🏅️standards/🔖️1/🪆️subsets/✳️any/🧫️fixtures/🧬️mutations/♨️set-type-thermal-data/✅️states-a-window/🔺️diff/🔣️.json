@@ -1,0 +1,16 @@
+{
+  "window_types": {
+    "win-1": {
+      "entry": "Patched",
+      "frame_fraction": {
+        "value": 0.25
+      },
+      "g_value": {
+        "value": 0.5
+      },
+      "u_value": {
+        "value": 0.9
+      }
+    }
+  }
+}

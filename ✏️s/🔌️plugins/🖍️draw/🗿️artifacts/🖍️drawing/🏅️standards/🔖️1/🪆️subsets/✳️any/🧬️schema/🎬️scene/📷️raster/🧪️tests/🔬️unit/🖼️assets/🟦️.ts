@@ -1,7 +1,8 @@
 const neutral=(value:any):any=>value instanceof Uint8Array?Array.from(value):Array.isArray(value)?value.map(neutral):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,neutral(item)])):value;
 /** 🖼️ Shared encoded scene fixtures preserve private image composition and independent source/filter/blend output. */
 import {test,expect} from "bun:test";
-import Ajv from "ajv";
+import Ajv from "ajv/dist/2020.js";
+import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
 import sharp from "sharp";
 import {PNG} from "pngjs";
 import cases from "../../../🧫️fixtures/🖼️assets/🔣️.json";
@@ -11,7 +12,7 @@ import pathSchema from "../../../../../🧮️geometry/📷️raster/🧬️sche
 import {RasterSceneJob,rasterizeScene,type RasterSceneInput} from "../../../🟦️.ts";
 import {areaOracle,canvasOracle,delta} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts";
 import imageSchema from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🧬️schema/🔣️.json";
-const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(schema);const validate=ajv.compile(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
+const ajv=new Ajv({strict:true}).addMetaSchema(draft7);ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(schema);const validate=ajv.compile(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
 const complete=(value:RasterSceneInput,grant=4096)=>{const job=new RasterSceneJob(value);let work=0;for(let i=0;i<2000000;i++){const p=job.advance(grant);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)return {image:job.result(),progress:p};}throw Error("Encoded scene did not finish");};
 async function reference(value:RasterSceneInput){
  let body="",groups:string[]=[];

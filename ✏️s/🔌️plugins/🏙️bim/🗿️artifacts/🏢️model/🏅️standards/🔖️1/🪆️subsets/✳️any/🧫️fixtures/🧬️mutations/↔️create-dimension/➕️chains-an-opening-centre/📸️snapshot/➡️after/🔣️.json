@@ -1,1 +1,229 @@
-{}
+{
+  "annotation_styles": {
+    "as-large": {
+      "gap": 0.1,
+      "mark_size": 0.15,
+      "name": "Plan 1:100",
+      "overshoot": 0.2,
+      "precision": 2,
+      "terminator": "Tick",
+      "text_height": 0.4,
+      "unit": "Metre"
+    },
+    "as-plan": {
+      "gap": 0.1,
+      "mark_size": 0.15,
+      "name": "Plan 1:50",
+      "overshoot": 0.2,
+      "precision": 2,
+      "terminator": "Tick",
+      "text_height": 0.25,
+      "unit": "Metre"
+    }
+  },
+  "beam_types": {},
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "classifications": {},
+  "column_types": {},
+  "columns": {},
+  "curtain_walls": {},
+  "dimensions": {
+    "dim-chain": {
+      "anchors": [
+        {
+          "WallEnd": {
+            "end": "Start",
+            "wall": "w-south"
+          }
+        },
+        {
+          "OpeningCentre": {
+            "opening": "o-win"
+          }
+        },
+        {
+          "WallEnd": {
+            "end": "End",
+            "wall": "w-south"
+          }
+        }
+      ],
+      "angle": 0.0,
+      "name": "Window position",
+      "offset": 0.8,
+      "storey": "st-ground",
+      "style": "as-plan"
+    }
+  },
+  "door_types": {},
+  "grids": {
+    "g-1": {
+      "building": "bldg-1",
+      "end": {
+        "x": 8.0,
+        "y": 0.0
+      },
+      "label": "1",
+      "start": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {
+    "o-win": {
+      "flip_facing": false,
+      "flip_hand": false,
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "win-1"
+        }
+      },
+      "name": "South window",
+      "offset": 1.0
+    }
+  },
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {},
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "wall_type": "wt-300"
+    },
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "South",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  },
+  "window_types": {
+    "win-1": {
+      "frame_depth": 0.1,
+      "frame_width": 0.05,
+      "height": 1.2,
+      "material": "m-brick",
+      "name": "Window 1.2",
+      "panes": 1,
+      "sill": 0.9,
+      "width": 1.2
+    }
+  }
+}

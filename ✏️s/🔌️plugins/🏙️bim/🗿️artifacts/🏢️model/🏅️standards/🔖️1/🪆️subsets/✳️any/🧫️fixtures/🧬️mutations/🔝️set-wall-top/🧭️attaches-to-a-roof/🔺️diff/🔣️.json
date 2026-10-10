@@ -1,1 +1,13 @@
-{}
+{
+  "walls": {
+    "w-east": {
+      "entry": "Patched",
+      "top": {
+        "Roof": {
+          "offset": -0.05,
+          "roof": "r-main"
+        }
+      }
+    }
+  }
+}

@@ -12,6 +12,8 @@ window_config! {
     type BimPlanWindowConfig, BimPlanWindowConfigDiff, BimPlanWindowConfigMutation, BimPlanWindowConfigOwner;
     view: String = String::new();
     framed: bool = false;
+    selected_options: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
+    workset_visibility: std::collections::BTreeMap<String, bool> = std::collections::BTreeMap::new();
     #[dsl(block)]
     viewport: store::Viewport2d = store::Viewport2d { x: 0.0, y: 0.0, zoom: 40.0 };
 }

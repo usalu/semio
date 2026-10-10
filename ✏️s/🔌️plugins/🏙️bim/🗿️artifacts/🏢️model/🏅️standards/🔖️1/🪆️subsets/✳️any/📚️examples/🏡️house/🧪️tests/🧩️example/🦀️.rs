@@ -30,7 +30,8 @@ async fn the_house_is_the_documented_building() {
     assert_eq!(model.spaces.len(), 12);
     assert!(model.spaces.values().all(|space| matches!(space.boundary, SpaceBoundary::Bounded { .. })));
     assert_eq!((model.materials.len(), model.wall_types.len(), model.slab_types.len(), model.roof_types.len()), (13, 6, 3, 2), "ten building materials and the oak, ceramic and paint of the room finishes");
-    assert_eq!((model.properties.len(), model.classifications.len()), (6, 6));
+    assert_eq!((model.properties.len(), model.classifications.len()), (7, 8));
+    assert_eq!((model.property_templates.len(), model.classification_systems.len()), (8, 3));
     let site = model.sites.values().next().expect("a site");
     assert!((46.0..48.0).contains(&site.latitude) && (7.0..8.0).contains(&site.longitude) && site.boundary.len() == 4);
 }
@@ -72,7 +73,11 @@ async fn the_house_infers_levels_heights_and_valid_openings() {
     assert!(heights("st-basement").iter().all(|height| near(*height, 2.6)));
     assert!(heights("st-ground").iter().all(|height| near(*height, 2.8)));
     assert!(heights("st-upper").iter().all(|height| near(*height, 2.7)));
-    assert!(heights("st-attic").iter().all(|height| near(*height, 0.9)), "knee walls stay 0.9 m high");
+    let attic: Vec<_> = model.walls.iter().filter(|(_, wall)| wall.storey == "st-attic").collect();
+    assert_eq!(attic.len(), 4, "the attic is walled by four walls");
+    assert!(attic.iter().all(|(_, wall)| matches!(&wall.top, crate::TopConstraint::Roof { roof, .. } if roof == "rf-main")), "the attic walls end at the underside of the main roof");
+    assert!(heights("st-attic").iter().all(|height| *height > 0.9 && *height < 2.4 + 1e-9), "attached attic walls rise into the roof, not to the knee wall height");
+    assert!(attic.iter().all(|(id, _)| inferred.wall_layout[*id].top_profile.len() >= 2), "an attached top is an authored-derived elevation outline");
     let south = &inferred.wall_layout["w-g-south"];
     assert!(near(south.thickness, 0.37) && near(south.length, 10.0) && near(south.base_z, 0.0) && near(south.top_z, 2.8));
     let bay = &inferred.wall_layout["w-g-bay"];
@@ -255,4 +260,57 @@ async fn the_house_hangs_four_ceilings_of_two_types_and_one_of_them_is_raked() {
     assert!(model.ceilings.values().all(|ceiling| model.storeys.contains_key(&ceiling.storey) && model.ceiling_types.contains_key(&ceiling.ceiling_type)));
     let inferred = crate::examples::checks::infer(&model);
     assert!(model.ceilings.keys().all(|id| inferred.element_solids.contains_key(id) && inferred.quantities.elements.contains_key(id)), "every ceiling has a solid and a take-off");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_house_wall_type_states_the_properties_its_walls_inherit_and_its_data_raises_no_finding() {
+    use crate::standards::v1::subsets::any::schema::inferences::effective_properties::Source;
+    let model = ASSET.model();
+    let inferred = crate::examples::checks::infer(&model);
+    let south = &inferred.effective_properties["w-g-south"];
+    let fire = south.get("Pset_WallCommon", "FireRating").expect("the south wall inherits the fire rating of its type");
+    assert_eq!((fire.source, &fire.value), (Source::Type, &crate::PropertyValue::Text { value: "REI 60".into() }));
+    assert_eq!(south.get("Pset_WallCommon", "LoadBearing").map(|row| row.source), Some(Source::Default));
+    assert_eq!(model.classifications["w-g-south"].len(), 2, "the south wall is classified in two systems");
+    assert!(inferred.diagnostics.iter().all(|found| found.code.category() != "property" && found.code.category() != "classification"), "{:?}", inferred.diagnostics);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_house_has_a_sheet_set_of_plans_sections_and_elevations_without_findings() {
+    let model = ASSET.model();
+    assert_eq!((model.sheets.len(), model.viewports.len(), model.sheet_revisions.len()), (3, 10, 2));
+    let sheet = |id: &str| model.sheets.get(id).unwrap_or_else(|| panic!("the sheet {id}"));
+    assert_eq!(["sh-plans", "sh-sections", "sh-elevations"].map(|id| sheet(id).number.as_str()), ["A-101", "A-201", "A-301"], "plans, sections and elevations");
+    assert_eq!(["sh-plans", "sh-sections", "sh-elevations"].map(|id| sheet(id).paper.name()), ["A2", "A3", "A2"], "the smallest paper on which the windows fit");
+    let drawn = |kinds: &[crate::ViewKind]| model.viewports.values().filter(|viewport| model.views.get(&viewport.view).is_some_and(|view| kinds.contains(&view.kind))).count();
+    assert_eq!(drawn(&[crate::ViewKind::Plan]) + drawn(&[crate::ViewKind::Section]) + drawn(&[crate::ViewKind::Elevation]), model.viewports.len());
+    let inferred = crate::examples::checks::infer(&model);
+    assert_eq!(inferred.sheet_layouts.len(), model.sheets.len());
+    for (id, layout) in &inferred.sheet_layouts {
+        assert!(layout.findings.is_empty(), "{id}: the sheet of an example has no finding: {:?}", layout.findings);
+        assert!(layout.viewports.iter().all(|placed| placed.cropped && !placed.empty), "{id}: every viewport shows its cropped drawing");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn debug_stages() {
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::{infer_selected, kinds};
+    let model = ASSET.model();
+    macro_rules! stage {
+        ($name:expr, $mask:expr) => {{
+            eprintln!("[DEBUG] start {}", $name);
+            let started = std::time::Instant::now();
+            let _ = infer_selected::<{ $mask }>(&model);
+            eprintln!("[DEBUG] {} in {:?}", $name, started.elapsed());
+        }};
+    }
+    stage!("levels", kinds::LEVELS);
+    stage!("surfaces", kinds::SURFACES);
+    stage!("layouts", kinds::LAYOUTS);
+    stage!("frames", kinds::FRAMES);
+    stage!("solids", kinds::SOLIDS);
+    stage!("rooms", kinds::ROOMS);
+    stage!("quantities", kinds::QUANTITIES);
+    stage!("zones", kinds::ZONES);
+    stage!("diagnostics", kinds::DIAGNOSTICS);
 }

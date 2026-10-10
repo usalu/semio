@@ -117,29 +117,45 @@ async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
     assert_eq!(decode_mp3(&encoded).unwrap(),decoded);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn playback_snapshot_retirement_obeys_each_byte_and_item_grant() {
-    use semio_framework_plugin::{ArtifactSnapshotDisposer, PluginCloseStep};
-    let decoded = decode_mp3(include_bytes!("../../../🧫️fixtures/🔊️.mp3")).expect("decode real LAME fixture");
-    let mut snapshot = Some(std::sync::Arc::new(decoded));
-    let mut disposer = playback::Mp3ExportSnapshotDisposer::default();
-    assert!(matches!(disposer.close_step(&mut snapshot, 0, 0).expect("zero grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
-    let mut steps = 0usize;
-    while !disposer.terminal_is_empty(&snapshot) {
-        match disposer.close_step(&mut snapshot, 1, 4_096).expect("bounded retirement") {
-            PluginCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 4_096);
-            }
-            PluginCloseStep::Complete => {}
-            other => panic!("unshared MP3 retirement must progress: {other:?}"),
+#[test]
+fn playback_snapshot_retirement_preserves_original_observers_and_each_exact_grant() {
+    use semio_framework_plugin::{ArtifactSnapshotDisposer, PluginLifecycleStep};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    for weak in [false, true] {
+        let decoded = decode_mp3(include_bytes!("../../../🧫️fixtures/🔊️.mp3")).unwrap();
+        let mut snapshot = Some(std::sync::Arc::new(decoded));
+        let pointer = std::sync::Arc::as_ptr(snapshot.as_ref().unwrap());
+        let strong = (!weak).then(|| snapshot.as_ref().unwrap().clone());
+        let observer = weak.then(|| std::sync::Arc::downgrade(snapshot.as_ref().unwrap()));
+        let mut disposer = playback::Mp3ExportSnapshotDisposer::default();
+        let demand = disposer.retirement_demands(&snapshot, 0).unwrap();
+        assert_eq!(demand.copy_bytes, std::mem::size_of::<Mp3Snapshot>());
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        assert_eq!(disposer.close_step(&mut snapshot, RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap().progress().unwrap(), Default::default());
+        assert!(matches!(disposer.close_step(&mut snapshot, grant).unwrap(), PluginLifecycleStep::AwaitingInput { .. }));
+        assert_eq!(std::sync::Arc::as_ptr(snapshot.as_ref().unwrap()), pointer);
+        if let Some(observer) = observer.as_ref() { assert_eq!(std::sync::Arc::as_ptr(&observer.upgrade().unwrap()), pointer); }
+        drop(strong);
+        drop(observer);
+        let demand = disposer.retirement_demands(&snapshot, 0).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        assert_eq!(disposer.close_step(&mut snapshot, RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - 1, ..grant }).unwrap().progress().unwrap(), Default::default());
+        assert_eq!(std::sync::Arc::as_ptr(snapshot.as_ref().unwrap()), pointer);
+        assert_eq!(disposer.close_step(&mut snapshot, RetainedCloneGrant { maximum_release_bytes: grant.maximum_release_bytes - 1, ..grant }).unwrap().progress().unwrap(), Default::default());
+        assert_eq!(std::sync::Arc::as_ptr(snapshot.as_ref().unwrap()), pointer);
+        let mut turns = 0;
+        while !disposer.terminal_is_empty(&snapshot) {
+            let demand = disposer.retirement_demands(&snapshot, 4_096).unwrap();
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(4_096), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            let step = disposer.close_step(&mut snapshot, grant).unwrap();
+            assert!(step.progress().unwrap().fits(grant));
+            turns += 1;
+            assert!(turns < 100_000);
         }
-        steps += 1;
-        assert!(steps < 10_000);
+        assert!(turns > 10);
+        eprintln!("[DEBUG] MP3 original observer weak={weak} header/payload closure turns={turns} terminal=true");
     }
-    assert!(steps > 10, "the real fixture must retire over many bounded grants");
 }
-
 //#region 🔖️Id3v1Retention
 #[semio_framework_async_macros::async_test]
 async fn id3v1_trailer_round_trips() {
@@ -160,3 +176,35 @@ async fn id3v1_trailer_round_trips() {
     assert_eq!(re_encoded, bytes);
 }
 //#endregion 🔖️Id3v1Retention
+
+/// 🎵️ Proves the actual MP3 native metadata oracle, logical carriers and compiled protocol.
+#[test]
+fn owned_fixture_publication_reports_canonical_logical_carriers() {
+    playback_snapshot_retirement_preserves_original_observers_and_each_exact_grant();
+    use store::{ArtifactDsl, ArtifactPack};
+    use semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::project_mp3;
+    let native = real_fixture();
+    let snapshot = decode_mp3(&native).unwrap();
+    let encoded = encode_mp3(&snapshot).unwrap();
+    assert_eq!(project_mp3(&native).unwrap(), project_mp3(&encoded).unwrap());
+    let text = snapshot.print_dsl();
+    let binary = snapshot.encode_pack_with(&Default::default()).unwrap();
+    assert_eq!(Mp3Snapshot::parse_dsl(&text).unwrap(), snapshot);
+    assert_eq!(Mp3Snapshot::decode_pack_with(&binary, &Default::default()).unwrap(), snapshot);
+    let factories = crate::native_codecs();
+    assert_eq!(factories.len(), 1);
+    let factory = &factories[0];
+    let codec = (factory.codec)();
+    let kind = (factory.kind)();
+    let compiled = include_bytes!("../../💾️binary/📸️snapshot/📡️.protocol.semio");
+    let current = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")).unwrap();
+    assert_eq!(current.as_slice(), compiled, "the live native receipt requires the current compiled protocol");
+    let digest = semio_framework_hash::Sha256::digest(compiled);
+    assert_ne!(codec.pack_schema_hash, [0; 32]);
+    assert_eq!(kind.id, crate::MP3_ARTIFACT_SCHEMA_ID);
+    assert_eq!(codec.schema, crate::STDIO_MP3_DOCUMENT_SCHEMA);
+    assert_eq!(codec.extension, "semio");
+    let hex = |bytes: &[u8]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let receipt = serde_json::json!({"schemaVersion":1,"artifactKind":kind.id,"artifactSchema":codec.schema,"factoryId":factory.id,"extension":codec.extension,"packSchemaHash":hex(&codec.pack_schema_hash),"protocolSourceSha256":hex(&digest)});
+    eprintln!("[DEBUG] native-codec-publication={receipt}");
+}

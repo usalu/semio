@@ -8,7 +8,7 @@ use crate::{ClassificationItem, ClassificationSystemPatch, ModelMutation, ModelS
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "edit-classification")]
 pub struct EditClassification {
     pub id: String,
@@ -42,9 +42,25 @@ pub fn apply(entries: &[ClassificationItem], edit: &EditClassification) -> Resul
     Ok(list)
 }
 
+/// 📚️ The edit with the typed line of the panel resolved: without a code the title holds `code | title | parent` (add), `code | title` (retitle), `code | parent` (move) or `code` (remove).
+pub fn normalised(edit: &EditClassification) -> EditClassification {
+    if !edit.code.trim().is_empty() {
+        return edit.clone();
+    }
+    let mut parts = edit.title.split('|').map(str::trim);
+    let (code, first, second) = (parts.next().unwrap_or_default(), parts.next().unwrap_or_default(), parts.next().unwrap_or_default());
+    match edit.op.as_str() {
+        "add" => EditClassification { code: code.into(), title: first.into(), parent: second.into(), ..edit.clone() },
+        "retitle" => EditClassification { code: code.into(), title: first.into(), ..edit.clone() },
+        "reparent" => EditClassification { code: code.into(), title: String::new(), parent: first.into(), ..edit.clone() },
+        _ => EditClassification { code: code.into(), title: String::new(), ..edit.clone() },
+    }
+}
+
 pub fn handle(payload: &EditClassification, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let system = doc.snapshot.classification_systems.get(&payload.id).ok_or_else(|| fault("bim.classification.system-missing", format!("the classification system '{}' does not exist", payload.id)))?;
-    let entries = apply(&system.entries, payload).map_err(|code| fault(code, format!("the system '{}' cannot take the edit '{} {}'", system.name, payload.op, payload.code)))?;
+    let edit = normalised(payload);
+    let entries = apply(&system.entries, &edit).map_err(|code| fault(code, format!("the system '{}' cannot take the edit '{} {}'", system.name, edit.op, edit.code)))?;
     Ok(Emit::mutations(vec![ModelMutation::SetClassificationSystem(SetClassificationSystem::from_patch(payload.id.clone(), ClassificationSystemPatch { entries: Some(entries), ..Default::default() }))]))
 }
 

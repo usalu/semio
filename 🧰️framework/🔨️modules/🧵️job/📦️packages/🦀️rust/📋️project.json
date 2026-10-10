@@ -9,6 +9,8 @@
     ]
   },
   "targets": {
+    "test-retained-work-source":{"executor":"nx:run-commands","cache":false,"options":{"cwd":"🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-retained-work source"}},
+    "test-retained-work-native":{"executor":"nx:run-commands","cache":false,"options":{"cwd":"🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-retained-work native"}},
     "test": {
       "executor": "nx:run-commands",
       "options": {
@@ -51,6 +53,22 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-architecture"
+      }
+    },
+    "test-session-return-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-session-return source"
+      }
+    },
+    "test-session-return-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-session-return native"
       }
     }
   }

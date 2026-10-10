@@ -6,9 +6,7 @@
   "type": "object",
   "required": [
     "schema",
-    "canvas",
-    "styles",
-    "layers"
+    "canvas"
   ],
   "properties": {
     "schema": {
@@ -47,7 +45,8 @@
           "en": "Styles",
           "de": "Stile"
         }
-      }
+      },
+      "default": []
     },
     "layers": {
       "type": "array",
@@ -60,7 +59,8 @@
           "en": "Layers",
           "de": "Layer"
         }
-      }
+      },
+      "default": []
     }
   },
   "$defs": {
@@ -213,6 +213,100 @@
       }
     },
     "PathSegment": {
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "moveTo"
+            },
+            "to": {}
+          },
+          "required": [
+            "kind",
+            "to"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "lineTo"
+            },
+            "to": {}
+          },
+          "required": [
+            "kind",
+            "to"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "cubicTo"
+            },
+            "c1": {},
+            "c2": {},
+            "to": {}
+          },
+          "required": [
+            "kind",
+            "c1",
+            "c2",
+            "to"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "quadTo"
+            },
+            "c": {},
+            "to": {}
+          },
+          "required": [
+            "kind",
+            "c",
+            "to"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "arcTo"
+            },
+            "rx": {},
+            "ry": {},
+            "xRotation": {},
+            "largeArc": {},
+            "sweep": {},
+            "to": {}
+          },
+          "required": [
+            "kind",
+            "rx",
+            "ry",
+            "xRotation",
+            "largeArc",
+            "sweep",
+            "to"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "close"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ],
       "type": "object",
       "required": [
         "kind"
@@ -348,6 +442,73 @@
       }
     },
     "DrawNode": {
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "path"
+            },
+            "segments": {},
+            "style": {}
+          },
+          "required": [
+            "kind",
+            "segments"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {},
+            "at": {},
+            "style": {}
+          },
+          "required": [
+            "kind",
+            "value",
+            "at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "at": {},
+            "width": {},
+            "height": {},
+            "mime": {},
+            "bytes": {}
+          },
+          "required": [
+            "kind",
+            "at",
+            "width",
+            "height",
+            "mime",
+            "bytes"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "group"
+            },
+            "transform": {},
+            "children": {}
+          },
+          "required": [
+            "kind",
+            "transform"
+          ],
+          "additionalProperties": false
+        }
+      ],
       "type": "object",
       "required": [
         "kind"
@@ -422,13 +583,17 @@
           }
         },
         "bytes": {
-          "type": "string",
-          "contentEncoding": "base64",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
           "x-semio-ui": {
             "widget": "text",
             "label": {
-              "en": "Image data (Base64)",
-              "de": "Bilddaten (Base64)"
+              "en": "Image data",
+              "de": "Bilddaten"
             }
           }
         }
@@ -474,7 +639,8 @@
         "opacity": {
           "type": "number"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "DrawLayer": {
       "type": "object",
@@ -503,7 +669,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "DrawCanvas": {
       "type": "object",
@@ -527,7 +694,9 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "additionalProperties": false
 }

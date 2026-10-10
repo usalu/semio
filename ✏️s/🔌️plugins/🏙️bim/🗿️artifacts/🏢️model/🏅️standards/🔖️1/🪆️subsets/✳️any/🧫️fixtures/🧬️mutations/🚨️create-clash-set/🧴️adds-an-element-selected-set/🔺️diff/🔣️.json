@@ -1,0 +1,26 @@
+{
+  "clash_sets": {
+    "cs-1": {
+      "a": {
+        "classes": [],
+        "ids": [
+          "w-south"
+        ],
+        "phases": [],
+        "storeys": []
+      },
+      "b": {
+        "classes": [],
+        "ids": [
+          "w-east"
+        ],
+        "phases": [],
+        "storeys": []
+      },
+      "clearance": 0.0,
+      "entry": "Created",
+      "name": "South against east",
+      "tolerance": 0.001
+    }
+  }
+}

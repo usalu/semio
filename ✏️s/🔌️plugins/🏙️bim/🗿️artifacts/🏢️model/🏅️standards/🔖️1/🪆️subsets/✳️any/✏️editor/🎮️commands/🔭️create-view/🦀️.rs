@@ -13,7 +13,7 @@ use crate::{ModelMutation, ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "create-view")]
 pub struct CreateView {
     pub kind: String,
@@ -34,7 +34,7 @@ fn half_thickness(snapshot: &ModelSnapshot, wall_type: &str) -> f64 {
     snapshot.wall_types.get(wall_type).map_or(0.0, |row| row.layers.iter().map(|layer| layer.thickness).sum::<f64>() / 2.0)
 }
 
-/// 📏️ The plan rectangle `[x0, y0, x1, y1]` of the authored elements of a building (wall, curtain wall, column, beam, slab, roof, railing, stair and ramp path points, walls grown by half their thickness), none for an empty building.
+/// 📏️ The plan rectangle `[x0, y0, x1, y1]` of the authored elements of a building (wall, curtain wall, column, beam, slab, roof, railing, stair and ramp path points, component positions and MEP path points, walls grown by half their thickness), none for an empty building.
 pub fn extents(snapshot: &ModelSnapshot, building: &str) -> Option<[f64; 4]> {
     let on = |storey: &String| snapshot.storeys.get(storey).is_some_and(|row| row.building == building);
     let mut points: Vec<Point2> = Vec::new();
@@ -51,6 +51,8 @@ pub fn extents(snapshot: &ModelSnapshot, building: &str) -> Option<[f64; 4]> {
     points.extend(snapshot.railings.values().filter(|row| on(&row.storey)).flat_map(|row| row.path.iter().copied()));
     points.extend(snapshot.stairs.values().filter(|row| on(&row.storey)).map(|row| row.start));
     points.extend(snapshot.ramps.values().filter(|row| on(&row.storey)).flat_map(|row| row.path.iter().map(|vertex| vertex.point)));
+    points.extend(snapshot.components.values().filter(|row| on(&row.storey)).map(|row| row.position));
+    points.extend(snapshot.mep_elements.values().filter(|row| on(&row.storey)).flat_map(|row| row.path.iter().map(|point| Point2 { x: point.x, y: point.y })));
     let first = *points.first()?;
     let [x0, y0, x1, y1] = points.iter().fold([first.x, first.y, first.x, first.y], |[x0, y0, x1, y1], p| [x0.min(p.x), y0.min(p.y), x1.max(p.x), y1.max(p.y)]);
     Some([x0 - grow, y0 - grow, x1 + grow, y1 + grow])

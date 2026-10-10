@@ -184,7 +184,7 @@ async fn a_deeper_landing_pushes_the_second_flight_and_grows_the_slab_only() {
     let (before_parts, after_parts) = (volumes(&base["st-l-left"]), volumes(&after["st-l-left"]));
     assert!(close(1.8 * 1.0 * 0.04, after_parts[parts::LANDING], 1e-12) && close(1.0 * 1.0 * 0.04, before_parts[parts::LANDING], 1e-12));
     assert!(close(before_parts[parts::STEP], after_parts[parts::STEP], 1e-12) && close(before_parts[parts::RISER], after_parts[parts::RISER], 1e-12), "the treads and risers keep their size");
-    assert!(after["st-l-left"].bounds.max.y > base["st-l-left"].bounds.max.y, "the second flight starts further along the first");
+    assert!(close(0.8, after["st-l-left"].bounds.max.x - base["st-l-left"].bounds.max.x, 1e-9), "the second flight starts 0.8 further along the first");
 }
 
 #[semio_framework_async_macros::async_test]

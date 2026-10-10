@@ -1,6 +1,6 @@
 {
   "schema": "space-history.native-io-owner/v1",
-  "owner": "os_store::space_history::io::sqlite::snapshot",
+  "owner": "os_store::component::space_history::io::sqlite::snapshot",
   "carriers": [
     "text",
     "binary"

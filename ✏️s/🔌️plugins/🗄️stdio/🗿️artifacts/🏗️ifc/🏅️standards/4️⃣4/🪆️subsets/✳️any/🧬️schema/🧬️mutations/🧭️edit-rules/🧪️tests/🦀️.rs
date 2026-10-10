@@ -9,7 +9,7 @@ fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
 }
 
 fn base() -> IfcSnapshot {
-    IfcSnapshot { entities: vec![entity(1, "IFCCARTESIANPOINT", vec![IfcValue::Real(1.0)]), entity(2, "IFCWALL", vec![IfcValue::Ref(1), IfcValue::Int(3)]), entity(3, "IFCSLAB", vec![IfcValue::Ref(1)])], ..Default::default() }
+    IfcSnapshot { entities: vec![entity(1, "IFCCARTESIANPOINT", vec![IfcValue::Real(1.0)]), entity(2, "IFCWALL", vec![IfcValue::Reference(1), IfcValue::Integer(3)]), entity(3, "IFCSLAB", vec![IfcValue::Reference(1)])], ..Default::default() }
 }
 
 fn resolve(event: SnapshotEditEvent) -> Vec<IfcMutation> {
@@ -35,11 +35,11 @@ fn an_entity_name_and_an_argument_are_addressed_by_id_and_position() {
 
 #[test]
 fn arguments_and_entities_insert_and_remove_at_their_position() {
-    let inserted = resolve(SnapshotEditEvent::InsertValue { path: "/entities/1/args/1".into(), value: IfcValue::Int(8).to_value() });
-    assert_eq!(replay(&inserted).entities[1].args, vec![IfcValue::Ref(1), IfcValue::Int(8), IfcValue::Int(3)]);
+    let inserted = resolve(SnapshotEditEvent::InsertValue { path: "/entities/1/args/1".into(), value: IfcValue::Integer(8).to_value() });
+    assert_eq!(replay(&inserted).entities[1].args, vec![IfcValue::Reference(1), IfcValue::Integer(8), IfcValue::Integer(3)]);
     let removed = resolve(SnapshotEditEvent::RemoveValue { path: "/entities/1/args/0".into() });
-    assert_eq!(replay(&removed).entities[1].args, vec![IfcValue::Int(3)]);
-    let entity_inserted = resolve(SnapshotEditEvent::InsertValue { path: "/entities/1".into(), value: entity(50, "IFCDOOR", vec![IfcValue::Ref(1)]).to_value() });
+    assert_eq!(replay(&removed).entities[1].args, vec![IfcValue::Integer(3)]);
+    let entity_inserted = resolve(SnapshotEditEvent::InsertValue { path: "/entities/1".into(), value: entity(50, "IFCDOOR", vec![IfcValue::Reference(1)]).to_value() });
     assert_eq!(replay(&entity_inserted).entities.iter().map(|entity| entity.id).collect::<Vec<_>>(), vec![1, 50, 2, 3]);
     let entity_removed = resolve(SnapshotEditEvent::RemoveValue { path: "/entities/2".into() });
     assert_eq!(entity_removed, vec![IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: 3 })]);

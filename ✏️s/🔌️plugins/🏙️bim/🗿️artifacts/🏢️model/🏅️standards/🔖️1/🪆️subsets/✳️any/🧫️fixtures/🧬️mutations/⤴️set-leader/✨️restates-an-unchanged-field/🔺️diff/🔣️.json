@@ -1,1 +1,11 @@
-{}
+{
+  "leaders": {
+    "lead-1": {
+      "entry": "Patched",
+      "offset": {
+        "x": 2.0,
+        "y": 2.0
+      }
+    }
+  }
+}

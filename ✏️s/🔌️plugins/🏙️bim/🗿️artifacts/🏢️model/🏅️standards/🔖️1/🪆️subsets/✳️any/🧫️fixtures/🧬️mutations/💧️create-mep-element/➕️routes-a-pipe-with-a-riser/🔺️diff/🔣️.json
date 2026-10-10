@@ -1,0 +1,32 @@
+{
+  "mep_elements": {
+    "mep-new": {
+      "entry": "Created",
+      "name": "Waste stack",
+      "path": [
+        {
+          "x": 2.0,
+          "y": 2.0,
+          "z": 0.0
+        },
+        {
+          "x": 2.0,
+          "y": 2.0,
+          "z": 2.8
+        },
+        {
+          "x": 4.0,
+          "y": 2.0,
+          "z": 2.8
+        }
+      ],
+      "shape": {
+        "Pipe": {
+          "diameter": 0.1
+        }
+      },
+      "storey": "st-ground",
+      "system": "Waste"
+    }
+  }
+}

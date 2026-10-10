@@ -1,6 +1,8 @@
 //! 🧪️ Transfer retains payload identity under independently funded physical grants.
 
 use super::*;
+use crate::os_store::test_support;
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 static TRANSFERS: AtomicUsize = AtomicUsize::new(0);
@@ -31,6 +33,11 @@ fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, Strin
         if preparation.terminal_is_empty() { return; }
     }
     panic!("isolated transfer must close under its fixed physical grant");
+}
+
+fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, String>) {
+    preparation.begin_close();
+    close_quoted(preparation, 1);
 }
 
 #[test]

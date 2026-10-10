@@ -239,7 +239,8 @@
         {
           "id": "importImage",
           "lanes": [
-            "artifact"
+            "artifact",
+            "interaction"
           ]
         }
       ],

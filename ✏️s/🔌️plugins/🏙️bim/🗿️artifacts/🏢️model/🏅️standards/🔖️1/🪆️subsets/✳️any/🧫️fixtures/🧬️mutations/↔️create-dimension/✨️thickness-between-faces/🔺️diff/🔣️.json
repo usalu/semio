@@ -1,1 +1,26 @@
-{}
+{
+  "dimensions": {
+    "dim-thickness": {
+      "anchors": [
+        {
+          "WallFace": {
+            "side": "Left",
+            "wall": "w-south"
+          }
+        },
+        {
+          "WallFace": {
+            "side": "Right",
+            "wall": "w-south"
+          }
+        }
+      ],
+      "angle": 1.5707963267948966,
+      "entry": "Created",
+      "name": "South thickness",
+      "offset": 1.0,
+      "storey": "st-ground",
+      "style": "as-plan"
+    }
+  }
+}

@@ -79,7 +79,7 @@
     {
       "artifactKind": "s.stdio.jpg",
       "artifactSchema": "stdio.jpg",
-      "packSchemaHash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
+      "packSchemaHash": "c243665f7783cf5feb236fb92a7613c5a3ff10c4b30e26b138f7cbe2bca0d38f",
       "factoryId": "stdio.native.jpg.v1",
       "extension": "jpg",
       "protocolSourceSha256": "65fe81f12ad7c4f2d39e9d3f43cb69f147ef60960beb1e5976c065b587ed5c55"
@@ -111,7 +111,7 @@
     {
       "artifactKind": "s.stdio.mp3",
       "artifactSchema": "stdio.mp3",
-      "packSchemaHash": "ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0",
+      "packSchemaHash": "f9b717aff034cbe4b3512df0c279ba08e5d23acb51aedc332ad23cbec39ed5bf",
       "factoryId": "stdio.native.mp3.v1",
       "extension": "semio",
       "protocolSourceSha256": "29b5d10c2e992ce46edd6e5b77df15a41a09ad79341541a12eba3c6beffed49c"
@@ -143,7 +143,7 @@
     {
       "artifactKind": "s.stdio.pdf",
       "artifactSchema": "stdio.pdf.1.7",
-      "packSchemaHash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
+      "packSchemaHash": "c233e3e6bdb24c76b0b81d2d8d3e73a220bd5ab137e869a00f4856923cddc7d3",
       "factoryId": "stdio.native.pdf17.v1",
       "extension": "pdf",
       "protocolSourceSha256": "9c3f260b792c2d71461d6f46b493c17da850403061808e00ab7eedabaef9e7b8"

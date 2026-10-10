@@ -6609,6 +6609,7 @@ struct CanvasTextFieldJson {
     content: Option<String>,
     #[serde(default)]
     size: Option<f64>,
+    font_family: TextFace,
 }
 
 #[derive(Deserialize)]
@@ -7328,6 +7329,7 @@ fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &CanvasLayer, v
         order.vector();
     }
     if let Some(content) = layer.text.as_ref().and_then(|text| text.content.as_deref()).filter(|content| !content.is_empty()) {
+        let face=layer.text.as_ref().expect("text content retains its explicit font face").font_family;
         let size = layer.text.as_ref().and_then(|text| text.size).unwrap_or(14.0);
         let text_scale=map.line_scale();
         let pixels = (size * text_scale) as f32;
@@ -7346,7 +7348,7 @@ fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &CanvasLayer, v
                     continue;
                 }
                 let origin=((layer.x*text_scale) as f32,((layer.y+size+index as f64*size*semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT)*text_scale) as f32);
-                ui_wgpu::wgpu::widgets::draw_text_face_affine_on(ctx.draw,ctx.atlas,TextFace::Sans,line,origin,pixels,color,matrix);
+                ui_wgpu::wgpu::widgets::draw_text_face_affine_on(ctx.draw,ctx.atlas,face,line,origin,pixels,color,matrix);
             }
         }
     }

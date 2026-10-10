@@ -28,8 +28,10 @@ pub(crate) mod fixture {
         snapshot.roof_types.insert("rf-200".into(), RoofType { name: "Roof".into(), layers: vec![layer("m-concrete", 0.2)] });
         snapshot.column_types.insert("col-30".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
         snapshot.beam_types.insert("bm-20".into(), crate::BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
-        snapshot.window_types.insert("win-12".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m-steel".into() });
-        snapshot.door_types.insert("door-09".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-steel".into() });
+        snapshot.window_types.insert("win-12".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
+        snapshot.curtain_wall_types.clear();
+        snapshot.curtain_wall_types.insert("cw-fa".into(), crate::CurtainWallType { name: "Facade".into(), u_grid: crate::CurtainGrid::Spacing { spacing: 1.5 }, v_grid: crate::CurtainGrid::Spacing { spacing: 1.5 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: crate::CurtainPanel::Glass, panel_material: "m-glass".into(), mullion_material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
+        snapshot.door_types.insert("door-09".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-steel".into(), u_value: None });
         snapshot
     }
 
@@ -44,6 +46,7 @@ pub(crate) mod fixture {
         snapshot.beam_types = extras.beam_types;
         snapshot.window_types = extras.window_types;
         snapshot.door_types = extras.door_types;
+        snapshot.curtain_wall_types = extras.curtain_wall_types;
         snapshot
     }
 
@@ -70,6 +73,7 @@ pub(crate) mod fixture {
                 Surface::Plan { .. } => PLAN,
                 Surface::World { .. } => crate::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID,
                 Surface::Section { .. } => crate::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID,
+                Surface::Sheet { .. } => crate::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID,
             };
             Self { snapshot, session: ToolSession::new(utility, kind), surface, selected: Vec::new(), library: Vec::new(), preview: Preview::default(), operations: 0 }
         }
@@ -96,6 +100,17 @@ pub(crate) mod fixture {
         /// ⌨️ Types one line into the entry field the way a submit does; every mutation of the answer is applied to the rig's model.
         pub fn typed(&mut self, line: &str) -> Step {
             self.drive(|session, context| session.enter(context, line))
+        }
+
+        /// 🔑️ Offers a gesture key to the tool; every mutation of the answer is applied to the rig's model. The flag says whether the tool took the key.
+        pub fn key(&mut self, key: crate::editor::bim::gestures::session::GestureKey) -> (bool, Step) {
+            let mut taken = false;
+            let step = self.drive(|session, context| {
+                let (took, step, preview) = session.key(context, key);
+                taken = took;
+                (step, preview)
+            });
+            (taken, step)
         }
 
         fn drive(&mut self, feed: impl FnOnce(&mut ToolSession, &mut ToolContext<'_>) -> (Step, Preview)) -> Step {
@@ -165,7 +180,7 @@ async fn every_utility_of_the_registry_arms_a_tool_that_owns_a_gesture() {
         let before = rig.snapshot.clone();
         rig.mv(1.0, 1.0);
         assert_eq!(rig.snapshot, before, "{}: a move never writes", row.id);
-        assert!(!rig.preview.marks.is_empty() || matches!(row.id, "move" | "rotate" | "window" | "door" | "opening" | "slab-walls" | "split-wall" | "copy" | "mirror" | "array" | "array-radial" | "offset" | "trim" | "extend" | "align" | "split"), "{} shows the snapped pointer", row.id);
+        assert!(!rig.preview.marks.is_empty() || matches!(row.id, "move" | "rotate" | "window" | "door" | "opening" | "slab-walls" | "split-wall" | "copy" | "mirror" | "array" | "array-radial" | "offset" | "trim" | "extend" | "align" | "split" | "sweep"), "{} shows the snapped pointer", row.id);
     }
 }
 
@@ -210,7 +225,8 @@ async fn the_owner_closes_empty() {
     let mut context = session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     owner.advance("w1", PLAN, "wall", &mut context, &ToolEvent::Escape);
     assert!(!semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
-    assert!(matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, 1, 4096), Ok(semio_framework_plugin::PluginCloseStep::Complete)));
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 4 };
+    assert!(matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, grant), Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_))));
     assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
 }
 
@@ -336,7 +352,7 @@ fn modify_scene() -> ModelSnapshot {
     let (long, short) = (wall(line((0.0, 3.0), (10.0, 3.0)), "Long"), wall(line((1.0, 4.0), (5.0, 4.0)), "Short"));
     snapshot.walls.insert("w-long".into(), long);
     snapshot.walls.insert("w-short".into(), short);
-    snapshot.beams.insert("b-1".into(), Beam { storey: "st-ground".into(), beam_type: "bm-20".into(), start: Point2 { x: 0.0, y: 2.0 }, end: Point2 { x: 8.0, y: 2.0 }, top_offset: 0.0, phase: Phase::New, name: "Beam".into() });
+    snapshot.beams.insert("b-1".into(), Beam { storey: "st-ground".into(), beam_type: "bm-20".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 2.0 }, end: Point2 { x: 8.0, y: 2.0 } }, top_offset: 0.0, end_top_offset: None, phase: Phase::New, name: "Beam".into() });
     let corner = |x: f64, y: f64| Vertex { point: Point2 { x, y }, bulge: 0.0 };
     snapshot.slabs.insert("sl-1".into(), Slab { storey: "st-ground".into(), slab_type: "sl-200".into(), boundary: vec![corner(0.0, 0.0), corner(8.0, 0.0), corner(8.0, 6.0), corner(0.0, 6.0)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: "Floor".into() });
     snapshot

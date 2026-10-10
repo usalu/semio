@@ -1,6 +1,234 @@
 {
   "name": "draw-ticket-verification",
   "targets": {
+    "native-decode-child-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts native-decode-child-source",
+        "cwd": "."
+      }
+    },
+    "native-decode-child-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts native-decode-child-native",
+        "cwd": "."
+      }
+    },
+    "job-work-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts job-work-source",
+        "cwd": ".",
+        "usePty": false
+      }
+    },
+    "job-work-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts job-work-native",
+        "cwd": ".",
+        "usePty": false
+      }
+    },
+    "deps-js-lock": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts deps-js-lock",
+        "cwd": ".",
+        "forwardAllArgs": false,
+        "usePty": false
+      }
+    },
+    "inspector-actions-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts inspector-actions-native",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      }
+    },
+    "gesture-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts gesture-source",
+        "cwd": ".",
+        "usePty": false
+      }
+    },
+    "gesture-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts gesture-native",
+        "cwd": ".",
+        "usePty": false
+      }
+    },
+    "registry-alias-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts registry-alias-native",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "value-mutex-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts value-test original_mutex",
+        "cwd": "."
+      }
+    },
+    "cargo-driver": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts cargo-driver",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "value-sealed-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts value-test sealed_shared",
+        "cwd": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-DRAW-VECTOR-EDITING-EXPERIENCE/🧪️nx"
+      }
+    },
+    "stdio-original-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts stdio-original-native",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      }
+    },
+    "sqlite-recipient": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts sqlite-recipient",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      }
+    },
+    "semio-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts semio-source",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      }
+    },
+    "semio-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts semio-native",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      }
+    },
+    "stdio-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts stdio-native",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "stdio-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts stdio-source",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "renderer-family-test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts renderer-family-test",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "draw-lock": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts draw-lock",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "cancel-return-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts cancel-return-source",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "cancel-return-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts cancel-return-native",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "job-session-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts job-session-source",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "job-session-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts job-session-native",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      },
+      "cache": false
+    },
     "geometry-test": {
       "executor": "nx:run-commands",
       "options": {
@@ -143,6 +371,34 @@
         "cwd": "."
       }
     },
+    "toolrun-entities": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts toolrun-entities",
+        "usePty": false,
+        "forwardAllArgs": true,
+        "cwd": "."
+      }
+    },
+    "toolrun-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts toolrun-native",
+        "usePty": false,
+        "cwd": "."
+      }
+    },
+    "value-source-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts value-test sealed_clone_source",
+        "usePty": false,
+        "cwd": "."
+      }
+    },
     "value-typescript": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -176,6 +432,86 @@
       },
       "cache": false,
       "executor": "nx:run-commands"
+    },
+    "view-model-source": {
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts view-model-source"
+      },
+      "cache": false,
+      "executor": "nx:run-commands"
+    },
+    "view-model-native": {
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts view-model-native"
+      },
+      "cache": false,
+      "executor": "nx:run-commands"
+    },
+    "dxf-source": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ./📜️script.ts dxf-source",
+        "usePty": false,
+        "forwardAllArgs": true
+      }
+    },
+    "dxf-native": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ./📜️script.ts dxf-native",
+        "usePty": false,
+        "forwardAllArgs": true
+      }
+    },
+    "binary-source-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ./📜️script.ts binary-source-native",
+        "forwardAllArgs": true
+      }
+    },
+    "binary-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts binary-source",
+        "cwd": ".",
+        "forwardAllArgs": true,
+        "usePty": false
+      }
+    },
+    "image-funding-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": ".",
+        "command": "bun ./📜️script.ts image-funding-native",
+        "forwardAllArgs": false,
+        "usePty": false
+      },
+      "cache": false
+    },
+    "pack-storage-source": {
+      "options": {
+        "command": "bun ./📜️script.ts pack-storage-source",
+        "forwardAllArgs": false
+      },
+      "executor": "nx:run-commands",
+      "cache": false
+    },
+    "pack-storage-native": {
+      "options": {
+        "command": "bun ./📜️script.ts pack-storage-native",
+        "forwardAllArgs": false
+      },
+      "executor": "nx:run-commands",
+      "cache": false
     }
   }
 }

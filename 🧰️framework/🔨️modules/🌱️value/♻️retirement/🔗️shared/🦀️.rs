@@ -7,6 +7,8 @@ use std::{sync::Arc,mem::ManuallyDrop};
 #[path="🏭️factory/🦀️.rs"]
 pub mod factory;
 pub use factory::FactorySharedRetirement;
+#[path="🔒️sealed/🦀️.rs"]
+pub mod sealed;
 
 pub struct SharedControlledRetirement<T:RetireOwned+Sync> {source:ManuallyDrop<Option<Arc<T>>>,owned:ManuallyDrop<Option<ControlledRetirement<T>>>,lease_only:bool}
 impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
@@ -25,14 +27,16 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
         if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared retirement exceeds admitted depth"));}
         if let Some(source)=self.source.as_mut(){
             if self.lease_only {
-                if Arc::weak_count(source)!=0||grant.maximum_release_bytes<arc_bytes::<T>(){return Ok(RetainedCloneStep::Progress(empty));}
+                let extent=if Arc::weak_count(source)==0{arc_bytes::<T>()}else{0};
+                if grant.maximum_release_bytes<extent{return Ok(RetainedCloneStep::Progress(empty));}
                 let value=Arc::into_inner(self.source.take().unwrap());
-                let released_bytes=if let Some(value)=value{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));arc_bytes::<T>()}else{0};
+                let released_bytes=if let Some(value)=value{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));extent}else{0};
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes,..empty}));
             }
-            if grant.maximum_release_bytes<arc_bytes::<T>()||Arc::get_mut(source).is_none(){return Ok(RetainedCloneStep::Progress(empty));}
+            let extent=if Arc::weak_count(source)==0{arc_bytes::<T>()}else{0};
+            if grant.maximum_release_bytes<extent||Arc::strong_count(source)!=1{return Ok(RetainedCloneStep::Progress(empty));}
             let source=self.source.take().unwrap();
-            match Arc::try_unwrap(source){Ok(value)=>{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:arc_bytes::<T>(),..empty}));},Err(source)=>{*self.source=Some(source);return Ok(RetainedCloneStep::Progress(empty));}}
+            match Arc::try_unwrap(source){Ok(value)=>{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:extent,..empty}));},Err(source)=>{*self.source=Some(source);return Ok(RetainedCloneStep::Progress(empty));}}
         }
         let owned=self.owned.as_mut().unwrap();
         if owned.terminal_is_empty(){*self.owned=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));}

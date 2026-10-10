@@ -6,7 +6,7 @@ use crate::schema::snapshot::*;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.create-sampler.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/samplers"];
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct GltfCreateSamplerPayload {
     pub position: usize,
@@ -36,7 +36,7 @@ pub fn inverse(p: &GltfCreateSamplerPayload, base: &GltfSnapshot) -> Vec<super::
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateSamplerMutation {

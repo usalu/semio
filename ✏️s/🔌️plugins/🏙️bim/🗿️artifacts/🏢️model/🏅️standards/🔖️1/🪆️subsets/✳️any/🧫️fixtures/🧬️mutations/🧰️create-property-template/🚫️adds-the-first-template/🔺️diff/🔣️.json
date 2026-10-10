@@ -1,17 +1,14 @@
 {
   "property_templates": {
     "pt-wall": {
-      "entry": "Created",
-      "name": "Pset_WallCommon",
       "applies_to": [
         "Wall",
         "WallType"
       ],
+      "entry": "Created",
+      "name": "Pset_WallCommon",
       "properties": [
         {
-          "name": "FireRating",
-          "kind": "Text",
-          "required": false,
           "allowed": [
             {
               "Text": {
@@ -28,32 +25,35 @@
                 "value": "EI90"
               }
             }
-          ]
+          ],
+          "kind": "Text",
+          "name": "FireRating",
+          "required": false
         },
         {
-          "name": "ThermalTransmittance",
-          "kind": "Real",
-          "required": true,
           "allowed": [],
-          "unit": "W/(m2.K)",
-          "minimum": 0,
-          "maximum": 5,
           "default_value": {
             "Real": {
               "value": 0.35
             }
-          }
+          },
+          "kind": "Real",
+          "maximum": 5.0,
+          "minimum": 0.0,
+          "name": "ThermalTransmittance",
+          "required": true,
+          "unit": "W/(m2.K)"
         },
         {
-          "name": "IsExternal",
-          "kind": "Boolean",
-          "required": false,
           "allowed": [],
           "default_value": {
             "Boolean": {
               "value": false
             }
-          }
+          },
+          "kind": "Boolean",
+          "name": "IsExternal",
+          "required": false
         }
       ]
     }

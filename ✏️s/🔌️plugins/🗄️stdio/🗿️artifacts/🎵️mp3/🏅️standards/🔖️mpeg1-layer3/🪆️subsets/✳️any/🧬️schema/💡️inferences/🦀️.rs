@@ -12,7 +12,7 @@ use super::duration::compute_mp3_duration;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an mp3 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp3.inference")]
 pub struct Mp3Inference {

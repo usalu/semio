@@ -99,9 +99,6 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
 
 #[semio_framework_async_macros::async_test]
 async fn every_locally_authored_operation_is_announced_exactly_once() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/📤️outbound-announcement/🔣️.json")).expect("outbound announcement fixture");
     assert_eq!(fixture.schema, "semio.store.outbound-announcement/v1");
     let mut steps = 0usize;
@@ -117,7 +114,7 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
             match (&step.gesture, step.undo, &step.remote) {
                 (Some(gesture), None, None) => publish_outbound_gesture(&mut store, index as u64 + 1, gesture, &mut next_value).await,
                 (None, Some(true), None) => {
-                    store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo");
+                    test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo");
                 }
                 (None, None, Some(arriving)) => {
                     next_value += 1;

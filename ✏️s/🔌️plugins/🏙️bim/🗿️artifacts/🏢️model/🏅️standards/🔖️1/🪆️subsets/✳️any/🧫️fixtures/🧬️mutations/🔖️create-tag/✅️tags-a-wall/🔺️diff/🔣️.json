@@ -1,1 +1,15 @@
-{}
+{
+  "tags": {
+    "tag-south": {
+      "category": "Name",
+      "element": "w-south",
+      "entry": "Created",
+      "offset": {
+        "x": 0.0,
+        "y": -0.5
+      },
+      "storey": "st-ground",
+      "style": "as-plan"
+    }
+  }
+}

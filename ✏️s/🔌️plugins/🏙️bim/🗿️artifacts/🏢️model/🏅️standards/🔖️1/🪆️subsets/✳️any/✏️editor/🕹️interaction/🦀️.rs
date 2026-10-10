@@ -24,10 +24,6 @@ pub const BIM_LIBRARY_DOMAIN: &str = "library";
 pub const CLASSIFICATION_ENTRY: &str = "classification-entry";
 //#endregion 🔖️Constants
 
-fn localized(label: crate::editor::bim::entities::LabelOf) -> LocalizedLabel {
-    LocalizedLabel::native(label(&BimLabels::NATIVE_EN).as_str(), label(&BimLabels::NATIVE_DE).as_str())
-}
-
 fn selection() -> SelectionSpec {
     SelectionSpec {
         modes: vec![SelectionMode::Multiple, SelectionMode::Single],
@@ -42,16 +38,16 @@ fn selection() -> SelectionSpec {
 /// 🕹️ The two interaction domains of the manifest, one granularity per entity kind.
 pub fn definitions() -> Vec<InteractionDefinition> {
     let granularities = |library: bool| -> Vec<GranularityDefinition> {
-        let mut found: Vec<GranularityDefinition> = ENTITIES.iter().filter(|row| row.library == library).map(|row| GranularityDefinition { id: row.kind.into(), label: localized(row.label), icon_id: row.icon.into() }).collect();
+        let mut found: Vec<GranularityDefinition> = ENTITIES.iter().filter(|row| row.library == library).map(|row| GranularityDefinition { id: row.kind.into(), label: BimLabels::localized(row.label), icon_id: row.icon.into() }).collect();
         if library {
-            found.push(GranularityDefinition { id: CLASSIFICATION_ENTRY.into(), label: localized(|labels| labels.kind_classification_entry), icon_id: "list-tree".into() });
+            found.push(GranularityDefinition { id: CLASSIFICATION_ENTRY.into(), label: BimLabels::localized(|labels| labels.kind_classification_entry), icon_id: "list-tree".into() });
         }
         found
     };
     vec![
         InteractionDefinition {
             id: BIM_ELEMENT_DOMAIN.into(),
-            label: LocalizedLabel::native(BimLabels::NATIVE_EN.domain_elements.as_str(), BimLabels::NATIVE_DE.domain_elements.as_str()),
+            label: BimLabels::localized(|labels| labels.domain_elements),
             granularities: granularities(false),
             hierarchy: HierarchyProvider::Topology,
             hover: HoverSpec::default(),
@@ -59,7 +55,7 @@ pub fn definitions() -> Vec<InteractionDefinition> {
         },
         InteractionDefinition {
             id: BIM_LIBRARY_DOMAIN.into(),
-            label: LocalizedLabel::native(BimLabels::NATIVE_EN.domain_library.as_str(), BimLabels::NATIVE_DE.domain_library.as_str()),
+            label: BimLabels::localized(|labels| labels.domain_library),
             granularities: granularities(true),
             hierarchy: HierarchyProvider::Flat,
             hover: HoverSpec::default(),
@@ -83,11 +79,20 @@ pub fn element_topology(snapshot: &ModelSnapshot) -> DomainTopology {
             }
             for storey in ordered_storeys(snapshot, building) {
                 ordered.push(node("storey", &storey, Some(building)));
-                for placed in ENTITIES.iter().filter(|row| !row.library && !matches!(row.kind, "site" | "building" | "storey" | "grid" | "opening")) {
+                for placed in ENTITIES.iter().filter(|row| !row.library && !matches!(row.kind, "site" | "building" | "storey" | "grid" | "opening" | "curtain-panel-override" | "component-override")) {
                     for id in (placed.ids)(snapshot).into_iter().filter(|id| (placed.parent)(snapshot, id).as_deref() == Some(storey.as_str())) {
                         ordered.push(node(placed.kind, &id, Some(&storey)));
                         for opening in snapshot.openings.iter().filter(|(_, row)| row.host == id).map(|(opening, _)| opening) {
                             ordered.push(node("opening", opening, Some(&id)));
+                        }
+                        for sweep in snapshot.wall_sweeps.iter().filter(|(_, row)| row.host == id).map(|(sweep, _)| sweep) {
+                            ordered.push(node("wall-sweep", sweep, Some(&id)));
+                        }
+                        for panel in snapshot.curtain_panel_overrides.iter().filter(|(_, row)| row.curtain == id).map(|(panel, _)| panel) {
+                            ordered.push(node("curtain-panel-override", panel, Some(&id)));
+                        }
+                        for overridden in snapshot.component_overrides.iter().filter(|(_, row)| row.component == id).map(|(key, _)| key) {
+                            ordered.push(node("component-override", overridden, Some(&id)));
                         }
                     }
                 }

@@ -1,0 +1,7 @@
+{
+  "id": "g",
+  "mutation": "createOptionGroup",
+  "option_group": {
+    "name": "Envelope"
+  }
+}

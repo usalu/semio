@@ -18,6 +18,7 @@
 
 use super::super::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
 use super::super::element_solids::plan_kit::{depth_of, mark, seg};
+use crate::standards::v1::subsets::any::schema::authored::sizes::{resolve_size, Resolved};
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::attach::{elevation_at, ElevationPoint};
 use super::super::wall_layout::{face_ends, WallLayout};
@@ -31,7 +32,7 @@ use std::f64::consts::FRAC_PI_2;
 
 //#region 🔖️Values
 /// 🧭️ A vector or point in metres.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -39,7 +40,7 @@ pub struct Vec3 {
 }
 
 /// 🧭️ A right-handed placement: an origin and three unit axes, as the columns of a rigid transform.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Frame {
     pub origin: Vec3,
     pub x_axis: Vec3,
@@ -56,7 +57,7 @@ impl Frame {
 }
 
 /// ✂️ The rectangle an opening removes from its host, in the host's development: `s` is the arc length along the axis, `z` runs up from the host base.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct OpeningCut {
     pub s_min: f64,
     pub s_max: f64,
@@ -65,7 +66,7 @@ pub struct OpeningCut {
 }
 
 /// 🩺️ Why a placement is not valid; an empty list means valid.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum OpeningIssue {
     HostMissing,
     TypeMissing,
@@ -79,7 +80,7 @@ pub enum OpeningIssue {
 }
 
 /// 🖊️ What a plan stroke depicts.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum PlanRole {
     Leaf,
     Swing,
@@ -87,14 +88,14 @@ pub enum PlanRole {
 }
 
 /// ✏️ A plan primitive in building plan coordinates: a segment, or a circular arc from `start_angle` through the signed `sweep` (radians, counter-clockwise positive).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum PlanShape {
     Line { from: Point2, to: Point2 },
     Arc { centre: Point2, radius: f64, start_angle: f64, sweep: f64 },
 }
 
 /// 🖊️ One plan stroke of an opening symbol.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PlanStroke {
     pub role: PlanRole,
     pub shape: PlanShape,
@@ -105,7 +106,7 @@ fn is_false(value: &bool) -> bool {
 }
 
 /// 🪟️ The resolved placement of one opening. Lengths in metres, `local` in building coordinates (`z` up from the building datum), `world` after the building origin, rotation and datum.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct OpeningFrame {
     pub width: f64,
     pub height: f64,
@@ -237,25 +238,6 @@ pub struct CutRect {
 //#endregion 🔖️Values
 
 //#region 🔖️Resolution
-/// 📐️ Size and sill of an opening after the override-else-type rule.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-pub struct Resolved {
-    pub width: f64,
-    pub height: f64,
-    pub sill: f64,
-    pub type_found: bool,
-}
-
-/// 📐️ Width, height and sill: an explicit width or height wins over the type; the sill override replaces the sill of the type (a window defaults to its type sill, a door or void to zero).
-pub fn resolve_size(snapshot: &ModelSnapshot, opening: &Opening) -> Resolved {
-    let (kind_width, kind_height, kind_sill, type_found) = match &opening.kind {
-        OpeningKind::Window { window_type } => snapshot.window_types.get(window_type).map_or((0.0, 0.0, 0.0, false), |kind| (kind.width, kind.height, kind.sill, true)),
-        OpeningKind::Door { door_type } => snapshot.door_types.get(door_type).map_or((0.0, 0.0, 0.0, false), |kind| (kind.width, kind.height, 0.0, true)),
-        OpeningKind::Void { width, height } => (*width, *height, 0.0, true),
-    };
-    Resolved { width: opening.width.unwrap_or(kind_width), height: opening.height.unwrap_or(kind_height), sill: opening.sill_override.unwrap_or(kind_sill), type_found }
-}
-
 /// ✂️ The cut rectangle of an opening in its host's `(s, z)` development.
 pub fn cut_of(snapshot: &ModelSnapshot, opening: &Opening) -> OpeningCut {
     let size = resolve_size(snapshot, opening);

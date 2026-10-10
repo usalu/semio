@@ -1,5 +1,6 @@
 mod document_window_replacement_tests {
     use super::*;
+    fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_framework_value::retained_clone::RetainedCloneGrant{semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}}
 
     #[test]
     fn retained_window_input_document_scope_renewal_cancels_old_and_admits_new_work() {

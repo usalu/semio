@@ -1,0 +1,9 @@
+{
+  "space_conditions": {
+    "sp-1": {
+      "cooling_setpoint": 26.0,
+      "entry": "Created",
+      "heating_setpoint": 20.0
+    }
+  }
+}

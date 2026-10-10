@@ -1,0 +1,82 @@
+{
+  "zones": {
+    "z-day": {
+      "name": "Day zone",
+      "category": "Ventilation",
+      "reference": "z-day",
+      "occupancy_density": 0.1,
+      "members": [
+        "sp-1"
+      ],
+      "totals": {
+        "GrossFloorArea": 43.44,
+        "NetFloorArea": 43.224337131,
+        "GrossVolume": 119.46,
+        "FloorFinishArea": 43.224337131,
+        "WallFinishArea": 86.015,
+        "CeilingFinishArea": 43.224337131
+      }
+    },
+    "z-empty": {
+      "name": "Empty zone",
+      "category": "Tenant",
+      "reference": "z-empty",
+      "occupancy_density": 0.0,
+      "members": [],
+      "totals": {
+        "GrossFloorArea": 0.0,
+        "NetFloorArea": 0.0,
+        "GrossVolume": 0.0,
+        "FloorFinishArea": 0.0,
+        "WallFinishArea": 0.0,
+        "CeilingFinishArea": 0.0
+      }
+    },
+    "z-night": {
+      "name": "Night zone",
+      "category": "Fire compartment",
+      "reference": "z-night",
+      "occupancy_density": 0.05,
+      "members": [
+        "sp-2"
+      ],
+      "totals": {
+        "GrossFloorArea": 20.16,
+        "NetFloorArea": 20.16,
+        "GrossVolume": 56.448,
+        "FloorFinishArea": 20.16,
+        "WallFinishArea": 51.52,
+        "CeilingFinishArea": 20.16
+      }
+    }
+  },
+  "schemes": {
+    "as-day": {
+      "name": "Day zone area",
+      "measure": "Gross",
+      "usages": [],
+      "zones": [
+        "z-day"
+      ]
+    },
+    "as-nsa": {
+      "name": "Net use area",
+      "measure": "Net",
+      "usages": [
+        "living",
+        "bedroom"
+      ],
+      "zones": []
+    }
+  },
+  "coverings": {
+    "sp-1": {
+      "CeilingCovering": "Concrete",
+      "FloorCovering": "Oak",
+      "WallCovering": "Brick"
+    },
+    "sp-2": {
+      "FloorCovering": "Oak"
+    }
+  }
+}

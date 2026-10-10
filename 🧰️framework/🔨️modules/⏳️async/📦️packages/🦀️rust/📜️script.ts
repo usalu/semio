@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-async` task router: `bun ./📜️script.ts <test|typegen>`. */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
@@ -271,6 +272,20 @@ class PreviewGeneratedScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("test-publication-docs", PublicationDocsTestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-parking-check", WorkerParkingCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
+/** ♻️ Verifies actual cancellation token graph custody before mounted lease integration. */
+class CancelReturnScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-cancel-return requires source or native");
+  const file=resolve(this.root,"../../♻️cancel-return/🧪️tests/🟦️.ts"),claim=resolve(this.root,"../../♻️cancel-return/📬️claim/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",file,claim],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file,claim],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
+  if(segments[0]==="source")return;
+  if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+  const receipts=await runExactCargoLaws({manifestPaths:{"semio-framework-async":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-async",target:{kind:"lib"},laws:["cancel_return::tests::original_cancel_graph_returns_exact_nodes_backing_and_retains_registered_waker","publication_claim::tests::original_publication_permit_return_slot_has_exact_allocator_and_parallel_custody"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,buildBudgetMs:3600000,listBudgetMs:60000,lawBudgetMs:120000});
+  console.log(`[DEBUG] original cancellation graph nativeReceipts=${receipts.length}`);
+ }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test-cancel-return",CancelReturnScript).register("check", CheckScript).register("test", TestScript).register("test-publication-docs", PublicationDocsTestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-parking-check", WorkerParkingCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

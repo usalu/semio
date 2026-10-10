@@ -60,3 +60,7 @@ S = `✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️stan
 - Chrome tests: `E/🎛️chrome/🧪️tests` still expect `bim.measure.plan.storey` while the chrome offers `bim.measure.plan.view` (w12 views); not mine.
 - The editor `[DEBUG]` timer in `🧮️compute` belongs to z-incremental; none of my code carries `[DEBUG]` lines.
 - Files I created in `T`: `r11-w02-diagnostics-*.py` (one-shot patch scripts, kept as inputs; the facet one is the reusable one).
+
+## Update 05:45 (after `r11-exec-store.md` appeared)
+`semio-framework-plugin` (with dag and playbook) now compiles. The next blockers, again not mine: `🌊️flow` (`🧩️extensions/🕸️wasm/🦀️.rs`, `🖥️host/🦀️.rs`, `🌿️vcs/🦀️.rs`: `neural_engine::ValueRetirementStep`, `os_store::SnapshotRetirementStep`, `semio_framework_value::SnapshotRetirementStep`) and a syntax error in
+`✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/…/🎬️media-export/🦀️.rs:196` (`expected where/{/( after struct name`, a peer edit in progress). Log: `T/🗑️generated/r11-w02-diagnostics/check13.txt`. My code is still not reached by the compiler.

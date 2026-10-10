@@ -9,6 +9,8 @@
     ]
   },
   "targets": {
+    "test-cancel-return-source": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-cancel-return source","cwd":"{projectRoot}"},"cache":false},
+    "test-cancel-return-native": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-cancel-return native","cwd":"{projectRoot}"},"cache":false},
     "worker-pool-use-check": {
       "executor": "nx:run-commands",
       "options": {

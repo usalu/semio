@@ -22,19 +22,46 @@ pub mod annotating;
 #[path = "🔩️family-rules/🦀️.rs"]
 pub mod family_rules;
 
+#[path = "🔌️component-rules/🦀️.rs"]
+pub mod component_rules;
+
 #[path = "📍️placement/🦀️.rs"]
 pub mod placement;
 
-#[path = "🧗️wall-depth/🦀️.rs"]
+#[path = "🧲️wall-depth/🦀️.rs"]
 pub mod wall_depth;
+
+#[path = "🧭️option-rules/🦀️.rs"]
+pub mod option_rules;
 
 //#region 🔖️Operations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<ModelSnapshot, ModelMutation>` payload struct declared in the
 /// corresponding leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = ModelSnapshot, diff = ModelDiff, schema = "bim.model")]
 pub enum ModelMutation {
+    SetElementWorkset(super::set_element_workset::SetElementWorkset),
+    SetElementOption(super::set_element_option::SetElementOption),
+    DeleteWorkset(super::delete_workset::DeleteWorkset),
+    SetWorkset(super::set_workset::SetWorkset),
+    CreateWorkset(super::create_workset::CreateWorkset),
+    DeleteDesignOption(super::delete_design_option::DeleteDesignOption),
+    SetDesignOption(super::set_design_option::SetDesignOption),
+    CreateDesignOption(super::create_design_option::CreateDesignOption),
+    DeleteOptionGroup(super::delete_option_group::DeleteOptionGroup),
+    SetOptionGroup(super::set_option_group::SetOptionGroup),
+    CreateOptionGroup(super::create_option_group::CreateOptionGroup),
+    CreateSupport(super::create_support::CreateSupport),
+    SetSupport(super::set_support::SetSupport),
+    DeleteSupport(super::delete_support::DeleteSupport),
+    CreateLoadCase(super::create_load_case::CreateLoadCase),
+    SetLoadCase(super::set_load_case::SetLoadCase),
+    DeleteLoadCase(super::delete_load_case::DeleteLoadCase),
+    CreateLoad(super::create_load::CreateLoad),
+    SetLoad(super::set_load::SetLoad),
+    DeleteLoad(super::delete_load::DeleteLoad),
+
     SetCurtainWall(super::set_curtain_wall::SetCurtainWall),
     DeleteCurtainWall(super::delete_curtain_wall::DeleteCurtainWall),
     CreateCurtainWall(super::create_curtain_wall::CreateCurtainWall),
@@ -131,6 +158,14 @@ pub enum ModelMutation {
     DeleteLeader(super::delete_leader::DeleteLeader),
     SetLeader(super::set_leader::SetLeader),
     CreateAnnotationStyle(super::create_annotation_style::CreateAnnotationStyle),
+    DeleteMepElement(super::delete_mep_element::DeleteMepElement),
+    SetMepElement(super::set_mep_element::SetMepElement),
+    CreateMepElement(super::create_mep_element::CreateMepElement),
+    RemoveComponentOverride(super::remove_component_override::RemoveComponentOverride),
+    SetComponentOverride(super::set_component_override::SetComponentOverride),
+    DeleteComponent(super::delete_component::DeleteComponent),
+    SetComponent(super::set_component::SetComponent),
+    CreateComponent(super::create_component::CreateComponent),
     SetFamilySolid(super::set_family_solid::SetFamilySolid),
     DeleteFamilySolid(super::delete_family_solid::DeleteFamilySolid),
     CreateFamilySolid(super::create_family_solid::CreateFamilySolid),
@@ -185,6 +220,21 @@ pub enum ModelMutation {
     CreateSheetRevision(super::create_sheet_revision::CreateSheetRevision),
     SetSheetRevision(super::set_sheet_revision::SetSheetRevision),
     DeleteSheetRevision(super::delete_sheet_revision::DeleteSheetRevision),
+    SetSpaceConditions(super::set_space_conditions::SetSpaceConditions),
+    RemoveSpaceConditions(super::remove_space_conditions::RemoveSpaceConditions),
+    SetTypeThermalData(super::set_type_thermal_data::SetTypeThermalData),
+    CreateClashSet(super::create_clash_set::CreateClashSet),
+    SetClashSet(super::set_clash_set::SetClashSet),
+    DeleteClashSet(super::delete_clash_set::DeleteClashSet),
+    CreateRule(super::create_rule::CreateRule),
+    SetRule(super::set_rule::SetRule),
+    DeleteRule(super::delete_rule::DeleteRule),
+    CreateIssue(super::create_issue::CreateIssue),
+    SetIssue(super::set_issue::SetIssue),
+    DeleteIssue(super::delete_issue::DeleteIssue),
+    CreateIssueComment(super::create_issue_comment::CreateIssueComment),
+    SetIssueComment(super::set_issue_comment::SetIssueComment),
+    DeleteIssueComment(super::delete_issue_comment::DeleteIssueComment),
     SetWallEndJoin(super::set_wall_end_join::SetWallEndJoin),
     CopyElements(super::copy_elements::CopyElements),
     MirrorElements(super::mirror_elements::MirrorElements),
@@ -213,6 +263,27 @@ pub enum ModelMutation {
 /// 🏷️ The kebab spelling of every [`ModelMutation`] variant, in declaration order: the one list the language-neutral test platform
 /// is measured against (this subset's oracle catalog and the `mutate-model-1` adapter repeat it on purpose).
 pub const KINDS: &[&str] = &[
+    "set-element-workset",
+    "set-element-option",
+    "delete-workset",
+    "set-workset",
+    "create-workset",
+    "delete-design-option",
+    "set-design-option",
+    "create-design-option",
+    "delete-option-group",
+    "set-option-group",
+    "create-option-group",
+    "create-support",
+    "set-support",
+    "delete-support",
+    "create-load-case",
+    "set-load-case",
+    "delete-load-case",
+    "create-load",
+    "set-load",
+    "delete-load",
+
     "set-curtain-wall",
     "delete-curtain-wall",
     "create-curtain-wall",
@@ -309,6 +380,14 @@ pub const KINDS: &[&str] = &[
     "delete-leader",
     "set-leader",
     "create-annotation-style",
+    "delete-mep-element",
+    "set-mep-element",
+    "create-mep-element",
+    "remove-component-override",
+    "set-component-override",
+    "delete-component",
+    "set-component",
+    "create-component",
     "set-family-solid",
     "delete-family-solid",
     "create-family-solid",
@@ -363,6 +442,21 @@ pub const KINDS: &[&str] = &[
     "create-sheet-revision",
     "set-sheet-revision",
     "delete-sheet-revision",
+    "set-space-conditions",
+    "remove-space-conditions",
+    "set-type-thermal-data",
+    "create-clash-set",
+    "set-clash-set",
+    "delete-clash-set",
+    "create-rule",
+    "set-rule",
+    "delete-rule",
+    "create-issue",
+    "set-issue",
+    "delete-issue",
+    "create-issue-comment",
+    "set-issue-comment",
+    "delete-issue-comment",
     "set-wall-end-join",
     "copy-elements",
     "mirror-elements",

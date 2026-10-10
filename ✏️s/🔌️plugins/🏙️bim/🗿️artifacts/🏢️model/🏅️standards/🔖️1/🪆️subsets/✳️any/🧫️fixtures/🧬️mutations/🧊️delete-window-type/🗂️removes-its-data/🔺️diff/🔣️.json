@@ -1,5 +1,5 @@
 {
-  "window_types": {
+  "classifications": {
     "win-1": {
       "entry": "Deleted"
     }
@@ -9,7 +9,7 @@
       "entry": "Deleted"
     }
   },
-  "classifications": {
+  "window_types": {
     "win-1": {
       "entry": "Deleted"
     }

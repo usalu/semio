@@ -1,0 +1,14 @@
+{
+  "issues": {
+    "i-1": {
+      "clash": {
+        "value": {
+          "first": "w-south",
+          "second": "w-east",
+          "set": "cs-1"
+        }
+      },
+      "entry": "Patched"
+    }
+  }
+}

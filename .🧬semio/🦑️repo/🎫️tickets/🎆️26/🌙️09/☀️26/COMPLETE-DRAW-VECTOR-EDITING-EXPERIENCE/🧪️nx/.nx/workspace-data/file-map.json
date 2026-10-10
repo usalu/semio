@@ -16,15 +16,16 @@
         },
         {
           "file": "project.json",
-          "hash": "12237507340357368663"
+          "hash": "1206251595233999309"
         },
         {
           "file": "📜️script.ts",
-          "hash": "1603264695294159084"
+          "hash": "2655028596574989591"
         }
       ]
     },
     "nonProjectFiles": []
   },
-  "externalNodesHash": "3244421341483603138"
+  "externalNodesHash": "3244421341483603138",
+  "dependencyResolutionAuthority": null
 }

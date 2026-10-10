@@ -169,7 +169,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     let cursor = fixture.start;
     while (counts.size) {
       const slots = [...counts.keys()].sort((a, b) => a - b);
-      const slot = slots.find((slot) => slot >= cursor) ?? slots[0]!;
+      const slot = slots.find((slot) => slot >= cursor) ?? slots[0];
+      if (slot === undefined) throw new Error("nonempty handback obligations require an occupied slot");
       const count = counts.get(slot)!;
       if (count === 1) counts.delete(slot);
       else counts.set(slot, count - 1);

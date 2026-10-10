@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
-        label: LocalizedLabel::native(BimViewerLabels::NATIVE_EN.window_world.as_str(), BimViewerLabels::NATIVE_DE.window_world.as_str()),
+        label: BimViewerLabels::localized(|labels| labels.window_world),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "bim-world".into(),

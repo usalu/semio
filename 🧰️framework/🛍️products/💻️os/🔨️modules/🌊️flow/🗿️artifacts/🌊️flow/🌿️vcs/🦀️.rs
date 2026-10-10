@@ -14,7 +14,7 @@ use crate::retained::{FlowOwner, FlowRetirement};
 
 // #region 🔖️ArtifactVcs
 use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
-use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory};
+use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactPreparedOperationSource, ArtifactStore, ArtifactStoreCursorDisposer, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ErasedSnapshotRetirement, HistoryLane, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory};
 
 
 
@@ -186,11 +186,40 @@ impl MemberStoreOwner<FlowMutation> for FlowHostSnapshot {
     type SnapshotOpen = crate::os_store::PackMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, FlowMutation>::source_birth_bytes::<FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, FlowMutation>>()?, depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, FlowMutation>::source_birth_bytes::<FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, FlowMutation>>()? + FlowAuthoringFactory::birth_demand().capacity_bytes, depth: 1 })
     }
 
     fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FlowMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, FlowMutation>> {
-        DocumentStoreOwners::admit_source_constructor(grant, || (FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, FlowMutation>::new()))
+        DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, FlowAuthoringFactory::birth_demand(), || (FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, FlowMutation>::new(), Arc::new(FlowAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation>>))
+    }
+}
+
+/// 🏭️ Authoring-only semantic authority of the Flow catalog: it names each mutation's canonical wire borrowed from the
+/// original leaf and prepares no retained gesture, because every Flow gesture is one bounded leaf.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct FlowAuthoringFactory;
+
+impl FlowAuthoringFactory {
+    fn birth_demand() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand {
+        semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<Self>(), depth: 1 }
+    }
+}
+
+impl ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation> for FlowAuthoringFactory {
+    fn operation_wire_source<'a>(&self, mutation: &'a FlowMutation) -> Option<ArtifactPreparedOperationSource<'a>> {
+        mutations::prepared_operation_wire_source(mutation)
+    }
+
+    fn preflight(&self, _mutation: &FlowMutation, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        Err("flow catalog prepares no retained gesture".into())
+    }
+
+    fn begin_demand(&self, _mutation: &FlowMutation, _lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "flow catalog prepares no retained gesture"))
+    }
+
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<FlowHostSnapshot, FlowMutation>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<FlowHostSnapshot, FlowMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, ArtifactStoreOneItemPreparationRequest<FlowHostSnapshot, FlowMutation>)> {
+        Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "flow catalog prepares no retained gesture"), request))
     }
 }
 
@@ -204,7 +233,7 @@ const FLOW_STORE_COLD_CLOSE_STEPS: usize = 1_000_000;
 /// 🎟️ The byte grant one cold flow-store disposal turn pays.
 const FLOW_STORE_COLD_CLOSE_PAGE_BYTES: usize = 4_096;
 
-/// 🧊️ Explicit cold-only disposal of a detached flow store — the store-level twin of
+//// 🧊️ Explicit cold-only disposal of a detached flow store — the store-level twin of
 /// [`FlowHostSnapshot::retire_cold`].
 ///
 /// 🐛️ `ArtifactStore`'s `Drop` asserts a terminal-empty shallow shell, and only the owner-supplied

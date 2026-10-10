@@ -1,1 +1,43 @@
-{}
+{
+  "beams": {
+    "b-a": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 2.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "end_top_offset": {
+        "value": -0.3
+      },
+      "entry": "Patched"
+    },
+    "b-b": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 4.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 2.0,
+            "y": 0.0
+          }
+        }
+      },
+      "beam_type": "bt-30x50",
+      "end_top_offset": -0.5,
+      "entry": "Created",
+      "name": "Beam A",
+      "phase": "New",
+      "storey": "st-ground",
+      "top_offset": -0.3
+    }
+  }
+}

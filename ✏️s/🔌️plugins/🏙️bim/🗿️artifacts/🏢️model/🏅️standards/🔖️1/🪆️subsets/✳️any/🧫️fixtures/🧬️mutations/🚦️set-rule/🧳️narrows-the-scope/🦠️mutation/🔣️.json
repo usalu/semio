@@ -1,0 +1,14 @@
+{
+  "mutation": "setRule",
+  "id": "r-1",
+  "scope": {
+    "storeys": [
+      "st-ground"
+    ],
+    "phases": [
+      "New"
+    ],
+    "ids": [],
+    "filter": ""
+  }
+}

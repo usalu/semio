@@ -159,6 +159,34 @@
               }
             }
           }
+        },
+        {
+          "then": {
+            "required": [
+              "fontFamily"
+            ],
+            "properties": {
+              "fontFamily": {
+                "$ref": "#/$defs/DrawingFontFamily",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Font Family",
+                    "de": "Schriftfamilie"
+                  },
+                  "widget": "select",
+                  "order": 30,
+                  "group": "text"
+                }
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "text"
+              }
+            }
+          }
         }
       ]
     },
@@ -776,6 +804,14 @@
         "nonzero"
       ],
       "default": "evenodd"
+    },
+    "DrawingFontFamily": {
+      "enum": [
+        "anta",
+        "kellySlab",
+        "shareTechMono",
+        "notoEmoji"
+      ]
     }
   }
 }

@@ -8,8 +8,21 @@ fn demo() -> ModelSnapshot {
 async fn the_manifest_declares_both_domains_with_one_granularity_per_kind() {
     let definitions = definitions();
     assert_eq!(definitions.iter().map(|definition| definition.id.as_str()).collect::<Vec<_>>(), vec![BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN]);
-    assert_eq!(definitions[0].granularities.len(), 14);
-    assert_eq!(definitions[1].granularities.len(), 8);
+    assert_eq!(definitions[0].granularities.len(), ENTITIES.iter().filter(|row| !row.library).count());
+    assert_eq!(definitions[1].granularities.len(), ENTITIES.iter().filter(|row| row.library).count() + 1, "the library kinds and the classification entry");
+    assert!(definitions[0].granularities.iter().any(|granularity| granularity.id == "wall-sweep"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_wall_sweep_is_a_node_of_the_element_domain_under_its_wall() {
+    let create = crate::editor::bim::entities::kind_of("wall-sweep").and_then(|row| row.create).expect("wall sweep create");
+    let snapshot = demo();
+    let snapshot = crate::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
+    let topology = element_topology(&snapshot);
+    let position = |id: &str| topology.ordered.iter().position(|node| node.id == id).unwrap_or_else(|| panic!("{id} in topology"));
+    assert!(position("w-south") < position("sw-1") && position("sw-1") < position("st-first"));
+    let sweep = &topology.ordered[position("sw-1")];
+    assert_eq!((sweep.granularity.as_str(), sweep.parent.as_deref()), ("wall-sweep", Some("w-south")));
 }
 
 #[semio_framework_async_macros::async_test]

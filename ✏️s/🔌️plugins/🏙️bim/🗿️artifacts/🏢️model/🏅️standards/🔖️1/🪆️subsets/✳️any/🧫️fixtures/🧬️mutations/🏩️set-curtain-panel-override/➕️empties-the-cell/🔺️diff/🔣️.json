@@ -1,1 +1,8 @@
-{}
+{
+  "curtain_panel_overrides": {
+    "ov-1": {
+      "entry": "Patched",
+      "panel": "Empty"
+    }
+  }
+}

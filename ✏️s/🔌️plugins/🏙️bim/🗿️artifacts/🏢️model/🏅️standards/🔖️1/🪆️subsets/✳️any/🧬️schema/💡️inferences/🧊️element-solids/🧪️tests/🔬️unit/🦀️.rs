@@ -41,17 +41,6 @@ fn the_empty_solid_is_the_default_and_is_empty() {
 }
 
 #[test]
-fn profiles_flatten_to_centred_counter_clockwise_outlines() {
-    let rectangle = profile_polygon(&Profile::Rectangle { width: 0.4, depth: 0.2 });
-    assert_eq!(profile_extents(&rectangle), (0.4, 0.2));
-    let circle = profile_polygon(&Profile::Circle { diameter: 1.0 });
-    assert!(circle.iter().all(|p| (p.x.hypot(p.y) - 0.5).abs() < 1e-12) && circle.len() >= 16);
-    let area = |ring: &[Point]| (0..ring.len()).map(|i| ring[i].x * ring[(i + 1) % ring.len()].y - ring[(i + 1) % ring.len()].x * ring[i].y).sum::<f64>() / 2.0;
-    assert!((area(&profile_polygon(&Profile::IShape { width: 0.2, depth: 0.3, web: 0.01, flange: 0.02 })) - (2.0 * 0.2 * 0.02 + 0.01 * 0.26)).abs() < 1e-12);
-    assert_eq!(profile_extents(&[]), (0.0, 0.0));
-}
-
-#[test]
 fn the_vertical_extent_follows_the_top_constraint() {
     let own = StoreyLevel { elevation: 3.0, top_elevation: 6.0, absolute_elevation: 3.0, absolute_top_elevation: 6.0 };
     let above = StoreyLevel { elevation: 6.0, top_elevation: 9.0, absolute_elevation: 6.0, absolute_top_elevation: 9.0 };
@@ -125,6 +114,7 @@ fn grid_of_walls(count: usize) -> ModelSnapshot {
             start_join: None,
             end_join: None,
             name: String::new(),
+            base_slab: None,
         };
         snapshot.walls.insert(format!("w-{index:04}"), wall);
         if index % 4 == 0 {

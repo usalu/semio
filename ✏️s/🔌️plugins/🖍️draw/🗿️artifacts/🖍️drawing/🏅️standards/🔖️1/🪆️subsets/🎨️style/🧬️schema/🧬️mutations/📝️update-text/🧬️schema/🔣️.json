@@ -4,13 +4,85 @@
   "title": "UpdateText",
   "type": "object",
   "additionalProperties": false,
-  "required": ["mutation","layerId", "content", "size"],
+  "required": [
+    "mutation",
+    "layerId",
+    "content",
+    "size",
+    "fontFamily"
+  ],
   "properties": {
     "mutation": {
       "const": "updateText"
     },
-    "layerId": {"type": "string", "minLength": 1, "x-semio-ui": {"widget": "reference", "role": "target", "label": {"en": "Layer", "de": "Ebene"}, "description": {"en": "The layer this mutation addresses.", "de": "Die Ebene, die diese Mutation adressiert."}, "ref": {"kind": "layer", "domain": "strokes", "granularity": "stroke"}, "group": "target", "order": 10}},
-    "content": {"type": "string", "x-semio-ui": {"widget": "multiline", "role": "value", "label": {"en": "Text", "de": "Text"}, "group": "content", "order": 20}},
-    "size": {"type": "number", "exclusiveMinimum": 0, "x-semio-ui": {"widget": "stepper", "role": "value", "label": {"en": "Font size", "de": "Schriftgröße"}, "step": 1, "precision": 1, "softMin": 6, "softMax": 96, "group": "content", "order": 30}}
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer this mutation addresses.",
+          "de": "Die Ebene, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "content": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "group": "content",
+        "order": 20
+      }
+    },
+    "size": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Font size",
+          "de": "Schriftgröße"
+        },
+        "step": 1,
+        "precision": 1,
+        "softMin": 6,
+        "softMax": 96,
+        "group": "content",
+        "order": 30
+      }
+    },
+    "fontFamily": {
+      "enum": [
+        "anta",
+        "kellySlab",
+        "shareTechMono",
+        "notoEmoji"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "de": "Schriftfamilie",
+          "en": "Font Family"
+        },
+        "widget": "select"
+      }
+    }
   }
 }

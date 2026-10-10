@@ -1,1 +1,19 @@
-{}
+{
+  "views": {
+    "v-section": {
+      "entry": "Patched",
+      "plane": {
+        "value": {
+          "end": {
+            "x": 8.0,
+            "y": 4.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 4.0
+          }
+        }
+      }
+    }
+  }
+}

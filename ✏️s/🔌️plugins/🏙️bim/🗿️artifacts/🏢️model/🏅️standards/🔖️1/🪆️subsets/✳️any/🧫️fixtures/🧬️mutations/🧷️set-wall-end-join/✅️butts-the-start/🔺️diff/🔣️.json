@@ -1,1 +1,10 @@
-{}
+{
+  "walls": {
+    "w-south": {
+      "entry": "Patched",
+      "start_join": {
+        "value": "Butt"
+      }
+    }
+  }
+}

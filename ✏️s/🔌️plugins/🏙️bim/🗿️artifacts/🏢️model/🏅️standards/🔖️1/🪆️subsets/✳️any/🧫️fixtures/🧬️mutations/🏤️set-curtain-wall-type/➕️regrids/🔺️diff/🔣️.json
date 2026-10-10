@@ -1,1 +1,21 @@
-{}
+{
+  "curtain_wall_types": {
+    "cwt-1": {
+      "entry": "Patched",
+      "u_grid": {
+        "Lines": {
+          "positions": [
+            1.0,
+            2.0,
+            3.0
+          ]
+        }
+      },
+      "v_grid": {
+        "Spacing": {
+          "spacing": 1.0
+        }
+      }
+    }
+  }
+}

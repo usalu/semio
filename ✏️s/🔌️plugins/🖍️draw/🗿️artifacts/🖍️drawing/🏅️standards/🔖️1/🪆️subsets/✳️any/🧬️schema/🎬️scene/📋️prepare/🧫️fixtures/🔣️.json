@@ -1131,7 +1131,8 @@
           "x": 3,
           "y": 4,
           "content": "Grüße 😀",
-          "size": 16
+          "size": 16,
+          "fontFamily": "anta"
         }
       ],
       "assets": {}
@@ -1176,7 +1177,8 @@
                 1
               ]
             },
-            "stroke": null
+            "stroke": null,
+            "fontFamily": "anta"
           },
           "sourcePath": [
             0

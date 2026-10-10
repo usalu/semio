@@ -1,0 +1,12 @@
+{
+  "mutation": "setClashSet",
+  "id": "cs-1",
+  "a": {
+    "classes": [],
+    "storeys": [],
+    "phases": [],
+    "ids": [
+      "w-9"
+    ]
+  }
+}

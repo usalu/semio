@@ -241,6 +241,299 @@
         "top_offset": 0,
         "phase": "New",
         "name": "Unknown type"
+      },
+      "b-joined": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 20,
+              "y": 0
+            },
+            "end": {
+              "x": 26,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": -0.1,
+        "phase": "New",
+        "name": "Joined at both ends"
+      },
+      "b-joined-lean": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 30,
+              "y": 0
+            },
+            "end": {
+              "x": 30,
+              "y": 6
+            }
+          }
+        },
+        "top_offset": -0.1,
+        "phase": "New",
+        "name": "Joined at the start, the end column leans away"
+      },
+      "b-incline": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 10
+            },
+            "end": {
+              "x": 6,
+              "y": 10
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Inclined",
+        "end_top_offset": -0.8
+      },
+      "b-incline-joined": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 20,
+              "y": 10
+            },
+            "end": {
+              "x": 26,
+              "y": 10
+            }
+          }
+        },
+        "top_offset": -0.1,
+        "phase": "New",
+        "name": "Inclined and joined",
+        "end_top_offset": -0.7
+      },
+      "b-arc": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Arc": {
+            "start": {
+              "x": 0,
+              "y": 14
+            },
+            "end": {
+              "x": 6,
+              "y": 14
+            },
+            "bulge": 0.4
+          }
+        },
+        "top_offset": -0.1,
+        "phase": "New",
+        "name": "Arc"
+      },
+      "b-arc-joined": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "axis": {
+          "Arc": {
+            "start": {
+              "x": 20,
+              "y": 14
+            },
+            "end": {
+              "x": 26,
+              "y": 14
+            },
+            "bulge": 0.4
+          }
+        },
+        "top_offset": -0.1,
+        "phase": "New",
+        "name": "Arc joined at both ends"
+      },
+      "b-arc-incline": {
+        "storey": "st-ground",
+        "beam_type": "bt-i",
+        "axis": {
+          "Arc": {
+            "start": {
+              "x": 0,
+              "y": 18
+            },
+            "end": {
+              "x": 6,
+              "y": 18
+            },
+            "bulge": -0.3
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Arc and inclined",
+        "end_top_offset": -0.5
+      }
+    },
+    "column_types": {
+      "ct-square": {
+        "name": "Square 400",
+        "profile": {
+          "Rectangle": {
+            "width": 0.4,
+            "depth": 0.4
+          }
+        },
+        "material": "m-concrete"
+      }
+    },
+    "columns": {
+      "c-j1": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 20,
+          "y": 0
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Joined west"
+      },
+      "c-j2": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 26,
+          "y": 0
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Joined east"
+      },
+      "c-j3": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 30,
+          "y": 0
+        },
+        "rotation": 0.6,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Rotated start"
+      },
+      "c-j4": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 30,
+          "y": 6
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Leaning end",
+        "tilt": {
+          "direction": 1.5707963267948966,
+          "angle": 0.2
+        }
+      },
+      "c-i1": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 20,
+          "y": 10
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Incline west"
+      },
+      "c-i2": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 26,
+          "y": 10
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Incline east"
+      },
+      "c-a1": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 20,
+          "y": 14
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Arc west"
+      },
+      "c-a2": {
+        "storey": "st-ground",
+        "column_type": "ct-square",
+        "position": {
+          "x": 26,
+          "y": 14
+        },
+        "rotation": 0,
+        "base_offset": 0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
+        },
+        "phase": "New",
+        "name": "Arc east"
       }
     }
   },
@@ -248,26 +541,26 @@
     "b-along-x": {
       "family": "Beam",
       "volume": 0.48,
-      "volume_tolerance": 1e-9,
+      "volume_tolerance": 1e-09,
       "min": [
-        0,
+        0.0,
         -0.1,
         2.5
       ],
       "max": [
-        6,
+        6.0,
         0.1,
         2.9
       ],
-      "bounds_tolerance": 1e-9,
+      "bounds_tolerance": 1e-09,
       "curved": false,
-      "length": 6,
+      "length": 6.0,
       "top_z": 2.9
     },
     "b-diagonal": {
       "family": "Beam",
       "volume": 0.4,
-      "volume_tolerance": 1e-9,
+      "volume_tolerance": 1e-09,
       "min": [
         -0.08,
         -0.06,
@@ -278,28 +571,28 @@
         4.06,
         5.8
       ],
-      "bounds_tolerance": 1e-9,
+      "bounds_tolerance": 1e-09,
       "curved": false,
-      "length": 5,
+      "length": 5.0,
       "top_z": 5.8
     },
     "b-i": {
       "family": "Beam",
       "volume": 0.034848,
-      "volume_tolerance": 1e-9,
+      "volume_tolerance": 1e-09,
       "min": [
         0.925,
-        1,
+        1.0,
         2.5
       ],
       "max": [
         1.075,
-        7,
+        7.0,
         2.8
       ],
-      "bounds_tolerance": 1e-9,
+      "bounds_tolerance": 1e-09,
       "curved": false,
-      "length": 6,
+      "length": 6.0,
       "top_z": 2.8
     },
     "b-pipe": {
@@ -307,22 +600,155 @@
       "volume": 0.031415926536,
       "volume_tolerance": 0.000131946891,
       "min": [
-        0,
+        0.0,
         1.95,
         2.9
       ],
       "max": [
-        4,
+        4.0,
         2.05,
-        3
+        3.0
       ],
       "bounds_tolerance": 0.00021,
       "curved": true,
-      "length": 4,
-      "top_z": 3
+      "length": 4.0,
+      "top_z": 3.0
     },
     "b-zero": null,
-    "b-unknown-type": null
+    "b-unknown-type": null,
+    "b-joined": {
+      "family": "Beam",
+      "volume": 0.448,
+      "volume_tolerance": 1e-09,
+      "min": [
+        20.2,
+        -0.1,
+        2.5
+      ],
+      "max": [
+        25.8,
+        0.1,
+        2.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 2.9
+    },
+    "b-joined-lean": {
+      "family": "Beam",
+      "volume": 0.460613946968,
+      "volume_tolerance": 1e-09,
+      "min": [
+        29.9,
+        0.242325662902,
+        2.5
+      ],
+      "max": [
+        30.1,
+        6.0,
+        2.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 2.9
+    },
+    "b-incline": {
+      "family": "Beam",
+      "volume": 0.484247870413,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.052865488036,
+        9.9,
+        1.803508839727
+      ],
+      "max": [
+        6.0,
+        10.1,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 3.0
+    },
+    "b-incline-joined": {
+      "family": "Beam",
+      "volume": 0.450234427826,
+      "volume_tolerance": 1e-09,
+      "min": [
+        20.160198512392,
+        9.9,
+        1.921985123916
+      ],
+      "max": [
+        25.8,
+        10.1,
+        2.88
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 2.9
+    },
+    "b-arc": {
+      "family": "Beam",
+      "volume": 0.52966487694,
+      "volume_tolerance": 3.6528612e-05,
+      "min": [
+        -0.068952061994,
+        12.70000000173,
+        2.5
+      ],
+      "max": [
+        6.068952061993,
+        14.072426605242,
+        2.9
+      ],
+      "bounds_tolerance": 0.000315,
+      "curved": true,
+      "length": 6.620810961755,
+      "top_z": 2.9
+    },
+    "b-arc-joined": {
+      "family": "Beam",
+      "volume": 0.486709184919,
+      "volume_tolerance": 3.3566151e-05,
+      "min": [
+        20.135643778241,
+        12.70000000173,
+        2.5
+      ],
+      "max": [
+        25.864356250914,
+        13.897500537245,
+        2.9
+      ],
+      "bounds_tolerance": 0.000315,
+      "curved": true,
+      "length": 6.620810961755,
+      "top_z": 2.9
+    },
+    "b-arc-incline": {
+      "family": "Beam",
+      "volume": 0.03701671389,
+      "volume_tolerance": 2.037617e-06,
+      "min": [
+        -0.060926084603,
+        17.92442702389,
+        2.20092460988
+      ],
+      "max": [
+        6.041275492376,
+        18.975053430182,
+        3.0
+      ],
+      "bounds_tolerance": 0.000315,
+      "curved": true,
+      "length": 6.353758119618,
+      "top_z": 3.0
+    }
   },
   "meshes": {}
 }

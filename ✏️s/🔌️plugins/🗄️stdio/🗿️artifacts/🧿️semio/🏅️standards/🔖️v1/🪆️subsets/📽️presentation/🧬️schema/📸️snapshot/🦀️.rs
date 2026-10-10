@@ -4,23 +4,9 @@
 //! ("presentation mirrors document's block shape with own types" — the shape types themselves
 //! (`SlideMaster`/`SlideLayout`/`Slide`/`SlideShape`) are owned here; only the block-tree LEAF is
 //! shared, per `w1b-type-ownership.md`).
-
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-
-
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-
-
-
-
-
-
-
-
-
-
 use framework_schema::ArtifactSchema;
-
 //#region 🔖️Geometry
 /// 📐️ A shape's on-slide placement: top-left `origin` (EMU-agnostic plane coordinates, matching
 /// pptx's `a:off`/`a:ext`) + `width`/`height` (matching `a:ext`). Reuses the shared engine's
@@ -35,7 +21,6 @@ pub struct SlideFrame {
     pub height: f64,
 }
 //#endregion 🔖️Geometry
-
 //#region 🔖️Shapes
 /// 🖼️ An embedded raster image (pptx `p:pic` -> `a:blip` target part), self-contained (no
 /// cross-reference to the `image` subset — presentation embeds its own media parts, same as pptx
@@ -48,10 +33,9 @@ pub struct SlidePictureImage {
     #[value(default)]
     pub bytes: Vec<u8>,
 }
-
 /// 🏷️ pptx placeholder type (`p:ph/@type`), the subset every named placeholder in a layout/slide
 /// declares itself as.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum PlaceholderKind {
     Title,
@@ -62,7 +46,6 @@ pub enum PlaceholderKind {
     DateTime,
     Other { value: String },
 }
-
 /// 🔲️ One `a:tc` table cell — holds its own block content, reusing `document`'s `DocBlock` (same
 /// cross-reuse the master plan calls out for `TextBox`; a table cell's text content is shaped
 /// identically to a text box's).
@@ -72,7 +55,6 @@ pub struct SlideTableCell {
     #[value(default)]
     pub blocks: Vec<DocBlock>,
 }
-
 /// ➖️ One `a:tr` table row.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -80,13 +62,12 @@ pub struct SlideTableRow {
     #[value(default)]
     pub cells: Vec<SlideTableCell>,
 }
-
 /// 🧩️ One shape on a master/layout/🎞️slide's shape tree (pptx `p:spTree` children) — the master
 /// plan's four kinds: `TextBox`, `Picture`, `Table`, `Placeholder`. Tag is `shapeKind` (not
 /// `kind`) because the `Placeholder` variant's own field is itself named `kind` (its pptx
 /// placeholder type) — an internally-tagged enum's tag name must not collide with any variant's
 /// own field name, so this avoids the collision rather than renaming the more-natural field.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "shapeKind", rename_all = "camelCase")]
 pub enum SlideShape {
     /// ✍️ `p:sp` with a text body — `blocks` reuses `document::DocBlock` verbatim (spec-mandated
@@ -108,7 +89,6 @@ pub enum SlideShape {
     Placeholder { frame: SlideFrame, kind: PlaceholderKind },
 }
 //#endregion 🔖️Shapes
-
 //#region 🔖️Structure
 /// 🗂️ One `p:sldMaster` — id-keyed (matches pptx's own part-relationship identity), a shape tree.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -118,7 +98,6 @@ pub struct SlideMaster {
     #[value(default)]
     pub shapes: Vec<SlideShape>,
 }
-
 /// 📐️ One `p:sldLayout` — references its owning master by id (`master_id`), like pptx's
 /// layout-to-master relationship part.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -129,7 +108,6 @@ pub struct SlideLayout {
     #[value(default)]
     pub shapes: Vec<SlideShape>,
 }
-
 /// 🎞️ One `p:sld` — ordered (presentation order is significant, like pdf page order), so `id` is
 /// carried as the slide's own persistent identity while the COLLECTION itself is index-addressed
 /// (see the diff facet's `SlidesDiff` for why: an index-keyed collection, not name-keyed).
@@ -147,11 +125,9 @@ pub struct Slide {
     pub notes: Vec<DocBlock>,
 }
 //#endregion 🔖️Structure
-
 //#region 🔖️Ids
 pub const STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.presentation";
 //#endregion 🔖️Ids
-
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -169,71 +145,20 @@ pub struct SemioPresentationSnapshot {
     #[value(default)]
     pub slides: Vec<Slide>,
 }
-
 impl Default for SemioPresentationSnapshot {
     fn default() -> Self {
         Self { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: Vec::new(), layouts: Vec::new(), slides: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
-
 //#region 🔖️TextCodec
-
-
 //#endregion 🔖️TextCodec
-
 //#region 🔖️BinaryCodec
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️BinaryCodec
-
 //#region 🔖️HandcraftedArtifactCodecs
-
-
-
 //#endregion 🔖️HandcraftedArtifactCodecs
-
 //#region 🔖️ReachableCodecs
-
-
-
-
 //#endregion 🔖️ReachableCodecs
-
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.presentation` snapshot — masters/layouts/slides all populated,
 /// exercising every `SlideShape` variant (incl. `Table`) and every `PlaceholderKind` variant (incl.
@@ -266,14 +191,9 @@ pub(crate) fn demo_semio_presentation_snapshot() -> SemioPresentationSnapshot {
     }
 }
 //#endregion 🔖️Demo
-
 //#region 🔖️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-
-
-
-
-
+                           

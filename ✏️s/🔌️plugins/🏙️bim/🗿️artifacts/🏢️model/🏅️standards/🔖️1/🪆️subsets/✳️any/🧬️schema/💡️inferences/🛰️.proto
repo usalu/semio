@@ -4,6 +4,8 @@ package semio.s.bim.model.inference;
 // 💡️ BIM model inference schema: derived elevations and wall layouts, keyed by element id.
 
 message ModelInference {
+  map<string,AnalyticalMember> analytical_members = 25000;
+  StructuralAnalysis structural_analysis = 25001;
   // @derived
   map<string, ElementSolid> element_solids = 8;
   // @derived
@@ -32,6 +34,50 @@ message ModelInference {
   map<string, SchemeTotals> scheme_totals = 13;
   // @derived
   DiagnosticIndex diagnostic_index = 14;
+  // @derived
+  map<string, FamilyValue> families = 15;
+  // @derived
+  map<string, EffectiveProperties> effective_properties = 16;
+  // @derived
+  map<string, ComponentValue> components = 17;
+  // @derived
+  map<string, MepValue> mep = 18;
+}
+
+enum PropertySource {
+  PROPERTY_SOURCE_OWN = 0;
+  PROPERTY_SOURCE_TYPE = 1;
+  PROPERTY_SOURCE_DEFAULT = 2;
+}
+
+enum PropertyIssue {
+  PROPERTY_ISSUE_MISSING = 0;
+  PROPERTY_ISSUE_KIND_MISMATCH = 1;
+  PROPERTY_ISSUE_BELOW_MINIMUM = 2;
+  PROPERTY_ISSUE_ABOVE_MAXIMUM = 3;
+  PROPERTY_ISSUE_NOT_ALLOWED = 4;
+}
+
+message PropertyFinding {
+  string template = 1;
+  string set = 2;
+  string property = 3;
+  PropertyIssue issue = 4;
+}
+
+message EffectivePropertyValue {
+  PropertyValue value = 1;
+  PropertySource source = 2;
+  optional string template = 3;
+}
+
+message EffectivePropertyGroup {
+  map<string, EffectivePropertyValue> properties = 1;
+}
+
+message EffectiveProperties {
+  map<string, EffectivePropertyGroup> values = 1;
+  repeated PropertyFinding findings = 2;
 }
 
 message ZoneTotals {
@@ -362,6 +408,7 @@ message ElementQuantity {
   repeated LayerQuantity layers = 19;
   repeated FinishQuantity finishes = 20;
   optional uint32 balusters = 21;
+  repeated string groups = 22;
 }
 
 enum QuantityKind {
@@ -379,6 +426,8 @@ enum QuantityKind {
   QUANTITY_KIND_RAMP = 11;
   QUANTITY_KIND_SPACE = 12;
   QUANTITY_KIND_CEILING = 13;
+  QUANTITY_KIND_COMPONENT = 14;
+  QUANTITY_KIND_MEP = 15;
 }
 
 enum FinishSurface {
@@ -406,6 +455,7 @@ message QuantityTotals {
   map<string, Totals> types = 2;
   map<string, Totals> materials = 3;
   map<string, Totals> finishes = 4;
+  map<string, Totals> groups = 5;
 }
 
 message Totals {
@@ -433,6 +483,8 @@ enum SolidFamily {
   SOLID_FAMILY_RAMP = 9;
   SOLID_FAMILY_RAILING = 10;
   SOLID_FAMILY_CEILING = 11;
+  SOLID_FAMILY_COMPONENT = 12;
+  SOLID_FAMILY_MEP = 13;
 }
 
 message SolidPoint {
@@ -523,6 +575,12 @@ enum PlanKind {
   PLAN_KIND_RAMP_LANDING = 35;
   PLAN_KIND_RAMP_ARROW = 36;
   PLAN_KIND_RAMP_TAG = 37;
+  PLAN_KIND_COMPONENT_OUTLINE = 38;
+  PLAN_KIND_COMPONENT_FRONT = 39;
+  PLAN_KIND_COMPONENT_CONNECTOR = 40;
+  PLAN_KIND_MEP_AXIS = 41;
+  PLAN_KIND_MEP_BAND = 42;
+  PLAN_KIND_MEP_DROP = 43;
 }
 
 message PlanVertex {
@@ -662,6 +720,30 @@ enum DiagnosticCode {
   DIAGNOSTIC_CODE_RAMP_NO_RUN = 73;
   DIAGNOSTIC_CODE_REF_RAILING_HOST = 74;
   DIAGNOSTIC_CODE_RAILING_HOST_UNRESOLVED = 75;
+  DIAGNOSTIC_CODE_FAMILY_SYNTAX = 76;
+  DIAGNOSTIC_CODE_FAMILY_KIND = 77;
+  DIAGNOSTIC_CODE_FAMILY_CYCLE = 78;
+  DIAGNOSTIC_CODE_FAMILY_UNKNOWN = 79;
+  DIAGNOSTIC_CODE_FAMILY_DIVISION_BY_ZERO = 80;
+  DIAGNOSTIC_CODE_FAMILY_NEGATIVE = 81;
+  DIAGNOSTIC_CODE_FAMILY_DEPENDENCY = 82;
+  DIAGNOSTIC_CODE_FAMILY_DOMAIN = 83;
+  DIAGNOSTIC_CODE_FAMILY_OUTLINE = 84;
+  DIAGNOSTIC_CODE_REF_PROFILE_FAMILY = 85;
+  DIAGNOSTIC_CODE_PROPERTY_REQUIRED_MISSING = 86;
+  DIAGNOSTIC_CODE_PROPERTY_KIND_MISMATCH = 87;
+  DIAGNOSTIC_CODE_PROPERTY_OUT_OF_RANGE = 88;
+  DIAGNOSTIC_CODE_PROPERTY_NOT_ALLOWED = 89;
+  DIAGNOSTIC_CODE_CLASSIFICATION_UNKNOWN_CODE = 90;
+  DIAGNOSTIC_CODE_REF_CLASSIFICATION_SYSTEM = 91;
+  DIAGNOSTIC_CODE_COMPONENT_OUTSIDE_STOREY = 92;
+  DIAGNOSTIC_CODE_COMPONENT_IN_WALL = 93;
+  DIAGNOSTIC_CODE_REF_COMPONENT_FAMILY = 94;
+  DIAGNOSTIC_CODE_REF_COMPONENT_HOST = 95;
+  DIAGNOSTIC_CODE_COMPONENT_OVERRIDE = 96;
+  DIAGNOSTIC_CODE_MEP_DEGENERATE = 97;
+  DIAGNOSTIC_CODE_MEP_CLASH = 98;
+  DIAGNOSTIC_CODE_TERMINAL_UNCONNECTED = 99;
 }
 
 message SeverityCounts {
@@ -693,3 +775,251 @@ message Diagnostic {
   optional string storey = 6;
   map<string, double> values = 7;
 }
+
+enum FamilyCategory {
+  FAMILYCATEGORY_UNSPECIFIED = 0;
+  FAMILYCATEGORY_FURNITURE = 1;
+  FAMILYCATEGORY_EQUIPMENT = 2;
+  FAMILYCATEGORY_CASEWORK = 3;
+  FAMILYCATEGORY_PLUMBING = 4;
+  FAMILYCATEGORY_LIGHTING = 5;
+  FAMILYCATEGORY_MECHANICAL = 6;
+  FAMILYCATEGORY_ELECTRICAL = 7;
+  FAMILYCATEGORY_GENERIC = 8;
+  FAMILYCATEGORY_PROFILE = 9;
+}
+
+enum ParameterKind {
+  PARAMETERKIND_UNSPECIFIED = 0;
+  PARAMETERKIND_LENGTH = 1;
+  PARAMETERKIND_ANGLE = 2;
+  PARAMETERKIND_REAL = 3;
+  PARAMETERKIND_INTEGER = 4;
+  PARAMETERKIND_BOOLEAN = 5;
+  PARAMETERKIND_TEXT = 6;
+  PARAMETERKIND_MATERIAL = 7;
+}
+
+enum IssueOwner {
+  ISSUEOWNER_UNSPECIFIED = 0;
+  ISSUEOWNER_PARAMETER = 1;
+  ISSUEOWNER_SOLID = 2;
+  ISSUEOWNER_FAMILY = 3;
+}
+
+enum FamilyIssueCode {
+  FAMILYISSUECODE_UNSPECIFIED = 0;
+  FAMILYISSUECODE_SYNTAX = 1;
+  FAMILYISSUECODE_KIND = 2;
+  FAMILYISSUECODE_CYCLE = 3;
+  FAMILYISSUECODE_UNKNOWN = 4;
+  FAMILYISSUECODE_DIVISIONBYZERO = 5;
+  FAMILYISSUECODE_NEGATIVE = 6;
+  FAMILYISSUECODE_DEPENDENCY = 7;
+  FAMILYISSUECODE_DOMAIN = 8;
+  FAMILYISSUECODE_OUTLINE = 9;
+}
+
+message FamilyIssue {
+  FamilyIssueCode code = 1;
+  IssueOwner owner = 2;
+  string subject = 3;
+  string field = 4;
+  repeated int32 path = 5;
+  string detail = 6;
+  repeated string names = 7;
+}
+
+message ParameterValue {
+  oneof variant {
+    ParameterValueNumber number = 1;
+    ParameterValueLength length = 2;
+    ParameterValueAngle angle = 3;
+    ParameterValueBoolean boolean = 4;
+    ParameterValueText text = 5;
+  }
+}
+
+message ParameterValueNumber {
+  double value = 1;
+}
+
+message ParameterValueLength {
+  double value = 1;
+}
+
+message ParameterValueAngle {
+  double value = 1;
+}
+
+message ParameterValueBoolean {
+  bool value = 1;
+}
+
+message ParameterValueText {
+  string value = 1;
+}
+
+message ResolvedParameter {
+  ParameterKind kind = 1;
+  string formula = 2;
+  optional ParameterValue value = 3;
+}
+
+message FamilySolidMesh {
+  string name = 1;
+  string material = 2;
+  bool visible = 3;
+  repeated double positions = 4;
+  repeated double normals = 5;
+  repeated uint32 indices = 6;
+  SolidBounds bounds = 7;
+  double volume = 8;
+  double area = 9;
+}
+
+message FamilyValue {
+  string name = 1;
+  optional FamilyCategory category = 2;
+  repeated string order = 3;
+  map<string, ResolvedParameter> parameters = 4;
+  map<string, FamilySolidMesh> solids = 5;
+  repeated Vertex outline = 6;
+  repeated FamilyIssue issues = 7;
+}
+
+enum MepSystem {
+  MEP_SYSTEM_UNSPECIFIED = 0;
+  MEP_SYSTEM_SUPPLY = 1;
+  MEP_SYSTEM_RETURN = 2;
+  MEP_SYSTEM_EXHAUST = 3;
+  MEP_SYSTEM_DOMESTIC_WATER = 4;
+  MEP_SYSTEM_WASTE = 5;
+  MEP_SYSTEM_GAS = 6;
+  MEP_SYSTEM_POWER = 7;
+  MEP_SYSTEM_DATA = 8;
+  MEP_SYSTEM_LIGHTING = 9;
+}
+
+enum MepSectionKind {
+  MEP_SECTION_KIND_UNSPECIFIED = 0;
+  MEP_SECTION_KIND_DUCT = 1;
+  MEP_SECTION_KIND_PIPE = 2;
+  MEP_SECTION_KIND_TRAY = 3;
+}
+
+enum MepIssueCode {
+  MEP_ISSUE_CODE_UNSPECIFIED = 0;
+  MEP_ISSUE_CODE_NON_FINITE = 1;
+  MEP_ISSUE_CODE_SECTION_DEGENERATE = 2;
+  MEP_ISSUE_CODE_PATH_DEGENERATE = 3;
+}
+
+enum ComponentIssueCode {
+  COMPONENT_ISSUE_CODE_UNSPECIFIED = 0;
+  COMPONENT_ISSUE_CODE_FAMILY_MISSING = 1;
+  COMPONENT_ISSUE_CODE_FAMILY_PROFILE = 2;
+  COMPONENT_ISSUE_CODE_HOST_MISSING = 3;
+  COMPONENT_ISSUE_CODE_HOST_OTHER_STOREY = 4;
+  COMPONENT_ISSUE_CODE_HOST_DEGENERATE = 5;
+  COMPONENT_ISSUE_CODE_OVERRIDE = 6;
+  COMPONENT_ISSUE_CODE_NON_FINITE = 7;
+}
+
+message Point3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message HostFit {
+  string wall = 1;
+  double station = 2;
+  double side = 3;
+  Point2 face = 4;
+  Point2 normal = 5;
+}
+
+message ComponentPlacement {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double yaw = 4;
+  bool mirrored = 5;
+  optional HostFit host = 6;
+}
+
+message Connector {
+  MepSystem system = 1;
+  string colour = 2;
+  Point3 position = 3;
+}
+
+message ComponentIssue {
+  ComponentIssueCode code = 1;
+  string subject = 2;
+  string detail = 3;
+  optional FamilyIssue family_issue = 4;
+}
+
+message ComponentValue {
+  string storey = 1;
+  string family = 2;
+  optional FamilyCategory category = 3;
+  ComponentPlacement placement = 4;
+  repeated Point2 footprint = 5;
+  double footprint_area = 6;
+  SolidBounds bounds = 7;
+  double volume = 8;
+  optional Connector connector = 9;
+  repeated string overridden = 10;
+  map<string, ResolvedParameter> parameters = 11;
+  repeated ComponentIssue issues = 12;
+}
+
+message MepSection {
+  MepSectionKind kind = 1;
+  double width = 2;
+  double height = 3;
+  double area = 4;
+  double perimeter = 5;
+  string label = 6;
+}
+
+message MepSegment {
+  Point3 from = 1;
+  Point3 to = 2;
+  double length = 3;
+}
+
+message MepIssue {
+  MepIssueCode code = 1;
+  string detail = 2;
+}
+
+message MepValue {
+  string storey = 1;
+  MepSystem system = 2;
+  string colour = 3;
+  MepSection section = 4;
+  repeated Point3 path = 5;
+  repeated MepSegment segments = 6;
+  double length = 7;
+  double volume = 8;
+  double surface_area = 9;
+  SolidBounds bounds = 10;
+  repeated MepIssue issues = 11;
+}
+
+message StructuralLocation { message Point { double station = 1; } message Line { double start = 1; double end = 2; } oneof location { Point point = 1; Line line = 2; bool area = 3; } }
+message Restraints { bool x = 1; bool y = 2; bool z = 3; bool rx = 4; bool ry = 5; bool rz = 6; }
+message StructuralSupport { string name = 1; string member = 2; StructuralLocation location = 3; Point3 offset = 4; Restraints restraints = 5; }
+message LoadCase { string name = 1; string category = 2; double factor = 3; }
+message StructuralLoad { string name = 1; string load_case = 2; string member = 3; StructuralLocation location = 4; Point3 force = 5; Point3 moment = 6; }
+
+message StructuralRing { repeated Point3 points = 1; }
+message AnalyticalMember { string element = 1; string storey = 2; string kind = 3; repeated Point3 path = 4; repeated Point3 boundary = 5; repeated StructuralRing holes = 6; double length = 7; double area = 8; double start_offset = 9; double end_offset = 10; }
+message RigidLink { string member = 1; string other = 2; Point3 start = 3; Point3 end = 4; double length = 5; }
+message ResolvedSupport { StructuralSupport authored = 1; repeated Point3 points = 2; }
+message ResolvedLoad { StructuralLoad authored = 1; repeated Point3 points = 2; double factor = 3; }
+message StructuralAnalysis { map<string,AnalyticalMember> members = 1; map<string,RigidLink> rigid_links = 2; map<string,ResolvedSupport> supports = 3; map<string,ResolvedLoad> loads = 4; repeated string findings = 5; }

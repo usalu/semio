@@ -1,0 +1,12 @@
+[
+ {"name":"Uncomposed Latin Mark","font":"🚀️anta/🏛️latin/📖️regular","text":"ẍ","direction":"ltr"},
+ {"name":"Canonical German Cluster","font":"🚀️anta/🏛️latin/📖️regular","text":"ÄV ö","direction":"ltr"},
+ {"name":"Stacked Extended Latin Marks","font":"🚀️anta/➕️latin-ext/📖️regular","text":"ạ́","direction":"ltr"},
+ {"name":"Default Latin Ligatures","font":"🧱️kelly-slab/🏛️latin/📖️regular","text":"office afflict","direction":"ltr"},
+ {"name":"Joined Emoji Family","font":"😀️noto-emoji/🔗️joined-forms/📖️regular","text":"👨‍👩‍👧‍👦","direction":"ltr"},
+ {"name":"Joined Emoji Profession","font":"😀️noto-emoji/🧑️people/📖️regular","text":"👩‍💻","direction":"ltr"},
+ {"name":"Emoji Skin Modifier","font":"😀️noto-emoji/🧑️people/📖️regular","text":"👍🏽","direction":"ltr"},
+ {"name":"Regional Indicator Flag","font":"😀️noto-emoji/🚩️flags/📖️regular","text":"🇩🇪","direction":"ltr"},
+ {"name":"Emoji Variation Cluster","font":"😀️noto-emoji/🔣️symbols/📖️regular","text":"❤️","direction":"ltr"},
+ {"name":"Explicit Right To Left Digits","font":"🚀️anta/🏛️latin/📖️regular","text":"123","direction":"rtl"}
+]

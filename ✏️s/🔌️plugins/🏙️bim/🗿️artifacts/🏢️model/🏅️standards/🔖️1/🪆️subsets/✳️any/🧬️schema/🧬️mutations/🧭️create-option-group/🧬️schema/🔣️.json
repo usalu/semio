@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateOptionGroup",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "option_group"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "option_group": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/OptionGroup"
+    }
+  }
+}

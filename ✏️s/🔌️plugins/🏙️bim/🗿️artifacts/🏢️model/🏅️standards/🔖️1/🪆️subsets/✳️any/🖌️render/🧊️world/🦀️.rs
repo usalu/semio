@@ -43,6 +43,8 @@ pub fn family_color(family: SolidFamily) -> [f32; 4] {
         SolidFamily::Roof => [0.62, 0.3, 0.26, 1.0],
         SolidFamily::Stair | SolidFamily::Railing => [0.5, 0.5, 0.52, 1.0],
         SolidFamily::Ramp => [0.66, 0.66, 0.64, 1.0],
+        SolidFamily::Component => [0.74, 0.66, 0.54, 1.0],
+        SolidFamily::Mep => [0.5, 0.56, 0.62, 1.0],
     }
 }
 
@@ -51,6 +53,7 @@ pub fn group_color(snapshot: &ModelSnapshot, family: SolidFamily, group: &SolidG
     match snapshot.materials.get(&group.material) {
         Some(material) => [material.color.r as f32, material.color.g as f32, material.color.b as f32, 1.0],
         None if group.part == parts::GLASS => GLASS_COLOR,
+        None if family == SolidFamily::Mep => crate::standards::v1::subsets::any::schema::inferences::mep::part_colour(&group.part).map_or_else(|| family_color(family), |rgb| [rgb[0], rgb[1], rgb[2], 1.0]),
         None => family_color(family),
     }
 }

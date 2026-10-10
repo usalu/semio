@@ -73,6 +73,11 @@ def levels_oracle():
     return load_sibling("🪜️infer-bim-1-levels-and-wall-heights", "levels")
 
 
+def frame_oracle():
+    """➖️ The sibling shapely oracle of the column and beam solids: leaning columns, arc and inclined beams cut back to the column faces."""
+    return load_sibling("📦️infer-bim-1-solids-rest", "frame")
+
+
 def spaces_oracle():
     return load_sibling("🏠️infer-bim-1-spaces", "spaces")
 
@@ -220,21 +225,35 @@ def column_row(snapshot, levels, column_id):
     top = base + body["height"] if tag == "Unconnected" else own["top_elevation"] + body["offset"] if tag == "StoreyTop" else levels.get(body["storey"], own)["elevation"] + body["offset"]
     height = max(top - base, 0.0)
     area, perimeter = profile(kind)
-    volume = area * height
+    tilt = column.get("tilt")
+    stretch = 1.0 / math.cos(tilt["angle"]) if tilt and abs(tilt["angle"]) > 1e-12 else 1.0
+    volume = area * height * stretch
     row = empty("Column", column["storey"], column["column_type"], column["phase"])
-    row.update(length=height, height=height, perimeter=perimeter, gross_area=area, net_area=area, gross_volume=volume, net_volume=volume, mass=volume * density(snapshot, kind["material"]), layers=[layer_row(snapshot, kind["material"], 0.0, area, volume)])
+    row.update(length=height * stretch, height=height, perimeter=perimeter, gross_area=area, net_area=area, gross_volume=volume, net_volume=volume, mass=volume * density(snapshot, kind["material"]), layers=[layer_row(snapshot, kind["material"], 0.0, area, volume)])
     return row
+
+
+CUT = {}
+"""🧮️ The cut-back beam rows of the snapshot last asked about (the sibling oracle measures every beam at once)."""
 
 
 def beam_row(snapshot, beam_id):
     """➖️ The quantities of one beam."""
     beam = snapshot["beams"][beam_id]
     kind = snapshot["beam_types"][beam["beam_type"]]
-    length = LineString([xy(beam["start"]), xy(beam["end"])]).length
+    frame = frame_oracle()
+    axis_tag, axis = variant(beam["axis"])
+    plan = LineString([xy(axis["start"]), xy(axis["end"])]).length if axis_tag == "Line" else abs(4.0 * math.atan(axis["bulge"])) * math.dist(xy(axis["start"]), xy(axis["end"])) / (2.0 * abs(math.sin(2.0 * math.atan(axis["bulge"]))))
+    rise = 0.0 if beam.get("end_top_offset") is None else beam["end_top_offset"] - beam["top_offset"]
+    length = math.hypot(plan, rise)
     area, perimeter = profile(kind)
-    volume = area * length
+    gross = area * length
+    if CUT.get("snapshot") is not snapshot:
+        CUT.update(snapshot=snapshot, rows=frame.beam_rows(snapshot, frame.storey_levels(snapshot)))
+    cut = CUT["rows"][beam_id]
+    volume = cut["volume"] if cut is not None else gross
     row = empty("Beam", beam["storey"], beam["beam_type"], beam["phase"])
-    row.update(length=length, perimeter=perimeter, gross_area=area, net_area=area, gross_volume=volume, net_volume=volume, mass=volume * density(snapshot, kind["material"]), layers=[layer_row(snapshot, kind["material"], 0.0, area, volume)])
+    row.update(length=length, perimeter=perimeter, gross_area=area, net_area=area, gross_volume=gross, net_volume=volume, mass=volume * density(snapshot, kind["material"]), layers=[layer_row(snapshot, kind["material"], 0.0, area, volume)])
     return row
 
 

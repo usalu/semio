@@ -214,6 +214,7 @@ pub struct ToolExecutionContract {
     pub cancellation: ToolCancellationPolicy,
     pub freshness: ToolFreshnessPolicy,
     pub shape: ToolExecutionShape,
+    pub work_grant: semio_framework_job::RetainedCloneGrant,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -247,6 +248,7 @@ impl ToolExecutionContract {
             cancellation: ToolCancellationPolicy::PerOperation,
             freshness: ToolFreshnessPolicy::ValidateImmediatelyBeforeExposure,
             shape: ToolExecutionShape::Resumable,
+            work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK,
         }
     }
 
@@ -262,7 +264,13 @@ impl ToolExecutionContract {
             cancellation: ToolCancellationPolicy::PerOperation,
             freshness: ToolFreshnessPolicy::ValidateImmediatelyBeforeExposure,
             shape: ToolExecutionShape::BoundedFirstStep,
+            work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK,
         }
+    }
+
+    pub const fn with_retained_work(mut self, grant: semio_framework_job::RetainedCloneGrant) -> Self {
+        self.work_grant = grant;
+        self
     }
 
     fn validate(self) -> Result<(), &'static str> {

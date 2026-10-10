@@ -1,1 +1,15 @@
-{}
+{
+  "annotation_styles": {
+    "as-mm": {
+      "entry": "Created",
+      "gap": 0.1,
+      "mark_size": 0.15,
+      "name": "Millimetres",
+      "overshoot": 0.2,
+      "precision": 0,
+      "terminator": "Arrow",
+      "text_height": 0.25,
+      "unit": "Millimetre"
+    }
+  }
+}

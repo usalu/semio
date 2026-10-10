@@ -17,26 +17,29 @@ pub(crate) fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember 
     let mut retained_empty_backings = 0;
     let mut complete = false;
     for _ in 0..100_000 {
-        if app.close_owned_stage >= 8 && !app.command_log.terminal_is_empty() {
-            let demand = app.command_log.next_close_byte_demand().unwrap();
+        if app.close_owned_stage >= 8 && !app.command_log.terminal_is_empty() && app.history_view.is_none() && app.cache.is_none() {
+            let demand = app.command_log.retirement_demands().unwrap().release_bytes;
             retained_empty_backings += usize::from(demand == 8194);
-            assert_eq!(app.next_close_byte_demand(), demand);
-            let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(0, demand).unwrap());
-            assert_eq!(denied, PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            let quoted = app.close_retirement_demands(4096).unwrap();
+            assert_eq!(quoted.release_bytes, demand);
+            let grant = crate::app::plugin_demand_grant(quoted);
+            let idle = PluginLifecycleStep::Progress(RetainedCloneProgress::default());
+            let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
+            assert_eq!(denied, idle);
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             if demand != 0 {
-                let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(1, demand - 1).unwrap());
-                assert_eq!(denied, PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(RetainedCloneGrant { maximum_release_bytes: demand - 1, ..grant }).unwrap());
+                assert_eq!(denied, idle);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(1, demand).unwrap());
-            assert_eq!(step, PluginCloseStep::Pending { released_items: 1, released_bytes: demand });
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(grant).unwrap());
+            assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand, ..Default::default() }));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand));
             physical_turns += 1;
         } else {
-            let demand = app.next_close_byte_demand();
-            assert!(demand <= 262_144);
-            if app.close_step(1, demand.max(4096)).unwrap() == PluginCloseStep::Complete { complete = true; break; }
+            let grant = crate::app::retirement_self_grant(|body| app.close_retirement_demands(body), 4096).unwrap();
+            assert!(grant.maximum_release_bytes <= 262_144);
+            if matches!(app.close_step(grant).unwrap(), PluginLifecycleStep::Complete(_)) { complete = true; break; }
         }
     }
     assert!(complete && app.close_terminal_is_empty());
@@ -64,11 +67,12 @@ pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceM
     for _ in 0..100_000 {
         if !app.command_prune_requested() && app.pending_command_prune.is_none() { complete = true; break; }
         assert_eq!(app.command_log.iter().map(|entry| entry.seq).collect::<Vec<_>>(), before);
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(0, 0).unwrap());
-        assert_eq!(step, PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let grant = crate::app::plugin_demand_grant(app.maintenance_retirement_demands(64).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
+        assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(1, 0).unwrap());
-        assert_eq!(step, PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(grant).unwrap());
+        assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     }
     assert!(complete);
@@ -77,24 +81,27 @@ pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceM
     let mut large_owner_seen = false;
     for _ in 0..100_000 {
         if app.command_log.pruned_terminal_is_empty() { break; }
-        let demand = app.command_log.next_pruned_close_byte_demand().unwrap();
-        assert_eq!(app.next_maintenance_byte_demand(), demand);
+        let demand = app.command_log.pruned_retirement_demands().unwrap().release_bytes;
+        let quoted = app.maintenance_retirement_demands(64).unwrap();
+        assert_eq!(quoted.release_bytes, demand);
+        let grant = crate::app::plugin_demand_grant(quoted);
         large_owner_seen |= demand == 65536;
         if demand > 0 {
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(1, demand - 1).unwrap());
-            assert_eq!(step, PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(RetainedCloneGrant { maximum_release_bytes: demand - 1, ..grant }).unwrap());
+            assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(1, demand).unwrap());
-        assert_eq!(step, PluginCloseStep::Pending { released_items: 1, released_bytes: demand });
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(grant).unwrap());
+        assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand, ..Default::default() }));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand));
     }
     assert!(large_owner_seen && app.command_log.pruned_terminal_is_empty());
     app.command_prune_generation += 1;
-    app.advance_command_prune_step(1, 0, false).unwrap();
+    app.advance_command_prune_step(RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() }, false).unwrap();
     assert!(app.pending_command_prune.is_some());
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(1, 0).unwrap());
-    assert_eq!(step, PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    let grant = crate::app::plugin_demand_grant(app.close_retirement_demands(64).unwrap());
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(grant).unwrap());
+    assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(app.pending_command_prune.is_none() && !app.command_prune_requested());
     crate::app::artifact_app_laws::close_registered_fixture_app(app);

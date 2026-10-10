@@ -17,3 +17,15 @@ pub mod json;
 
 #[path = "📄️sheets/🦀️.rs"]
 pub mod sheets;
+
+#[path = "🧱️holders/🦀️.rs"]
+pub mod holders;
+
+#[path = "🌿️gbxml/🦀️.rs"]
+pub mod gbxml;
+
+#[path = "🔋️energy/🦀️.rs"]
+pub mod energy;
+
+#[path = "🦴️solver/🦀️.rs"]
+pub mod solver;

@@ -1,1 +1,19 @@
-{}
+{
+  "curtain_wall_types": {
+    "cwt-1": {
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.2,
+          "width": 0.1
+        }
+      },
+      "entry": "Patched",
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.12,
+          "width": 0.04
+        }
+      }
+    }
+  }
+}

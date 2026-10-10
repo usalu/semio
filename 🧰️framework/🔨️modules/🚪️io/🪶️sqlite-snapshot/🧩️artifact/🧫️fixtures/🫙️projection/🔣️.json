@@ -1,0 +1,51 @@
+{
+  "schemaSql": "CREATE TABLE owner(id INTEGER PRIMARY KEY,label TEXT NOT NULL,payload BLOB NOT NULL); CREATE TABLE relation(id INTEGER PRIMARY KEY,owner INTEGER NOT NULL REFERENCES owner(id),ordinal INTEGER NOT NULL);",
+  "owners": [
+    {
+      "id": 1,
+      "label": "",
+      "payload": []
+    },
+    {
+      "id": 2,
+      "label": "Größe ✍",
+      "payload": [
+        0,
+        255,
+        17
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": 1,
+      "owner": 2,
+      "ordinal": 1
+    },
+    {
+      "id": 2,
+      "owner": 1,
+      "ordinal": 0
+    },
+    {
+      "id": 3,
+      "owner": 2,
+      "ordinal": 0
+    }
+  ],
+  "expectedCounts": {
+    "owner": 2,
+    "relation": 3
+  },
+  "textUnit": "Größe ✍|",
+  "textRepeats": 32769,
+  "cancelStops": [
+    0,
+    1,
+    7,
+    31,
+    89,
+    233,
+    65537
+  ]
+}

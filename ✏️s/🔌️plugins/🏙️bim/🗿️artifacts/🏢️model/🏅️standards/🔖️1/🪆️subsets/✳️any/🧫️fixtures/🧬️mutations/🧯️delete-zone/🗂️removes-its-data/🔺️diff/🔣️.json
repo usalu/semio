@@ -1,1 +1,31 @@
-{}
+{
+  "classifications": {
+    "z-day": {
+      "entry": "Deleted"
+    }
+  },
+  "properties": {
+    "z-day": {
+      "entry": "Deleted"
+    }
+  },
+  "spaces": {
+    "sp-1": {
+      "entry": "Patched",
+      "zone": {
+        "value": null
+      }
+    },
+    "sp-2": {
+      "entry": "Patched",
+      "zone": {
+        "value": null
+      }
+    }
+  },
+  "zones": {
+    "z-day": {
+      "entry": "Deleted"
+    }
+  }
+}

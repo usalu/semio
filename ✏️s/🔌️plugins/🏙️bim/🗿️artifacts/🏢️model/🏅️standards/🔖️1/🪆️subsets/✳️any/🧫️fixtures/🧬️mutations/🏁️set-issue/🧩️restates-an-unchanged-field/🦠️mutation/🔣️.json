@@ -1,0 +1,6 @@
+{
+  "mutation": "setIssue",
+  "id": "i-1",
+  "title": "Beam hits the south wall",
+  "status": "Closed"
+}

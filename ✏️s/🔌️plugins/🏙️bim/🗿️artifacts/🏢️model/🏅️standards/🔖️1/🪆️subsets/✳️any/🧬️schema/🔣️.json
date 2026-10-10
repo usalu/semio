@@ -220,6 +220,13 @@
       },
       "x-semio-state": "artifact"
     },
+    "space_conditions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SpaceConditions"
+      },
+      "x-semio-state": "artifact"
+    },
     "views": {
       "type": "object",
       "additionalProperties": {
@@ -304,6 +311,55 @@
       },
       "x-semio-state": "artifact"
     },
+    "components": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Component"
+      },
+      "x-semio-state": "artifact"
+    },
+    "component_overrides": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ComponentOverride"
+      },
+      "x-semio-state": "artifact"
+    },
+    "mep_elements": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/MepElement"
+      },
+      "x-semio-state": "artifact"
+    },
+    "clash_sets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ClashSet"
+      },
+      "x-semio-state": "artifact"
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Rule"
+      },
+      "x-semio-state": "artifact"
+    },
+    "issues": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Issue"
+      },
+      "x-semio-state": "artifact"
+    },
+    "issue_comments": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/IssueComment"
+      },
+      "x-semio-state": "artifact"
+    },
     "wall_sweeps": {
       "type": "object",
       "additionalProperties": {
@@ -343,6 +399,62 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/ClassificationSet"
+      },
+      "x-semio-state": "artifact"
+    },
+    "option_groups": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/OptionGroup"
+      },
+      "x-semio-state": "artifact"
+    },
+    "design_options": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/DesignOption"
+      },
+      "x-semio-state": "artifact"
+    },
+    "worksets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Workset"
+      },
+      "x-semio-state": "artifact"
+    },
+    "element_options": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ElementMembership"
+      },
+      "x-semio-state": "artifact"
+    },
+    "element_worksets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ElementMembership"
+      },
+      "x-semio-state": "artifact"
+    },
+    "supports": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralSupport"
+      },
+      "x-semio-state": "artifact"
+    },
+    "load_cases": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/LoadCase"
+      },
+      "x-semio-state": "artifact"
+    },
+    "loads": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralLoad"
       },
       "x-semio-state": "artifact"
     }
@@ -453,6 +565,73 @@
         "X",
         "Y",
         "Z"
+      ]
+    },
+    "MepSystem": {
+      "enum": [
+        "Supply",
+        "Return",
+        "Exhaust",
+        "DomesticWater",
+        "Waste",
+        "Gas",
+        "Power",
+        "Data",
+        "Lighting"
+      ]
+    },
+    "ElementClass": {
+      "enum": [
+        "Wall",
+        "CurtainWall",
+        "Window",
+        "Door",
+        "Column",
+        "Beam",
+        "Slab",
+        "Ceiling",
+        "Roof",
+        "Stair",
+        "Ramp",
+        "Railing",
+        "WallSweep",
+        "Component",
+        "Mep"
+      ]
+    },
+    "RuleKind": {
+      "enum": [
+        "MinClearHeight",
+        "MaxRiser",
+        "MinTread",
+        "MinStairWidth",
+        "MinDoorWidth",
+        "MaxRampSlope",
+        "MinCorridorWidth",
+        "MaxCompartmentArea"
+      ]
+    },
+    "RuleSeverity": {
+      "enum": [
+        "Error",
+        "Warning",
+        "Note"
+      ]
+    },
+    "IssueStatus": {
+      "enum": [
+        "Open",
+        "InProgress",
+        "Resolved",
+        "Closed"
+      ]
+    },
+    "IssuePriority": {
+      "enum": [
+        "Low",
+        "Normal",
+        "High",
+        "Critical"
       ]
     },
     "IsoSize": {
@@ -595,7 +774,9 @@
         "LayerArea",
         "LayerVolume",
         "LayerMass",
-        "FinishArea"
+        "FinishArea",
+        "UValue",
+        "GValue"
       ]
     },
     "ScheduleOp": {
@@ -1049,6 +1230,81 @@
                 },
                 "height": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "MepShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Duct"
+          ],
+          "properties": {
+            "Duct": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "width",
+                "height"
+              ],
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Pipe"
+          ],
+          "properties": {
+            "Pipe": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "diameter"
+              ],
+              "properties": {
+                "diameter": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Tray"
+          ],
+          "properties": {
+            "Tray": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "width",
+                "height"
+              ],
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
                 }
               }
             }
@@ -2260,6 +2516,45 @@
         }
       }
     },
+    "SpaceConditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "occupancy": {
+          "type": "string",
+          "description": "The occupancy type of the space (for example Office, Residential or Classroom); absent leaves it unstated."
+        },
+        "occupancy_density": {
+          "type": "number",
+          "description": "Persons per square metre of floor area; absent takes the occupancy density of the zone of the space."
+        },
+        "heating_setpoint": {
+          "type": "number",
+          "description": "Heating set point in degrees Celsius; absent means the space is not heated (an unheated neighbour of a heated space is a thermal boundary)."
+        },
+        "cooling_setpoint": {
+          "type": "number",
+          "description": "Cooling set point in degrees Celsius; absent means the space is not cooled."
+        },
+        "ventilation_rate": {
+          "type": "number",
+          "description": "Outdoor air flow in litres per second per square metre of floor area."
+        },
+        "lighting_power_density": {
+          "type": "number",
+          "description": "Installed lighting power in watts per square metre of floor area."
+        },
+        "equipment_power_density": {
+          "type": "number",
+          "description": "Installed equipment (plug load) power in watts per square metre of floor area."
+        },
+        "schedule": {
+          "type": "string",
+          "description": "The name of the schedule profile that drives occupancy, lighting and equipment (for example Office 08-18); the energy model resolves it."
+        }
+      }
+    },
     "Dimension": {
       "type": "object",
       "additionalProperties": false,
@@ -2550,6 +2845,425 @@
         }
       }
     },
+    "Point3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "Component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "family",
+        "position",
+        "elevation",
+        "rotation",
+        "mirrored",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string",
+          "description": "The storey the component stands on; its elevation is measured from the elevation of this storey."
+        },
+        "family": {
+          "type": "string",
+          "description": "The family the component is an instance of; its category must not be a profile."
+        },
+        "position": {
+          "$ref": "#/$defs/Point2",
+          "description": "Plan position of the family origin in metres. With a host wall the component clings to the face of the wall on the side of this point, at the projection of this point onto the wall."
+        },
+        "elevation": {
+          "type": "number",
+          "description": "Height in metres of the family origin above the elevation of the storey (negative below)."
+        },
+        "rotation": {
+          "type": "number",
+          "description": "Counter-clockwise turn in radians about the vertical axis through the origin, added to the orientation the host wall gives."
+        },
+        "mirrored": {
+          "type": "boolean",
+          "description": "Whether the family is mirrored left to right (the local x axis is flipped) before it is turned."
+        },
+        "host": {
+          "type": "string",
+          "description": "The wall the component is mounted on (a basin, a socket, a wall light); absent for a free-standing instance."
+        },
+        "system": {
+          "$ref": "#/$defs/MepSystem",
+          "description": "The service the connector of the family carries: set for a terminal (a diffuser, a tap, a luminaire), absent otherwise."
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "ComponentOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "name",
+        "value"
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "description": "The component the override belongs to."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the family parameter whose formula the override replaces."
+        },
+        "value": {
+          "type": "string",
+          "description": "The replacing formula, in the canonical text of the expression language; it may use every parameter of the family."
+        }
+      }
+    },
+    "MepElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "system",
+        "shape",
+        "name"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "system": {
+          "$ref": "#/$defs/MepSystem",
+          "description": "The service the element carries; it decides the colour in the plan and in 3D and the group in the quantities."
+        },
+        "shape": {
+          "$ref": "#/$defs/MepShape",
+          "description": "Cross-section across the centre line in metres: duct width and height, pipe diameter, tray width and height."
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point3"
+          },
+          "description": "Centre line of the element from its start to its end: vertices in metres, the height above the elevation of the storey in z."
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "ElementSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ElementClass"
+          },
+          "description": "The element classes selected; empty selects every class."
+        },
+        "storeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids of the storeys the elements stand on; empty selects every storey. An opening stands on the storey of its host."
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Phase"
+          },
+          "description": "The construction phases selected; empty selects every phase. An element that carries no phase counts as new, an opening takes the phase of its host."
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids of the elements selected; empty selects every element. Ids that name no element select nothing."
+        }
+      }
+    },
+    "RuleScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filter"
+      ],
+      "properties": {
+        "storeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids of the storeys the rule covers; empty covers every storey."
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Phase"
+          },
+          "description": "The construction phases the rule covers; empty covers every phase."
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids of the elements the rule covers (the stair, door, ramp, space or zone it checks); empty covers every element."
+        },
+        "filter": {
+          "type": "string",
+          "description": "For the space rules the usage of the spaces covered (compared without regard to case), for the compartment rule the category of the zones covered; empty covers all."
+        }
+      }
+    },
+    "ClashRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "set",
+        "first",
+        "second"
+      ],
+      "properties": {
+        "set": {
+          "type": "string",
+          "description": "The clash set that reported the clash."
+        },
+        "first": {
+          "type": "string",
+          "description": "The first element of the clash (side A)."
+        },
+        "second": {
+          "type": "string",
+          "description": "The second element of the clash (side B)."
+        }
+      }
+    },
+    "SectionBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "$ref": "#/$defs/Point3",
+          "description": "The corner with the smallest coordinates."
+        },
+        "max": {
+          "$ref": "#/$defs/Point3",
+          "description": "The corner with the largest coordinates."
+        }
+      }
+    },
+    "IssueViewpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "camera"
+      ],
+      "properties": {
+        "camera": {
+          "$ref": "#/$defs/ViewCamera",
+          "description": "The orbit camera of the 3D view: the point it looks at, its azimuth and pitch and the distance to the target."
+        },
+        "section": {
+          "$ref": "#/$defs/SectionBox",
+          "description": "Optional section box that hides everything outside it; absent shows the whole model."
+        },
+        "isolate": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids of the elements that stay visible while all others are hidden; empty hides nothing."
+        }
+      }
+    },
+    "ClashSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "a",
+        "b",
+        "tolerance",
+        "clearance"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the clash set as listed in the clash panel."
+        },
+        "a": {
+          "$ref": "#/$defs/ElementSelector",
+          "description": "Side A: the elements tested against side B."
+        },
+        "b": {
+          "$ref": "#/$defs/ElementSelector",
+          "description": "Side B: the elements side A is tested against. When both sides select the same element it is not tested against itself and a pair is reported once."
+        },
+        "tolerance": {
+          "type": "number",
+          "description": "Penetration in metres below which an overlap is not reported as a hard clash (zero reports every interpenetration)."
+        },
+        "clearance": {
+          "type": "number",
+          "description": "Distance in metres below which two elements that do not touch are reported as a soft clash (zero reports hard clashes only)."
+        }
+      }
+    },
+    "Rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "limit",
+        "severity",
+        "scope"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the rule as listed in the rules panel."
+        },
+        "kind": {
+          "$ref": "#/$defs/RuleKind",
+          "description": "Which measure the rule checks and in which direction (minimum or maximum)."
+        },
+        "limit": {
+          "type": "number",
+          "description": "The limit: metres for heights, depths and widths, a ratio of rise to run for the ramp slope, square metres for the compartment area."
+        },
+        "severity": {
+          "$ref": "#/$defs/RuleSeverity",
+          "description": "How serious a violation is."
+        },
+        "scope": {
+          "$ref": "#/$defs/RuleScope",
+          "description": "Where the rule applies."
+        }
+      }
+    },
+    "Issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "description",
+        "status",
+        "priority",
+        "assignee",
+        "author",
+        "created"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The headline of the issue."
+        },
+        "description": {
+          "type": "string",
+          "description": "What is wrong, in full."
+        },
+        "status": {
+          "$ref": "#/$defs/IssueStatus",
+          "description": "Where the issue stands."
+        },
+        "priority": {
+          "$ref": "#/$defs/IssuePriority",
+          "description": "How urgent the issue is."
+        },
+        "assignee": {
+          "type": "string",
+          "description": "Who has to fix the issue; empty is unassigned."
+        },
+        "author": {
+          "type": "string",
+          "description": "Who raised the issue."
+        },
+        "created": {
+          "type": "string",
+          "description": "When the issue was raised, as year-month-day or year-month-dayThour:minute:second with an optional Z or offset."
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Free labels of the issue (for example Clash or MEP)."
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids of the elements the issue concerns. An element that is deleted later stays named here as history."
+        },
+        "clash": {
+          "$ref": "#/$defs/ClashRef",
+          "description": "Optional: the clash the issue was raised from."
+        },
+        "viewpoint": {
+          "$ref": "#/$defs/IssueViewpoint",
+          "description": "Optional: the viewpoint that shows the issue."
+        }
+      }
+    },
+    "IssueComment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issue",
+        "author",
+        "date",
+        "text"
+      ],
+      "properties": {
+        "issue": {
+          "type": "string",
+          "description": "The issue the comment belongs to."
+        },
+        "author": {
+          "type": "string",
+          "description": "Who wrote the comment."
+        },
+        "date": {
+          "type": "string",
+          "description": "When the comment was written, as year-month-day or year-month-dayThour:minute:second with an optional Z or offset."
+        },
+        "text": {
+          "type": "string",
+          "description": "The comment."
+        }
+      }
+    },
     "Sheet": {
       "type": "object",
       "additionalProperties": false,
@@ -2584,7 +3298,7 @@
         },
         "project": {
           "type": "string",
-          "description": "The project line of the title block; empty prints the name of the project."
+          "description": "The project line of the title block; empty prints none."
         },
         "drawn_by": {
           "type": "string",
@@ -2604,7 +3318,7 @@
         },
         "scale_label": {
           "type": "string",
-          "description": "The scale line of the title block (for example 1:100 or As indicated); empty prints the common scale of the viewports, or As indicated when they differ."
+          "description": "The scale line of the title block (for example 1:100 or As indicated); empty prints the distinct scales of the viewports, comma-joined."
         }
       }
     },
@@ -3087,6 +3801,18 @@
         },
         "material": {
           "type": "string"
+        },
+        "u_value": {
+          "type": "number",
+          "description": "Thermal transmittance of the whole window (glazing and frame) in watts per square metre and kelvin; absent means the window has no thermal data."
+        },
+        "g_value": {
+          "type": "number",
+          "description": "Total solar energy transmittance of the glazing, from 0 to 1; absent means the window has no solar data."
+        },
+        "frame_fraction": {
+          "type": "number",
+          "description": "Share of the window opening covered by the frame, from 0 to 1; the glazed share is one minus it; absent counts the whole opening as glazing."
         }
       }
     },
@@ -3127,6 +3853,10 @@
         },
         "material": {
           "type": "string"
+        },
+        "u_value": {
+          "type": "number",
+          "description": "Thermal transmittance of the door leaf in watts per square metre and kelvin; absent means the door has no thermal data."
         }
       }
     },
@@ -3342,6 +4072,18 @@
         "mullion_material": {
           "type": "string",
           "description": "Material of every mullion."
+        },
+        "u_value": {
+          "type": "number",
+          "description": "Thermal transmittance of the whole curtain wall (glass panels and mullions) in watts per square metre and kelvin; absent means the curtain wall has no thermal data."
+        },
+        "g_value": {
+          "type": "number",
+          "description": "Total solar energy transmittance of the glass panels, from 0 to 1; absent means the curtain wall has no solar data."
+        },
+        "frame_fraction": {
+          "type": "number",
+          "description": "Share of the curtain wall area covered by the mullions, from 0 to 1; the glazed share is one minus it; absent counts the whole area as glazing."
         }
       }
     },
@@ -4272,6 +5014,246 @@
       "type": "object",
       "additionalProperties": {
         "type": "string"
+      }
+    },
+    "OptionGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "DesignOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "name",
+        "primary"
+      ],
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "primary": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Workset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "default_visible"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "default_visible": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ElementMembership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "properties": {
+        "target": {
+          "type": "string"
+        }
+      }
+    },
+    "Restraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "rx",
+        "ry",
+        "rz"
+      ],
+      "properties": {
+        "x": {
+          "type": "boolean"
+        },
+        "y": {
+          "type": "boolean"
+        },
+        "z": {
+          "type": "boolean"
+        },
+        "rx": {
+          "type": "boolean"
+        },
+        "ry": {
+          "type": "boolean"
+        },
+        "rz": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StructuralSupport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "member",
+        "location",
+        "offset",
+        "restraints"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "member": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralLocation"
+        },
+        "offset": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+        },
+        "restraints": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Restraints"
+        }
+      }
+    },
+    "LoadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "category",
+        "factor"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "factor": {
+          "type": "number"
+        }
+      }
+    },
+    "StructuralLoad": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "load_case",
+        "member",
+        "location",
+        "force",
+        "moment"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "load_case": {
+          "type": "string"
+        },
+        "member": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralLocation"
+        },
+        "force": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+        },
+        "moment": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point3"
+        }
+      }
+    },
+    "StructuralLocation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Point"
+          ],
+          "properties": {
+            "Point": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/PointLocation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Line"
+          ],
+          "properties": {
+            "Line": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/LineLocation"
+            }
+          }
+        },
+        {
+          "const": "Area"
+        }
+      ]
+    },
+    "PointLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "station"
+      ],
+      "properties": {
+        "station": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "LineLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "end": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
       }
     }
   }

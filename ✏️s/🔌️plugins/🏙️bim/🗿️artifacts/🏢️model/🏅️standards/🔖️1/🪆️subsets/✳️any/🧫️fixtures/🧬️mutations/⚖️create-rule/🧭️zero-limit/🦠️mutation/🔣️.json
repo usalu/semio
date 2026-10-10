@@ -1,0 +1,16 @@
+{
+  "mutation": "createRule",
+  "id": "r-1",
+  "rule": {
+    "name": "Maximum riser",
+    "kind": "MaxRiser",
+    "limit": 0,
+    "severity": "Error",
+    "scope": {
+      "storeys": [],
+      "phases": [],
+      "ids": [],
+      "filter": ""
+    }
+  }
+}

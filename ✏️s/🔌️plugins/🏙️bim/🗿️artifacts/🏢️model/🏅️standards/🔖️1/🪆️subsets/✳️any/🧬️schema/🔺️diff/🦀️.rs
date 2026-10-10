@@ -3,6 +3,7 @@
 //! sync and import only and is never called from a mutation leaf.
 
 use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*, ModelSnapshot};
+use crate::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
 use protocol::{ApplyCapability, DiffAlgebra, DiffRegions, MutationApplyError, MutationApplyResult, MutationDiff, TouchedPaths};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
@@ -39,7 +40,7 @@ pub trait Patch<T>: Clone + Default + PartialEq {
 }
 
 /// 🎯️ An explicitly assigned optional value: keeps "set to none" distinct from "untouched" on the wire.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Assigned<T> {
     pub value: T,
 }
@@ -92,7 +93,7 @@ pub fn differs_assigned<T: Clone + PartialEq>(from: &Option<T>, to: &Option<T>) 
 }
 
 /// 🏷️ Sparse patch of one element's property sets: property set → property → value (`None` removes).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct PropertySetPatch {
     pub assigned: BTreeMap<String, BTreeMap<String, Option<PropertyValue>>>,
@@ -152,7 +153,7 @@ impl Patch<PropertySet> for PropertySetPatch {
 }
 
 /// 🗂️ Sparse patch of one element's classifications: classification system → code (`None` removes the classification of that system).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct ClassificationSetPatch {
     pub assigned: BTreeMap<String, Option<String>>,
@@ -198,7 +199,7 @@ impl Patch<ClassificationSet> for ClassificationSetPatch {
 
 //#region 🔖️KeyedDelta
 /// 🧩 One keyed change of a collection.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "entry")]
 pub enum Entry<T, P> {
     Created(T),
@@ -208,7 +209,7 @@ pub enum Entry<T, P> {
 }
 
 /// 🧩 Keyed delta of one id-keyed collection: at most one entry per id, in canonical id order.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct KeyedDelta<T, P>(pub BTreeMap<String, Entry<T, P>>);
 
 impl<T, P> Default for KeyedDelta<T, P> {
@@ -334,6 +335,14 @@ fn non_empty<T: Clone + PartialEq, P: Patch<T>>(delta: KeyedDelta<T, P>) -> Opti
 macro_rules! collections {
     ($callback:ident) => {
         $callback! {
+            option_groups: OptionGroup, OptionGroupPatch;
+            design_options: DesignOption, DesignOptionPatch;
+            worksets: Workset, WorksetPatch;
+            element_options: ElementMembership, ElementMembershipPatch;
+            element_worksets: ElementMembership, ElementMembershipPatch;
+            supports: StructuralSupport, StructuralSupportPatch;
+            load_cases: LoadCase, LoadCasePatch;
+            loads: StructuralLoad, StructuralLoadPatch;
             materials: Material, MaterialPatch;
             wall_types: WallType, WallTypePatch;
             slab_types: SlabType, SlabTypePatch;
@@ -363,10 +372,15 @@ macro_rules! collections {
             spaces: Space, SpacePatch;
             zones: Zone, ZonePatch;
             area_schemes: AreaScheme, AreaSchemePatch;
+            space_conditions: SpaceConditions, SpaceConditionsPatch;
             views: View, ViewPatch;
             sheets: Sheet, SheetPatch;
             viewports: Viewport, ViewportPatch;
             sheet_revisions: SheetRevision, SheetRevisionPatch;
+            clash_sets: ClashSet, ClashSetPatch;
+            rules: Rule, RulePatch;
+            issues: Issue, IssuePatch;
+            issue_comments: IssueComment, IssueCommentPatch;
             dimensions: Dimension, DimensionPatch;
             tags: Tag, TagPatch;
             text_notes: TextNote, TextNotePatch;
@@ -377,6 +391,9 @@ macro_rules! collections {
             families: Family, FamilyPatch;
             family_parameters: FamilyParameter, FamilyParameterPatch;
             family_solids: FamilySolid, FamilySolidPatch;
+            components: Component, ComponentPatch;
+            component_overrides: ComponentOverride, ComponentOverridePatch;
+            mep_elements: MepElement, MepElementPatch;
             property_templates: PropertyTemplate, PropertyTemplatePatch;
             classification_systems: ClassificationSystem, ClassificationSystemPatch;
             properties: PropertySet, PropertySetPatch;
@@ -388,7 +405,7 @@ macro_rules! collections {
 macro_rules! model_diff {
     ($($field:ident : $entity:ty, $patch:ty;)*) => {
         /// 🔺️ Sparse typed diff of a [`ModelSnapshot`]: one optional keyed delta per collection, absent = untouched.
-        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+        #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
         #[value(default)]
         #[artifact_schema(id = "s.bim.model")]
         pub struct ModelDiff {

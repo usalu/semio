@@ -1,0 +1,16 @@
+{
+  "space_conditions": {
+    "sp-1": {
+      "entry": "Patched",
+      "equipment_power_density": {
+        "value": 3.0
+      },
+      "lighting_power_density": {
+        "value": 5.0
+      },
+      "ventilation_rate": {
+        "value": 0.3
+      }
+    }
+  }
+}

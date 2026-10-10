@@ -1,10 +1,8 @@
 //! 🧭️ Pure placement arithmetic shared by every IFC family: loop orientation, vertical extents under a top constraint, axis frames and profile measures.
 
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{top_of, StoreyLevel};
-use crate::{Point2, Profile, TopConstraint, Vertex};
+use crate::{Point2, Profile, Vertex};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::{loops, Point};
-use std::collections::BTreeMap;
 
 /// 📍️ Geometry-kit point of a snapshot point.
 pub fn point(value: &Point2) -> Point {
@@ -37,17 +35,6 @@ pub fn area(vertices: &[Vertex]) -> f64 {
 /// 📏️ Perimeter of a snapshot loop (arcs included).
 pub fn perimeter(vertices: &[Vertex]) -> f64 {
     loops::perimeter(&kit(vertices))
-}
-
-/// 🧭️ Resolves `(base_z, top_z)` of an element standing on `storey`: building-relative metres.
-pub fn vertical(levels: &BTreeMap<String, StoreyLevel>, storey: &str, base_offset: f64, top: &TopConstraint) -> Option<(f64, f64)> {
-    let own = levels.get(storey)?;
-    let target = match top {
-        TopConstraint::Storey { storey: target, .. } => levels.get(target),
-        _ => None,
-    };
-    let base = own.elevation + base_offset;
-    Some((base, top_of(top, base, own, target)))
 }
 
 /// 📍️ `(point, unit tangent)` of an axis at arc length `s`.

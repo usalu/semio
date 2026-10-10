@@ -21,6 +21,11 @@ class TestScript extends BundleScript {
       const affine = join(this.root,"🎨️sampling/↗️affine");
       const png = join(this.root,"📷️png/📥️decode");
       const image = join(this.root,"🖼️image/📥️decode");
+      if(rest[0]==="jpeg-decoding") {
+        const jpeg=join(this.root,"📸️jpeg/📥️decode");
+        await runOwnedCommand(process.execPath,["test",join(jpeg,"🧪️tests/🟦️.ts"),...rest.slice(1)],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+        await runOwnedCommand(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",join(jpeg,"🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});return;
+      }
       if (rest[0] === "image-decoding") {
         await runOwnedCommand(process.execPath, ["test",join(image,"🧪️tests/🟦️.ts"),...rest.slice(1)], this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
         await runOwnedCommand(process.execPath, [join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",join(image,"🟦️.ts")], this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});

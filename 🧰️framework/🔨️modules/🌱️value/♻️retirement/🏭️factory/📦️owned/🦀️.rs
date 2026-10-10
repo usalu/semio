@@ -57,6 +57,7 @@ impl<T:Send+'static> ErasedSnapshotRetirement for FactoryOwnedRetirement<T> {
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.demands(copy)?.capacity_bytes)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
+    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError> {self.demands(body)}
 }
 impl<T:Send+'static> Drop for FactoryOwnedRetirement<T> {
     fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"owned factory retirement abandoned original payload or issuer custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.unique);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.closing_factory);}}}

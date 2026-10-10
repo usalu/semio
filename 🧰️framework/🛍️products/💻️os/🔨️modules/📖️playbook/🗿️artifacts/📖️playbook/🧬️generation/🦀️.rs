@@ -2,7 +2,7 @@
 
 use super::GenerationPlayState;
 use crate::os_store as store;
-use semio_framework_value::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, RetirementDemand, ToValue, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,shared::SharedControlledRetirement}};
 use std::sync::Arc;
@@ -53,7 +53,6 @@ impl GenerationPlayRoot {
         GenerationRootRetirement { owned: SharedControlledRetirement::lease(self.0.take().expect("original generation lease")) }
     }
     pub fn retire_cold(self) {
-        use store::ErasedSnapshotRetirement;
         let mut retirement = self.into_retirement();
         loop {
             let copy=4096.max(retirement.next_copy_byte_demand().expect("cold generation copy demand"));

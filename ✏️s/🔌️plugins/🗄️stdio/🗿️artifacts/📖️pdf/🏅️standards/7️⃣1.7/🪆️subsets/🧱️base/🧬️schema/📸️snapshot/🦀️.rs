@@ -32,7 +32,7 @@ pub const STDIO_PDF17_DOCUMENT_SCHEMA: &str = "stdio.pdf.1.7";
 /// 🔗️ An indirect-object reference `N G R` — also the `objects` collection's diff KEY (the
 /// `(id,gen)` pair per the recipe's "numeric id" key kind; `Hash` is needed by the diff module's
 /// key-transport absorb maps).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ObjRef {
     pub num: u32,
@@ -41,7 +41,7 @@ pub struct ObjRef {
 
 /// 🧩 One `key`/`value` pair of a PDF dictionary. A `Vec` (not a map) so parse order survives
 /// losslessly -- PDF dictionaries have no canonical key order and real files vary widely.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfDictEntry {
     pub key: String,
@@ -56,7 +56,7 @@ impl PdfDictEntry {
 }
 
 /// 🎛️ Logical predictor parameters attached to a Flate/LZW stream filter (§7.4.4.4).
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfPredictor {
     pub predictor: u32,
@@ -66,7 +66,7 @@ pub struct PdfPredictor {
 }
 
 /// 📠️ CCITTFaxDecode parameters (§7.4.6, Table 11).
-#[derive(Clone, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfCcittParameters {
     #[value(default)]
@@ -103,7 +103,7 @@ impl PdfCcittParameters {
 /// stand — `data` is still the encoded image; a conforming reader hands such a stream to its image
 /// decoder, and this codec hands it back byte for byte. `Crypt` names an identity/explicit crypt
 /// filter (§7.6.5) and is likewise transparent.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfStreamFilter {
     Flate { predictor: Option<PdfPredictor> },
@@ -143,7 +143,7 @@ impl PdfStreamFilter {
 }
 
 /// 🔢️ Exact logical PDF real number represented as decimal coefficient and scale.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfDecimal {
     pub negative: bool,
@@ -221,7 +221,7 @@ impl fmt::Display for PdfDecimal {
 /// streams. Stream `data` is the logical byte sequence after applying every filter that has a
 /// logical decoder (@see [`PdfStreamFilter`]); `/Filter`, `/F`, `/DecodeParms`, and `/DP` are
 /// removed during native deserialization and regenerated from `filters` on write.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 #[derive(Default)]
 pub enum PdfObject {
     #[default]
@@ -330,7 +330,7 @@ impl PdfObject {
 }
 
 /// 🗄️ One `N G obj ... endobj` indirect object, keyed by its `id`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfIndirectObject {
     pub id: ObjRef,
@@ -351,7 +351,7 @@ pub const PDF_IDENTITY_MATRIX: PdfMatrix = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// 🔤️ A string operand of a text-showing operator. `Text` is Unicode recovered through the
 /// selected font's encoding (and written back through it); `Codes` are logical unsigned character codes
 /// whenever the font cannot map them to Unicode and back (§9.4.3). Native byte grouping belongs to I/O and its application font binding.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfTextString {
     Text { text: String },
@@ -367,7 +367,7 @@ impl PdfTextString {
 
 /// 🧵 One element of a `TJ` array: a string or a horizontal adjustment in thousandths of text
 /// space (§9.4.3, Table 109).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfTextArrayItem {
     Text { text: String },
@@ -376,7 +376,7 @@ pub enum PdfTextArrayItem {
 }
 
 /// 🏷️ The property-list operand of `DP`/`BDC` (§14.6): a named resource or an inline dictionary.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfPropertyList {
     Named { name: String },
@@ -385,7 +385,7 @@ pub enum PdfPropertyList {
 
 /// 🖼️ An inline image (`BI … ID … EI`, §8.9.7). Abbreviated keys are expanded on read; `data` is
 /// decoded except for image codecs, exactly as for [`PdfObject::Stream`].
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfInlineImage {
     pub width: u32,
@@ -406,7 +406,7 @@ pub struct PdfInlineImage {
 }
 
 /// ✂️ Line cap style (§8.4.3.3).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PdfLineCap {
     #[default]
@@ -416,7 +416,7 @@ pub enum PdfLineCap {
 }
 
 /// 🔗️ Line join style (§8.4.3.4).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PdfLineJoin {
     #[default]
@@ -427,7 +427,7 @@ pub enum PdfLineJoin {
 
 /// 🖋️ One content-stream operator with typed operands — every operator of ISO 32000-1 Table 51.
 /// Painting order is the `Vec<PdfOp>` order; nothing is inferred or re-ordered on either side.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "op", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfOp {
     // 🎛️ General graphics state (Table 57)
@@ -519,7 +519,7 @@ pub enum PdfOp {
 //#region 🔖️Colour
 /// 🌈 A colour space (§8.6). `Named` refers to an entry of the current resource dictionary's
 /// `/ColorSpace` sub-dictionary and only appears where the spec allows a name.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", retire_with="retire_pdf_color_space")]
 pub enum PdfColorSpace {
     DeviceGray,
@@ -576,7 +576,7 @@ impl PdfColorSpace {
 
 /// 🧮 A PDF function (§7.10): sampled (type 0), exponential (2), stitching (3), PostScript
 /// calculator (4, retained as its source text), or an array of 1-out functions.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", retire_with="retire_pdf_function")]
 pub enum PdfFunction {
     Sampled { domain: Vec<f64>, range: Vec<f64>, size: Vec<u32>, bits_per_sample: u32, order: Option<u32>, encode: Option<Vec<f64>>, decode: Option<Vec<f64>>, samples: Vec<u32> },
@@ -599,7 +599,7 @@ fn retire_pdf_function(value: PdfFunction) {
 
 /// 🌅 A shading (§8.7.4.5). Mesh types 4–7 keep their packed vertex data with the decode
 /// parameters needed to read it.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfShadingKind {
     FunctionBased { domain: Option<[f64; 4]>, matrix: Option<PdfMatrix>, function: PdfFunction },
@@ -608,7 +608,7 @@ pub enum PdfShadingKind {
     Mesh { shading_type: u32, bits_per_coordinate: u32, bits_per_component: u32, bits_per_flag: Option<u32>, vertices_per_row: Option<u32>, decode: Vec<f64>, function: Option<PdfFunction>, reference: semio_framework_artifact_reference::ArtifactRef },
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfShading {
     pub id: String,
@@ -626,14 +626,14 @@ pub struct PdfShading {
 
 /// 🧩 A pattern (§8.7.3): tiling patterns paint a content cell, shading patterns reference a
 /// shading.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfPatternKind {
     Tiling { paint_type: u32, tiling_type: u32, bbox: PdfRect, x_step: f64, y_step: f64, content: Vec<PdfOp> },
     Shading { shading: String, ext_g_state: Option<String> },
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfPattern {
     pub id: String,
@@ -656,7 +656,7 @@ impl PdfPattern {
 /// 🫥 The `/SMask` entry of an extended graphics state (§11.6.5): `None` (the name `/None`,
 /// which switches soft masking off), or an alpha/luminosity mask drawn from the form XObject
 /// `group`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfSoftMask {
     None,
@@ -666,7 +666,7 @@ pub enum PdfSoftMask {
 
 /// 🎛️ An extended graphics state parameter dictionary (§8.4.5, Table 58). Every entry is optional;
 /// absent means "leave as is".
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfExtGState {
     pub id: String,
@@ -716,7 +716,7 @@ pub struct PdfExtGState {
 //#region 🔖️Resources
 /// 🌈 One `name → colour space` entry of the document's `/ColorSpace` resources. Content
 /// operators (`cs`/`CS`) reference the name; every page and form binds what it uses on write.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfNamedColorSpace {
     pub name: String,
@@ -725,7 +725,7 @@ pub struct PdfNamedColorSpace {
 
 /// 🏷️ One `name → property list` entry of the document's `/Properties` resources (§14.6.2),
 /// referenced by `DP`/`BDC` operators.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfNamedProperties {
     pub name: String,
@@ -735,7 +735,7 @@ pub struct PdfNamedProperties {
 
 //#region 🔖️Fonts
 /// 🔡 A predefined simple-font base encoding (§9.6.6, Annex D).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PdfBaseEncoding {
     Standard,
@@ -745,7 +745,7 @@ pub enum PdfBaseEncoding {
 }
 
 /// 🔡 One `/Differences` entry: `code` shows the glyph named `glyph`.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfEncodingDifference {
     pub code: u32,
@@ -754,7 +754,7 @@ pub struct PdfEncodingDifference {
 
 /// 🔡 A simple font's encoding: an optional base encoding (`None` = the font's built-in encoding)
 /// plus `/Differences` (§9.6.6.1).
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfSimpleEncoding {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -771,7 +771,7 @@ impl PdfSimpleEncoding {
 }
 
 /// 📏 A font descriptor (§9.8, Table 122). Widths live on the font itself.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfFontDescriptor {
     pub font_name: String,
@@ -814,7 +814,7 @@ pub struct PdfFontDescriptor {
 }
 
 /// 💾 An embedded font program (§9.9, Table 126).
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfFontProgram {
     Type1 { reference: semio_framework_artifact_reference::ArtifactRef },
@@ -830,7 +830,7 @@ impl PdfFontProgram {
 
 /// 🈴 One `ToUnicode` mapping (§9.10.3): a character code (of `byte_width` bytes) to a Unicode
 /// string, or a contiguous range whose destinations increment from `text`'s last code point.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfToUnicodeMapping {
     Char { code: u32, text: String },
@@ -838,7 +838,7 @@ pub enum PdfToUnicodeMapping {
 }
 
 /// 🈴 A `ToUnicode` CMap in typed form.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfToUnicode {
     pub byte_width: u32,
@@ -847,7 +847,7 @@ pub struct PdfToUnicode {
 }
 
 /// 🗺️ One code-space range of a CMap (§9.7.5.2).
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfCodespaceRange {
     pub byte_width: u32,
@@ -856,7 +856,7 @@ pub struct PdfCodespaceRange {
 }
 
 /// 🗺️ One `cidchar`/`cidrange` entry of an embedded CMap.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfCidMapping {
     Char { code: u32, cid: u32 },
@@ -864,7 +864,7 @@ pub enum PdfCidMapping {
 }
 
 /// 🗺️ An embedded CMap stream (§9.7.5.3) in typed form.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfEmbeddedCMap {
     pub name: String,
@@ -879,7 +879,7 @@ pub struct PdfEmbeddedCMap {
 }
 
 /// 🗺️ The `/Encoding` of a Type 0 font (§9.7.5): a predefined CMap by name, or an embedded one.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfCMap {
     Predefined { name: String },
@@ -894,7 +894,7 @@ impl PdfCMap {
 }
 
 /// 📇 `/CIDSystemInfo` (§9.7.3).
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfCidSystemInfo {
     pub registry: String,
@@ -909,7 +909,7 @@ impl Default for PdfCidSystemInfo {
 }
 
 /// 📏 One run of a CIDFont `/W` array: consecutive widths from `start_cid` (§9.7.4.3).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfCidWidthRun {
     pub start_cid: u32,
@@ -917,7 +917,7 @@ pub struct PdfCidWidthRun {
 }
 
 /// 📏 One `/W2` vertical-metrics run (§9.7.4.3): per-CID `[w1y vx vy]` triples.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfCidVerticalRun {
     pub start_cid: u32,
@@ -925,7 +925,7 @@ pub struct PdfCidVerticalRun {
 }
 
 /// 🔢 `/CIDToGIDMap` (§9.7.4.2).
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfCidToGid {
     Identity,
@@ -933,7 +933,7 @@ pub enum PdfCidToGid {
 }
 
 /// 🔤 A CIDFont (§9.7.4), the descendant of a Type 0 font.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfCidFont {
     pub true_type: bool,
@@ -965,7 +965,7 @@ impl PdfCidFont {
 }
 
 /// 🔠 One Type 3 glyph procedure (§9.6.5): a content stream drawing the glyph named `name`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfCharProc {
     pub name: String,
@@ -974,7 +974,7 @@ pub struct PdfCharProc {
 
 /// 🔤 A font's subtype-specific data (§9.5–9.7). The standard 14 fonts are `Type1` fonts with
 /// no program and no descriptor; their metrics come from the writer's built-in AFM tables.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfFontKind {
     Type1 { base_font: String, encoding: PdfSimpleEncoding, first_char: u32, widths: Vec<f64>, descriptor: Option<PdfFontDescriptor>, program: Option<PdfFontProgram> },
@@ -984,7 +984,7 @@ pub enum PdfFontKind {
 }
 
 /// 🔤 A document font, keyed by `id` — the resource name content operators (`Tf`) use.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfFont {
     pub id: String,
@@ -1020,7 +1020,7 @@ impl PdfFont {
 
 //#region 🔖️XObjects
 /// 🖼️ A logical image body is explicit component samples or an admitted foreign image.
-#[derive(Clone,Debug,PartialEq,Eq,value_derive::ToValue,value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone,Debug,PartialEq,Eq,value_derive::ToValue,value_derive::FromValue)]
 #[value(tag="kind",rename_all="camelCase",rename_all_fields="camelCase")]
 pub enum PdfImageBody {
     Samples { values:Vec<u32> },
@@ -1028,7 +1028,7 @@ pub enum PdfImageBody {
 }
 
 /// 🎭 An image's explicit mask (§8.9.6): a stencil image id or colour-key ranges.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfImageMask {
     Stencil { image: String },
@@ -1036,7 +1036,7 @@ pub enum PdfImageMask {
 }
 
 /// 🖼️ An image XObject (§8.9.5, Table 89), keyed by `id`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfImage {
     pub id: String,
@@ -1083,7 +1083,7 @@ impl PdfImage {
 }
 
 /// 🫧 A transparency group attribute dictionary (§11.6.6).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfTransparencyGroup {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -1095,7 +1095,7 @@ pub struct PdfTransparencyGroup {
 }
 
 /// 📄 A form XObject (§8.10), keyed by `id`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfFormXObject {
     pub id: String,
@@ -1128,7 +1128,7 @@ impl PdfFormXObject {
 
 //#region 🔖️Navigation
 /// 🎯 How a destination positions the page (§12.3.2.2, Table 151).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfDestinationFit {
     Xyz { left: Option<f64>, top: Option<f64>, zoom: Option<f64> },
@@ -1143,7 +1143,7 @@ pub enum PdfDestinationFit {
 
 /// 🎯 A destination (§12.3.2): a page of this document by index, a page of a remote document by
 /// number, or a named destination.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfDestination {
     Page { page: u32, fit: PdfDestinationFit },
@@ -1152,7 +1152,7 @@ pub enum PdfDestination {
 }
 
 /// 📎 A file specification (§7.11.3): a path or an embedded file by id.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfFileSpecification {
     Path { path: String },
@@ -1160,7 +1160,7 @@ pub enum PdfFileSpecification {
 }
 
 /// 🎬 An action (§12.6.4). `next` chains follow-up actions.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfActionKind {
     GoTo { destination: PdfDestination },
@@ -1184,7 +1184,7 @@ pub enum PdfActionKind {
     Unknown { subtype: String, entries: Vec<PdfDictEntry> },
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", retire_with="retire_pdf_action")]
 pub struct PdfAction {
     pub kind: PdfActionKind,
@@ -1213,7 +1213,7 @@ impl PdfAction {
 }
 
 /// 📑 One outline (bookmark) item (§12.3.3) with its nested children.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", retire_with="retire_pdf_outline_item")]
 pub struct PdfOutlineItem {
     pub title: String,
@@ -1253,7 +1253,7 @@ impl PdfOutlineItem {
 }
 
 /// 📛 One entry of the document's `/Dests` name tree (§12.3.2.3).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfNamedDestination {
     pub name: String,
@@ -1261,7 +1261,7 @@ pub struct PdfNamedDestination {
 }
 
 /// 🔢 Page label numbering style (§12.4.2, Table 159).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PdfPageLabelStyle {
     Decimal,
@@ -1272,7 +1272,7 @@ pub enum PdfPageLabelStyle {
 }
 
 /// 🔢 One page-label range starting at page `start_index`.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfPageLabelRange {
     pub start_index: u32,
@@ -1294,7 +1294,7 @@ impl PdfPageLabelRange {
 
 //#region 🔖️Annotations
 /// 🖼️ One appearance sub-dictionary entry: the form XObject `form` shown in appearance `state`.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfAppearanceState {
     pub state: String,
@@ -1302,7 +1302,7 @@ pub struct PdfAppearanceState {
 }
 
 /// 🖼️ The appearance of one state: a single form XObject id, or a form per appearance state.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfAppearanceEntry {
     Single { form: String },
@@ -1310,7 +1310,7 @@ pub enum PdfAppearanceEntry {
 }
 
 /// 🖼️ An appearance dictionary (§12.5.5).
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfAppearance {
     pub normal: PdfAppearanceEntry,
@@ -1321,7 +1321,7 @@ pub struct PdfAppearance {
 }
 
 /// 🟦 An annotation border (§12.5.4 `/Border` or the `/BS` border style dictionary).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfBorderStyle {
     pub width: f64,
@@ -1334,7 +1334,7 @@ pub struct PdfBorderStyle {
 }
 
 /// 💬 Fields shared by markup annotations (§12.5.6.2, Table 170).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfMarkupAnnotation {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -1358,7 +1358,7 @@ pub struct PdfMarkupAnnotation {
 }
 
 /// 🏷️ Subtype-specific annotation data (§12.5.6, Table 169 — every subtype).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfAnnotationKind {
     Text { open: bool, icon: Option<String>, state: Option<String>, state_model: Option<String> },
@@ -1392,7 +1392,7 @@ pub enum PdfAnnotationKind {
 
 /// 📌 An annotation (§12.5.2, Table 164) on a page. `contents`/`name`/`modified`/`flags`/
 /// `border`/`color`/`appearance` are the common entries; `markup` the markup-annotation ones.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfAnnotation {
     pub rect: PdfRect,
@@ -1440,7 +1440,7 @@ impl PdfAnnotation {
 
 //#region 🔖️Forms
 /// 📝 Interactive form field data by field type (§12.7.4).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfFormFieldKind {
     Button { value: Option<String>, default_value: Option<String>, options: Vec<String> },
@@ -1452,7 +1452,7 @@ pub enum PdfFormFieldKind {
 
 /// 📝 One field of the interactive form tree (§12.7.3). `widgets` are `(page index, annotation
 /// index)` pairs of the Widget annotations presenting this field.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", retire_with="retire_pdf_form_field")]
 pub struct PdfFormField {
     pub name: String,
@@ -1489,7 +1489,7 @@ fn retire_pdf_form_field(value: PdfFormField) {
 }
 
 /// 📝 The document's interactive form dictionary (§12.7.2).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfAcroForm {
     #[value(default)]
@@ -1511,7 +1511,7 @@ pub struct PdfAcroForm {
 
 //#region 🔖️OptionalContent
 /// 👁️ An optional content group (§8.11.2).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfOptionalContentGroup {
     pub id: String,
@@ -1523,7 +1523,7 @@ pub struct PdfOptionalContentGroup {
 }
 
 /// 👁️ The optional content properties dictionary (§8.11.4): groups plus the default configuration.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfOptionalContent {
     #[value(default)]
@@ -1545,7 +1545,7 @@ pub struct PdfOptionalContent {
 
 //#region 🔖️Document
 /// 📅 A PDF date (§7.9.4) with an optional UTC offset in minutes.
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfDate {
     pub year: i32,
@@ -1575,7 +1575,7 @@ impl PdfDate {
 }
 
 /// 📇️ Document `/Info` dictionary (§14.3.3, Table 317).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfInfo {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -1609,7 +1609,7 @@ impl PdfInfo {
 
 /// 📎 An embedded file (§7.11.4) reachable through the `/EmbeddedFiles` name tree or a file
 /// attachment annotation, keyed by `id`.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfEmbeddedFile {
     pub id: String,
@@ -1631,7 +1631,7 @@ pub struct PdfEmbeddedFile {
 }
 
 /// 🏳️ An output intent (§14.11.5) — what PDF/A and PDF/X conformance is declared against.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfOutputIntent {
     pub subtype: String,
@@ -1647,7 +1647,7 @@ pub struct PdfOutputIntent {
 }
 
 /// 📖 Page layout to use when the document is opened (§12.2, Table 28).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PdfPageLayout {
     SinglePage,
@@ -1659,7 +1659,7 @@ pub enum PdfPageLayout {
 }
 
 /// 📖 How the document is displayed when opened (§12.2, Table 28).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PdfPageMode {
     UseNone,
@@ -1671,7 +1671,7 @@ pub enum PdfPageMode {
 }
 
 /// 🖥️ Viewer preferences (§12.2, Table 150).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfViewerPreferences {
     #[value(default)]
@@ -1713,7 +1713,7 @@ pub struct PdfViewerPreferences {
 }
 
 /// 🚪 What happens when the document opens (§7.7.2 `/OpenAction`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfOpenAction {
     Destination { destination: PdfDestination },
@@ -1721,7 +1721,7 @@ pub enum PdfOpenAction {
 }
 
 /// 🔐 The standard security handler's algorithm (§7.6.3).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PdfEncryptionAlgorithm {
     Rc4_40,
@@ -1734,7 +1734,7 @@ pub enum PdfEncryptionAlgorithm {
 /// the persistent form of this snapshot is the encrypted file itself, whose `/O`/`/U` entries
 /// are derived from them on write. A decoded document records the algorithm, permissions and
 /// the user password it was opened with (`""` for the empty user password).
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfEncryption {
     pub algorithm: PdfEncryptionAlgorithm,
@@ -1760,7 +1760,7 @@ impl PdfEncryption {
 }
 
 /// 🏷️ `/MarkInfo` (§14.7.1).
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfMarkInfo {
     #[value(default)]
@@ -1777,7 +1777,7 @@ pub struct PdfMarkInfo {
 /// applied (§7.7.3.4). `content` is the concatenation of the page's content streams as typed
 /// operators whose resource names are the document-level ids ([`PdfSnapshot::fonts`], images,
 /// forms, …); the page's own `/Resources` dictionary is regenerated from them on write.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfPage {
     pub media_box: PdfRect,
@@ -1897,7 +1897,7 @@ impl PdfPage {
 /// 🧬️ `stdio.pdf` (1.7) persistent snapshot: the typed document lanes plus the retained COS
 /// carrier (`objects`/`trailer`, the full logical indirect-object graph as read — lossless
 /// retention per D2 ground rules, what the conformance subsets inspect).
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.stdio.pdf.1.7")]
 pub struct PdfSnapshot {
     #[state(artifact)]
@@ -2195,7 +2195,7 @@ impl pack::value::FromValue for PdfSnapshot {
             trailer: decode_or_default(field("trailer"), "trailer")?,
             admitted_stream_roles: decode_or_default(field("admittedStreamRoles"), "admittedStreamRoles")?,
         };
-        super::stream_roles::validate_role_inputs(&snapshot.objects,&snapshot.objects,&[],&snapshot.admitted_stream_roles).map_err(|message|pack::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message).under("admittedStreamRoles"))?;
+        crate::standards::v1_7::subsets::base::schema::stream_roles::validate_role_inputs(&snapshot.objects,&snapshot.objects,&[],&snapshot.admitted_stream_roles).map_err(|message|pack::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message).under("admittedStreamRoles"))?;
         Ok(snapshot)
     }
 }

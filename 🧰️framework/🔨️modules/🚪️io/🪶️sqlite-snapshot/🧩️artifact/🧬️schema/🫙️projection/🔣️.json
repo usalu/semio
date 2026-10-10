@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Relational Projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaSql",
+    "owners",
+    "relations",
+    "expectedCounts",
+    "textUnit",
+    "textRepeats",
+    "cancelStops"
+  ],
+  "properties": {
+    "schemaSql": {
+      "type": "string"
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "payload"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "label": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner",
+          "ordinal"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "owner": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "ordinal": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "expectedCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "relation"
+      ],
+      "properties": {
+        "owner": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "relation": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "textUnit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "textRepeats": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelStops": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

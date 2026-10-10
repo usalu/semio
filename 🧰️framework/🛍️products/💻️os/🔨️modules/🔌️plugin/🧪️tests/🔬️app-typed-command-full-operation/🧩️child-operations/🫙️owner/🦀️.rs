@@ -1,5 +1,5 @@
 // 🫙️ Child semantic text and encoded source owners retain their independent physical lifetimes.
-use super::paged_encoder::{ChildTextView,PagedChildGroup,PagedChildGroups,PagedChildLabels};
+use super::paged_encoder::{ChildTextView,PagedChildGroup,PagedChildGroups,PagedChildLabels,nested_grant,grant_funds,deeper,quote,handoff,yielded,settle,pop_demand,release_demand,release_page};
 use super::reader::{ChildGroupDecodeVisitor,ChildGroupText};
 use semio_framework_os_kernel::{os_pack::{PackRefusal,codec::ByteSpan},os_spr::operation_bytes::OwnedOperationBytes};
 use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,paged_text::{PagedText,TextReadSource},list::PagedList,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};

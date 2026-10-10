@@ -1,0 +1,423 @@
+{
+  "schema": "IFC4",
+  "counts": {
+    "IfcProject": 1,
+    "IfcSite": 1,
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 4,
+    "IfcWallStandardCase": 0,
+    "IfcWall": 30,
+    "IfcOpeningElement": 35,
+    "IfcWindow": 25,
+    "IfcDoor": 9,
+    "IfcSlab": 15,
+    "IfcRoof": 2,
+    "IfcColumn": 1,
+    "IfcBeam": 1,
+    "IfcStair": 2,
+    "IfcStairFlight": 3,
+    "IfcRailing": 4,
+    "IfcCurtainWall": 0,
+    "IfcMember": 10,
+    "IfcPlate": 1,
+    "IfcSpace": 12,
+    "IfcGrid": 1,
+    "IfcRelVoidsElement": 35,
+    "IfcRelFillsElement": 34,
+    "IfcRelAggregates": 14,
+    "IfcRelContainedInSpatialStructure": 5,
+    "IfcRelDefinesByType": 33,
+    "IfcRelAssociatesMaterial": 58,
+    "IfcRelAssociatesClassification": 11,
+    "IfcMaterialLayerSet": 13,
+    "IfcMaterialLayerSetUsage": 38,
+    "IfcWallType": 6,
+    "IfcSlabType": 3,
+    "IfcRoofType": 2,
+    "IfcColumnType": 1,
+    "IfcBeamType": 1,
+    "IfcWindowType": 5,
+    "IfcDoorType": 5,
+    "IfcTriangulatedFaceSet": 40,
+    "IfcClassification": 3,
+    "IfcClassificationReference": 39,
+    "IfcAnnotation": 11,
+    "IfcTextLiteralWithExtent": 14,
+    "IfcPolyline": 207,
+    "IfcPlanarExtent": 14,
+    "IfcCovering": 4,
+    "IfcCoveringType": 2,
+    "IfcRamp": 1,
+    "IfcRampFlight": 2,
+    "IfcRelConnectsElements": 4,
+    "IfcProjectLibrary": 1,
+    "IfcPropertySetTemplate": 8,
+    "IfcRelDeclares": 2,
+    "IfcRelDefinesByTemplate": 6
+  },
+  "containment": {
+    "st-attic": [
+      "rf-bay",
+      "rf-main",
+      "sl-a",
+      "w-a-east",
+      "w-a-north-1-0",
+      "w-a-south",
+      "w-a-west-1-0"
+    ],
+    "st-basement": [
+      "bm-b-support",
+      "c-b-support",
+      "o-b-door",
+      "o-b-light-n1",
+      "o-b-light-n2",
+      "o-b-light-s1",
+      "o-b-light-s2",
+      "o-b-light-w",
+      "sl-b",
+      "sr-cellar",
+      "w-b-bay",
+      "w-b-east-1",
+      "w-b-east-2",
+      "w-b-north",
+      "w-b-south",
+      "w-b-spine",
+      "w-b-west"
+    ],
+    "st-ground": [
+      "Axis spacing",
+      "Entry and living window",
+      "South length",
+      "South wall thickness",
+      "West length",
+      "ce-g-kitchen",
+      "ce-g-living",
+      "cmp-basin",
+      "cmp-chair-1",
+      "cmp-chair-2",
+      "cmp-chair-3",
+      "cmp-chair-4",
+      "cmp-kitchen-unit",
+      "cmp-lamp-1",
+      "cmp-lamp-2",
+      "cmp-table-dining",
+      "cmp-wc",
+      "lead-g-north",
+      "mep-tray-living",
+      "note-g-site",
+      "o-g-bay-1",
+      "o-g-bay-2",
+      "o-g-bay-3",
+      "o-g-cellar-door",
+      "o-g-cellar-north",
+      "o-g-entry",
+      "o-g-hall-west",
+      "o-g-kitchen-east",
+      "o-g-kitchen-north",
+      "o-g-living",
+      "o-g-living-door",
+      "o-g-patio",
+      "o-g-wc-door",
+      "o-g-wc-north",
+      "rl-cellar",
+      "rl-ramp-left",
+      "rl-ramp-right",
+      "rp-entry",
+      "sl-g",
+      "sr-main",
+      "tag-g-entry-size",
+      "tag-g-hall",
+      "tag-g-south-name",
+      "tag-g-south-type",
+      "w-g-bay",
+      "w-g-cross",
+      "w-g-east-1",
+      "w-g-east-2",
+      "w-g-north",
+      "w-g-south",
+      "w-g-spine",
+      "w-g-wc",
+      "w-g-west",
+      "ws-cross-wall",
+      "ws-cross-wall",
+      "ws-cross-wall",
+      "ws-cross-wall",
+      "ws-living-south",
+      "ws-living-south",
+      "ws-living-south"
+    ],
+    "st-upper": [
+      "ce-u-child",
+      "ce-u-master",
+      "cmp-bed-child",
+      "cmp-bed-master",
+      "o-u-bath-door",
+      "o-u-bath-north",
+      "o-u-bay-1",
+      "o-u-bay-2",
+      "o-u-bay-3",
+      "o-u-child-door",
+      "o-u-child-east",
+      "o-u-child-north-1",
+      "o-u-child-north-2",
+      "o-u-landing-north",
+      "o-u-landing-south",
+      "o-u-landing-west",
+      "o-u-master",
+      "o-u-master-door",
+      "rl-main",
+      "sl-u",
+      "w-u-bath",
+      "w-u-bath-east",
+      "w-u-bay",
+      "w-u-bedrooms",
+      "w-u-east-1",
+      "w-u-east-2",
+      "w-u-north",
+      "w-u-south",
+      "w-u-spine",
+      "w-u-west"
+    ]
+  },
+  "volumes": {
+    "w-b-east-1": 0.964756851019,
+    "w-b-east-2": 3.850756851019,
+    "w-b-north": 9.324,
+    "w-b-south": 9.324,
+    "w-b-spine": 4.5095,
+    "w-b-west": 7.548,
+    "w-g-cross": 4.02087,
+    "w-g-east-1": 1.038968916482,
+    "w-g-east-2": 3.547568916482,
+    "w-g-north": 9.1945,
+    "w-g-south": 7.3001,
+    "w-g-spine": 3.99217,
+    "w-g-wc": 1.101275,
+    "w-g-west": 7.7885,
+    "w-u-bath": 0.3886725,
+    "w-u-bath-east": 1.1020725,
+    "w-u-bedrooms": 2.39304375,
+    "w-u-east-1": 1.001862883751,
+    "w-u-east-2": 3.399462883751,
+    "w-u-north": 8.20845,
+    "w-u-south": 8.5581,
+    "w-u-spine": 3.448305,
+    "w-u-west": 7.4925,
+    "bm-b-support": 0.023798272,
+    "sl-a": 24.0,
+    "sl-b": 39.969991213037,
+    "sl-g": 23.745123191655,
+    "sl-u": 22.875423191655,
+    "ce-g-kitchen": 1.029375,
+    "ce-g-living": 0.358375,
+    "ce-u-child": 1.22,
+    "cmp-kitchen-unit": 1.00968
+  },
+  "annotations": {
+    "Axis spacing": {
+      "kind": "Dimension",
+      "printed": "10.00",
+      "curves": 7,
+      "literals": [
+        "3.60",
+        "6.40"
+      ],
+      "total": 10.0
+    },
+    "Entry and living window": {
+      "kind": "Dimension",
+      "printed": "10.00",
+      "curves": 9,
+      "literals": [
+        "2.90",
+        "3.00",
+        "4.10"
+      ],
+      "total": 10.0
+    },
+    "South length": {
+      "kind": "Dimension",
+      "printed": "10.00",
+      "curves": 5,
+      "literals": [
+        "10.00"
+      ],
+      "total": 10.0
+    },
+    "South wall thickness": {
+      "kind": "Dimension",
+      "printed": "370",
+      "curves": 5,
+      "literals": [
+        "370"
+      ],
+      "total": 0.37
+    },
+    "West length": {
+      "kind": "Dimension",
+      "printed": "8.00",
+      "curves": 5,
+      "literals": [
+        "8.00"
+      ],
+      "total": 8.0
+    },
+    "lead-g-north": {
+      "kind": "Leader",
+      "printed": "Clay block cavity wall",
+      "curves": 2,
+      "literals": [
+        "Clay block cavity wall"
+      ],
+      "total": null
+    },
+    "note-g-site": {
+      "kind": "TextNote",
+      "printed": "Check the plinth level on site",
+      "curves": 0,
+      "literals": [
+        "Check the plinth level on site"
+      ],
+      "total": null
+    },
+    "tag-g-entry-size": {
+      "kind": "Tag",
+      "printed": "1.00 × 2.15",
+      "curves": 0,
+      "literals": [
+        "1.00 × 2.15"
+      ],
+      "total": null
+    },
+    "tag-g-hall": {
+      "kind": "Tag",
+      "printed": "0.01",
+      "curves": 0,
+      "literals": [
+        "0.01"
+      ],
+      "total": null
+    },
+    "tag-g-south-name": {
+      "kind": "Tag",
+      "printed": "Ground South",
+      "curves": 0,
+      "literals": [
+        "Ground South"
+      ],
+      "total": null
+    },
+    "tag-g-south-type": {
+      "kind": "Tag",
+      "printed": "Exterior Wall 37",
+      "curves": 0,
+      "literals": [
+        "Exterior Wall 37"
+      ],
+      "total": null
+    }
+  },
+  "classifications": {
+    "systems": {
+      "DIN 276|2018-12": {
+        "source": "https://www.din.de",
+        "entries": [
+          "300|Bauwerk - Baukonstruktionen|",
+          "330|Außenwände/Vertikale Baukonstruktionen, außen|300",
+          "331|Tragende Außenwände|330",
+          "332|Nichttragende Außenwände|330",
+          "333|Außenstützen|330",
+          "334|Außentüren und -fenster|330",
+          "337|Elementierte Außenwände|330",
+          "340|Innenwände/Vertikale Baukonstruktionen, innen|300",
+          "341|Tragende Innenwände|340",
+          "342|Nichttragende Innenwände|340",
+          "343|Innenstützen|340",
+          "344|Innentüren und -fenster|340",
+          "350|Decken/Horizontale Baukonstruktionen|300",
+          "351|Deckenkonstruktionen|350",
+          "360|Dächer|300",
+          "361|Dachkonstruktionen|360",
+          "362|Dachfenster, Dachöffnungen|360",
+          "363|Dachbeläge|360"
+        ]
+      },
+      "OmniClass Table 23 Products|2012": {
+        "source": "https://www.csiresources.org/standards/omniclass",
+        "entries": [
+          "23-13 00 00|Structural and Exterior Enclosure Products|",
+          "23-13 35 00|Framing Products|23-13 00 00",
+          "23-13 35 11|Structural Frames|23-13 35 00",
+          "23-13 35 11 13|Column Slab Frames|23-13 35 11",
+          "23-17 00 00|Openings, Passages, and Protection Products|",
+          "23-17 23 00|Circulation and Escape Products|23-17 00 00",
+          "23-17 23 17|Stairs|23-17 23 00"
+        ]
+      },
+      "Uniclass 2015|EF v1.16, Pr v1.34": {
+        "source": "https://uniclass.thenbs.com",
+        "entries": [
+          "EF_25|Wall and barrier elements|",
+          "EF_25_10|Walls|EF_25",
+          "EF_25_10_25|External walls|EF_25_10",
+          "EF_25_10_30|Free-standing walls|EF_25_10",
+          "EF_25_10_40|Internal walls|EF_25_10",
+          "EF_25_10_60|Parapet walls|EF_25_10",
+          "EF_25_30|Openings|EF_25",
+          "Pr|Products|",
+          "Pr_20|Structure and general products|Pr",
+          "Pr_20_93|Unit structure and general products|Pr_20",
+          "Pr_20_93_52|Masonry walling units|Pr_20_93",
+          "Pr_25|Skin products|Pr",
+          "Pr_25_71|Rigid board, panel, sheet and sectional products|Pr_25",
+          "Pr_25_93|Unit skin products|Pr_25"
+        ]
+      }
+    },
+    "attached": {
+      "o-g-entry": [
+        "DIN 276|2018-12|334"
+      ],
+      "o-g-living": [
+        "DIN 276|2018-12|334"
+      ],
+      "rf-main": [
+        "DIN 276|2018-12|361"
+      ],
+      "sl-g": [
+        "DIN 276|2018-12|351"
+      ],
+      "sr-main": [
+        "OmniClass Table 23 Products|2012|23-17 23 17"
+      ],
+      "w-g-south": [
+        "DIN 276|2018-12|331",
+        "Uniclass 2015|EF v1.16, Pr v1.34|EF_25_10"
+      ],
+      "w-g-spine": [
+        "DIN 276|2018-12|341"
+      ],
+      "wt-ext-37": [
+        "Uniclass 2015|EF v1.16, Pr v1.34|EF_25_10_25"
+      ]
+    }
+  },
+  "type_properties": {
+    "wt-ext-37": {
+      "Pset_WallCommon": {
+        "FireRating": [
+          "IFCLABEL",
+          "REI 60"
+        ],
+        "IsExternal": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "ThermalTransmittance": [
+          "IFCREAL",
+          0.24
+        ]
+      }
+    }
+  }
+}

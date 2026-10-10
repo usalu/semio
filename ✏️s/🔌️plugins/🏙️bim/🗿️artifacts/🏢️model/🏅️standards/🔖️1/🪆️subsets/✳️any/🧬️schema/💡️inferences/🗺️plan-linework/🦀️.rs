@@ -21,6 +21,8 @@ use super::super::curtain_layout::CurtainLayout;
 use super::super::opening_frames::OpeningFrame;
 use super::super::annotation_layout::StoreyAnnotations;
 use super::super::spaces::StoreyRooms;
+use super::super::components::ComponentValue;
+use super::super::mep::MepValue;
 use super::super::ramp_runs::RampRun;
 use super::super::stair_runs::StairRun;
 use super::super::storey_levels::StoreyLevel;
@@ -41,6 +43,10 @@ pub mod annotations;
 pub mod stairs;
 #[path = "🛝️ramps/🦀️.rs"]
 pub mod ramps;
+#[path = "🪑️components/🦀️.rs"]
+pub mod components;
+#[path = "🌀️mep/🦀️.rs"]
+pub mod mep;
 #[path = "🧱️walls/🦀️.rs"]
 pub mod walls;
 #[path = "📏️notation/🦀️.rs"]
@@ -48,7 +54,7 @@ pub mod notation;
 
 //#region 🔖️Values
 /// 🖊️ The line class of a primitive: how the plan window strokes it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum PlanStyle {
     Cut,
     Projection,
@@ -57,7 +63,7 @@ pub enum PlanStyle {
 }
 
 /// 🏷️ What a primitive depicts.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 pub enum PlanKind {
     WallCut,
     WallLayer,
@@ -106,6 +112,12 @@ pub enum PlanKind {
     RampLanding,
     RampArrow,
     RampTag,
+    ComponentOutline,
+    ComponentFront,
+    ComponentConnector,
+    MepAxis,
+    MepBand,
+    MepDrop,
 }
 
 impl PlanKind {
@@ -116,7 +128,7 @@ impl PlanKind {
 }
 
 /// 📍️ A path vertex: a point and the bulge `tan(sweep / 4)` of the segment leaving it (zero = straight).
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PlanVertex {
     pub x: f64,
     pub y: f64,
@@ -124,7 +136,7 @@ pub struct PlanVertex {
 }
 
 /// 🟫️ A filled region: a closed outer loop and closed hole loops.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PlanRegion {
     pub id: String,
     pub element: String,
@@ -135,7 +147,7 @@ pub struct PlanRegion {
 }
 
 /// 〰️ A stroked path, open or closed.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PlanPolyline {
     pub id: String,
     pub element: String,
@@ -146,7 +158,7 @@ pub struct PlanPolyline {
 }
 
 /// 🔤️ A text anchor: `label` is the primary text (space number, grid label), `detail` the secondary (space name), `measure` a quantity (space area in square metres).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PlanText {
     pub id: String,
     pub element: String,
@@ -164,7 +176,7 @@ pub struct PlanText {
 }
 
 /// ▭️ The rectangle that holds every primitive of a plan.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PlanBounds {
     pub min_x: f64,
     pub min_y: f64,
@@ -173,7 +185,7 @@ pub struct PlanBounds {
 }
 
 /// 🗺️ The plan of one storey. `cut_elevation` is the height of the cut plane above the building datum, `cut_height` above the storey elevation.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PlanLinework {
     pub storey: String,
     pub cut_height: f64,
@@ -223,6 +235,8 @@ pub struct Inputs<'a> {
     pub frames: BTreeMap<&'a str, &'a OpeningFrame>,
     pub runs: BTreeMap<&'a str, &'a StairRun>,
     pub ramp_runs: BTreeMap<&'a str, &'a RampRun>,
+    pub components: BTreeMap<&'a str, &'a ComponentValue>,
+    pub meps: BTreeMap<&'a str, &'a MepValue>,
     pub rooms: Option<&'a StoreyRooms>,
     pub annotations: Option<&'a StoreyAnnotations>,
 }
@@ -387,6 +401,8 @@ pub fn plan_at(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, cut_
     members::draw(&mut sheet, &cx);
     stairs::draw(&mut sheet, &cx);
     ramps::draw(&mut sheet, &cx);
+    components::draw(&mut sheet, &cx);
+    mep::draw(&mut sheet, &cx);
     annotations::draw_spaces(&mut sheet, &cx);
     notation::draw(&mut sheet, inputs.annotations);
     PlanLinework { cut_height, ..sheet.finish(storey, cx.cut) }

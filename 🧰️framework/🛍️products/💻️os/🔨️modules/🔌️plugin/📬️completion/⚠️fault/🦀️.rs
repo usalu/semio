@@ -3,6 +3,7 @@ use crate::app::ArtifactBoundedToolFault;
 use semio_framework_diagnostic::{Fault,FaultOrigin,Severity};
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ArtifactCompletionFault{pub bounded:ArtifactBoundedToolFault,original:Fault}
+impl std::fmt::Debug for ArtifactCompletionFault{fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{formatter.debug_struct("ArtifactCompletionFault").field("original",&self.original).finish_non_exhaustive()}}
 struct Frame{bytes:[u8;480],len:usize}
 impl Frame{
  fn write(&mut self,text:&[u8]){self.bytes[self.len..self.len+text.len()].copy_from_slice(text);self.len+=text.len();}
@@ -15,14 +16,20 @@ impl Frame{
 impl ArtifactCompletionFault{
  /// 📥️ Moves the actual original fault while retaining an inline report for host publication.
  pub fn new(original:Fault)->Self{
-  let origin=match original.origin{FaultOrigin::Edge=>"edge",FaultOrigin::Renderer=>"renderer",FaultOrigin::Os=>"os",FaultOrigin::Module=>"module",FaultOrigin::Plugin=>"plugin",FaultOrigin::App=>"app",FaultOrigin::Extension=>"extension",FaultOrigin::Framework=>"framework"};
-  let severity=match original.severity{Severity::Info=>"info",Severity::Warning=>"warning",Severity::Error=>"error",Severity::Fatal=>"fatal"};
-  let mut frame=Frame{bytes:[0;480],len:0};frame.write(b"{\"origin\":");frame.string(origin,16);frame.write(b",\"code\":");let code_start=frame.len;if !frame.string(&original.code.0,128){frame.len=code_start;frame.string("interactive-job.fault-capacity",128);}frame.write(b",\"severity\":");frame.string(severity,16);frame.write(b",\"message\":");frame.string(&original.message,224);frame.write(b",\"scope\":{},\"retryable\":");frame.write(if original.retryable{b"true"}else{b"false"});frame.write(b"}");Self{bounded:ArtifactBoundedToolFault::from_inline_report(frame.bytes,frame.len),original}
+  Self{bounded:borrowed_report(original.origin,&original.code.0,original.severity,&original.message,original.retryable),original}
  }
  /// 📤️ Transfers the exact original diagnostic rather than reconstructing it from a report.
  pub fn into_fault(self)->Fault{self.original}
  pub(crate) fn framed_page_bytes(&self,buffer:&mut[u8;480])->usize{self.bounded.framed_page_bytes(buffer)}
 }
+/// 🧾️ Copies a bounded borrowed diagnostic into its actual fixed inline carrier without constructing an owned Fault.
+pub(crate) fn borrowed_report(origin:FaultOrigin,code:&str,severity:Severity,message:&str,retryable:bool)->ArtifactBoundedToolFault{
+ let origin=match origin{FaultOrigin::Edge=>"edge",FaultOrigin::Renderer=>"renderer",FaultOrigin::Os=>"os",FaultOrigin::Module=>"module",FaultOrigin::Plugin=>"plugin",FaultOrigin::App=>"app",FaultOrigin::Extension=>"extension",FaultOrigin::Framework=>"framework"};
+ let severity=match severity{Severity::Info=>"info",Severity::Warning=>"warning",Severity::Error=>"error",Severity::Fatal=>"fatal"};
+ let mut frame=Frame{bytes:[0;480],len:0};frame.write(b"{\"origin\":");frame.string(origin,16);frame.write(b",\"code\":");let code_start=frame.len;if !frame.string(code,128){frame.len=code_start;frame.string("interactive-job.fault-capacity",128);}frame.write(b",\"severity\":");frame.string(severity,16);frame.write(b",\"message\":");frame.string(message,224);frame.write(b",\"scope\":{},\"retryable\":");frame.write(if retryable{b"true"}else{b"false"});frame.write(b"}");ArtifactBoundedToolFault::from_inline_report(frame.bytes,frame.len)
+}
+/// 🧮️ Prices transfer of every byte in the concrete bounded report carrier, including its inline frame and length.
+pub(crate) const fn borrowed_report_copy_bytes()->usize{std::mem::size_of::<ArtifactBoundedToolFault>()}
 #[cfg(test)]
 mod tests{
  use super::*;

@@ -1,0 +1,7 @@
+{
+  "mutation": "setTypeThermalData",
+  "id": "dr-1",
+  "u_value": {
+    "value": 1.3
+  }
+}

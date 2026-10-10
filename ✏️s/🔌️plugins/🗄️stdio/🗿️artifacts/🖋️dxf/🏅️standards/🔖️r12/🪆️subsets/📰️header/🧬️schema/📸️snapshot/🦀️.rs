@@ -30,7 +30,7 @@ use framework_schema::ArtifactSchema;
 /// 🏷️ One raw DXF group-code/value pair — used only as the tokenizer's intermediate unit and as
 /// the raw-retention payload for whole unmodeled tables (`DxfOtherTable`). The typed model above
 /// it (`DxfSnapshot`'s real fields) is the source of truth everywhere else.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfTag {
     pub code: i32,
@@ -43,7 +43,7 @@ pub struct DxfTag {
 /// integer (60-79/90-99/160-179/…), double (40-59/110-149/…), and point-component (a combined
 /// 10/20/30-style triplet — see module docs). `classify_group_code_value` never produces `Point`
 /// for a single raw tag; only header-var parsing manually combines an adjacent triplet into one.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum DxfValue {
     Str { value: String },
@@ -70,7 +70,7 @@ impl Default for DxfValue {
 //#region 🔖️Header
 /// 🏷️ One `$VAR` header entry: `9/$NAME` followed by its primary value group code, plus (rare)
 /// any additional group codes beyond a plain scalar/point that this codec still retains losslessly.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfHeaderVar {
     pub name: String,
@@ -83,7 +83,7 @@ pub struct DxfHeaderVar {
 
 //#region 🔖️Tables
 /// 🗂️ `LAYER` table entry — group codes 2 (name), 70 (flags), 62 (color), 6 (linetype).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLayer {
     pub name: String,
@@ -95,7 +95,7 @@ pub struct DxfLayer {
 }
 
 /// 🗂️ `STYLE` table entry — group codes 2 (name), 70 (flags), 3 (primary font file).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfStyle {
     pub name: String,
@@ -106,7 +106,7 @@ pub struct DxfStyle {
 }
 
 /// 🗂️ `LTYPE` table entry — group codes 2 (name), 70 (flags), 3 (description).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLinetype {
     pub name: String,
@@ -117,7 +117,7 @@ pub struct DxfLinetype {
 }
 
 /// 🗂️ The three name-keyed table kinds this codec typed-models.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfTables {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -131,7 +131,7 @@ pub struct DxfTables {
 /// 🕳️ Raw retention for any R12 `TABLE` kind other than LAYER/STYLE/LTYPE (VPORT, VIEW, UCS,
 /// APPID, DIMSTYLE, BLOCK_RECORD, …) — this codec has no typed view for these, but every tag is
 /// preserved verbatim, per the recipe's raw-retention rule.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfOtherTable {
     pub name: String,
@@ -142,7 +142,7 @@ pub struct DxfOtherTable {
 
 //#region 🔖️Entities
 /// 📍 One `POLYLINE` vertex record — group codes 10/20/30 (point), 42 (bulge).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfVertex {
     pub x: f64,
@@ -156,7 +156,7 @@ pub struct DxfVertex {
 /// 📐️ The R12 entity set this codec types directly. `Other` retains any entity kind this codec
 /// has no typed view for (`3DFACE`, `POINT`, `DIMENSION`, `SHAPE`, `ATTRIB`, …) — its whole
 /// group-code body verbatim, never silently dropped.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum DxfEntity {
     /// `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
@@ -234,7 +234,7 @@ pub enum DxfEntity {
 //#region 🔖️Blocks
 /// 🧱 One `BLOCK` — 2 (name), 10/20/30 (base point), followed by its own nested entity list up
 /// to `ENDBLK`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfBlock {
     pub name: String,
@@ -246,7 +246,7 @@ pub struct DxfBlock {
 //#endregion 🔖️Blocks
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf")]
 pub struct DxfSnapshot {

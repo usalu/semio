@@ -709,6 +709,57 @@ message DeleteRamp {
   string id = 1;
 }
 
+message CreateComponent {
+  string id = 1;
+  Component component = 2;
+}
+
+message SetComponent {
+  string id = 1;
+  optional string storey = 2;
+  optional string family = 3;
+  optional Point2 position = 4;
+  optional double elevation = 5;
+  optional double rotation = 6;
+  optional bool mirrored = 7;
+  optional map<string, google.protobuf.Value> host = 8;
+  optional MepSystem system = 9;
+  optional string name = 10;
+}
+
+message DeleteComponent {
+  string id = 1;
+}
+
+message SetComponentOverride {
+  string component = 1;
+  string name = 2;
+  string value = 3;
+}
+
+message RemoveComponentOverride {
+  string component = 1;
+  string name = 2;
+}
+
+message CreateMepElement {
+  string id = 1;
+  MepElement mep = 2;
+}
+
+message SetMepElement {
+  string id = 1;
+  optional string storey = 2;
+  optional MepSystem system = 3;
+  optional MepShape shape = 4;
+  repeated Point3 path = 5;
+  optional string name = 6;
+}
+
+message DeleteMepElement {
+  string id = 1;
+}
+
 message CreateDimension {
   string id = 1;
   Dimension dimension = 2;
@@ -905,6 +956,82 @@ message DeleteSheetRevision {
   string id = 1;
 }
 
+message CreateClashSet {
+  string id = 1;
+  ClashSet clash_set = 2;
+}
+
+message SetClashSet {
+  string id = 1;
+  optional string name = 2;
+  optional ElementSelector a = 3;
+  optional ElementSelector b = 4;
+  optional double tolerance = 5;
+  optional double clearance = 6;
+}
+
+message DeleteClashSet {
+  string id = 1;
+}
+
+message CreateRule {
+  string id = 1;
+  Rule rule = 2;
+}
+
+message SetRule {
+  string id = 1;
+  optional string name = 2;
+  optional RuleKind kind = 3;
+  optional double limit = 4;
+  optional RuleSeverity severity = 5;
+  optional RuleScope scope = 6;
+}
+
+message DeleteRule {
+  string id = 1;
+}
+
+message CreateIssue {
+  string id = 1;
+  Issue issue = 2;
+}
+
+message SetIssue {
+  string id = 1;
+  optional string title = 2;
+  optional string description = 3;
+  optional IssueStatus status = 4;
+  optional IssuePriority priority = 5;
+  optional string assignee = 6;
+  optional string author = 7;
+  optional string created = 8;
+  repeated string labels = 9;
+  repeated string elements = 10;
+  optional ClashRef clash = 11;
+  optional IssueViewpoint viewpoint = 12;
+}
+
+message DeleteIssue {
+  string id = 1;
+}
+
+message CreateIssueComment {
+  string id = 1;
+  IssueComment issue_comment = 2;
+}
+
+message SetIssueComment {
+  string id = 1;
+  optional string author = 2;
+  optional string date = 3;
+  optional string text = 4;
+}
+
+message DeleteIssueComment {
+  string id = 1;
+}
+
 message CreatePropertyTemplate {
   string id = 1;
   PropertyTemplate template = 2;
@@ -994,6 +1121,29 @@ message DeleteCurtainPanelOverride {
   string id = 1;
 }
 
+message SetSpaceConditions {
+  string id = 1;
+  optional map<string, google.protobuf.Value> occupancy = 2;
+  optional map<string, google.protobuf.Value> occupancy_density = 3;
+  optional map<string, google.protobuf.Value> heating_setpoint = 4;
+  optional map<string, google.protobuf.Value> cooling_setpoint = 5;
+  optional map<string, google.protobuf.Value> ventilation_rate = 6;
+  optional map<string, google.protobuf.Value> lighting_power_density = 7;
+  optional map<string, google.protobuf.Value> equipment_power_density = 8;
+  optional map<string, google.protobuf.Value> schedule = 9;
+}
+
+message RemoveSpaceConditions {
+  string id = 1;
+}
+
+message SetTypeThermalData {
+  string id = 1;
+  optional map<string, google.protobuf.Value> u_value = 2;
+  optional map<string, google.protobuf.Value> g_value = 3;
+  optional map<string, google.protobuf.Value> frame_fraction = 4;
+}
+
 message CreateFamily {
   string id = 1;
   Family family = 2;
@@ -1041,6 +1191,15 @@ message SetFamilySolid {
 
 message ModelMutation {
   oneof mutation {
+    CreateSupport create_support = 25000;
+    SetSupport set_support = 25001;
+    DeleteSupport delete_support = 25002;
+    CreateLoadCase create_load_case = 25003;
+    SetLoadCase set_load_case = 25004;
+    DeleteLoadCase delete_load_case = 25005;
+    CreateLoad create_load = 25006;
+    SetLoad set_load = 25007;
+    DeleteLoad delete_load = 25008;
     CreateSite create_site = 1;
     DeleteSite delete_site = 2;
     CreateBuilding create_building = 3;
@@ -1160,6 +1319,14 @@ message ModelMutation {
     CreateRamp create_ramp = 9001;
     SetRamp set_ramp = 9002;
     DeleteRamp delete_ramp = 9003;
+    CreateComponent create_component = 10001;
+    SetComponent set_component = 10002;
+    DeleteComponent delete_component = 10003;
+    SetComponentOverride set_component_override = 10004;
+    RemoveComponentOverride remove_component_override = 10005;
+    CreateMepElement create_mep_element = 10006;
+    SetMepElement set_mep_element = 10007;
+    DeleteMepElement delete_mep_element = 10008;
     CreateDimension create_dimension = 11001;
     DeleteDimension delete_dimension = 11002;
     SetDimension set_dimension = 11003;
@@ -1190,6 +1357,18 @@ message ModelMutation {
     CreateSheetRevision create_sheet_revision = 14007;
     SetSheetRevision set_sheet_revision = 14008;
     DeleteSheetRevision delete_sheet_revision = 14009;
+    CreateClashSet create_clash_set = 16001;
+    SetClashSet set_clash_set = 16002;
+    DeleteClashSet delete_clash_set = 16003;
+    CreateRule create_rule = 16004;
+    SetRule set_rule = 16005;
+    DeleteRule delete_rule = 16006;
+    CreateIssue create_issue = 16007;
+    SetIssue set_issue = 16008;
+    DeleteIssue delete_issue = 16009;
+    CreateIssueComment create_issue_comment = 16010;
+    SetIssueComment set_issue_comment = 16011;
+    DeleteIssueComment delete_issue_comment = 16012;
     CreatePropertyTemplate create_property_template = 18001;
     SetPropertyTemplate set_property_template = 18002;
     DeletePropertyTemplate delete_property_template = 18003;
@@ -1206,6 +1385,9 @@ message ModelMutation {
     CreateCurtainPanelOverride create_curtain_panel_override = 19008;
     SetCurtainPanelOverride set_curtain_panel_override = 19009;
     DeleteCurtainPanelOverride delete_curtain_panel_override = 19010;
+    SetSpaceConditions set_space_conditions = 20001;
+    RemoveSpaceConditions remove_space_conditions = 20002;
+    SetTypeThermalData set_type_thermal_data = 20003;
     CreateFamily create_family = 23001;
     DeleteFamily delete_family = 23002;
     SetFamily set_family = 23003;
@@ -1216,3 +1398,27 @@ message ModelMutation {
     SetFamilySolid set_family_solid = 23008;
   }
 }
+
+message StructuralLocation { message Point { double station = 1; } message Line { double start = 1; double end = 2; } oneof location { Point point = 1; Line line = 2; bool area = 3; } }
+message Restraints { bool x = 1; bool y = 2; bool z = 3; bool rx = 4; bool ry = 5; bool rz = 6; }
+message StructuralSupport { string name = 1; string member = 2; StructuralLocation location = 3; Point3 offset = 4; Restraints restraints = 5; }
+message LoadCase { string name = 1; string category = 2; double factor = 3; }
+message StructuralLoad { string name = 1; string load_case = 2; string member = 3; StructuralLocation location = 4; Point3 force = 5; Point3 moment = 6; }
+
+message CreateSupport { string id = 1; StructuralSupport support = 2; }
+
+message SetSupport { string id = 1; optional string name = 2; optional string member = 3; optional StructuralLocation location = 4; optional Point3 offset = 5; optional Restraints restraints = 6; }
+
+message DeleteSupport { string id = 1;  }
+
+message CreateLoadCase { string id = 1; LoadCase load_case = 2; }
+
+message SetLoadCase { string id = 1; optional string name = 2; optional string category = 3; optional double factor = 4; }
+
+message DeleteLoadCase { string id = 1;  }
+
+message CreateLoad { string id = 1; StructuralLoad load = 2; }
+
+message SetLoad { string id = 1; optional string name = 2; optional string load_case = 3; optional string member = 4; optional StructuralLocation location = 5; optional Point3 force = 6; optional Point3 moment = 7; }
+
+message DeleteLoad { string id = 1;  }

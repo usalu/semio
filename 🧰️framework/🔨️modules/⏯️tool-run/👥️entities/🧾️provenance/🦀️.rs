@@ -1,0 +1,68 @@
+//! 🧾️ Publishes deduplicated original operation provenance and its entity projection atomically.
+use super::{EntityMap,ToolRunEntityEdit,ToolRunEntityEditKind,ToolRunEntityEditGrant,ToolRunEntityEditProgress};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,ordered_map::{RetainedOrderedMap,BoundedOrdProgress}},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}}};
+use std::mem::{ManuallyDrop,size_of};
+
+pub type ProvenanceMap=RetainedOrderedMap<u128,()>;
+#[derive(semio_framework_value::RetireOwned)]
+struct Root {marks:ProvenanceMap,entities:EntityMap}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct ToolRunEntityProvenance {root:SealedShared<Root>,revision:u64}
+impl ToolRunEntityProvenance {
+ pub fn birth_bytes()->usize{SealedShared::<Root>::birth_bytes()}
+ pub fn birth_copy_bytes()->usize{size_of::<Root>()}
+ pub fn admit_empty(grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{if grant.maximum_copy_bytes<Self::birth_copy_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"empty provenance fixed-body admission is not funded"));}let birth=SealedShared::<Root>::prepare_birth(grant)?;let(root,mut progress)=birth.materialize(Root{marks:Default::default(),entities:Default::default()},SharedIssuer::owned());progress.copied_bytes=Self::birth_copy_bytes();Ok((Self{root,revision:0},progress))}
+ pub fn capture_copy_bytes()->usize{size_of::<Self>()}
+ pub fn admit(marks:ProvenanceMap,entities:EntityMap,revision:u64,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,ProvenanceMap,EntityMap)>{SealedShared::admit(Root{marks,entities},SharedIssuer::owned(),grant).map(|(root,progress)|(Self{root,revision},progress)).map_err(|(error,root)|(error,root.marks,root.entities))}
+ pub fn capture(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{if grant.maximum_copy_bytes<Self::capture_copy_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original provenance capture requires its fixed-body copy"));}let(root,mut progress)=self.root.try_duplicate(grant)?;progress.copied_bytes=Self::capture_copy_bytes();Ok((Self{root,revision:self.revision},progress))}
+ pub fn marks(&self)->&ProvenanceMap{&self.root.get().marks}
+ pub fn entities(&self)->&EntityMap{&self.root.get().entities}
+ pub fn revision(&self)->u64{self.revision}
+ pub fn identity(&self)->usize{self.root.identity()}
+}
+#[derive(semio_framework_value::RetireOwned)]
+struct State {original:Option<ToolRunEntityProvenance>,source:Option<RetainedCloneSource<ProvenanceMap,ToolRunEntityProvenance>>,append:Vec<u64>,keys:Option<Vec<u128>>,targets:Option<Vec<u64>>,marks:Option<ProvenanceMap>,entities:Option<EntityMap>,marks_edit:Option<ToolRunEntityEdit<u128>>,entities_edit:Option<ToolRunEntityEdit>,marks_close:Option<ControlledRetirement<ToolRunEntityEdit<u128>>>,entities_close:Option<ControlledRetirement<ToolRunEntityEdit>>,retract:Option<u32>,end:u32,index:usize,phase:u8,next_revision:Option<u64>,key_count:Option<usize>,cancelled:bool}
+pub struct ToolRunEntityProvenanceEdit {state:ManuallyDrop<State>,transferred:bool}
+fn control_demands<T:RetireOwned>(child:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{if child.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}let copy=child.next_copy_byte_demand()?;Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:child.next_capacity_byte_demand(body.max(copy))?,release_bytes:child.next_release_byte_demand()?,depth:child.next_depth_demand()?})}
+impl ToolRunEntityProvenanceEdit {
+ pub fn new(original:ToolRunEntityProvenance,retract:Option<u32>,end:u32,append:Vec<u64>)->Self{let key_count=original.marks().len().checked_add(append.len());let next_revision=original.revision.checked_add(1);Self{state:ManuallyDrop::new(State{original:Some(original),source:None,append,keys:None,targets:None,marks:None,entities:None,marks_edit:None,entities_edit:None,marks_close:None,entities_close:None,retract,end,index:0,phase:0,next_revision,key_count,cancelled:false}),transferred:false}}
+ pub fn complete(&self)->bool{self.state.phase==12&&!self.state.cancelled}
+ pub fn cancel(&mut self){self.state.cancelled=true;if let Some(child)=self.state.marks_edit.as_mut(){child.cancel();}if let Some(child)=self.state.entities_edit.as_mut(){child.cancel();}}
+ pub fn edit_capacity_bound(&self)->Result<usize,ValueError>{let count=self.state.key_count.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"provenance candidate cardinality overflow"))?;Ok(ToolRunEntityEdit::<u128>::capacity_bound_for(0,count).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"provenance candidate page capacity overflow"))?.max(ToolRunEntityEdit::<u64>::capacity_bound_for(0,count).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"entity candidate page capacity overflow"))?))}
+ pub fn publication_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Root>()+size_of::<ToolRunEntityProvenance>(),capacity_bytes:ToolRunEntityProvenance::birth_bytes(),depth:1,..Default::default()}}
+ pub fn next_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{let state=&*self.state;if state.cancelled||state.phase>=12{return Ok(Default::default());}let count=state.key_count.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"provenance cardinality overflow"))?;if state.next_revision.is_none(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"provenance revision overflow"));}Ok(match state.phase{
+  0=>RetirementDemand{copy_bytes:RetainedCloneSource::<ProvenanceMap>::borrowed_constructor_copy_bytes::<ToolRunEntityProvenance>(),capacity_bytes:RetainedCloneSource::<ProvenanceMap>::borrowed_constructor_capacity_bytes::<ToolRunEntityProvenance>(),depth:1,..Default::default()},
+  1=>RetirementDemand{capacity_bytes:count.checked_mul(size_of::<u128>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"provenance target capacity overflow"))?,depth:1,..Default::default()},
+  2|3=>RetirementDemand{copy_bytes:size_of::<u128>(),depth:1,..Default::default()},
+  4=>RetirementDemand{copy_bytes:size_of::<ProvenanceMap>()+size_of::<Vec<u128>>()+size_of::<ToolRunEntityEditKind>(),depth:1,..Default::default()},
+  5=>{let child=state.marks_edit.as_ref().unwrap();if child.complete(){RetirementDemand{copy_bytes:size_of::<ProvenanceMap>()+size_of::<ToolRunEntityEdit<u128>>(),depth:1,..Default::default()}}else{let quote=child.next_demands(body)?;child.next_demands(body.max(quote.copy_bytes))?}},
+  6=>control_demands(state.marks_close.as_ref().unwrap(),body)?,
+  7=>RetirementDemand{capacity_bytes:state.marks.as_ref().unwrap().len().checked_mul(size_of::<u64>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"entity target capacity overflow"))?,depth:1,..Default::default()},
+  8=>RetirementDemand{copy_bytes:size_of::<u64>(),depth:1,..Default::default()},
+  9=>RetirementDemand{copy_bytes:size_of::<EntityMap>()+size_of::<Vec<u64>>()+size_of::<ToolRunEntityEditKind>(),depth:1,..Default::default()},
+  10=>{let child=state.entities_edit.as_ref().unwrap();if child.complete(){RetirementDemand{copy_bytes:size_of::<EntityMap>()+size_of::<ToolRunEntityEdit>(),depth:1,..Default::default()}}else{let quote=child.next_demands(body)?;child.next_demands(body.max(quote.copy_bytes))?}},
+  11=>control_demands(state.entities_close.as_ref().unwrap(),body)?,
+  _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"provenance producer phase is invalid")),
+ })}
+ pub fn advance(&mut self,grant:ToolRunEntityEditGrant)->Result<ToolRunEntityEditProgress,ValueError>{
+  if self.state.cancelled||self.state.phase>=12||grant.retirement.maximum_items==0{return Ok(Default::default());}let quote=self.next_demands(grant.retirement.maximum_copy_bytes)?;if quote.copy_bytes>grant.retirement.maximum_copy_bytes||quote.capacity_bytes>grant.retirement.maximum_capacity_bytes||quote.release_bytes>grant.retirement.maximum_release_bytes||quote.depth>grant.retirement.maximum_depth{return Ok(Default::default());}
+  let state=&mut *self.state;let mut receipt=ToolRunEntityEditProgress{retirement:RetainedCloneProgress{copied_items:1,..Default::default()},..Default::default()};match state.phase{
+   0=>{let original=state.original.take().unwrap();match RetainedCloneSource::admit_borrowed(original,ToolRunEntityProvenance::marks,grant.retirement){Ok((source,progress))=>{state.source=Some(source);state.phase=1;receipt.retirement=progress;},Err((error,original))=>{state.original=Some(original);return Err(error);}}},
+   1=>{let mut keys=Vec::new();keys.try_reserve_exact(state.key_count.unwrap()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"provenance target backing allocation failed"))?;receipt.retirement.retained_capacity_bytes=keys.capacity()*size_of::<u128>();state.keys=Some(keys);state.phase=2;},
+   2=>{let source=state.source.as_ref().unwrap().borrow();if state.index==source.get().len(){state.index=0;state.phase=3;}else{if grant.comparison.maximum_items==0||grant.comparison.maximum_bytes<size_of::<u32>(){return Ok(Default::default());}let key=*source.get().get_index(state.index).unwrap().0;if state.retract.is_none_or(|end|(key>>64)<=end as u128){state.keys.as_mut().unwrap().push(key);receipt.retirement.copied_bytes=size_of::<u128>();}state.index+=1;receipt.comparison=BoundedOrdProgress{compared_items:1,compared_bytes:size_of::<u32>()};}},
+   3=>{if state.index==state.append.len(){state.index=0;state.phase=4;}else{state.keys.as_mut().unwrap().push(((state.end as u128)<<64)|state.append[state.index]as u128);state.index+=1;receipt.retirement.copied_bytes=size_of::<u128>();}},
+   4=>{state.marks_edit=Some(ToolRunEntityEdit::<u128>::new(ProvenanceMap::default(),state.keys.take().unwrap(),ToolRunEntityEditKind::Append));state.phase=5;receipt.retirement.copied_bytes=quote.copy_bytes;},
+   5=>{let child=state.marks_edit.as_mut().unwrap();if !child.complete(){return child.advance(grant);}state.marks=Some(child.take_output(grant.retirement)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"provenance map child lost its private candidate"))?.0);let child=state.marks_edit.take().unwrap();match ControlledRetirement::new(child){Ok(owner)=>state.marks_close=Some(owner),Err((error,child))=>{state.marks_edit=Some(child);return Err(error);}}state.phase=6;receipt.retirement.copied_bytes=quote.copy_bytes;},
+   6=>{let child=state.marks_close.as_mut().unwrap();if !child.terminal_is_empty(){receipt.retirement=child.step(grant.retirement)?.progress();}else{state.marks_close=None;state.phase=7;}},
+   7=>{let mut targets=Vec::new();targets.try_reserve_exact(state.marks.as_ref().unwrap().len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"entity target backing allocation failed"))?;receipt.retirement.retained_capacity_bytes=targets.capacity()*size_of::<u64>();state.targets=Some(targets);state.phase=8;},
+   8=>{let marks=state.marks.as_ref().unwrap();if state.index==marks.len(){state.index=0;state.phase=9;}else{state.targets.as_mut().unwrap().push(*marks.get_index(state.index).unwrap().0 as u64);state.index+=1;receipt.retirement.copied_bytes=size_of::<u64>();}},
+   9=>{state.entities_edit=Some(ToolRunEntityEdit::new(EntityMap::default(),state.targets.take().unwrap(),ToolRunEntityEditKind::Append));state.phase=10;receipt.retirement.copied_bytes=quote.copy_bytes;},
+   10=>{let child=state.entities_edit.as_mut().unwrap();if !child.complete(){return child.advance(grant);}state.entities=Some(child.take_output(grant.retirement)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"entity projection child lost its private candidate"))?.0);let child=state.entities_edit.take().unwrap();match ControlledRetirement::new(child){Ok(owner)=>state.entities_close=Some(owner),Err((error,child))=>{state.entities_edit=Some(child);return Err(error);}}state.phase=11;receipt.retirement.copied_bytes=quote.copy_bytes;},
+   11=>{let child=state.entities_close.as_mut().unwrap();if !child.terminal_is_empty(){receipt.retirement=child.step(grant.retirement)?.progress();}else{state.entities_close=None;state.phase=12;}},
+   _=>unreachable!(),
+  }Ok(receipt)
+ }
+ pub fn take_output(&mut self,grant:RetainedCloneGrant)->Result<Option<(ToolRunEntityProvenance,RetainedCloneProgress)>,ValueError>{if !self.complete(){return Ok(None);}let quote=self.publication_demands();if grant.maximum_items==0||grant.maximum_copy_bytes<quote.copy_bytes||grant.maximum_capacity_bytes<quote.capacity_bytes||grant.maximum_depth<quote.depth{return Ok(None);}let birth=SealedShared::<Root>::prepare_birth(grant)?;let root=Root{marks:self.state.marks.take().unwrap(),entities:self.state.entities.take().unwrap()};let(root,mut receipt)=birth.materialize(root,SharedIssuer::owned());receipt.copied_bytes=quote.copy_bytes;self.state.phase=13;Ok(Some((ToolRunEntityProvenance{root,revision:self.state.next_revision.unwrap()},receipt)))}
+}
+impl RetireOwned for ToolRunEntityProvenanceEdit {fn retirement(mut self)->Box<dyn RetirementCursor>{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}fn retirement_element_copy_bytes()->usize{size_of::<Self>()}}
+impl Drop for ToolRunEntityProvenanceEdit{fn drop(&mut self){assert!(self.transferred,"original provenance producer requires controlled retirement")}}

@@ -40,6 +40,7 @@
         "forwardAllArgs": true
       }
     },
+    "test-original-ownership":{"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-ownership","forwardAllArgs":true}},
     "canonical-architecture": {
       "executor": "nx:run-commands",
       "cache": false,

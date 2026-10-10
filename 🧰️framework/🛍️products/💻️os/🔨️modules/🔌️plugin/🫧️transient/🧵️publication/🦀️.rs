@@ -300,6 +300,10 @@ where
         })
     }
 
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn terminal_is_empty(&self, owner: &store::TransientStore<P, M>) -> bool {
         self.retired.is_none() && self.owns_terminal(owner)
     }

@@ -12,7 +12,9 @@
     "sectionEnabled",
     "sectionAxis",
     "sectionOffset",
-    "framed"
+    "framed",
+    "energyOverlay",
+    "energyMode"
   ],
   "properties": {
     "camera": {
@@ -44,6 +46,12 @@
     },
     "framed": {
       "type": "boolean"
+    },
+    "energyOverlay": {
+      "type": "boolean"
+    },
+    "energyMode": {
+      "type": "string"
     }
   },
   "$defs": {

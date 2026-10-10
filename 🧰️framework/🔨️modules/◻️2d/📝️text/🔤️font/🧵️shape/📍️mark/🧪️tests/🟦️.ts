@@ -1,0 +1,11 @@
+/** 🧫️ Shared original anchor receipts agree with the independently parsed native font oracle. */
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import {FontFaceAdmissionJob} from "../../../🟦️.ts";
+import {builtinFontLocations} from "../../../📇️catalog/🟦️.ts";
+import {FontLookupPlanJob} from "../../🟦️.ts";
+import {FontMarkJob} from "../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json";
+import rows from "../🧫️fixtures/🔣️.json";
+const limits={maxFontBytes:67108864,maxTables:128,maxGlyphs:65536,maxPoints:1048576,maxContours:65536,maxComponents:262144,maxDepth:32,maxSegments:1048576,maxWork:1e9};
+test("shared genuine mark anchors preserve original font custody",async()=>{expect(new Ajv({strict:true}).compile(schema)(rows)).toBe(true);const source=builtinFontLocations("Anta")[0]!,bytes=new Uint8Array(await Bun.file(source.url).arrayBuffer()),admission=new FontFaceAdmissionJob(bytes,limits);while(!admission.advance(4096).done){}const face=admission.result(),plan=new FontLookupPlanJob(face,"positioning","latn",["mark"],limits.maxWork);while(!plan.advance(4096).done){}let matched=0;for(const lookup of plan.result()){for(const row of rows){const expected=row.attachment===null?null:{x:row.attachment[0]!,y:row.attachment[1]!};for(const grant of [1,7,4096]){const job=new FontMarkJob(face,lookup,row.base,row.mark,limits.maxWork);let work=0;while(true){const p=job.advance(grant);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;expect(()=>job.result()).toThrow();}expect(job.result()).toEqual(expected);const moved=job.intoRetirement();while(!moved.job.advance(1).done){}expect(moved.output).toEqual(expected);expect(face.bytes).toBe(bytes);matched++;}for(const stop of [0,1,2,7,20,40,100]){const job=new FontMarkJob(face,lookup,row.base,row.mark,limits.maxWork);if(stop)job.advance(stop);job.cancel();expect(()=>job.result()).toThrow();const moved=job.intoRetirement();expect(moved.output).toBeNull();while(!moved.job.advance(1).done){}expect(face.bytes).toBe(bytes);}}}expect(matched).toBe(6);const selected=plan.intoRetirement();while(!selected.job.advance(1).done){}const moved=admission.intoRetirement();while(!moved.job.advance(1).done){}console.log("[DEBUG] Actual shared native ttf-parser anchor receipts 383/374 and missing X attachment match original GPOS at grants1/7/4096 and seven interruptions");});

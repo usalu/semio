@@ -47,7 +47,8 @@ pub fn emit(x: &mut Export<'_>) {
         let direction = (building.rotation.abs() > 1e-12).then(|| [building.rotation.cos(), building.rotation.sin(), 0.0]);
         let axis = x.ifc.axis3([building.origin.x, building.origin.y, building.elevation], None, direction);
         let placement = x.ifc.place(Some(site_placement), axis);
-        let absolute = building.elevation + model.sites.get(&building.site).map_or(0.0, |site| site.elevation);
+        let datum = model.storeys.iter().filter(|(_, storey)| storey.building == *id).find_map(|(storey, _)| x.inferred.storey_levels.get(storey)).map(|level| level.absolute_elevation - level.elevation);
+        let absolute = datum.unwrap_or(building.elevation + model.sites.get(&building.site).map_or(0.0, |site| site.elevation));
         let entity = x.ifc.rooted("IFCBUILDING", id, &building.name, "", vec![opt_text(id), rf(placement), unset(), unset(), en("ELEMENT"), real(absolute), unset(), unset()]);
         x.buildings.insert(id.clone(), BuildingRef { ifc: entity, placement });
         x.links.elements.insert(id.clone(), entity);

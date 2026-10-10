@@ -407,7 +407,7 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     let mut utility_meta = meta.clone();
     let view = meta.view_state.clone().expect("canvas window view");
     utility_meta.view_state = Some(ViewModel {
-        active_utility_by_window_id: std::collections::HashMap::from([("drawing-canvas".to_string(), "shapeRect".to_string())]),
+        active_utility_by_window_id: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([("drawing-canvas".to_string(), "shapeRect".to_string())]),
         active_utility_id: None,
         ..view
     });
@@ -688,7 +688,7 @@ fn assert_artifact_publication_units(receipt: &artifact_laws::TypedOperationFixt
 fn drawing_composite_shape_meta() -> semio_framework_plugin::ActionMeta {
     use semio_framework_plugin::{ViewSessionIdentity, ViewWindowInstance};
     let view = ViewModel {
-        active_utility_by_window_id: std::collections::HashMap::from([(DRAWING_PLAY_WINDOW_CANVAS.to_string(), "shapeRect".to_string())]),
+        active_utility_by_window_id: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([(DRAWING_PLAY_WINDOW_CANVAS.to_string(), "shapeRect".to_string())]),
         focused_window_id: Some(DRAWING_PLAY_WINDOW_CANVAS.into()),
         window_instances: vec![ViewWindowInstance { id: DRAWING_PLAY_WINDOW_CANVAS.into(), window_kind_id: DRAWING_PLAY_WINDOW_CANVAS.into() }],
         session_identity: Some(ViewSessionIdentity { user_id: "draw-repeat-owner".into(), display_name: "Draw Repeat Owner".into() }),

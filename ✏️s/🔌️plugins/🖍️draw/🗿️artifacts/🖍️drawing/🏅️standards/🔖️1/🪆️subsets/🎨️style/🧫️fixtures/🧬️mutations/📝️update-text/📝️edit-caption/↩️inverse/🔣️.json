@@ -1,8 +1,7 @@
-[
-  {
-    "mutation": "updateText",
-    "layerId": "caption",
-    "content": "Text",
-    "size": 24
-  }
-]
+{
+  "mutation": "updateText",
+  "layerId": "caption",
+  "content": "Text",
+  "size": 24,
+  "fontFamily": "anta"
+}

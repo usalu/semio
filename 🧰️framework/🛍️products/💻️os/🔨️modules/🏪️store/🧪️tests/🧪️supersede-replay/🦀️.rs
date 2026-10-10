@@ -279,7 +279,7 @@ async fn downstream_warning_error_and_fatal_outcomes_are_reported_per_mutation()
     assert_eq!(levels, vec![Some(semio_framework_diagnostic::Severity::Warning), Some(semio_framework_diagnostic::Severity::Error), Some(semio_framework_diagnostic::Severity::Fatal)]);
     assert!(report.blocks_finalize());
     assert_eq!(report.worst, Some(semio_framework_diagnostic::Severity::Fatal));
-    drop(result);
+    result.retire_unscheduled().expect("the inspected replay retires from its own quoted demands");
     let generation = store.generation();
     let snapshot = store.snapshot().unwrap();
     for (target, operation) in [(&ids[1], SeverityMutation::SetErrorN(SetErrorN { n: 6 })), (&ids[2], SeverityMutation::SetFatalN(SetFatalN { n: 7 }))] {
@@ -442,6 +442,7 @@ async fn convergence_early_exit_equals_the_full_replay() {
         let replay = store.begin_report_replay(&drafts(&[(&ids[0], Some(set(50)))]), None).expect("replay");
         let result = finish(store, replay);
         reports.push((result.converged_at(), result.state().map(|state| state.n), outcomes_by_position(store, &store.replay_report(&result).unwrap().outcomes)));
+        result.retire_unscheduled().expect("the inspected replay retires from its own quoted demands");
     }
     assert!(reports[0].0.is_some_and(|length| length < 7), "the early store converges before the head: {:?}", reports[0].0);
     assert_eq!(reports[1].0, None, "the full store replays every edit");
@@ -907,7 +908,8 @@ async fn an_interior_revert_keeps_the_early_exit_equal_to_the_full_replay() {
     let replayed = finish(&full, full.begin_report_replay(&restate(&full), None).expect("full replay"));
     assert!(replayed.converged_at().is_none());
     assert_eq!(outcomes_by_position(&early, &early.replay_report(&converged).unwrap().outcomes), outcomes_by_position(&full, &full.replay_report(&replayed).unwrap().outcomes));
-    drop((converged, replayed));
+    converged.retire_unscheduled().expect("the converged replay retires from its own quoted demands");
+    replayed.retire_unscheduled().expect("the full replay retires from its own quoted demands");
     fixture_author(&mut early, ArtifactCommand::Redo).await.expect("redo re-applies the interior delete");
     fixture_author(&mut full, ArtifactCommand::Redo).await.expect("redo re-applies the interior delete");
     for store in [&early, &full] {
@@ -1413,6 +1415,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
             let grant = fixture_retirement_policy(close_items, release_bytes);
             match retirement.close_step(grant).unwrap() {
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); break; }
+                semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => panic!("unpublished preview owns no outstanding reads"),
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
             }
             assert_eq!(store.snapshot_ref().n, Some(99));
@@ -1433,6 +1436,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
             let grant = fixture_retirement_policy(close_items, release_bytes);
             match retirement.close_step(grant).unwrap() {
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); break; }
+                semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => panic!("unpublished replay owns no outstanding reads"),
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
             }
             assert_eq!(store.snapshot_ref().n, Some(99));

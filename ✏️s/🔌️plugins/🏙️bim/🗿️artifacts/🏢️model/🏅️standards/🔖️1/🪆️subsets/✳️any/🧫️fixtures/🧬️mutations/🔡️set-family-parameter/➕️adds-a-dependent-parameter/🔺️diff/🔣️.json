@@ -1,1 +1,11 @@
-{}
+{
+  "family_parameters": {
+    "fam-table.quad": {
+      "entry": "Created",
+      "family": "fam-table",
+      "kind": "Length",
+      "name": "quad",
+      "value": "double * 2"
+    }
+  }
+}

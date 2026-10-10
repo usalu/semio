@@ -227,6 +227,38 @@ impl<P: 'static, M: 'static> super::ArtifactStoreOneItemPreparationFactory<P, M>
     fn stamped_mutation_id(&self) -> Option<&super::MutationId> { self.factory.stamped_mutation_id() }
 }
 
+/// 🏭️ Authoring-only semantic authority of a catalog whose mutation names its own canonical JSON wire: authoring and
+/// publication borrow the wire from the original operation, and no retained gesture is prepared. Nothing is copied or leaked.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+pub struct ArtifactCanonicalAuthoringFactory<P: 'static, M: 'static>(std::marker::PhantomData<fn() -> (P, M)>);
+
+impl<P: 'static, M: 'static> ArtifactCanonicalAuthoringFactory<P, M> {
+    /// 🌱️ Constructs the factory a canonical authoring catalog installs.
+    pub fn new() -> Self { Self(std::marker::PhantomData) }
+}
+
+impl<P: 'static, M: 'static> Default for ArtifactCanonicalAuthoringFactory<P, M> {
+    fn default() -> Self { Self::new() }
+}
+
+impl<P: 'static, M: super::ArtifactCanonicalJson + 'static> super::ArtifactStoreOneItemPreparationFactory<P, M> for ArtifactCanonicalAuthoringFactory<P, M> {
+    fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> {
+        Some(ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: mutation })
+    }
+
+    fn preflight(&self, _mutation: &M, _lane: super::HistoryLane) -> Result<super::ArtifactStoreOneItemFootprint, String> {
+        Err("canonical authoring catalog prepares no retained gesture".into())
+    }
+
+    fn begin_demand(&self, _mutation: &M, _lane: super::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
+        Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "canonical authoring catalog prepares no retained gesture"))
+    }
+
+    fn begin(&self, request: super::ArtifactStoreOneItemPreparationRequest<P, M>, _grant: super::ArtifactStoreOneItemGrant) -> Result<(Box<dyn super::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, super::ArtifactStoreOneItemPreparationRequest<P, M>)> {
+        Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner, "canonical authoring catalog prepares no retained gesture"), request))
+    }
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

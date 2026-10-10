@@ -1,1 +1,49 @@
-{}
+{
+  "schedules": {
+    "sch-takeoff": {
+      "category": "Material",
+      "columns": [
+        {
+          "key": {
+            "Field": {
+              "field": "Material"
+            }
+          },
+          "total": false
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "LayerVolume"
+            }
+          },
+          "total": true
+        },
+        {
+          "key": {
+            "Field": {
+              "field": "LayerMass"
+            }
+          },
+          "total": true
+        }
+      ],
+      "entry": "Created",
+      "filter": [],
+      "group": [
+        {
+          "key": {
+            "Field": {
+              "field": "Material"
+            }
+          }
+        }
+      ],
+      "itemize": false,
+      "name": "Material take-off",
+      "phases": [],
+      "sort": [],
+      "storeys": []
+    }
+  }
+}

@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Values
 /// 🔢️ How many findings of each severity.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SeverityCounts {
     pub error: u32,
     pub warning: u32,
@@ -44,7 +44,7 @@ impl SeverityCounts {
 }
 
 /// 🧩️ What the findings say about one element: how many name it, its worst severity and the codes (ordered, once each).
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct ElementFindings {
     pub severity: Severity,
     pub count: u32,
@@ -52,7 +52,7 @@ pub struct ElementFindings {
 }
 
 /// 🗂️ The index of one set of findings. `elements` holds every id a finding names (elements, storeys, buildings), `categories` and `codes` (by slug) count findings, `storeys` the findings that sit on a storey; `total` counts all.
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub struct DiagnosticIndex {
     pub total: SeverityCounts,
     pub elements: BTreeMap<String, ElementFindings>,

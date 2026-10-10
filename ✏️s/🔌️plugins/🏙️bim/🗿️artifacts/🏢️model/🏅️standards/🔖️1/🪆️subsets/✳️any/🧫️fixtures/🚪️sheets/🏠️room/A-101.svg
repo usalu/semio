@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 420 297" width="420mm" height="297mm" xmlns="http://www.w3.org/2000/svg" class="sheet-page"
+    version="1.1" data-unit="mm" data-sheet="sh-plans" data-number="A-101" data-name="Plan and elevation"
+    data-paper="A3" data-width="420" data-height="297" aria-label="A-101 Plan and elevation"><title>A-101 Plan and elevation</title><desc>Sheet A-101 Plan and elevation: 3 viewport(s) at paper size A3, paper millimetres.</desc><style>
+      .plan{font-family:sans-serif}
+      path{stroke:#000;stroke-linecap:round;stroke-linejoin:round;fill:none}
+      .cut{stroke-width:0.5}
+      .projection{stroke-width:0.25}
+      .hidden{stroke-width:0.18}
+      .annotation{stroke-width:0.13}
+      .hidden{stroke-dasharray:1.5 0.75}
+      path.region{fill-rule:evenodd}
+      path.region.cut{fill:#1a1a1a}
+      path.region.projection{fill:#e6e6e6}
+      text{fill:#000;stroke:none;font-size:3.2px}
+      text.title{font-size:5px;font-weight:bold}
+      text.space-tag{text-anchor:middle}
+      text.grid-label{font-size:3.5px;text-anchor:middle;dominant-baseline:central}
+    
+      .sheet-page{font-family:sans-serif}
+      rect{fill:none;stroke:#000}
+      line{stroke:#000}
+      text.cell-label,text.revision-heading{fill:#444}
+      text.caption{font-weight:bold}
+    </style><defs><clipPath id="clip-vp-detail"><rect x="240" y="30" width="160" height="120"/></clipPath><clipPath
+            id="clip-vp-plan"><rect x="30" y="30" width="80" height="60"/></clipPath><clipPath id="clip-vp-south"><rect
+                x="30" y="110" width="200" height="60"/></clipPath></defs><g class="frame"><rect x="20" y="10"
+            width="390" height="277" class="frame" stroke-width="0.7"/></g><g id="viewport-vp-detail"
+        class="viewport section" data-viewport="vp-detail" data-view="v-section-a" data-kind="section" data-scale="25"
+        data-label="Section A" data-window="240 30 160 120" clip-path="url(#clip-vp-detail)" aria-label="Section A"><title>Section A</title><g
+            class="layer regions"><path d="M 274 150 L 526 150 L 526 30 L 274 30 Z" class="region projection silhouette"
+                data-element="w2" data-id="w2/Silhouette/0"/><path d="M 320 -82 L 320 30 L 480 30 L 480 -82 Z"
+                class="region projection silhouette" data-element="w4" data-id="w4/Silhouette/0"/><path
+                d="M 387.226 150 L 412.774 150 L 412.774 30 L 387.226 30 Z" class="region projection silhouette"
+                data-element="col-a" data-id="col-a/Silhouette/0"/><path d="M 332 30 L 348 30 L 348 -82 L 332 -82 Z"
+                class="region cut section-cut" data-element="col-b" data-id="col-b/SectionCut/0"/><path
+                d="M 514 150 L 526 150 L 526 30 L 514 30 Z" class="region cut section-cut" data-element="w1"
+                data-id="w1/SectionCut/0"/><path d="M 286 150 L 286 30 L 274 30 L 274 150 Z"
+                class="region cut section-cut" data-element="w3" data-id="w3/SectionCut/0"/></g><g class="layer lines"><path
+                d="M 387.226 150 L 398.732 150" class="line projection edge" data-element="col-a"
+                data-id="col-a/Edge/0"/><path d="M 387.226 150 L 387.226 30" class="line projection edge"
+                data-element="col-a" data-id="col-a/Edge/1"/><path d="M 387.226 150 L 401.268 150"
+                class="line projection edge" data-element="col-a" data-id="col-a/Edge/2"/><path
+                d="M 412.774 150 L 398.732 150" class="line projection edge" data-element="col-a"
+                data-id="col-a/Edge/3"/><path d="M 412.774 150 L 412.774 30" class="line projection edge"
+                data-element="col-a" data-id="col-a/Edge/4"/><path d="M 412.774 150 L 401.268 150"
+                class="line projection edge" data-element="col-a" data-id="col-a/Edge/5"/><path
+                d="M 398.732 150 L 398.732 30" class="line projection edge" data-element="col-a"
+                data-id="col-a/Edge/6"/><path d="M 387.226 30 L 398.732 30" class="line projection edge"
+                data-element="col-a" data-id="col-a/Edge/7"/><path d="M 387.226 30 L 401.268 30"
+                class="line projection edge" data-element="col-a" data-id="col-a/Edge/8"/><path
+                d="M 398.732 30 L 412.774 30" class="line projection edge" data-element="col-a" data-id="col-a/Edge/9"/><path
+                d="M 412.774 30 L 401.268 30" class="line projection edge" data-element="col-a"
+                data-id="col-a/Edge/10"/><path d="M 332 30 L 332 -82" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/0"/><path d="M 332 30 L 348 30" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/1"/><path d="M 332 -82 L 348 -82" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/2"/><path d="M 348 30 L 348 -82" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/3"/><path d="M 514 150 L 526 150" class="line projection edge" data-element="w1"
+                data-id="w1/Edge/0"/><path d="M 514 150 L 514 30" class="line projection edge" data-element="w1"
+                data-id="w1/Edge/1"/><path d="M 526 150 L 526 30" class="line projection edge" data-element="w1"
+                data-id="w1/Edge/2"/><path d="M 514 30 L 526 30" class="line projection edge" data-element="w1"
+                data-id="w1/Edge/3"/><path d="M 514 30 L 286 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/0"/><path d="M 286 150 L 514 150" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/1"/><path d="M 286 150 L 274 150" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/2"/><path d="M 286 150 L 286 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/3"/><path d="M 526 30 L 274 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/4"/><path d="M 526 150 L 274 150" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/5"/><path d="M 274 150 L 274 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/6"/><path d="M 286 30 L 274 30" class="line projection edge" data-element="w2"
+                data-id="w2/Edge/7"/><path d="M 320 -82 L 320 30" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/0"/><path d="M 320 -82 L 480 -82" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/1"/><path d="M 480 30 L 320 30" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/2"/><path d="M 480 30 L 480 -82" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/3"/><path d="M 240 150 L 560 150" class="line annotation datum"
+                data-element="st-ground" data-id="st-ground/Datum/0"/><path d="M 240 30 L 560 30"
+                class="line annotation datum" data-element="st-first" data-id="st-first/Datum/0"/><path
+                d="M 240 -82 L 560 -82" class="line annotation datum" data-element="st-first"
+                data-id="st-first/Datum/1"/></g><g class="layer texts"><text x="566" y="150"
+                class="annotation datum-label" data-element="st-ground" data-id="st-ground/DatumLabel/0"><tspan x="566"
+                    dy="-1.84">Ground</tspan><tspan x="566" dy="3.68">+0.00</tspan></text><text x="566" y="30"
+                class="annotation datum-label" data-element="st-first" data-id="st-first/DatumLabel/0"><tspan x="566"
+                    dy="-1.84">First</tspan><tspan x="566" dy="3.68">+3.00</tspan></text><text x="566" y="-82"
+                class="annotation datum-label" data-element="st-first" data-id="st-first/DatumLabel/1"><tspan x="566"
+                    dy="-1.84">First top</tspan><tspan x="566" dy="3.68">+5.80</tspan></text></g></g><g
+        id="viewport-vp-plan" class="viewport plan" data-viewport="vp-plan" data-view="v-plan-ground" data-kind="plan"
+        data-scale="100" data-label="Ground floor" data-window="30 30 80 60" clip-path="url(#clip-vp-plan)"
+        aria-label="Ground floor"><title>Ground floor</title><g class="layer regions"><path
+                d="M 38.5 81.5 L 101.5 81.5 L 98.5 78.5 L 41.5 78.5 Z" class="region cut wall-cut" data-element="w0"
+                data-id="w0/WallCut/0"/><path d="M 101.5 81.5 L 101.5 38.5 L 98.5 41.5 L 98.5 78.5 Z"
+                class="region cut wall-cut" data-element="w1" data-id="w1/WallCut/0"/><path
+                d="M 101.5 38.5 L 38.5 38.5 L 41.5 41.5 L 98.5 41.5 Z" class="region cut wall-cut" data-element="w2"
+                data-id="w2/WallCut/0"/><path d="M 38.5 38.5 L 38.5 81.5 L 41.5 78.5 L 41.5 41.5 Z"
+                class="region cut wall-cut" data-element="w3" data-id="w3/WallCut/0"/><path
+                d="M 69.683 63.592 L 73.193 61.674 L 70.317 56.408 L 66.807 58.326 Z" class="region cut column-cut"
+                data-element="col-a" data-id="col-a/ColumnCut/0"/></g><g class="layer lines"/><g class="layer texts"/></g><g
+        id="viewport-vp-south" class="viewport elevation" data-viewport="vp-south" data-view="v-south"
+        data-kind="elevation" data-scale="50" data-label="South" data-window="30 110 200 60"
+        clip-path="url(#clip-vp-south)" aria-label="South"><title>South</title><g class="layer regions"><path
+                d="M 107 170 L 233 170 L 233 110 L 107 110 Z" class="region projection silhouette" data-element="w2"
+                data-id="w2/Silhouette/0"/><path d="M 130 54 L 130 110 L 210 110 L 210 54 Z"
+                class="region projection silhouette" data-element="w4" data-id="w4/Silhouette/0"/><path
+                d="M 163.613 170 L 176.387 170 L 176.387 110 L 163.613 110 Z" class="region projection silhouette"
+                data-element="col-a" data-id="col-a/Silhouette/0"/><path d="M 144 110 L 144 54 L 136 54 L 136 110 Z"
+                class="region projection silhouette" data-element="col-b" data-id="col-b/Silhouette/0"/><path
+                d="M 227 110 L 227 170 L 233 170 L 233 110 Z" class="region projection silhouette" data-element="w1"
+                data-id="w1/Silhouette/0"/><path d="M 113 170 L 113 110 L 107 110 L 107 170 Z"
+                class="region projection silhouette" data-element="w3" data-id="w3/Silhouette/0"/><path
+                d="M 107 110 L 107 170 L 233 170 L 233 110 Z" class="region projection silhouette" data-element="w0"
+                data-id="w0/Silhouette/0"/></g><g class="layer lines"><path d="M 163.613 170 L 169.366 170"
+                class="line projection edge" data-element="col-a" data-id="col-a/Edge/0"/><path
+                d="M 163.613 170 L 170.634 170" class="line projection edge" data-element="col-a"
+                data-id="col-a/Edge/1"/><path d="M 176.387 170 L 169.366 170" class="line projection edge"
+                data-element="col-a" data-id="col-a/Edge/2"/><path d="M 176.387 170 L 170.634 170"
+                class="line projection edge" data-element="col-a" data-id="col-a/Edge/3"/><path
+                d="M 163.613 110 L 169.366 110" class="line projection edge" data-element="col-a"
+                data-id="col-a/Edge/4"/><path d="M 163.613 110 L 170.634 110" class="line projection edge"
+                data-element="col-a" data-id="col-a/Edge/5"/><path d="M 169.366 110 L 176.387 110"
+                class="line projection edge" data-element="col-a" data-id="col-a/Edge/6"/><path
+                d="M 176.387 110 L 170.634 110" class="line projection edge" data-element="col-a"
+                data-id="col-a/Edge/7"/><path d="M 136 110 L 136 54" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/0"/><path d="M 136 110 L 144 110" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/1"/><path d="M 144 110 L 144 54" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/2"/><path d="M 136 54 L 144 54" class="line projection edge" data-element="col-b"
+                data-id="col-b/Edge/3"/><path d="M 113 110 L 107 110" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/0"/><path d="M 113 110 L 227 110" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/1"/><path d="M 227 170 L 113 170" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/2"/><path d="M 227 170 L 233 170" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/3"/><path d="M 113 170 L 107 170" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/4"/><path d="M 107 110 L 107 170" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/5"/><path d="M 107 110 L 233 110" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/6"/><path d="M 107 170 L 233 170" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/7"/><path d="M 233 170 L 233 110" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/8"/><path d="M 227 110 L 233 110" class="line projection edge" data-element="w0"
+                data-id="w0/Edge/9"/><path d="M 130 54 L 130 110" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/0"/><path d="M 130 54 L 210 54" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/1"/><path d="M 210 110 L 130 110" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/2"/><path d="M 210 110 L 210 54" class="line projection edge" data-element="w4"
+                data-id="w4/Edge/3"/><path d="M 70 170 L 270 170" class="line annotation datum" data-element="st-ground"
+                data-id="st-ground/Datum/0"/><path d="M 70 110 L 270 110" class="line annotation datum"
+                data-element="st-first" data-id="st-first/Datum/0"/><path d="M 70 54 L 270 54"
+                class="line annotation datum" data-element="st-first" data-id="st-first/Datum/1"/></g><g
+            class="layer texts"><text x="273" y="170" class="annotation datum-label" data-element="st-ground"
+                data-id="st-ground/DatumLabel/0"><tspan x="273" dy="-1.84">Ground</tspan><tspan x="273"
+                    dy="3.68">+0.00</tspan></text><text x="273" y="110" class="annotation datum-label"
+                data-element="st-first" data-id="st-first/DatumLabel/0"><tspan x="273" dy="-1.84">First</tspan><tspan
+                    x="273" dy="3.68">+3.00</tspan></text><text x="273" y="54" class="annotation datum-label"
+                data-element="st-first" data-id="st-first/DatumLabel/1"><tspan x="273" dy="-1.84">First top</tspan><tspan
+                    x="273" dy="3.68">+5.80</tspan></text></g></g><g class="captions"><text x="240" y="155"
+            class="caption" font-size="3.5" text-anchor="start" font-weight="bold">Section A   1:25</text><text x="30"
+            y="95" class="caption" font-size="3.5" text-anchor="start" font-weight="bold">Ground floor   1:100</text><text
+            x="30" y="175" class="caption" font-size="3.5" text-anchor="start" font-weight="bold">South   1:50</text></g><g
+        class="title-block"><rect x="230" y="239" width="180" height="48" class="title-block" stroke-width="0.5"/><rect
+            x="230" y="239" width="110" height="16" class="title-cell" stroke-width="0.18"/><text x="231.5" y="242.2"
+            class="cell-label" font-size="2" text-anchor="start">Project</text><text x="231.5" y="250.5"
+            class="cell-value" font-size="4" text-anchor="start">Room</text><rect x="340" y="239" width="70" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="341.5" y="242.2" class="cell-label" font-size="2"
+            text-anchor="start">Sheet no.</text><text x="341.5" y="250.5" class="cell-value" font-size="5"
+            text-anchor="start" font-weight="bold">A-101</text><rect x="230" y="255" width="110" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="231.5" y="258.2" class="cell-label" font-size="2"
+            text-anchor="start">Title</text><text x="231.5" y="266.5" class="cell-value" font-size="5"
+            text-anchor="start" font-weight="bold">Plan and elevation</text><rect x="340" y="255" width="70" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="341.5" y="258.2" class="cell-label" font-size="2"
+            text-anchor="start">Scale</text><text x="341.5" y="266.5" class="cell-value" font-size="3.5"
+            text-anchor="start">1:25, 1:50, 1:100</text><rect x="230" y="271" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="231.5" y="274.2" class="cell-label" font-size="2"
+            text-anchor="start">Drawn by</text><text x="231.5" y="282.5" class="cell-value" font-size="3.5"
+            text-anchor="start">UG</text><rect x="275" y="271" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="276.5" y="274.2" class="cell-label" font-size="2"
+            text-anchor="start">Checked by</text><text x="276.5" y="282.5" class="cell-value" font-size="3.5"
+            text-anchor="start">AB</text><rect x="320" y="271" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="321.5" y="274.2" class="cell-label" font-size="2"
+            text-anchor="start">Date</text><text x="321.5" y="282.5" class="cell-value" font-size="3.5"
+            text-anchor="start">2026-10-09</text><rect x="365" y="271" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="366.5" y="274.2" class="cell-label" font-size="2"
+            text-anchor="start">Revision</text><text x="366.5" y="282.5" class="cell-value" font-size="3.5"
+            text-anchor="start">B</text></g><g class="revision-table"><rect x="230" y="221" width="180" height="18"
+            class="revision-table" stroke-width="0.5"/><text x="231.5" y="225.2" class="revision-heading"
+            font-size="2.8" text-anchor="start" font-weight="bold">Mark</text><text x="245.5" y="225.2"
+            class="revision-heading" font-size="2.8" text-anchor="start" font-weight="bold">Date</text><text x="271.5"
+            y="225.2" class="revision-heading" font-size="2.8" text-anchor="start" font-weight="bold">Description</text><text
+            x="381.5" y="225.2" class="revision-heading" font-size="2.8" text-anchor="start"
+            font-weight="bold">By</text><line x1="244" y1="221" x2="244" y2="239" class="revision-column"
+            stroke-width="0.18"/><line x1="270" y1="221" x2="270" y2="239" class="revision-column" stroke-width="0.18"/><line
+            x1="380" y1="221" x2="380" y2="239" class="revision-column" stroke-width="0.18"/><rect x="230" y="227"
+            width="180" height="6" class="revision-row" stroke-width="0.18"/><text x="231.5" y="231.2"
+            class="revision-text" font-size="2.8" text-anchor="start">A</text><text x="245.5" y="231.2"
+            class="revision-text" font-size="2.8" text-anchor="start">2026-10-01</text><text x="271.5" y="231.2"
+            class="revision-text" font-size="2.8" text-anchor="start">Issued for permit</text><text x="381.5" y="231.2"
+            class="revision-text" font-size="2.8" text-anchor="start">UG</text><rect x="230" y="233" width="180"
+            height="6" class="revision-row" stroke-width="0.18"/><text x="231.5" y="237.2" class="revision-text"
+            font-size="2.8" text-anchor="start">B</text><text x="245.5" y="237.2" class="revision-text" font-size="2.8"
+            text-anchor="start">2026-10-05</text><text x="271.5" y="237.2" class="revision-text" font-size="2.8"
+            text-anchor="start">Section added</text><text x="381.5" y="237.2" class="revision-text" font-size="2.8"
+            text-anchor="start">AB</text></g></svg>

@@ -1,0 +1,8 @@
+{
+  "id": "structure",
+  "mutation": "createWorkset",
+  "workset": {
+    "default_visible": true,
+    "name": "Structure"
+  }
+}

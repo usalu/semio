@@ -9,7 +9,7 @@ use super::super::modify::WallEnd;
 use super::super::placement::width_of;
 use super::super::wall_geometry::{flaw, snap};
 use super::TrimExtendWall;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::axis_length;
+use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
 use crate::{Entry, KeyedDelta, ModelDiff, ModelSnapshot, OpeningPatch, WallPatch};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

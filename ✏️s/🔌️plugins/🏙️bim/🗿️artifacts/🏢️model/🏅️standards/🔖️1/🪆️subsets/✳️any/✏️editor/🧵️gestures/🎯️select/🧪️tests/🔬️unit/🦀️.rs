@@ -217,3 +217,38 @@ async fn a_drag_that_ends_where_it_began_or_a_press_away_from_the_corners_writes
     let away = rig.down(2.0, 2.0);
     assert!(away.mutations.is_empty() && away.pick.is_some(), "away from the corners the press picks as it always does");
 }
+
+fn room_with_duct() -> ModelSnapshot {
+    let mut snapshot = room();
+    let storey = snapshot.walls["w-south"].storey.clone();
+    let vertex = |x: f64, y: f64, z: f64| crate::Point3 { x, y, z };
+    snapshot.mep_elements.insert("m-1".into(), crate::MepElement { storey, system: crate::MepSystem::Supply, shape: crate::MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![vertex(2.0, 3.0, 2.5), vertex(5.0, 3.0, 2.5), vertex(5.0, 3.0, 3.1)], name: "Duct 1".into() });
+    snapshot
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_vertices_of_the_selected_mep_element_are_handles_and_dragging_one_reroutes_it_at_its_own_elevation() {
+    let mut rig = Rig::plan("select", room_with_duct());
+    rig.selected = vec!["m-1".into()];
+    assert_eq!(plan_marks(&rig.snapshot, &rig.selected).len(), 3, "a dot on every vertex");
+    assert!(plan_marks(&rig.snapshot, &[]).is_empty());
+    assert!(rig.down(5.0, 3.0).mutations.is_empty());
+    rig.mv(5.0, 4.5);
+    assert!(rig.shows(Shape::Path) && rig.shows(Shape::Dot), "the ghost of the new route");
+    let step = rig.up(5.0, 4.5);
+    let ModelMutation::SetMepElement(leaf) = only_mutation(&step) else { panic!("a set-mep-element") };
+    let path = leaf.path.clone().expect("the new path");
+    assert_eq!((path.len(), path[1].x, path[1].y, path[1].z), (3, 5.0, 4.5, 2.5), "the first of the two vertices on that point moves, keeping its own elevation");
+    assert_eq!(rig.snapshot.mep_elements["m-1"].path[0], crate::Point3 { x: 2.0, y: 3.0, z: 2.5 });
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_drag_that_does_not_move_a_vertex_writes_nothing() {
+    let mut rig = Rig::plan("select", room_with_duct());
+    rig.selected = vec!["m-1".into()];
+    rig.down(2.0, 3.0);
+    assert!(rig.up(2.0, 3.0).mutations.is_empty(), "released where it was pressed");
+    rig.down(5.0, 3.0);
+    let step = rig.up(5.0, 3.0);
+    assert!(step.mutations.is_empty());
+}

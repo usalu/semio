@@ -696,7 +696,7 @@ pub fn solve_with_clock(snapshot: &BitmapSnapshot, now_us: fn() -> Option<u64>) 
         operation: operation.operation,
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
-        config: semio_framework_job::BatchDriveConfig { site: "wfc.bitmap.inference.headless", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US },
+        config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "wfc.bitmap.inference.headless", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US },
         now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {

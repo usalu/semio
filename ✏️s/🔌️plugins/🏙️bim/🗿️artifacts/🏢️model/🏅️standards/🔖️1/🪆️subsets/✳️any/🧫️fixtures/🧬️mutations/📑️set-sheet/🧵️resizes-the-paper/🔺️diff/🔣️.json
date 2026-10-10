@@ -1,1 +1,12 @@
-{}
+{
+  "sheets": {
+    "sh-1": {
+      "entry": "Patched",
+      "paper": {
+        "Iso": {
+          "size": "A1"
+        }
+      }
+    }
+  }
+}

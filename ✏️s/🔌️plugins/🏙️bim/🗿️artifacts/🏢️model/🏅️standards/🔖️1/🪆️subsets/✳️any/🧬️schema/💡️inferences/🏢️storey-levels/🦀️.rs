@@ -6,13 +6,14 @@
 //! the absolute pair adds the site and building elevations. This module is the pure arithmetic (`resolve`, `top_of`, `vertical_of`);
 //! the `Storey` nodes of the model graph (`model-graph`) call it, and so does every consumer that needs a vertical extent.
 
+use crate::standards::v1::subsets::any::schema::authored::storeys::{stacking, step};
 use crate::{ModelSnapshot, TopConstraint};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
 /// 🪜️ Resolved elevations of one storey, in metres.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct StoreyLevel {
     pub elevation: f64,
     pub top_elevation: f64,
@@ -22,20 +23,6 @@ pub struct StoreyLevel {
 //#endregion 🔖️Value
 
 //#region 🔖️Stacking
-/// 🧭️ The storeys of one building ordered by level, with the id of each storey's single parent.
-pub fn stacking(snapshot: &ModelSnapshot, building: &str) -> Vec<(String, Option<String>)> {
-    let mut rows: Vec<(i32, &String)> = snapshot.storeys.iter().filter(|(_, storey)| storey.building == building).map(|(id, storey)| (storey.level, id)).collect();
-    rows.sort();
-    let upward: Vec<&(i32, &String)> = rows.iter().filter(|(level, _)| *level >= 0).collect();
-    let downward: Vec<&(i32, &String)> = rows.iter().rev().filter(|(level, _)| *level < 0).collect();
-    let chain = |ordered: Vec<&(i32, &String)>| -> Vec<(String, Option<String>)> {
-        ordered.iter().enumerate().map(|(index, (_, id))| ((*id).clone(), index.checked_sub(1).map(|previous| ordered[previous].1.clone()))).collect()
-    };
-    let mut plan = chain(upward);
-    plan.extend(chain(downward));
-    plan
-}
-
 /// 🧭️ Every storey of the model in stacking order (buildings by id, each building bottom-up from level 0, then downward) with the id of its parent.
 pub fn stackings(snapshot: &ModelSnapshot) -> Vec<(String, Option<String>)> {
     let buildings: std::collections::BTreeSet<&String> = snapshot.storeys.values().map(|storey| &storey.building).collect();
@@ -52,12 +39,7 @@ pub fn parent_of(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
 pub fn resolve(snapshot: &ModelSnapshot, id: &str, parent: Option<&StoreyLevel>) -> StoreyLevel {
     let Some(storey) = snapshot.storeys.get(id) else { return StoreyLevel::default() };
     let datum = snapshot.buildings.get(&storey.building).map_or(0.0, |building| building.elevation + snapshot.sites.get(&building.site).map_or(0.0, |site| site.elevation));
-    let elevation = match (storey.level >= 0, parent) {
-        (true, Some(below)) => below.top_elevation,
-        (true, None) => 0.0,
-        (false, Some(above)) => above.elevation - storey.height,
-        (false, None) => -storey.height,
-    };
+    let elevation = step(storey.level, storey.height, parent.map(|level| (level.elevation, level.top_elevation)));
     let top = elevation + storey.height;
     StoreyLevel { elevation, top_elevation: top, absolute_elevation: datum + elevation, absolute_top_elevation: datum + top }
 }

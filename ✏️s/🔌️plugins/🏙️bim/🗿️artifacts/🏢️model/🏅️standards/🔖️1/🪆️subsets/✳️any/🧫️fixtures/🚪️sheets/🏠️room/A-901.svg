@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 210 297" width="210mm" height="297mm" xmlns="http://www.w3.org/2000/svg" class="sheet-page"
+    version="1.1" data-unit="mm" data-sheet="sh-notes" data-number="A-901" data-name="Notes" data-paper="A4"
+    data-width="210" data-height="297" aria-label="A-901 Notes"><title>A-901 Notes</title><desc>Sheet A-901 Notes: 2 viewport(s) at paper size A4, paper millimetres.</desc><style>
+      .plan{font-family:sans-serif}
+      path{stroke:#000;stroke-linecap:round;stroke-linejoin:round;fill:none}
+      .cut{stroke-width:0.5}
+      .projection{stroke-width:0.25}
+      .hidden{stroke-width:0.18}
+      .annotation{stroke-width:0.13}
+      .hidden{stroke-dasharray:1.5 0.75}
+      path.region{fill-rule:evenodd}
+      path.region.cut{fill:#1a1a1a}
+      path.region.projection{fill:#e6e6e6}
+      text{fill:#000;stroke:none;font-size:3.2px}
+      text.title{font-size:5px;font-weight:bold}
+      text.space-tag{text-anchor:middle}
+      text.grid-label{font-size:3.5px;text-anchor:middle;dominant-baseline:central}
+    
+      .sheet-page{font-family:sans-serif}
+      rect{fill:none;stroke:#000}
+      line{stroke:#000}
+      text.cell-label,text.revision-heading{fill:#444}
+      text.caption{font-weight:bold}
+    </style><defs><clipPath id="clip-vp-camera"><rect x="30" y="30" width="10" height="10"/></clipPath><clipPath
+            id="clip-vp-outside"><rect x="150" y="200" width="160" height="120"/></clipPath></defs><g class="frame"><rect
+            x="20" y="10" width="180" height="277" class="frame" stroke-width="0.7"/></g><g id="viewport-vp-camera"
+        class="viewport perspective" data-viewport="vp-camera" data-view="v-3d" data-kind="perspective" data-scale="100"
+        data-label="3D view" data-window="30 30 10 10" clip-path="url(#clip-vp-camera)" aria-label="3D view"><title>3D view</title><g
+            class="layer regions"/><g class="layer lines"/><g class="layer texts"/></g><g id="viewport-vp-outside"
+        class="viewport plan" data-viewport="vp-outside" data-view="v-plan-ground" data-kind="plan" data-scale="50"
+        data-label="Plan Ground" data-window="150 200 160 120" clip-path="url(#clip-vp-outside)"
+        aria-label="Plan Ground"><title>Plan Ground</title><g class="layer regions"><path
+                d="M 167 303 L 293 303 L 287 297 L 173 297 Z" class="region cut wall-cut" data-element="w0"
+                data-id="w0/WallCut/0"/><path d="M 293 303 L 293 217 L 287 223 L 287 297 Z" class="region cut wall-cut"
+                data-element="w1" data-id="w1/WallCut/0"/><path d="M 293 217 L 167 217 L 173 223 L 287 223 Z"
+                class="region cut wall-cut" data-element="w2" data-id="w2/WallCut/0"/><path
+                d="M 167 217 L 167 303 L 173 297 L 173 223 Z" class="region cut wall-cut" data-element="w3"
+                data-id="w3/WallCut/0"/><path
+                d="M 229.366 267.183 L 236.387 263.348 L 230.634 252.817 L 223.613 256.652 Z"
+                class="region cut column-cut" data-element="col-a" data-id="col-a/ColumnCut/0"/></g><g
+            class="layer lines"/><g class="layer texts"/></g><g class="captions"><text x="30" y="45" class="caption"
+            font-size="3.5" text-anchor="start" font-weight="bold">3D view   1:100</text><text x="150" y="325"
+            class="caption" font-size="3.5" text-anchor="start" font-weight="bold">Plan Ground   1:50</text></g><g
+        class="title-block"><rect x="20" y="239" width="180" height="48" class="title-block" stroke-width="0.5"/><rect
+            x="20" y="239" width="110" height="16" class="title-cell" stroke-width="0.18"/><text x="21.5" y="242.2"
+            class="cell-label" font-size="2" text-anchor="start">Project</text><text x="21.5" y="250.5"
+            class="cell-value" font-size="4" text-anchor="start">Room</text><rect x="130" y="239" width="70" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="131.5" y="242.2" class="cell-label" font-size="2"
+            text-anchor="start">Sheet no.</text><text x="131.5" y="250.5" class="cell-value" font-size="5"
+            text-anchor="start" font-weight="bold">A-901</text><rect x="20" y="255" width="110" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="21.5" y="258.2" class="cell-label" font-size="2"
+            text-anchor="start">Title</text><text x="21.5" y="266.5" class="cell-value" font-size="5"
+            text-anchor="start" font-weight="bold">Notes</text><rect x="130" y="255" width="70" height="16"
+            class="title-cell" stroke-width="0.18"/><text x="131.5" y="258.2" class="cell-label" font-size="2"
+            text-anchor="start">Scale</text><text x="131.5" y="266.5" class="cell-value" font-size="3.5"
+            text-anchor="start">As indicated</text><rect x="20" y="271" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="21.5" y="274.2" class="cell-label" font-size="2"
+            text-anchor="start">Drawn by</text><text x="21.5" y="282.5" class="cell-value" font-size="3.5"
+            text-anchor="start">UG</text><rect x="65" y="271" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="66.5" y="274.2" class="cell-label" font-size="2"
+            text-anchor="start">Checked by</text><text x="66.5" y="282.5" class="cell-value" font-size="3.5"
+            text-anchor="start">AB</text><rect x="110" y="271" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="111.5" y="274.2" class="cell-label" font-size="2"
+            text-anchor="start">Date</text><text x="111.5" y="282.5" class="cell-value" font-size="3.5"
+            text-anchor="start">2026-10-09</text><rect x="155" y="271" width="45" height="16" class="title-cell"
+            stroke-width="0.18"/><text x="156.5" y="274.2" class="cell-label" font-size="2"
+            text-anchor="start">Revision</text><text x="156.5" y="282.5" class="cell-value" font-size="3.5"
+            text-anchor="start"></text></g></svg>

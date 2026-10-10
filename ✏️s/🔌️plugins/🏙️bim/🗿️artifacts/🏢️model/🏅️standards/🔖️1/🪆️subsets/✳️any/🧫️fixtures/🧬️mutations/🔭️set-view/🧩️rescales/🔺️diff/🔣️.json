@@ -1,1 +1,10 @@
-{}
+{
+  "views": {
+    "v-section": {
+      "depth": 5.0,
+      "detail": "Fine",
+      "entry": "Patched",
+      "scale": 50
+    }
+  }
+}

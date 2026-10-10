@@ -203,7 +203,7 @@
     "value": "Glück",
     "maximumItems": 2,
     "maximumBytes": 3,
-    "expectedReleasedBytes": 23
+    "expectedTextBytes": 15
   },
   "binary64Words": [
     "0000000000000000",

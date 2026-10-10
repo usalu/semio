@@ -13,6 +13,9 @@ pub mod export;
 #[path = "📥️import/🦀️.rs"]
 pub mod import;
 
+#[path = "💬️bcf/🦀️.rs"]
+pub mod bcf;
+
 //#region 🔖️Inference
 /// 🔮️ Reads the inference of `model` from the shared session (the one path every consumer takes), so an export after an edit recomputes only what the edit touched; a fault of the run is a refusal of `leaf`.
 pub fn with_inferred<R>(leaf: &str, model: &crate::ModelSnapshot, read: impl FnOnce(&crate::ModelInference) -> R) -> Result<R, semio_framework::io_schema::IoError> {
@@ -35,11 +38,18 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             .get_or_init(|| {
                 vec![
                     serializer_entry::<ModelSnapshot, export::ifc::ModelIntoIfc2x3>(BIM_MODEL_DIALECT),
+                    serializer_entry::<ModelSnapshot, export::ifc::ifc4::ModelIntoIfc4>(BIM_MODEL_DIALECT),
                     serializer_entry::<ModelSnapshot, export::gltf::ModelIntoGlb>(BIM_MODEL_DIALECT),
                     serializer_entry::<ModelSnapshot, export::svg::ModelIntoSvg>(BIM_MODEL_DIALECT),
                     serializer_entry::<ModelSnapshot, export::csv::ModelIntoCsv>(BIM_MODEL_DIALECT),
                     serializer_entry::<ModelSnapshot, export::json::ModelIntoJson>(BIM_MODEL_DIALECT),
-                    deserializer_entry::<ModelSnapshot, import::ifc::IfcIntoModel>(BIM_MODEL_DIALECT),
+                    serializer_entry::<ModelSnapshot, export::sheets::ModelIntoSheetsPdf>(BIM_MODEL_DIALECT),
+                    serializer_entry::<ModelSnapshot, export::gbxml::ModelIntoGbxml>(BIM_MODEL_DIALECT),
+                    serializer_entry::<ModelSnapshot, export::energy::ModelIntoEnergy>(BIM_MODEL_DIALECT),
+                    serializer_entry::<ModelSnapshot, bcf::ModelIntoBcf>(BIM_MODEL_DIALECT),
+                    deserializer_entry::<ModelSnapshot, import::ifc::Ifc2x3IntoModel>(BIM_MODEL_DIALECT),
+                    deserializer_entry::<ModelSnapshot, import::ifc::Ifc4IntoModel>(BIM_MODEL_DIALECT),
+                    deserializer_entry::<ModelSnapshot, bcf::BcfIntoModel>(BIM_MODEL_DIALECT),
                 ]
             })
             .as_slice()

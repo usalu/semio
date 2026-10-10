@@ -6,21 +6,22 @@ fn text_edits_preserve_content_size_and_history_payload() {
     let layer = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
     let id = crate::schema::layer_id(&layer).to_string();
     let before = crate::DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
-    for edit in fixture["edits"].as_array().unwrap() {
-        let mutation = super::mutation::update_text(id.clone().into(), edit["content"].as_str().unwrap().into(), edit["size"].as_f64().unwrap());
+    for (index,edit) in fixture["edits"].as_array().unwrap().iter().enumerate() {
+        let mutation = super::mutation::update_text(id.clone().into(), edit["content"].as_str().unwrap().into(), edit["size"].as_f64().unwrap(),crate::DrawingFontFamily::parse(edit["fontFamily"].as_str().unwrap()).unwrap());
         store::os_store::test_support::assert_op_line_round_trip(&mutation);
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         let outcome = mutation.diff(&before);
         assert!(outcome.messages().is_empty());
+        if let Some(delta)=&outcome.diff().layers{let patch=&delta.modified[0].patch;assert_eq!(patch.text_content.as_deref(),fixture["patches"][index]["textContent"].as_str());assert_eq!(patch.text_size,fixture["patches"][index]["textSize"].as_f64());assert_eq!(patch.font_family.map(|family|family.as_str()),fixture["patches"][index]["fontFamily"].as_str());}else{assert_eq!(fixture["patches"][index],serde_json::json!({}));}
         let mut after = protocol::apply_diff(outcome.diff(), &before).unwrap();
         let crate::DrawingLayerNode::Text(text) = &after.layers[0] else { panic!("Text kind changed") };
         assert_eq!(text.content, edit["content"].as_str().unwrap());
-        assert_eq!(text.size, edit["size"].as_f64().unwrap());
+        assert_eq!(text.size, edit["size"].as_f64().unwrap(),crate::DrawingFontFamily::parse(edit["fontFamily"].as_str().unwrap()).unwrap());
         for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after, &inverse).unwrap(); }
         assert_eq!(after, before);
     }
     for size in [0.0, -1.0, f64::NAN, f64::INFINITY] {
-        let rejected = super::mutation::update_text(id.clone().into(), "changed".into(), size).diff(&before);
+        let rejected = super::mutation::update_text(id.clone().into(), "changed".into(), size,crate::DrawingFontFamily::Anta).diff(&before);
         assert!(!rejected.messages().is_empty());
         assert_eq!(protocol::apply_diff(rejected.diff(), &before).unwrap(), before);
     }

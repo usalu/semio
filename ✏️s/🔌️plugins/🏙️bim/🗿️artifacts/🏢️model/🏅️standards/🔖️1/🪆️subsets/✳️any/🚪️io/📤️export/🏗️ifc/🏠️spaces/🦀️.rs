@@ -8,6 +8,9 @@ use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurf
 use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
 
+/// 🏷️ The `Semio_Authoring` row that holds the authored boundary rule of a space whose outline is inferred.
+pub const BOUNDARY_ROW: &str = "Boundary";
+
 fn finish_area(row: &ElementQuantity, surface: FinishSurface) -> f64 {
     row.finishes.iter().filter(|finish| finish.surface == surface).map(|finish| finish.area).sum()
 }
@@ -43,6 +46,9 @@ pub fn emit(x: &mut Export<'_>) {
         x.links.elements.insert(id.clone(), entity);
         x.links.aggregated.entry(storey.ifc).or_default().push(entity);
         x.phase(id, entity);
+        if !matches!(row.boundary, crate::SpaceBoundary::Explicit { .. }) {
+            x.links.authoring.push((entity, vec![(BOUNDARY_ROW, super::data::label(&semio_framework_pack_json::to_json_string(&row.boundary)))]));
+        }
         super::zoning::finishes(x, id, entity);
         if resolved {
             x.quantify(entity, "Qto_SpaceBaseQuantities", id, |row| {

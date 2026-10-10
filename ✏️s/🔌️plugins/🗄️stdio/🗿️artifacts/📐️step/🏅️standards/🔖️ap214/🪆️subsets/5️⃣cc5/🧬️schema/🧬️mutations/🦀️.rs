@@ -66,7 +66,7 @@ pub mod set_shape_representation;
 ///
 /// Every inverse restores the touched entities through `restore-entities`, an exact absolute write that is not filtered by the class
 /// ceiling, so undoing a repair can re-introduce the violation the repair removed.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc5")]
 pub enum StepCc5Mutation {
     SetFileSchema(set_file_schema::SetFileSchema),

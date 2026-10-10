@@ -78,18 +78,19 @@ impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPaylo
 }
 
 /// 🫙️ Exact owner catalogue for a store whose snapshot and mutation types are statically empty.
-pub(super) fn zero_payload_store_owners<P, M>(grant: RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<P, M>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<P, M>>
+pub(super) fn zero_payload_store_owners<P, M>() -> Result<store::DocumentStoreOwners<P, M>, ValueError>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::OpBinary + store::OpText + Send + 'static,
 {
-    store::DocumentStoreOwners::admit_source_constructor(grant, || {
-        (ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<M>(std::marker::PhantomData), store::ArtifactStoreCursorDisposer::<P, M>::new())
+    let capacity_bytes = store::DocumentStoreOwners::<P, M>::source_birth_bytes::<ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<M>, store::ArtifactStoreCursorDisposer<P, M>>()?;
+    store::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes, depth: 1 }, |grant| {
+        store::DocumentStoreOwners::admit_source_constructor(grant, || (ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<M>(std::marker::PhantomData), store::ArtifactStoreCursorDisposer::<P, M>::new()))
     })
 }
 
-pub fn no_draft_store_owners(grant: RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<NoDraft, NoDraftMutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<NoDraft, NoDraftMutation>> {
-    zero_payload_store_owners::<NoDraft, NoDraftMutation>(grant)
+pub fn no_draft_store_owners() -> Result<store::DocumentStoreOwners<NoDraft, NoDraftMutation>, ValueError> {
+    zero_payload_store_owners::<NoDraft, NoDraftMutation>()
 }
 
 pub fn no_draft_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::DraftStore<NoDraft, NoDraftMutation>>> {

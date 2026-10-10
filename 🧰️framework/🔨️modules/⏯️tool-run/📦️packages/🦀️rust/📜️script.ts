@@ -36,6 +36,25 @@ class TestScript extends SourceScript {
   }
 }
 
+/** 📸️ Verifies original progress metadata against canonical tick/schema oracles and physical native receipts. */
+class OriginalProgressTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length>1||(args.length===1&&args[0]!=="source"))throw Error("Expected test-original-progress [source]");
+  await runBudgetedTestCommand(process.execPath,["test","--test-name-pattern","schema oracle|tick codec and step ring",join(this.root,"../../🧪️tests/🧪️conformance/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs()});
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",join(this.root,"../../📊️progress/📸️clone/🟦️.ts"),join(this.root,"../../📊️progress/💍️steps/➕️insert/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🧬️update/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🌱️seed/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🗃️slot/🟦️.ts"),join(this.root,"../../📽️tick/🔐️source/🟦️.ts")],this.repoRoot,"tool-run:original-progress-clone:types",120000);
+  if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_tool_run_progress_metadata","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ }
+}
+/** 👥️ Verifies bounded original entity edit custody against shared independent append/retract laws. */
+class OriginalEntitiesTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length>1||(args.length===1&&args[0]!=="source"))throw Error("Expected test-original-entities [source]");
+  const file=join(this.root,"../../👥️entities/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs()});
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,"tool-run:entity-edit:types",120000);
+  if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_tool_run_entity_edit","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ }
+}
 class CheckScript extends BundleScript {
   async run(): Promise<void> {
     await runOwnedCommand("cargo", ["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE], this.repoRoot, "tool:owner", buildBudgetMs(), {env: process.env});
@@ -43,6 +62,6 @@ class CheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-source", SourceScript).register("check", CheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-original-progress", OriginalProgressTestScript).register("test-original-entities",OriginalEntitiesTestScript).register("test-source", SourceScript).register("check", CheckScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

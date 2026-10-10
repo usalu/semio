@@ -1,0 +1,10 @@
+{
+  "space_conditions": {
+    "sp-1": {
+      "entry": "Patched",
+      "heating_setpoint": {
+        "value": 22.0
+      }
+    }
+  }
+}

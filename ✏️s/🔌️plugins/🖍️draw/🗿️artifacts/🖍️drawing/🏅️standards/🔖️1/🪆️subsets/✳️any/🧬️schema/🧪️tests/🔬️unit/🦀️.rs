@@ -250,7 +250,7 @@ async fn layer_to_path_segments_covers_every_shape_kind_and_empty_polygon_and_un
 
 #[semio_framework_async_macros::async_test]
 async fn drawing_layer_world_bounds_covers_text_image_default_and_none_branches() {
-    let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), x: 0.0, y: 0.0, content: "hi".into(), size: 10.0 });
+    let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), x: 0.0, y: 0.0, content: "hi".into(), size: 10.0, font_family: crate::DrawingFontFamily::Anta });
     let (tx, ty, tw, th) = drawing_layer_world_bounds(&text).expect("text bounds");
     assert_eq!((tx, ty), (0.0, 0.0));
     assert!(tw > 0.0 && th > 0.0);

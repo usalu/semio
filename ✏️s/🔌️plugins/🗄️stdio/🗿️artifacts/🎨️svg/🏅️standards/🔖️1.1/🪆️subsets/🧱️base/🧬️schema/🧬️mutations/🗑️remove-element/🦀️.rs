@@ -3,7 +3,7 @@ use crate::schema::diff::{diff_at_path, SvgChildrenDiff, SvgDiff, SvgElementDiff
 use crate::schema::snapshot::{node_at, NodePath, SvgNode};
 use crate::SvgSnapshot;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RemoveElementPayload {

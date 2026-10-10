@@ -1,1 +1,76 @@
-{}
+{
+  "slabs": {
+    "sl-1": {
+      "boundary": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 4.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.146768836304,
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 4.0,
+            "y": 7.2
+          }
+        }
+      ],
+      "entry": "Patched"
+    },
+    "sl-2": {
+      "boundary": [
+        {
+          "bulge": 0.146768836304,
+          "point": {
+            "x": 4.0,
+            "y": 7.2
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 4.0,
+            "y": 0.0
+          }
+        }
+      ],
+      "entry": "Created",
+      "holes": [],
+      "name": "Floor",
+      "offset": 0.0,
+      "phase": "New",
+      "slab_type": "slt-200",
+      "storey": "st-ground"
+    }
+  }
+}

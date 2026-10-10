@@ -92,6 +92,17 @@
         "command": "bun ./📜️script.ts test test-command"
       }
     },
+    "test-cargo-profile": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["{projectRoot}/**/*"],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test cargo-profile"
+      }
+    },
     "test-cargo-driver": {
       "executor": "nx:run-commands",
       "cache": false,

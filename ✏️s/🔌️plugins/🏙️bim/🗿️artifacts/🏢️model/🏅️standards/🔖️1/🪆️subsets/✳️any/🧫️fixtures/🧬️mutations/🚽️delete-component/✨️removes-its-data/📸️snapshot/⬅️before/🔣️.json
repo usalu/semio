@@ -1,0 +1,361 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    },
+    "w-upper": {
+      "storey": "st-first",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "Upper"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {
+    "cmp-table": {
+      "Pset_ComponentCommon": {
+        "Reference": {
+          "Text": {
+            "value": "T-01"
+          }
+        }
+      }
+    }
+  },
+  "classifications": {
+    "cmp-table": {
+      "cs-uniclass": "Ss_40_10"
+    }
+  },
+  "families": {
+    "fam-table": {
+      "name": "Table",
+      "category": "Furniture"
+    },
+    "fam-basin": {
+      "name": "Basin",
+      "category": "Plumbing"
+    },
+    "fam-lamp": {
+      "name": "Lamp",
+      "category": "Lighting"
+    },
+    "fam-hea": {
+      "name": "HEA 200",
+      "category": "Profile"
+    }
+  },
+  "family_parameters": {
+    "fam-table.width": {
+      "family": "fam-table",
+      "name": "width",
+      "kind": "Length",
+      "value": "1.6 m"
+    },
+    "fam-table.depth": {
+      "family": "fam-table",
+      "name": "depth",
+      "kind": "Length",
+      "value": "0.8 m"
+    },
+    "fam-table.double": {
+      "family": "fam-table",
+      "name": "double",
+      "kind": "Length",
+      "value": "2 * width"
+    },
+    "fam-basin.width": {
+      "family": "fam-basin",
+      "name": "width",
+      "kind": "Length",
+      "value": "0.6 m"
+    },
+    "fam-lamp.size": {
+      "family": "fam-lamp",
+      "name": "size",
+      "kind": "Length",
+      "value": "0.3 m"
+    },
+    "fam-hea.h": {
+      "family": "fam-hea",
+      "name": "h",
+      "kind": "Length",
+      "value": "190 mm"
+    }
+  },
+  "family_solids": {
+    "s-top": {
+      "family": "fam-table",
+      "name": "Top",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0.7 m",
+          "width": "width",
+          "depth": "depth",
+          "height": "40 mm"
+        }
+      },
+      "material": "\"m-brick\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-bowl": {
+      "family": "fam-basin",
+      "name": "Bowl",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "width",
+          "depth": "0.4 m",
+          "height": "0.2 m"
+        }
+      },
+      "material": "\"m-brick\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    },
+    "s-body": {
+      "family": "fam-lamp",
+      "name": "Body",
+      "shape": {
+        "Cuboid": {
+          "x": "0 m",
+          "y": "0 m",
+          "z": "0 m",
+          "width": "size",
+          "depth": "size",
+          "height": "size"
+        }
+      },
+      "material": "\"m-brick\"",
+      "visible": "true",
+      "offset": {
+        "x": "0 m",
+        "y": "0 m",
+        "z": "0 m"
+      }
+    }
+  },
+  "components": {
+    "cmp-table": {
+      "storey": "st-ground",
+      "family": "fam-table",
+      "position": {
+        "x": 2,
+        "y": 3
+      },
+      "elevation": 0,
+      "rotation": 0,
+      "mirrored": false,
+      "name": "Table 1"
+    },
+    "cmp-basin": {
+      "storey": "st-ground",
+      "family": "fam-basin",
+      "position": {
+        "x": 3,
+        "y": 0.3
+      },
+      "elevation": 0.85,
+      "rotation": 0,
+      "mirrored": false,
+      "host": "w-south",
+      "name": "Basin 1"
+    },
+    "cmp-lamp": {
+      "storey": "st-ground",
+      "family": "fam-lamp",
+      "position": {
+        "x": 4,
+        "y": 3
+      },
+      "elevation": 2.4,
+      "rotation": 0,
+      "mirrored": false,
+      "system": "Lighting",
+      "name": "Lamp 1"
+    }
+  },
+  "component_overrides": {
+    "cmp-table.width": {
+      "component": "cmp-table",
+      "name": "width",
+      "value": "2 m"
+    }
+  },
+  "classification_systems": {
+    "cs-uniclass": {
+      "name": "Uniclass",
+      "edition": "",
+      "entries": [
+        {
+          "code": "Ss_40_10",
+          "title": "Furniture"
+        }
+      ]
+    }
+  }
+}

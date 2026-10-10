@@ -4,19 +4,26 @@ import {PngEncodeJob} from "../../../../../../../../../../../🧰️framework/�
 import {ImageDecodeJob,type ImageDecodeInput,type ImageDecodeProgress} from "../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🟦️.ts";
 import type {DrawingImageAsset} from "../../🧬️schema/🟦️.ts";
 export interface DrawingImageAdmissionProgress{decoding:ImageDecodeProgress|undefined;samples:number;totalSamples:number;work:number;done:boolean}
+import type {RetainedCloneGrant,RetainedCloneProgress} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
 export class DrawingImageAdmissionJob{
- private decoder:ImageDecodeJob|undefined;private decoding:ImageDecodeProgress|undefined;private image:ReturnType<ImageDecodeJob["result"]>|undefined;private asset:DrawingImageAsset|undefined;private samples=0;private work=0;private done=false;private cancelled=false;private failure:unknown;
- constructor(input:ImageDecodeInput){this.decoder=new ImageDecodeJob(input);}
- private check():void{if(this.cancelled)throw new DOMException("Drawing image admission cancelled","AbortError");if(this.failure!==undefined)throw this.failure;}
- private step():void{if(this.decoder){this.decoding=this.decoder.advance(1);if(this.decoding.done){this.image=this.decoder.result();this.decoder=undefined;this.asset={width:this.image.width,height:this.image.height,samples:[]};}return;}
-  const image=this.image!,at=this.samples*4;if(at===image.pixels.length){this.image=undefined;this.done=true;return;}this.asset!.samples.push([image.pixels[at]!,image.pixels[at+1]!,image.pixels[at+2]!,image.pixels[at+3]!]);this.samples++;
+ private readonly original:string;private decoder:ImageDecodeJob;private decoding:ImageDecodeProgress|undefined;private image:ReturnType<ImageDecodeJob["result"]>|undefined;private asset:DrawingImageAsset|undefined;private samples=0;private work=0;private phase=0;private cancelled=false;private failure:unknown;
+ constructor(input:ImageDecodeInput){this.original=input.data;this.decoder=new ImageDecodeJob(input);}
+ private check():void{if(this.cancelled)throw new DOMException("Drawing image admission cancelled","AbortError");if(this.phase===4)throw Error("Drawing image admission incomplete");if(this.failure!==undefined)throw this.failure;}
+ private grant(value:RetainedCloneGrant):void{for(const field of ["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"]as const)if(!Number.isSafeInteger(value[field])||value[field]<0)throw RangeError("Invalid drawing image admission funding");}
+ progress():DrawingImageAdmissionProgress{return {decoding:this.decoding,samples:this.samples,totalSamples:this.asset?this.asset.width*this.asset.height:0,work:this.work,done:this.phase===3};}
+ nextCopyByteDemand():number{return this.phase===0?this.decoder.nextCopyByteDemand():this.phase===1?64:this.phase===2?20:0;}
+ nextCapacityByteDemand():number{return this.phase===0?this.decoder.nextCapacityByteDemand():this.phase===2&&this.samples<this.asset!.width*this.asset!.height?32:0;}
+ private step(source:string,grant:RetainedCloneGrant):RetainedCloneProgress{
+  if(this.phase===0){const child=this.decoder.advance(source,grant);this.decoding=child.progress;if(child.progress.done)this.phase=1;return child.receipt;}
+  if(this.phase===1){const child=this.decoder.takeResult(grant);if(!child)return {copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};this.image=child.value;this.asset={width:this.image.width,height:this.image.height,samples:[]};this.phase=2;return {...child.receipt,copiedBytes:64};}
+  const image=this.image!,at=this.samples*4;if(at===image.pixels.length){this.phase=3;return {copiedItems:1,copiedBytes:20,retainedCapacityBytes:0,releasedBytes:0};}
+  this.asset!.samples.push([image.pixels[at]!,image.pixels[at+1]!,image.pixels[at+2]!,image.pixels[at+3]!]);this.samples++;return {copiedItems:1,copiedBytes:20,retainedCapacityBytes:32,releasedBytes:0};
  }
- advance(grant:number):DrawingImageAdmissionProgress{if(!Number.isSafeInteger(grant)||grant<1)throw RangeError("Invalid drawing image admission work grant");this.check();try{for(let i=0;i<grant&&!this.done;i++){this.step();this.work++;}}catch(error){this.failure=error;this.release();throw error;}return{decoding:this.decoding,samples:this.samples,totalSamples:this.asset?this.asset.width*this.asset.height:0,work:this.work,done:this.done};}
- private release():void{this.decoder?.cancel();this.decoder=undefined;this.image=undefined;this.asset=undefined;}
- cancel():void{this.cancelled=true;this.release();}
- result():DrawingImageAsset{this.check();if(!this.done||!this.asset)throw Error("Drawing image admission incomplete");return this.asset;}
+ advance(source:string,grant:RetainedCloneGrant):{progress:DrawingImageAdmissionProgress;receipt:RetainedCloneProgress}{this.grant(grant);this.check();if(source!==this.original)throw Error("Original drawing image source changed");const receipt:RetainedCloneProgress={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};try{for(let i=0;i<grant.maximumItems&&this.phase!==3;i++){const copy=this.nextCopyByteDemand(),capacity=this.nextCapacityByteDemand();if(!grant.maximumDepth||copy>grant.maximumCopyBytes-receipt.copiedBytes||capacity>grant.maximumCapacityBytes-receipt.retainedCapacityBytes)break;const step=this.step(source,{...grant,maximumItems:1,maximumCopyBytes:copy,maximumCapacityBytes:grant.maximumCapacityBytes-receipt.retainedCapacityBytes,maximumReleaseBytes:grant.maximumReleaseBytes-receipt.releasedBytes});if(!step.copiedItems)break;this.work+=step.copiedItems;receipt.copiedItems+=step.copiedItems;receipt.copiedBytes+=step.copiedBytes;receipt.retainedCapacityBytes+=step.retainedCapacityBytes;receipt.releasedBytes+=step.releasedBytes;}}catch(error){this.failure=error;throw error;}return {progress:this.progress(),receipt};}
+ takeResult(grant:RetainedCloneGrant):{value:DrawingImageAsset;receipt:RetainedCloneProgress}|undefined{this.grant(grant);const value=this.result();if(!grant.maximumItems||grant.maximumCopyBytes<32||!grant.maximumDepth)return;this.asset=undefined;this.phase=4;return {value,receipt:{copiedItems:1,copiedBytes:32,retainedCapacityBytes:0,releasedBytes:0}};}
+ cancel():void{this.cancelled=true;}
+ result():DrawingImageAsset{this.check();if(this.phase!==3||!this.asset)throw Error("Drawing image admission incomplete");return this.asset;}
 }
-
 /** 📤️ Borrowed semantic samples retain original authority throughout emission and refusal. */
 export class DrawingImageEmissionJob{
  private samples=0;private pixels:Uint8Array;private encoder:PngEncodeJob|undefined;private bytes:Uint8Array|undefined;private phase:"samples"|"encoding"|"complete"="samples";private work=0;private cancelled=false;private failure:unknown;

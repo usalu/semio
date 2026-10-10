@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-support/schema.json",
+  "title": "CreateSupport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "support"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createSupport"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "support": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StructuralSupport"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "components": {
+    "cmp-table": {
+      "entry": "Patched",
+      "host": {
+        "value": "w-south"
+      }
+    }
+  }
+}

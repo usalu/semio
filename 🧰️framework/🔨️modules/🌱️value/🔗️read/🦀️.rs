@@ -10,6 +10,8 @@ pub use authority::ReadAuthority;
 #[path="🪪️lease/🦀️.rs"]
 mod lease;
 pub use lease::ErasedReadLease;
+#[path="🧬️clone/🦀️.rs"] mod original_clone;
+pub use original_clone::{OriginalReadSource,OriginalErasedReadSource};
 
 pub const READ_LEASE_CAPACITY:usize=1024;
 
@@ -153,10 +155,11 @@ impl<T:RetireOwned+Sync> ReadLease<T> {
     pub fn get(&self)->&T {self.owner.as_deref().expect("read root is unavailable after granted return")}
     pub fn id(&self)->ReadLeaseId {self.id}
     pub fn commit_authority_matches(&self,generation:u64,revision:[u8;32])->bool {self.registry.as_ref().is_some_and(|registry|registry.authority_matches(generation,revision))}
-    pub fn source_capacity_bytes(&self)->usize {RetainedCloneSource::<T>::constructor_capacity_bytes::<RegistryAuthority<T>>()}
-    pub fn admit_source(&self,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T>,RetainedCloneProgress),ValueError> {
-        let owner=self.owner.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"returned read has no source authority"))?;let registry=self.registry.as_ref().expect("live read root has registry authority");
-        RetainedCloneSource::admit(Arc::clone(owner),RegistryAuthority(Arc::clone(registry)),grant).map_err(|(error,alias,authority)|{drop(alias);drop(authority);error})
+    pub fn source_capacity_bytes(&self)->usize{RetainedCloneSource::<T>::borrowed_constructor_capacity_bytes::<OriginalReadSource<T>>()}
+    pub fn source_copy_bytes(&self)->usize{RetainedCloneSource::<T>::borrowed_constructor_copy_bytes::<OriginalReadSource<T>>()}
+    pub fn admit_source(self,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T,OriginalReadSource<T>>,RetainedCloneProgress),(ValueError,Self)>{
+        if self.owner.is_none(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"returned read cannot issue an original source"),self));}
+        RetainedCloneSource::admit_borrowed(OriginalReadSource::new(self),|read:&OriginalReadSource<T>|read.get(),grant).map_err(|(error,mut read)|{let original=read.take_refused();(error,original)})
     }
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {Ok(RetirementDemand {copy_bytes:self.next_copy_byte_demand()?,capacity_bytes:self.next_capacity_byte_demand(copy)?,release_bytes:self.next_release_byte_demand()?,depth:self.next_depth_demand()?})}
 }

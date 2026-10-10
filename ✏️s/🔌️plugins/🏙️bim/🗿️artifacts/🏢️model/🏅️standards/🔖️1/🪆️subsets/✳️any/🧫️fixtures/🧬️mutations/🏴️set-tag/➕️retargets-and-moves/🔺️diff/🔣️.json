@@ -1,1 +1,12 @@
-{}
+{
+  "tags": {
+    "tag-south": {
+      "element": "w-east",
+      "entry": "Patched",
+      "offset": {
+        "x": 0.4,
+        "y": 0.0
+      }
+    }
+  }
+}

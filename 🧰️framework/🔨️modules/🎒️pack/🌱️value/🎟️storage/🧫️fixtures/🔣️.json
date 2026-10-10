@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {"roots": 0, "pending": false, "close": ["backing", "complete"]},
+    {"roots": 1, "pending": false, "close": ["frame", "backing", "complete"]},
+    {"roots": 2, "pending": true, "close": ["pending", "frame", "frame", "backing", "complete"]}
+  ],
+  "deniedAxes": ["items", "copy", "capacity", "release", "depth"],
+  "capacityTargets": [1, 513, 8193],
+  "symbols": ["", "a", "axis", "A€𐍈"],
+  "interruptions": [0, 1, 4, 8],
+  "recordBodies": ["0000", "020161046178697300", "010841e282acf0908d8800"]
+}

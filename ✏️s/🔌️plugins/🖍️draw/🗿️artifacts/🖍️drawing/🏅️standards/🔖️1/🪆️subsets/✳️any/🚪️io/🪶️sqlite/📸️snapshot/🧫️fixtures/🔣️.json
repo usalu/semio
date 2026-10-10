@@ -214,7 +214,8 @@
         "x": 1,
         "y": 2,
         "content": "Ω\n\u0000text",
-        "size": 3
+        "size": 3,
+        "fontFamily": "anta"
       },
       {
         "kind": "image",

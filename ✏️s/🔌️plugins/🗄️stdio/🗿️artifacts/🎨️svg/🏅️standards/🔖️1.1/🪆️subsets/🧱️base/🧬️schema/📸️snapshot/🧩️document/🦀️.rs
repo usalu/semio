@@ -2,7 +2,7 @@
 use super::{ViewBox,TransformOp,PathCommand};
 use semio_framework_value::FromValue;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration,XmlDoctype};
-#[derive(Clone,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue)]
 #[value(tag="kind",content="value",rename_all="camelCase")]
 pub enum SvgAttributeValue {
     Text(String),
@@ -14,13 +14,13 @@ pub enum SvgAttributeValue {
     Points(Vec<SvgPoint>),
     PathData(Vec<PathCommand>),
 }
-#[derive(Clone,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue)]
 #[value(rename_all="camelCase")]
 pub struct SvgLength { pub magnitude:f64,pub unit:String }
-#[derive(Clone,Copy,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone,Copy,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue)]
 #[value(rename_all="camelCase")]
 pub struct SvgPoint { pub x:f64,pub y:f64 }
-#[derive(Clone,Debug,PartialEq,value_derive::ToValue)]
+#[derive(semio_framework_value::RetireOwned, Clone,Debug,PartialEq,value_derive::ToValue)]
 #[value(rename_all="camelCase")]
 pub struct SvgAttr {pub name:String,pub value:SvgAttributeValue}
 #[derive(value_derive::FromValue)]
@@ -34,7 +34,7 @@ impl semio_framework_value::FromValue for SvgAttr{
 impl SvgAttr{
     fn admit(fields:SvgAttributeFields)->Result<Self,semio_framework_value::ValueError>{validate_svg_attribute_owner(&fields.name,&fields.value).map_err(|detail|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,detail))?;Ok(Self{name:fields.name,value:fields.value})}
 }
-#[derive(Clone,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone,Debug,PartialEq,value_derive::ToValue,value_derive::FromValue)]
 #[value(tag="kind",rename_all="camelCase")]
 pub enum SvgNode {
     Element {name:String,#[value(default)] attrs:Vec<SvgAttr>,#[value(default)] children:Vec<SvgNode>},
@@ -43,7 +43,7 @@ pub enum SvgNode {
     Comment {text:String},
     ProcessingInstruction {target:String,data:String},
 }
-#[derive(Clone,Debug,Default,PartialEq,value_derive::ToValue,value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone,Debug,Default,PartialEq,value_derive::ToValue,value_derive::FromValue)]
 #[value(rename_all="camelCase")]
 pub struct SvgDocument {
     #[value(default)] pub declaration:Option<XmlDeclaration>,#[value(default)] pub doctype:Option<XmlDoctype>,#[value(default)] pub prolog:Vec<SvgNode>,#[value(default)] pub root:Option<SvgNode>,#[value(default)] pub epilog:Vec<SvgNode>,

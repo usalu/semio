@@ -3889,12 +3889,16 @@ name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "rustybuzz",
  "semio-framework-hash",
  "semio-framework-pixels",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
+ "tiny-skia",
+ "ttf-parser",
 ]
 
 [[package]]

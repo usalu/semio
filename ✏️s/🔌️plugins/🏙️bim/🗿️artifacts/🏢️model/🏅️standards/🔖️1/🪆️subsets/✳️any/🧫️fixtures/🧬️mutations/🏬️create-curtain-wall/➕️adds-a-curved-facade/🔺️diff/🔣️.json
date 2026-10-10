@@ -1,1 +1,30 @@
-{}
+{
+  "curtain_walls": {
+    "cw-2": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.3,
+          "end": {
+            "x": 6.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "curtain_wall_type": "cwt-1",
+      "entry": "Created",
+      "name": "Bay facade",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      }
+    }
+  }
+}

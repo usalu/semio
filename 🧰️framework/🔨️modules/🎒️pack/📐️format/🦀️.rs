@@ -25,6 +25,9 @@ fn retained_page_close_demands<T, const N: usize>(pages: &protocol::list::PagedL
     Ok(RetirementDemand { release_bytes: pages.next_release_allocation_bytes().map_err(error)?, depth: pages.next_release_depth_demand().map_err(error)?.max(1), ..Default::default() })
 }
 
+#[path = "🏷️symbols/🎟️storage/🦀️.rs"]
+mod original_symbol_storage;
+
 #[path="🛫️encoding/🦀️.rs"]
 mod controlled_encoding;
 pub use controlled_encoding::ControlledPackWriter;
@@ -2518,6 +2521,8 @@ pub struct RetainedPackSymbolTable {
     fault: Option<RetainedPackCatalogFault>,
     closing: bool,
     closed: bool,
+    storage_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<original_symbol_storage::SymbolStorage>>,
+    storage_retiring_bytes: usize,
 }
 
 impl RetainedPackSymbolTable {
@@ -2551,6 +2556,8 @@ impl RetainedPackSymbolTable {
             fault: None,
             closing: false,
             closed: false,
+            storage_retirement: None,
+            storage_retiring_bytes: 0,
         })
     }
 
@@ -2565,7 +2572,7 @@ impl RetainedPackSymbolTable {
     }
 
     fn allocated_bytes_checked(&self) -> Option<usize> {
-        self.symbols.allocated_bytes().checked_add(self.scalars.allocated_bytes())
+        self.symbols.allocated_bytes().checked_add(self.scalars.allocated_bytes())?.checked_add(self.storage_retiring_bytes)
     }
 
     pub fn allocated_bytes(&self) -> usize {
@@ -2809,6 +2816,8 @@ impl RetainedPackSymbolTable {
 
     pub fn terminal_is_empty(&self) -> bool {
         self.closed
+            && self.storage_retirement.is_none()
+            && self.storage_retiring_bytes == 0
             && self.scalars.terminal_is_empty()
             && self.symbols.terminal_is_empty()
             && self.published_scalars == 0

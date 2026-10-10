@@ -57,12 +57,8 @@ impl ArtifactApp for SingleDocumentApp {
         built_text_to_component_tree(semio_framework_ui_locale::Label::data("Single-document fixture"))
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(TestCountOneItemPreparationFactory))
+        Some(test_document_preparation_factory())
     }
 
     fn build_document_store_initialization_job(
@@ -78,16 +74,8 @@ impl ArtifactApp for SingleDocumentApp {
         Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        TestApp::<false>::build_config_store_owners()
-    }
-
     fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         TestApp::<false>::build_config_store_disposer()
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        TestApp::<false>::build_draft_store_owners()
     }
 
     fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
@@ -143,7 +131,8 @@ async fn drive_single_document_archive(app: &mut SingleDocumentAppUnderTest, ope
         if matches!(status.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             return status;
         }
-        let _ = PluginApp::maintenance_step(app, 1, store::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("single-document archive maintenance step");
+        let demand = PluginApp::maintenance_retirement_demands(app, store::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("single-document archive maintenance quote");
+        let _ = PluginApp::maintenance_step(app, plugin_demand_grant(demand)).expect("single-document archive maintenance step");
         semio_framework_async::yield_once().await;
     }
     panic!("single-document archive exceeded its public maintenance progress authority")
@@ -235,17 +224,8 @@ async fn a_refused_whole_document_archive_names_the_leg_that_refused_it() {
 
 /// 🧹️ Closes a source store built beside the app under its bounded owners.
 fn close_bounded_source_store(source: &mut store::ArtifactStore<TestSnapshot, TestMutation>) {
-    for _ in 0..65_536 {
-        match source.close_owned_step(1, 4096).expect("the source store closes under its exact grant") {
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
-            store::SnapshotRetirementStep::Blocked => panic!("the source store has no external owner"),
-            store::SnapshotRetirementStep::Complete => {
-                assert!(source.close_owned_terminal_is_empty());
-                return;
-            }
-        }
-    }
-    panic!("the source store did not close");
+    source.close_owned_unscheduled().expect("the source store closes under its own quoted demands");
+    assert!(source.close_owned_terminal_is_empty());
 }
 
 /// ✏️ A whole-document archive whose history supersedes inputs — a replacement, a withdrawal and a garbage replacement a
@@ -259,13 +239,13 @@ async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state(
     let live_id = app.store.envelope().id.clone();
     let genesis = store::create_document_envelope::<TestSnapshot, TestMutation>(SingleDocumentApp::DOCUMENT_SCHEMA, &live_id, TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None);
     let mut source = Box::pin(store::ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("source store");
-    source.install_document_store_owners_exact(bounded_document_store_owners::<TestSnapshot, TestMutation>());
+    store::install_unscheduled_catalog(&mut source, store::funded_bounded_artifact_store_owners::<TestSnapshot, TestMutation>()).expect("source owners");
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
-        Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], transaction: None })).await.expect("source edit");
+        crate::with_authoring_identity!(|identity| Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
     }
     let ids: Vec<protocol::MutationId> = source.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
     let inputs = vec![store::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }, store::SupersedeInput { target: ids[1].clone(), replacement: None }];
-    Box::pin(source.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs })).await.expect("a clean supersession");
+    crate::with_authoring_identity!(|identity| Box::pin(source.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs }, &mut identity)).await).expect("a clean supersession");
     let garbage = protocol::HistoryTransition::Supersede(protocol::TransitionSupersede {
         scope: None,
         inputs: vec![protocol::SupersededInput { target: ids[2].clone(), replacement: protocol::InputReplacement::Input { schema: SingleDocumentApp::DOCUMENT_SCHEMA.into(), payload: vec![0xff, 0x13, 0x37] } }],
@@ -306,21 +286,21 @@ async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
     use crate::test_app_mutation_fixture::{SetCount, SetLabel};
     let mut source = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
-        Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], transaction: None })).await.expect("source edit");
+        crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
     }
     let ids: Vec<protocol::MutationId> = source.store.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
-    Box::pin(source.store.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs: vec![store::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }] })).await.expect("history edit");
-    Box::pin(source.store.dispatch(store::ArtifactCommand::Undo)).await.expect("revert");
-    Box::pin(source.store.dispatch(store::ArtifactCommand::Redo)).await.expect("reinstate");
-    Box::pin(source.store.dispatch(store::ArtifactCommand::CreateAlternativeWithSupersede { name: "c".into(), inputs: vec![store::SupersedeInput { target: ids[2].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 7 })) }] })).await.expect("history edit as a new alternative");
-    Box::pin(source.store.dispatch(store::ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![store::SupersedeInput { target: ids[1].clone(), replacement: Some(TestMutation::SetLabel(SetLabel { value: "alternative".into() })) }] })).await.expect("a second history edit as a new alternative");
-    Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], transaction: None })).await.expect("edit on the alternative");
-    Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], transaction: None })).await.expect("a second edit on the alternative");
+    crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs: vec![store::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }] }, &mut identity)).await).expect("history edit");
+    crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::Undo, &mut identity)).await).expect("revert");
+    crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::Redo, &mut identity)).await).expect("reinstate");
+    crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::CreateAlternativeWithSupersede { name: "c".into(), inputs: vec![store::SupersedeInput { target: ids[2].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 7 })) }] }, &mut identity)).await).expect("history edit as a new alternative");
+    crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![store::SupersedeInput { target: ids[1].clone(), replacement: Some(TestMutation::SetLabel(SetLabel { value: "alternative".into() })) }] }, &mut identity)).await).expect("a second history edit as a new alternative");
+    crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], transaction: None }, &mut identity)).await).expect("edit on the alternative");
+    crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], transaction: None }, &mut identity)).await).expect("a second edit on the alternative");
     let expected = source.snapshot().expect("source projection");
     let before = archive_history_rows(&Box::pin(source.history_snapshot()).await.expect("source history"));
     let archive = Box::pin(PluginApp::document_archive(&source)).await.expect("source archive");
     let mut target = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
-    Box::pin(target.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], transaction: None })).await.expect("target example");
+    crate::with_authoring_identity!(|identity| Box::pin(target.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], transaction: None }, &mut identity)).await).expect("target example");
     let replaced = archive_history_rows(&Box::pin(target.history_snapshot()).await.expect("target history before the load"));
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     let target_id = target.store.envelope().id.clone();

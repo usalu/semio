@@ -7,12 +7,12 @@
 use crate::mutations::elements::{self, placement_diff, Placement, Refusal};
 use crate::mutations::placement::host_length;
 use super::map::{self, Image, Map};
-use crate::{Assigned, CurtainPanelOverride, EndJoin, Entry, KeyedDelta, ModelDiff, ModelSnapshot, Opening, Patch, WallPatch, WallSweep};
+use crate::{Assigned, ComponentOverride, CurtainPanelOverride, EndJoin, Entry, KeyedDelta, ModelDiff, ModelSnapshot, Opening, Patch, WallPatch, WallSweep};
 use protocol::OutcomeCode;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🔢️ The most records and data rows one mutation may create: what one delete restores (the inverse of every copy), so that undoing a copy never meets the bound of a removal.
-pub const MAX_CREATED: usize = super::super::cascade::INVERSE_ROWS;
+pub const MAX_CREATED: usize = crate::mutations::cascade::INVERSE_ROWS;
 
 //#region 🔖️Sources
 /// 🧲️ What a modify mutation acts on: the placed elements it names, in id order, the openings hosted by them and the curtain panel overrides of the curtain walls among them and the wall sweeps of the walls among them, all in id order.
@@ -22,6 +22,7 @@ pub struct Sources {
     pub openings: Vec<String>,
     pub overrides: Vec<String>,
     pub sweeps: Vec<String>,
+    pub component_overrides: Vec<String>,
 }
 
 /// 🧲️ The sources named by `ids`: an empty selection is `Invariant`, an unknown id `TargetMissing`, an element without a placement
@@ -49,7 +50,8 @@ pub fn sources(base: &ModelSnapshot, ids: &[String]) -> Result<Sources, Refusal>
     }
     let overrides: Vec<String> = base.curtain_panel_overrides.iter().filter(|(_, row)| elements.contains(&row.curtain)).map(|(id, _)| id.clone()).collect();
     let sweeps: Vec<String> = base.wall_sweeps.iter().filter(|(_, row)| elements.contains(&row.host)).map(|(id, _)| id.clone()).collect();
-    Ok(Sources { elements, openings, overrides, sweeps })
+    let component_overrides: Vec<String> = base.component_overrides.iter().filter(|(_, row)| elements.contains(&row.component)).map(|(key, _)| key.clone()).collect();
+    Ok(Sources { elements, openings, overrides, sweeps, component_overrides })
 }
 //#endregion 🔖️Sources
 
@@ -92,6 +94,8 @@ fn insert(diff: &mut ModelDiff, id: &str, image: Image) {
         Image::Stair(row) => created(&mut diff.stairs, id, row),
         Image::Railing(row) => created(&mut diff.railings, id, row),
         Image::Ramp(row) => created(&mut diff.ramps, id, row),
+        Image::Component(row) => created(&mut diff.components, id, row),
+        Image::Mep(row) => created(&mut diff.mep_elements, id, row),
         Image::Space(row) => created(&mut diff.spaces, id, row),
         Image::Grid(row) => created(&mut diff.grids, id, row),
     }
@@ -125,7 +129,7 @@ pub fn duplicate(base: &ModelSnapshot, ids: &[String], prefix: &str, maps: &[Map
         return Err(Refusal::new(OutcomeCode::Invariant, "A copy needs a non-blank id prefix.", ["prefix"]));
     }
     let found = sources(base, ids)?;
-    if (found.elements.len() + found.openings.len() + found.overrides.len() + found.sweeps.len()) * maps.len() > MAX_CREATED {
+    if (found.elements.len() + found.openings.len() + found.overrides.len() + found.sweeps.len() + found.component_overrides.len()) * maps.len() > MAX_CREATED {
         return Err(Refusal::new(OutcomeCode::Invariant, format!("A mutation creates at most {MAX_CREATED} records."), ["ids"]));
     }
     let mut diff = ModelDiff::default();
@@ -157,6 +161,22 @@ pub fn duplicate(base: &ModelSnapshot, ids: &[String], prefix: &str, maps: &[Map
             rows += 1 + data(base, &mut diff, id, &minted);
             hosts.insert(id.clone(), minted.clone());
             roots.push(minted);
+        }
+        for (id, minted) in &hosts {
+            let Some(wall) = base.components.get(id).and_then(|row| row.host.as_ref()).and_then(|host| hosts.get(host)) else {
+                continue;
+            };
+            if let Some(Entry::Created(copied)) = diff.components.as_mut().and_then(|delta| delta.0.get_mut(minted)) {
+                copied.host = Some(wall.clone());
+            }
+        }
+        for key in &found.component_overrides {
+            let record = &base.component_overrides[key];
+            let owner = hosts[&record.component].clone();
+            let minted = format!("{owner}.{}", record.name);
+            free(base, &minted)?;
+            created(&mut diff.component_overrides, &minted, ComponentOverride { component: owner, ..record.clone() });
+            rows += 1;
         }
         for (position, id) in found.openings.iter().enumerate() {
             let minted = mint(prefix, copy, found.elements.len() + position);

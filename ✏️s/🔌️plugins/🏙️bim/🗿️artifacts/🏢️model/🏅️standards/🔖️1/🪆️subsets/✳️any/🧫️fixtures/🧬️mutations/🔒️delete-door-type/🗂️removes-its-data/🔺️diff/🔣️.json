@@ -1,15 +1,15 @@
 {
+  "classifications": {
+    "door-1": {
+      "entry": "Deleted"
+    }
+  },
   "door_types": {
     "door-1": {
       "entry": "Deleted"
     }
   },
   "properties": {
-    "door-1": {
-      "entry": "Deleted"
-    }
-  },
-  "classifications": {
     "door-1": {
       "entry": "Deleted"
     }

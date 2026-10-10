@@ -669,6 +669,8 @@ pub enum RetainedValueContainer {
     Wire,
 }
 
+semio_framework_value::artifact_retire_leaf!(RetainedValueContainer);
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RetainedValueToken {
     Tag { offset: u64, value: u8 },

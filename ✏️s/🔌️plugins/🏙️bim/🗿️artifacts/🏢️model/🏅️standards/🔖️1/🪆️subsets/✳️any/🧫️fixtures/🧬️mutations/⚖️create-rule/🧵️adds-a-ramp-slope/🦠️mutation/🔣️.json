@@ -1,0 +1,16 @@
+{
+  "mutation": "createRule",
+  "id": "r-1",
+  "rule": {
+    "name": "Ramp slope 1:12",
+    "kind": "MaxRampSlope",
+    "limit": 0.0833,
+    "severity": "Error",
+    "scope": {
+      "storeys": [],
+      "phases": [],
+      "ids": [],
+      "filter": ""
+    }
+  }
+}

@@ -52,6 +52,726 @@
       "package.json",
       "nx/core/package-json"
     ],
+    "targets.native-decode-child-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.native-decode-child-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-source.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-work-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.deps-js-lock": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.deps-js-lock.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.deps-js-lock.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.deps-js-lock.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.deps-js-lock.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.deps-js-lock.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.deps-js-lock.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.deps-js-lock.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspector-actions-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspector-actions-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspector-actions-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspector-actions-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspector-actions-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspector-actions-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspector-actions-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspector-actions-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-source.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.gesture-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.registry-alias-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.registry-alias-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.registry-alias-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.registry-alias-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.registry-alias-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.registry-alias-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.registry-alias-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.registry-alias-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-mutex-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-mutex-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-mutex-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-mutex-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-mutex-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-mutex-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cargo-driver": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cargo-driver.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cargo-driver.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cargo-driver.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cargo-driver.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cargo-driver.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cargo-driver.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cargo-driver.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-sealed-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-sealed-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-sealed-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-sealed-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-sealed-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-sealed-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-original-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-original-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-original-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-original-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-original-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-original-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-original-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-original-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.sqlite-recipient": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.sqlite-recipient.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.sqlite-recipient.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.sqlite-recipient.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.sqlite-recipient.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.sqlite-recipient.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.sqlite-recipient.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.sqlite-recipient.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-source.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-source.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.semio-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-source.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-source.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.renderer-family-test": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.renderer-family-test.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.renderer-family-test.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.renderer-family-test.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.renderer-family-test.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.renderer-family-test.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.renderer-family-test.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.renderer-family-test.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.draw-lock": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.draw-lock.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.draw-lock.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.draw-lock.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.draw-lock.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.draw-lock.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.draw-lock.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.draw-lock.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-source.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-source.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cancel-return-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-source.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-source.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.job-session-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
     "targets.geometry-test": [
       "project.json",
       "nx/core/project-json"
@@ -500,6 +1220,94 @@
       "project.json",
       "nx/core/project-json"
     ],
+    "targets.toolrun-entities": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-entities.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-entities.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-entities.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-entities.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-entities.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-entities.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-entities.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.toolrun-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-source-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-source-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-source-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-source-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-source-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-source-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.value-source-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
     "targets.value-typescript": [
       "project.json",
       "nx/core/project-json"
@@ -601,6 +1409,254 @@
       "nx/core/project-json"
     ],
     "targets.window-native-test.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.view-model-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-source.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-source.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dxf-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.binary-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.image-funding-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.image-funding-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.image-funding-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.image-funding-native.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.image-funding-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.image-funding-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.image-funding-native.options.usePty": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.image-funding-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-source.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-native.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.pack-storage-native.options": [
       "project.json",
       "nx/core/project-json"
     ]

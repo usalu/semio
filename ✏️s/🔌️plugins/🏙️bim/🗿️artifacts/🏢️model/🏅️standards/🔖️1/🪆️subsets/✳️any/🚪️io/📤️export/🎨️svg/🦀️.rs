@@ -44,7 +44,7 @@ pub fn views_to_svg(model: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinew
         codec::element("desc", vec![], vec![codec::text(&format!("Views of {title}, one group per view (plan, ceiling plan, section, elevation) at the scale of the view, paper millimetres."))]),
         codec::element("style", vec![], vec![codec::text(&style::sheet())]),
     ];
-    children.extend(layout.slots.iter().map(|slot| drawing::view_group(slot, &drawings[&slot.view].lines)));
+    children.extend(layout.slots.iter().map(|slot| drawing::view_group(model, slot, &drawings[&slot.view].lines)));
     let root = codec::SvgElement::Svg {
         common,
         view_box: Some(codec::ViewBox { min_x: 0.0, min_y: 0.0, width, height }),

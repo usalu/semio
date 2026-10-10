@@ -1,0 +1,31 @@
+{
+  "mutation": "createMepElement",
+  "id": "mep-new",
+  "mep": {
+    "storey": "st-ground",
+    "system": "Waste",
+    "shape": {
+      "Pipe": {
+        "diameter": 0.1
+      }
+    },
+    "path": [
+      {
+        "x": 2,
+        "y": 2,
+        "z": 0
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "z": 2.8
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "z": 2.8
+      }
+    ],
+    "name": "Waste stack"
+  }
+}

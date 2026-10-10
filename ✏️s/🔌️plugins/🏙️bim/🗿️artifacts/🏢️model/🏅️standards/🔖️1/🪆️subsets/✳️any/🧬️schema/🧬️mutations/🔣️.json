@@ -361,6 +361,30 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-ramp/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-component/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-component/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-component/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-component-override/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/remove-component-override/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-mep-element/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-mep-element/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-mep-element/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-dimension/schema.json"
     },
     {
@@ -451,6 +475,42 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-sheet-revision/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-clash-set/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-clash-set/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-clash-set/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-rule/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-rule/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-rule/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-issue/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-issue/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-issue/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-issue-comment/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-issue-comment/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-issue-comment/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-property-template/schema.json"
     },
     {
@@ -499,6 +559,15 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-curtain-panel-override/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-space-conditions/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/remove-space-conditions/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-type-thermal-data/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-family/schema.json"
     },
     {
@@ -521,6 +590,33 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-family-solid/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-support/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-support/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-support/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-load-case/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-load-case/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-load-case/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-load/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-load/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-load/schema.json"
     }
   ]
 }

@@ -1,1 +1,8 @@
-{}
+{
+  "beams": {
+    "b-a": {
+      "entry": "Patched",
+      "name": "Beam A (renamed)"
+    }
+  }
+}

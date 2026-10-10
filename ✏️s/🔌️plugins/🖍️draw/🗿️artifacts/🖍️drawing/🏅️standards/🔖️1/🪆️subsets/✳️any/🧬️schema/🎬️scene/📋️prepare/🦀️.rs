@@ -33,19 +33,22 @@ impl<T:RetireOwned+Eq> OwnedSet<T>{
 pub mod selection;
 pub use selection::{scene_selection_relation,SceneSelectionRelation};
 use crate::schema::scene_booleans::{DocumentBooleanInput,DocumentBooleanJob,DocumentBooleanLimits,DocumentBooleanProgress,DocumentBooleanRetirement};
+use crate::schema::scene_text::{DocumentTextJob,DocumentTextRetirement};
 use crate::schema::scene_trace::{DocumentTraceInput,DocumentTraceJob,DocumentTraceLimits,DocumentTraceProgress,DocumentTraceRetirement};
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentSceneLimits{pub max_nodes:usize,pub max_depth:usize,pub max_segments:usize,pub max_references:usize,pub max_source_bytes:usize}
+impl Default for DocumentSceneLimits{fn default()->Self{Self{max_nodes:1024,max_depth:32,max_segments:65536,max_references:32768,max_source_bytes:268439552}}}
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]
 pub enum DocumentSceneContent{
  Path{segments:Vec<PathSegment>,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
  Image{asset:String,width:f64,height:f64},Group{children:Vec<String>,isolation:bool},
- Text{content:String,x:f64,y:f64,size:f64,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
+ Text{content:String,x:f64,y:f64,size:f64,font_family:crate::DrawingFontFamily,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
+ Glyphs{content:String,x:f64,y:f64,size:f64,font_family:crate::DrawingFontFamily,segments:Vec<PathSegment>,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
  Boolean{operation:String,children:Vec<String>,reference_transform:[f64;6],fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
  Trace{source:String,threshold:f64,simplify_epsilon:f64,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
 }
 impl DocumentSceneContent{
- fn paint(&mut self)->Option<(&mut Option<FillStyle>,&mut Option<StrokeStyle>)>{match self{Self::Path{fill,stroke,..}|Self::Text{fill,stroke,..}|Self::Boolean{fill,stroke,..}|Self::Trace{fill,stroke,..}=>Some((fill,stroke)),_=>None}}
+ fn paint(&mut self)->Option<(&mut Option<FillStyle>,&mut Option<StrokeStyle>)>{match self{Self::Path{fill,stroke,..}|Self::Glyphs{fill,stroke,..}|Self::Text{fill,stroke,..}|Self::Boolean{fill,stroke,..}|Self::Trace{fill,stroke,..}=>Some((fill,stroke)),_=>None}}
  fn children(&self)->&[String]{match self{Self::Group{children,..}|Self::Boolean{children,..}=>children,_=>&[]}}
 }
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]
@@ -106,7 +109,7 @@ struct DocumentSceneCursor{
 impl DocumentSceneCursor{
  pub fn new(document:&impl DrawingSceneSource,limits:DocumentSceneLimits)->Result<Self,DocumentSceneError>{
   if !(1..=1024).contains(&limits.max_nodes)||!(1..=32).contains(&limits.max_depth)||!(1..=65536).contains(&limits.max_segments)||!(1..=32768).contains(&limits.max_references)||!(1..=268439552).contains(&limits.max_source_bytes)||document.root_count()>limits.max_nodes||document.asset_count()>1024{return Err(invalid("Invalid scene preparation limits or document"));}
-  Ok(Self{limits,asset_key:None,asset_active:false,asset_samples:Vec::new(),asset_char:0,frames:vec![Frame{locked_ancestors:0,path:Vec::new(),at:0,matrix:[1.0,0.0,0.0,1.0,0.0,0.0],visible:true,groups:Vec::new()}],retired_frames:Vec::new(),retired_groups:Vec::new(),retired_paths:Vec::new(),current:None,node:None,plan:DocumentScenePlan::default(),ids:OwnedTable::new(),asset_ids:OwnedSet::new(),phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,at:0,stroke_at:0,text_at:0,text_chars:0,text_chunk:0,text_chunk_offset:0,validate_at:0,ref_at:0,cycle_at:0,graph:Vec::new(),visited:OwnedSet::new(),visiting:OwnedSet::new(),cancelled:false,failure:None,cleanup_slot:0})
+  Ok(Self{limits,asset_key:None,asset_active:false,asset_samples:Vec::new(),asset_char:0,frames:vec![Frame{locked_ancestors:0,path:Vec::new(),at:0,matrix:[1.0,0.0,0.0,1.0,0.0,0.0],visible:true,groups:Vec::new()}],retired_frames:Vec::new(),retired_groups:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),current:None,node:None,plan:DocumentScenePlan::default(),ids:OwnedTable::new(),asset_ids:OwnedSet::new(),phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,at:0,stroke_at:0,text_at:0,text_chars:0,text_chunk:0,text_chunk_offset:0,validate_at:0,ref_at:0,cycle_at:0,graph:Vec::new(),visited:OwnedSet::new(),visiting:OwnedSet::new(),cancelled:false,failure:None,cleanup_slot:0})
  }
  fn start(&mut self,layer:&DrawingLayerNode,path:Vec<usize>,parent:[f64;6],visible:bool,groups:Vec<DrawingSceneGroup>,locks:u32)->Result<(),DocumentSceneError>{
   if path.is_empty()||path.len()>self.limits.max_depth{return Err(invalid("Scene source path exceeds depth limit"));}
@@ -119,7 +122,7 @@ impl DocumentSceneCursor{
    DrawingLayerNode::Path(_)|DrawingLayerNode::Shape(_)=>DocumentSceneContent::Path{segments:Vec::new(),fill_rule:rule,fill:None,stroke:None},
    DrawingLayerNode::Image(v)=>{id(&v.image_key)?;DocumentSceneContent::Image{asset:v.image_key.to_string_owner(),width:positive(v.width)?,height:positive(v.height)?}},
    DrawingLayerNode::Group(v)=>{if v.children.len()>1024{return Err(invalid("Invalid scene group"));}DocumentSceneContent::Group{children:Vec::new(),isolation:v.isolation}},
-   DrawingLayerNode::Text(v)=>{if v.content.len()>262144{return Err(invalid("Scene text exceeds limit"));}DocumentSceneContent::Text{content:String::new(),x:coordinate(v.x)?,y:coordinate(v.y)?,size:positive(v.size)?,fill_rule:rule,fill:None,stroke:None}},
+   DrawingLayerNode::Text(v)=>{if v.content.len()>262144{return Err(invalid("Scene text exceeds limit"));}DocumentSceneContent::Text{content:String::new(),x:coordinate(v.x)?,y:coordinate(v.y)?,size:positive(v.size)?,font_family:v.font_family,fill_rule:rule,fill:None,stroke:None}},
    DrawingLayerNode::Boolean(v)=>{if !crate::DRAWING_BOOLEAN_OPERATIONS.iter().any(|operation| v.operation.eq_str(operation))||v.children.len()>1024{return Err(invalid("Invalid boolean scene work"));}DocumentSceneContent::Boolean{operation:v.operation.to_string_owner(),children:Vec::new(),reference_transform:parent,fill_rule:rule,fill:None,stroke:None}},
    DrawingLayerNode::Trace(v)=>{id(&v.source_key)?;let epsilon=coordinate(v.params.simplify_epsilon)?;if epsilon<0.0{return Err(invalid("Invalid trace epsilon"));}DocumentSceneContent::Trace{source:v.source_key.to_string_owner(),threshold:unit(v.params.threshold)?,simplify_epsilon:epsilon,fill_rule:rule,fill:None,stroke:None}},
   };
@@ -182,7 +185,7 @@ impl DocumentSceneCursor{
 }
 #[derive(semio_framework_value::RetireOwned)]
 struct DocumentSceneOwners{asset_key:Option<String>,asset_samples:Vec<u8>,frames:Vec<Frame>,retired_frames:Vec<Frame>,retired_groups:Vec<DrawingSceneGroup>,retired_paths:Vec<Vec<usize>>,current:Option<Vec<usize>>,node:Option<DocumentSceneNode>,plan:DocumentScenePlan,ids:OwnedTable<String,usize>,asset_ids:OwnedSet<String>,graph:Vec<(usize,usize)>,visited:OwnedSet<usize>,visiting:OwnedSet<usize>,failure:Option<DocumentSceneError>}
-impl RetireOwned for DocumentSceneCursor{fn retirement(self)->Box<dyn RetirementCursor>{DocumentSceneOwners{asset_key:self.asset_key,asset_samples:self.asset_samples,frames:self.frames,retired_frames:self.retired_frames,retired_groups:self.retired_groups,retired_paths:self.retired_paths,current:self.current,node:self.node,plan:self.plan,ids:self.ids,asset_ids:self.asset_ids,graph:self.graph,visited:self.visited,visiting:self.visiting,failure:self.failure}.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.asset_key),deferred_birth_bytes_for(&self.asset_samples),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes_for(&self.retired_frames),deferred_birth_bytes_for(&self.retired_groups),deferred_birth_bytes_for(&self.retired_paths),deferred_birth_bytes_for(&self.current),deferred_birth_bytes_for(&self.node),deferred_birth_bytes_for(&self.plan),deferred_birth_bytes_for(&self.ids),deferred_birth_bytes_for(&self.asset_ids),deferred_birth_bytes_for(&self.graph),deferred_birth_bytes_for(&self.visited),deferred_birth_bytes_for(&self.visiting),deferred_birth_bytes_for(&self.failure)])} fn controlled_retirement_supported()->bool{DocumentSceneOwners::controlled_retirement_supported()}}
+impl RetireOwned for DocumentSceneCursor{fn retirement(self)->Box<dyn RetirementCursor>{DocumentSceneOwners{asset_key:self.asset_key,asset_samples:self.asset_samples,frames:self.frames,retired_frames:self.retired_frames,retired_groups:self.retired_groups,retired_paths:self.retired_paths,retired_texts:self.retired_texts,current:self.current,node:self.node,plan:self.plan,ids:self.ids,asset_ids:self.asset_ids,graph:self.graph,visited:self.visited,visiting:self.visiting,failure:self.failure}.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.asset_key),deferred_birth_bytes_for(&self.asset_samples),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes_for(&self.retired_frames),deferred_birth_bytes_for(&self.retired_groups),deferred_birth_bytes_for(&self.retired_paths),deferred_birth_bytes_for(&self.current),deferred_birth_bytes_for(&self.node),deferred_birth_bytes_for(&self.plan),deferred_birth_bytes_for(&self.ids),deferred_birth_bytes_for(&self.asset_ids),deferred_birth_bytes_for(&self.graph),deferred_birth_bytes_for(&self.visited),deferred_birth_bytes_for(&self.visiting),deferred_birth_bytes_for(&self.failure)])} fn controlled_retirement_supported()->bool{DocumentSceneOwners::controlled_retirement_supported()}}
 semio_framework_2d::physical_work_retirement!(DocumentSceneRetirement,DocumentSceneCursor,DocumentSceneError,|error:&str|invalid(error));
 /// 🧭️ Owns source positions so a retained caller supplies its immutable document per work grant.
 pub struct DocumentScenePreparation{cursor:DocumentSceneCursor}
@@ -217,17 +220,18 @@ impl DocumentSceneViewport{fn input(&self,assets:Vec<RasterSceneAsset>,nodes:Vec
 pub struct DocumentRasterProgress{pub phase:&'static str,pub preparation:DocumentSceneProgress,pub tracing:Option<DocumentTraceProgress>,pub resolution:Option<DocumentBooleanProgress>,pub raster:Option<crate::schema::scene_raster::RasterSceneProgress>,pub nodes:usize,pub work:u64,pub done:bool}
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentAlgorithmLimits{pub booleans:DocumentBooleanLimits,pub trace:DocumentTraceLimits,pub max_work:u64}
+impl Default for DocumentAlgorithmLimits{fn default()->Self{Self{max_work:1000000000,trace:DocumentTraceLimits{max_pixels:16777216,max_admitted_pixels:67108864,max_source_bytes:268439552,max_edges:65536,max_segments:65536,max_retained_segments:65536,max_work:1000000000},booleans:DocumentBooleanLimits{tolerance:0.05,epsilon:1e-8,max_depth:32,max_references:32768,max_edges:65536,max_parameters:262144,max_atomic_edges:65536,max_segments:65536,max_retained_segments:262144,max_work:1000000000}}}}
 #[derive(Clone,Debug)]
 pub struct DocumentVectorProgress{pub phase:&'static str,pub preparation:DocumentSceneProgress,pub tracing:Option<DocumentTraceProgress>,pub resolution:Option<DocumentBooleanProgress>,pub work:u64,pub done:bool}
 impl Default for DocumentVectorProgress{fn default()->Self{Self{phase:"preparing",preparation:DocumentSceneProgress{phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,done:false},tracing:None,resolution:None,work:0,done:false}}}
 enum DocumentVectorSource<'a>{Borrowed(&'a DrawingSnapshot),SnapshotRead(store::SnapshotRead<DrawingSnapshot>)}
 impl DocumentVectorSource<'_>{fn document(&self)->&DrawingSnapshot{match self{Self::Borrowed(document)=>document,Self::SnapshotRead(read)=>read.get()}}}
 #[derive(semio_framework_value::RetireOwned)]
-enum VectorChildRetirement{Preparation(DocumentSceneRetirement),Trace(DocumentTraceRetirement),Boolean(DocumentBooleanRetirement)}
-impl VectorChildRetirement{fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,DocumentSceneError>{match self{Self::Preparation(job)=>job.advance(grant),Self::Trace(job)=>job.advance(grant),Self::Boolean(job)=>job.advance(grant)}}}
+enum VectorChildRetirement{Preparation(DocumentSceneRetirement),Trace(DocumentTraceRetirement),Text(DocumentTextRetirement),Boolean(DocumentBooleanRetirement)}
+impl VectorChildRetirement{fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,DocumentSceneError>{match self{Self::Preparation(job)=>job.advance(grant),Self::Trace(job)=>job.advance(grant),Self::Text(job)=>job.advance(grant),Self::Boolean(job)=>job.advance(grant)}}}
 /// 🎬️ Resolves one stable source while retaining text and authored paint metadata.
 pub struct DocumentVectorJob<'a>{
- source:Option<DocumentVectorSource<'a>>,preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,algorithms:Option<DocumentBooleanJob>,progress:DocumentVectorProgress,
+ source:Option<DocumentVectorSource<'a>>,preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,algorithms:Option<DocumentBooleanJob>,progress:DocumentVectorProgress,
  output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,limits:DocumentAlgorithmLimits,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>,
 }
 impl<'a> DocumentVectorJob<'a>{
@@ -241,11 +245,11 @@ impl<'a> DocumentVectorJob<'a>{
   let mut trace=DocumentTraceJob::new(DocumentTraceInput{plan:DocumentScenePlan::default(),limits:algorithms.trace})?;trace.cancel();
   let(boolean_close,boolean_input,boolean_output)=boolean.into_retirement();let(trace_close,trace_input,trace_output)=trace.into_retirement();
   let mut retired_plans=vec![ScenePlanCloseJob::new(boolean_input),ScenePlanCloseJob::new(trace_input)];for plan in [boolean_output,trace_output].into_iter().flatten(){retired_plans.push(ScenePlanCloseJob::new(plan));}
-  Ok(Self{preparation:Some(preparation),source:None,traces:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:vec![VectorChildRetirement::Boolean(boolean_close),VectorChildRetirement::Trace(trace_close)],retired_plans})
+  Ok(Self{preparation:Some(preparation),source:None,traces:None,texts:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:vec![VectorChildRetirement::Boolean(boolean_close),VectorChildRetirement::Trace(trace_close)],retired_plans})
  }
  /// 🔐️ Owns the genuine immutable store read while preparation retains only source positions.
  pub fn from_snapshot_read(read:store::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->DocumentVectorJob<'static>{
-  let mut job=DocumentVectorJob{preparation:None,source:Some(DocumentVectorSource::SnapshotRead(read)),traces:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:Vec::new(),retired_plans:Vec::new()};
+  let mut job=DocumentVectorJob{preparation:None,source:Some(DocumentVectorSource::SnapshotRead(read)),traces:None,texts:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:Vec::new(),retired_plans:Vec::new()};
   let admitted=(||->Result<(),DocumentSceneError>{
    if !(1..=1000000000).contains(&algorithms.max_work){return Err(invalid("Invalid document vector work limit"));}
    let mut boolean=DocumentBooleanJob::new(DocumentBooleanInput{plan:DocumentScenePlan::default(),limits:algorithms.booleans})?;boolean.cancel();let(close,input,output)=boolean.into_retirement();job.retired_children.push(VectorChildRetirement::Boolean(close));job.retired_plans.push(ScenePlanCloseJob::new(input));if let Some(plan)=output{job.retired_plans.push(ScenePlanCloseJob::new(plan));}
@@ -258,10 +262,11 @@ impl<'a> DocumentVectorJob<'a>{
  fn step(&mut self,document:&impl DrawingSceneSource)->Result<(),DocumentSceneError>{
   if let Some(close)=self.closing.take(){self.retired_children.push(close);return Ok(());}
   if let Some(close)=self.discard.take(){self.retired_plans.push(close);return Ok(());}
-  if let Some(plan)=self.handoff.take(){match self.progress.phase{"preparing"=>{self.traces=Some(DocumentTraceJob::new(DocumentTraceInput{plan,limits:self.limits.trace})?);self.progress.phase="tracing";},"tracing"=>{self.algorithms=Some(DocumentBooleanJob::new(DocumentBooleanInput{plan,limits:self.limits.booleans})?);self.progress.phase="algorithms";},_=>{self.output=Some(plan);self.progress.phase="complete";self.progress.done=true;}}return Ok(());}
+  if let Some(plan)=self.handoff.take(){match self.progress.phase{"preparing"=>{self.traces=Some(DocumentTraceJob::new(DocumentTraceInput{plan,limits:self.limits.trace})?);self.progress.phase="tracing";},"tracing"=>{self.texts=Some(DocumentTextJob::new(plan,self.limits.max_work));self.progress.phase="text";},"text"=>{self.algorithms=Some(DocumentBooleanJob::new(DocumentBooleanInput{plan,limits:self.limits.booleans})?);self.progress.phase="algorithms";},_=>{self.output=Some(plan);self.progress.phase="complete";self.progress.done=true;}}return Ok(());}
   match self.progress.phase{
    "preparing"=>{self.progress.preparation=self.preparation.as_mut().unwrap().advance(document,1)?;if self.progress.preparation.done{let(close,plan)=self.preparation.take().unwrap().into_retirement();self.closing=Some(VectorChildRetirement::Preparation(close));self.handoff=plan;}}
    "tracing"=>{let p=self.traces.as_mut().unwrap().advance(1)?;self.progress.tracing=Some(p);if p.done{let(close,input,plan)=self.traces.take().unwrap().into_retirement();self.closing=Some(VectorChildRetirement::Trace(close));self.discard=Some(ScenePlanCloseJob::new(input));self.handoff=plan;}}
+   "text"=>{let p=self.texts.as_mut().unwrap().advance(1)?;if p.done{let(close,plan)=self.texts.take().unwrap().into_retirement();self.closing=Some(VectorChildRetirement::Text(close));self.handoff=plan;}}
    "algorithms"=>{let p=self.algorithms.as_mut().unwrap().advance(1)?;self.progress.resolution=Some(p);if p.done{let(close,input,plan)=self.algorithms.take().unwrap().into_retirement();self.closing=Some(VectorChildRetirement::Boolean(close));self.discard=Some(ScenePlanCloseJob::new(input));self.handoff=plan;}}
    _=>{}
   }Ok(())
@@ -276,6 +281,7 @@ impl<'a> DocumentVectorJob<'a>{
   let mut children=self.retired_children;let mut child=self.closing.take();let mut plans=self.retired_plans;if let Some(discard)=self.discard.take(){plans.push(discard);}
   if let Some(preparation)=self.preparation.take(){let(close,output)=preparation.into_retirement();child=Some(VectorChildRetirement::Preparation(close));if let Some(plan)=output{plans.push(ScenePlanCloseJob::new(plan));}}
   if let Some(trace)=self.traces.take(){let(close,input,output)=trace.into_retirement();child=Some(VectorChildRetirement::Trace(close));plans.push(ScenePlanCloseJob::new(input));if let Some(plan)=output{plans.push(ScenePlanCloseJob::new(plan));}}
+  if let Some(text)=self.texts.take(){let(close,output)=text.into_retirement();child=Some(VectorChildRetirement::Text(close));if let Some(plan)=output{plans.push(ScenePlanCloseJob::new(plan));}}
   if let Some(algorithms)=self.algorithms.take(){let(close,input,output)=algorithms.into_retirement();child=Some(VectorChildRetirement::Boolean(close));plans.push(ScenePlanCloseJob::new(input));if let Some(plan)=output{plans.push(ScenePlanCloseJob::new(plan));}}
   if let Some(plan)=self.handoff.take(){plans.push(ScenePlanCloseJob::new(plan));}let output=if self.progress.done&&!self.cancelled&&self.failure.is_none(){self.output.take()}else{None};if let Some(plan)=self.output.take(){plans.push(ScenePlanCloseJob::new(plan));}
   if let Some(child)=child.take(){children.push(child);}(DocumentVectorRetirement{source:self.source.take(),owner:ControlledRetirement::new(DocumentVectorOwners{children,plans,failure:self.failure}).unwrap_or_else(|(error,_)|panic!("physical document vector owner refused: {error}")),work:0},output)
@@ -308,7 +314,7 @@ impl DocumentVectorRetirement<'_>{
  }
 }
 #[derive(semio_framework_value::RetireOwned)]
-struct BorrowedVectorOwners{preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,algorithms:Option<DocumentBooleanJob>,output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>}
+struct BorrowedVectorOwners{preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,algorithms:Option<DocumentBooleanJob>,output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>}
 /// 👁️ Actual scene parts are borrowed per turn while every private producer owner stays typed.
 pub struct DocumentVectorPreparationJob{job:DocumentVectorJob<'static>}
 impl DocumentVectorPreparationJob{
@@ -319,14 +325,14 @@ impl DocumentVectorPreparationJob{
  pub fn into_retirement(mut self)->(DocumentVectorPreparationRetirement,Option<DocumentScenePlan>){let output=if self.job.progress.done&&!self.job.cancelled&&self.job.failure.is_none(){self.job.output.take()}else{None};self.cancel();(DocumentVectorPreparationRetirement::new(self),output)}
 }
 impl RetireOwned for DocumentVectorPreparationJob{
- fn retirement(self)->Box<dyn RetirementCursor>{let job=self.job;assert!(job.source.is_none(),"borrowed preparation cannot own a fabricated snapshot source");BorrowedVectorOwners{preparation:job.preparation,traces:job.traces,algorithms:job.algorithms,output:job.output,failure:job.failure,closing:job.closing,discard:job.discard,handoff:job.handoff,retired_children:job.retired_children,retired_plans:job.retired_plans}.retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};let job=&self.job;sequence_birth_bytes(&[deferred_birth_bytes_for(&job.preparation),deferred_birth_bytes_for(&job.traces),deferred_birth_bytes_for(&job.algorithms),deferred_birth_bytes_for(&job.output),deferred_birth_bytes_for(&job.failure),deferred_birth_bytes_for(&job.closing),deferred_birth_bytes_for(&job.discard),deferred_birth_bytes_for(&job.handoff),deferred_birth_bytes_for(&job.retired_children),deferred_birth_bytes_for(&job.retired_plans)])}
+ fn retirement(self)->Box<dyn RetirementCursor>{let job=self.job;assert!(job.source.is_none(),"borrowed preparation cannot own a fabricated snapshot source");BorrowedVectorOwners{preparation:job.preparation,traces:job.traces,texts:job.texts,algorithms:job.algorithms,output:job.output,failure:job.failure,closing:job.closing,discard:job.discard,handoff:job.handoff,retired_children:job.retired_children,retired_plans:job.retired_plans}.retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};let job=&self.job;sequence_birth_bytes(&[deferred_birth_bytes_for(&job.preparation),deferred_birth_bytes_for(&job.traces),deferred_birth_bytes_for(&job.texts),deferred_birth_bytes_for(&job.algorithms),deferred_birth_bytes_for(&job.output),deferred_birth_bytes_for(&job.failure),deferred_birth_bytes_for(&job.closing),deferred_birth_bytes_for(&job.discard),deferred_birth_bytes_for(&job.handoff),deferred_birth_bytes_for(&job.retired_children),deferred_birth_bytes_for(&job.retired_plans)])}
  fn controlled_retirement_supported()->bool{BorrowedVectorOwners::controlled_retirement_supported()}
 }
 semio_framework_2d::physical_work_retirement!(DocumentVectorPreparationRetirement,DocumentVectorPreparationJob,DocumentSceneError,|error:&str|invalid(error));
 /// 📷️ Resolves each raster record after the common document vector producer completes.
 pub struct DocumentRasterJob<'a>{
- vector:Option<DocumentVectorJob<'a>>,prepared:DocumentVectorProgress,source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,at:usize,work:u64,phase:&'static str,
+ vector:Option<DocumentVectorJob<'a>>,prepared:DocumentVectorProgress,source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,retired_texts:Vec<String>,at:usize,work:u64,phase:&'static str,
  raster:Option<crate::schema::scene_raster::RasterSceneJob>,rendered:Option<crate::schema::scene_raster::RasterSceneProgress>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>,cancelled:bool,viewport:DocumentSceneViewport,max_work:u64,
  vector_retirement:Option<DocumentVectorRetirement<'a>>,raster_retirement:Option<crate::schema::scene_raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,
  pixel_scale:[f64;2],
@@ -337,12 +343,12 @@ impl<'a> DocumentRasterJob<'a>{
  }
  fn from_vector(vector:DocumentVectorJob<'a>,viewport:DocumentSceneViewport,max_work:u64)->Result<Self,DocumentSceneError>{
   let mut check=crate::schema::scene_raster::RasterSceneJob::new(viewport.input(Vec::new(),Vec::new())).map_err(|e|invalid(e.to_string()))?;check.cancel();
-  Ok(Self{vector:Some(vector),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure:None,cancelled:false,viewport,max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]})
+  Ok(Self{vector:Some(vector),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure:None,cancelled:false,viewport,max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]})
  }
  /// 🔐️ Retains the actual immutable store read through every raster and output handoff.
  pub fn from_snapshot_read(read:store::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,algorithms:DocumentAlgorithmLimits)->DocumentRasterJob<'static>{
   let failure=crate::schema::scene_raster::validate_scene_input(&viewport.input(Vec::new(),Vec::new())).err().map(|error|invalid(error.to_string()));
-  DocumentRasterJob{vector:Some(DocumentVectorJob::from_snapshot_read(read,limits,algorithms)),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure,cancelled:false,viewport,max_work:algorithms.max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]}
+  DocumentRasterJob{vector:Some(DocumentVectorJob::from_snapshot_read(read,limits,algorithms)),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure,cancelled:false,viewport,max_work:algorithms.max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]}
  }
  /// 🔍️ Maps the immutable artboard extent to the exact requested pixel extent.
  pub fn set_pixel_scale(&mut self,x:f64,y:f64)->Result<(),DocumentSceneError>{if self.work!=0||![x,y].into_iter().all(|n|n.is_finite()&&n>0.0){return Err(invalid("Invalid document pixel scale"));}self.pixel_scale=[x,y];Ok(())}
@@ -351,7 +357,7 @@ impl<'a> DocumentRasterJob<'a>{
   
   if let Some(vector)=&mut self.vector{self.prepared=vector.advance(1)?;if self.prepared.done{let(close,plan)=self.vector.take().unwrap().into_retirement();self.vector_retirement=Some(close);self.handoff=plan;self.phase="resolving";}else{self.phase=self.prepared.phase;}return Ok(());}
   match self.phase{
-   "resolving"=>{if let Some(n)=self.source.pop_front(){self.at+=1;if !n.visible||matches!(&n.content,DocumentSceneContent::Group{..}){self.retired_nodes.push(n);return Ok(());}if !matches!(&n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Image{..}){let error=invalid(format!("Unresolved scene layer: {}",n.id));self.retired_nodes.push(n);return Err(error);}let content=match n.content{DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>unreachable!()};self.retired_paths.push(n.source_path);let m=n.transform;let [x,y]=self.pixel_scale;self.nodes.push(RasterSceneNode{id:n.id,groups:n.groups,transform:[m[0]*x,m[1]*y,m[2]*x,m[3]*y,m[4]*x,m[5]*y],opacity:n.opacity,blend_mode:n.blend_mode,visible:n.visible,content});}else{self.raster=Some(crate::schema::scene_raster::RasterSceneJob::new(self.viewport.input(std::mem::take(&mut self.assets),std::mem::take(&mut self.nodes))).map_err(|e|invalid(e.to_string()))?);self.phase="raster";}}
+   "resolving"=>{if let Some(n)=self.source.pop_front(){self.at+=1;if !n.visible||matches!(&n.content,DocumentSceneContent::Group{..}){self.retired_nodes.push(n);return Ok(());}if !matches!(&n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Glyphs{..}|DocumentSceneContent::Image{..}){let error=invalid(format!("Unresolved scene layer: {}",n.id));self.retired_nodes.push(n);return Err(error);}let content=match n.content{DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Glyphs{content,segments,fill_rule,fill,stroke,..}=>{self.retired_texts.push(content);RasterSceneContent::Path{segments,fill_rule,fill,stroke}},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>unreachable!()};self.retired_paths.push(n.source_path);let m=n.transform;let [x,y]=self.pixel_scale;self.nodes.push(RasterSceneNode{id:n.id,groups:n.groups,transform:[m[0]*x,m[1]*y,m[2]*x,m[3]*y,m[4]*x,m[5]*y],opacity:n.opacity,blend_mode:n.blend_mode,visible:n.visible,content});}else{self.raster=Some(crate::schema::scene_raster::RasterSceneJob::new(self.viewport.input(std::mem::take(&mut self.assets),std::mem::take(&mut self.nodes))).map_err(|e|invalid(e.to_string()))?);self.phase="raster";}}
    "raster"=>{let p=self.raster.as_mut().unwrap().advance(1).map_err(|e|invalid(e.to_string()))?;let done=p.done;self.rendered=Some(p);if done{let(close,image)=self.raster.take().unwrap().into_retirement();self.output=image;self.raster_retirement=Some(close);self.phase="complete";}}
    _=>{}
   }Ok(())
@@ -366,13 +372,13 @@ impl<'a> DocumentRasterJob<'a>{
   let output=if self.phase=="complete"&&!self.cancelled&&self.failure.is_none(){self.output.take()}else{None};self.cancelled=true;
   if let Some(vector)=self.vector.take(){let(close,plan)=vector.into_retirement();self.vector_retirement=Some(close);self.handoff=plan;}
   if let Some(raster)=self.raster.take(){let(close,image)=raster.into_retirement();self.raster_retirement=Some(close);if let Some(image)=image{self.output=Some(image);}}
-  let owners=DocumentRasterOwners{source:self.source,assets:self.assets,nodes:self.nodes,retired_nodes:self.retired_nodes,retired_paths:self.retired_paths,raster:self.raster_retirement,handoff:self.handoff,output:self.output,failure:self.failure};
+  let owners=DocumentRasterOwners{source:self.source,assets:self.assets,nodes:self.nodes,retired_nodes:self.retired_nodes,retired_paths:self.retired_paths,retired_texts:self.retired_texts,raster:self.raster_retirement,handoff:self.handoff,output:self.output,failure:self.failure};
   (DocumentRasterRetirement{vector:self.vector_retirement,owner:ControlledRetirement::new(owners).unwrap_or_else(|(error,_)|panic!("physical document raster owner refused: {error}")),work:0},output)
  }
 }
 /// 🧺️ Source handback follows actual vector, raster and private candidate retirement.
 #[derive(semio_framework_value::RetireOwned)]
-struct DocumentRasterOwners{source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,raster:Option<crate::schema::scene_raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>}
+struct DocumentRasterOwners{source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,retired_texts:Vec<String>,raster:Option<crate::schema::scene_raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>}
 pub struct DocumentRasterRetirement<'a>{vector:Option<DocumentVectorRetirement<'a>>,owner:ControlledRetirement<DocumentRasterOwners>,work:u64}
 impl DocumentRasterRetirement<'_>{
  pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.vector.as_ref().is_none_or(DocumentVectorRetirement::terminal_is_empty)}

@@ -1,0 +1,10 @@
+{
+  "mutation": "createIssueComment",
+  "id": "c-3",
+  "issue_comment": {
+    "issue": "i-1",
+    "author": "UG",
+    "date": "2026-10-09T11:30:00+02:00",
+    "text": "Fixed in the next revision."
+  }
+}

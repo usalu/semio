@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-type-thermal-data/schema.json",
+  "title": "SetTypeThermalData",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setTypeThermalData"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window, door or curtain wall type",
+          "de": "Fenster-, Tür- oder Fassadentyp"
+        },
+        "ref": {
+          "kind": "window-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "u_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "U-value (W/m²K)",
+          "de": "U-Wert (W/m²K)"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "g_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "g-value (0..1)",
+          "de": "g-Wert (0..1)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "frame_fraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Frame fraction (0..1)",
+          "de": "Rahmenanteil (0..1)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    }
+  }
+}

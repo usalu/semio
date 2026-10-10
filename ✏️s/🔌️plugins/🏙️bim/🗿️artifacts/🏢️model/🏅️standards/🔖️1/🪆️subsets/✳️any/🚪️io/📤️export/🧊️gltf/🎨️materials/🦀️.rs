@@ -13,6 +13,7 @@ use std::collections::BTreeMap;
 pub enum MaterialKey {
     Model(String),
     Glass,
+    System(String),
     Family(SolidFamily),
 }
 
@@ -22,6 +23,8 @@ pub fn key_of(snapshot: &ModelSnapshot, family: SolidFamily, group: &SolidGroup)
         MaterialKey::Model(group.material.clone())
     } else if group.part == parts::GLASS {
         MaterialKey::Glass
+    } else if family == SolidFamily::Mep && crate::standards::v1::subsets::any::schema::inferences::mep::part_colour(&group.part).is_some() {
+        MaterialKey::System(group.part.clone())
     } else {
         MaterialKey::Family(family)
     }
@@ -44,6 +47,8 @@ fn family_name(family: SolidFamily) -> &'static str {
         SolidFamily::Railing => "Railing",
         SolidFamily::Ceiling => "Ceiling",
         SolidFamily::WallSweep => "Wall sweep",
+        SolidFamily::Component => "Component",
+        SolidFamily::Mep => "MEP element",
     }
 }
 
@@ -59,6 +64,7 @@ fn definition(snapshot: &ModelSnapshot, key: &MaterialKey, family: SolidFamily, 
             }
         }
         MaterialKey::Glass => GltfMaterial { name: "Glazing".into(), color, metallic: 0.0, roughness: 0.05, blend: true },
+        MaterialKey::System(system) => GltfMaterial { name: format!("MEP {system}"), color, metallic: 0.0, roughness: 0.8, blend: false },
         MaterialKey::Family(family) => GltfMaterial { name: family_name(*family).into(), color: family_color(*family), metallic: 0.0, roughness: 0.9, blend: false },
     }
 }

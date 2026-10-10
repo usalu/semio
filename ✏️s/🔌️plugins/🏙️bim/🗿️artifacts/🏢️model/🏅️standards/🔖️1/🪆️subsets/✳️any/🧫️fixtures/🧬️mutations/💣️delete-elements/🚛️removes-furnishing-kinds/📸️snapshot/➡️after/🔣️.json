@@ -14,14 +14,26 @@
   "beams": {},
   "buildings": {
     "bldg-1": {
-      "elevation": 0,
+      "elevation": 0.0,
       "name": "House",
       "origin": {
-        "x": 0,
-        "y": 0
+        "x": 0.0,
+        "y": 0.0
       },
-      "rotation": 0,
+      "rotation": 0.0,
       "site": "site-1"
+    }
+  },
+  "classification_systems": {
+    "cs-uniclass": {
+      "edition": "",
+      "entries": [
+        {
+          "code": "EF_25_10",
+          "title": "Walls"
+        }
+      ],
+      "name": "Uniclass"
     }
   },
   "classifications": {
@@ -42,11 +54,24 @@
     }
   },
   "columns": {},
-  "curtain_walls": {},
-  "door_types": {},
   "curtain_wall_types": {
     "cwt-1": {
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.1,
+          "width": 0.06
+        }
+      },
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.1,
+          "width": 0.06
+        }
+      },
+      "mullion_material": "m-steel",
       "name": "Curtain wall 1.5 x 1.2",
+      "panel": "Glass",
+      "panel_material": "m-glass",
       "u_grid": {
         "Spacing": {
           "spacing": 1.5
@@ -56,24 +81,11 @@
         "Spacing": {
           "spacing": 1.2
         }
-      },
-      "interior_mullion": {
-        "Rectangle": {
-          "width": 0.06,
-          "depth": 0.1
-        }
-      },
-      "border_mullion": {
-        "Rectangle": {
-          "width": 0.06,
-          "depth": 0.1
-        }
-      },
-      "panel": "Glass",
-      "panel_material": "m-glass",
-      "mullion_material": "m-steel"
+      }
     }
   },
+  "curtain_walls": {},
+  "door_types": {},
   "grids": {},
   "materials": {
     "m-brick": {
@@ -84,9 +96,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800,
+      "density": 1800.0,
       "name": "Brick",
-      "specific_heat": 900
+      "specific_heat": 900.0
     },
     "m-glass": {
       "category": "Masonry",
@@ -96,9 +108,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800,
+      "density": 1800.0,
       "name": "Glass",
-      "specific_heat": 900
+      "specific_heat": 900.0
     },
     "m-steel": {
       "category": "Masonry",
@@ -108,9 +120,9 @@
         "r": 0.7
       },
       "conductivity": 0.8,
-      "density": 1800,
+      "density": 1800.0,
       "name": "Steel",
-      "specific_heat": 900
+      "specific_heat": 900.0
     }
   },
   "openings": {
@@ -124,7 +136,7 @@
         }
       },
       "name": "Window",
-      "offset": 1
+      "offset": 1.0
     }
   },
   "project": {
@@ -177,11 +189,11 @@
   "sites": {
     "site-1": {
       "boundary": [],
-      "elevation": 100,
-      "latitude": 47,
-      "longitude": 8,
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
       "name": "Plot",
-      "true_north": 0
+      "true_north": 0.0
     }
   },
   "slab_types": {
@@ -208,7 +220,7 @@
     },
     "st-ground": {
       "building": "bldg-1",
-      "height": 3,
+      "height": 3.0,
       "level": 0,
       "name": "Ground"
     }
@@ -230,16 +242,16 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8,
-            "y": 6
+            "x": 8.0,
+            "y": 6.0
           },
           "start": {
-            "x": 8,
-            "y": 0
+            "x": 8.0,
+            "y": 0.0
           }
         }
       },
-      "base_offset": 0,
+      "base_offset": 0.0,
       "location": "Center",
       "name": "East",
       "phase": "New",
@@ -255,23 +267,23 @@
       "axis": {
         "Line": {
           "end": {
-            "x": 8,
-            "y": 0
+            "x": 8.0,
+            "y": 0.0
           },
           "start": {
-            "x": 0,
-            "y": 0
+            "x": 0.0,
+            "y": 0.0
           }
         }
       },
-      "base_offset": 0,
+      "base_offset": 0.0,
       "location": "Center",
       "name": "South",
       "phase": "New",
       "storey": "st-ground",
       "top": {
         "StoreyTop": {
-          "offset": 0
+          "offset": 0.0
         }
       },
       "wall_type": "wt-300"
@@ -287,18 +299,6 @@
       "panes": 2,
       "sill": 0.9,
       "width": 1.2
-    }
-  },
-  "classification_systems": {
-    "cs-uniclass": {
-      "name": "Uniclass",
-      "edition": "",
-      "entries": [
-        {
-          "code": "EF_25_10",
-          "title": "Walls"
-        }
-      ]
     }
   }
 }

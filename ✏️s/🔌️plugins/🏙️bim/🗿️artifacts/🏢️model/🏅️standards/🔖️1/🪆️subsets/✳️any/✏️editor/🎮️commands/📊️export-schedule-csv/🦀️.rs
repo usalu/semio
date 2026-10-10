@@ -10,7 +10,6 @@ use crate::editor::bim::modes::edit::windows::schedule;
 use crate::editor::bim::{BimCommand, BimDispatchCtx, BimModelApp};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry as inference;
 use crate::standards::v1::subsets::any::io::export::csv::{codec, schedule_records};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::SessionRun;
 use crate::{ModelMutation, ModelSnapshot};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
@@ -22,7 +21,7 @@ pub const NODES_PER_STEP: usize = 256;
 /// ⏩️ Records one job step may write.
 pub const RECORDS_PER_STEP: usize = 512;
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-schedule-csv")]
 pub struct ExportScheduleCsv {
     /// The schedule to export; empty means the one the addressed schedule window shows.
@@ -64,7 +63,7 @@ fn download(snapshot: &ModelSnapshot, id: &str, text: String) -> Emit<ModelMutat
 /// 🧵️ Where a job stands.
 enum Stage {
     Open,
-    Infer(SessionRun),
+    Infer,
     Encode,
 }
 
@@ -78,8 +77,8 @@ pub enum Advance {
 /// 🧵️ The export of one schedule as a stepped, cancellable job: infer, then encode. Dropping it half-way is the cancellation: the session keeps every node it finished.
 pub struct CsvJob {
     id: String,
-    instance: Option<u32>,
-    nodes: usize,
+    instance: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    analysis: inference::Analysis,
     records_per_step: usize,
     stage: Stage,
     records: Vec<Vec<String>>,
@@ -89,13 +88,18 @@ pub struct CsvJob {
 
 impl CsvJob {
     /// 🏗️ A job exporting schedule `id` of the document that instance `instance` shows.
-    pub fn new(id: String, instance: Option<u32>) -> Self {
+    pub fn new(id: String, instance: inference::Instance<'_>) -> Self {
         Self::with_steps(id, instance, NODES_PER_STEP, RECORDS_PER_STEP)
     }
 
     /// 🏗️ A job with explicit step sizes (at least one node and one record per step).
-    pub fn with_steps(id: String, instance: Option<u32>, nodes: usize, records_per_step: usize) -> Self {
-        Self { id, instance, nodes: nodes.max(1), records_per_step: records_per_step.max(1), stage: Stage::Open, records: Vec::new(), written: 0, text: String::new() }
+    pub fn with_steps(id: String, instance: inference::Instance<'_>, nodes: usize, records_per_step: usize) -> Self {
+        Self { id, instance: instance.cloned(), analysis: inference::Analysis::new(instance, nodes), records_per_step: records_per_step.max(1), stage: Stage::Open, records: Vec::new(), written: 0, text: String::new() }
+    }
+
+    pub fn cancel(&mut self, snapshot: &ModelSnapshot) {
+        self.analysis.cancel(snapshot);
+        self.stage = Stage::Open;
     }
 
     /// 📈️ How much of the encoding is written, in records.
@@ -110,19 +114,18 @@ impl CsvJob {
         }
         match std::mem::replace(&mut self.stage, Stage::Open) {
             Stage::Open => {
-                self.stage = Stage::Infer(inference::begin(self.instance, snapshot));
+                self.stage = Stage::Infer;
                 Ok(Advance::Progress("bim-schedule-csv-infer"))
             }
-            Stage::Infer(mut run) => {
-                let progress = inference::step(self.instance, &mut run, snapshot, self.nodes).map_err(|error| fault("app.schedule.inference", format!("the schedule table could not be inferred: {error:?}")))?;
+            Stage::Infer => {
+                let progress = self.analysis.advance(snapshot).map_err(|error| fault("app.schedule.inference", format!("the schedule table could not be inferred: {error:?}")))?;
                 if progress.done {
-                    inference::finish(self.instance, run, snapshot).map_err(|error| fault("app.schedule.inference", format!("the schedule table could not be inferred: {error:?}")))?;
                     let schedule = &snapshot.schedules[&self.id];
-                    self.records = inference::with_inference(self.instance, snapshot, |found| schedule_records(schedule, found.schedules.get(&self.id).unwrap_or(&Default::default())));
+                    self.records = inference::with_inference(self.instance.as_ref(), snapshot, |found| schedule_records(schedule, found.schedules.get(&self.id).unwrap_or(&Default::default())));
                     self.stage = Stage::Encode;
                     Ok(Advance::Progress("bim-schedule-csv-encode"))
                 } else {
-                    self.stage = Stage::Infer(run);
+                    self.stage = Stage::Infer;
                     Ok(Advance::Progress("bim-schedule-csv-infer"))
                 }
             }
@@ -147,13 +150,14 @@ impl CsvJob {
 /// 🧵️ The retained-command shell of a [`CsvJob`]: one step per call, the framework yields between steps and drops the work on cancellation.
 pub struct ScheduleCsvWork {
     tool_id: &'static str,
+    owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     job: Option<CsvJob>,
 }
 
 impl ScheduleCsvWork {
     /// 🏗️ The work of tool `tool_id`.
-    pub fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, job: None }
+    pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, owner, job: None }
     }
 }
 
@@ -170,9 +174,10 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for ScheduleCsvWork {
         let BimCommand::ExportScheduleCsv(payload) = input.command else { return Err(Fault::from("bim-schedule-csv-work-mismatch")) };
         if self.job.is_none() {
             let shown = schedule::config::from_snapshot(input.context.and_then(|context| context.window_config.as_ref())).schedule;
-            self.job = Some(CsvJob::new(resolve(&payload.id, &shown, input.snapshot)?, Some(input.operation.app_instance_id)));
+            self.job = Some(CsvJob::new(resolve(&payload.id, &shown, input.snapshot)?, Some(&self.owner)));
         }
         let job = self.job.as_mut().ok_or_else(|| Fault::from("bim-schedule-csv-work-terminal"))?;
+        if cx.is_cancelled(){job.cancel(input.snapshot);return Err(fault("bim.export.cancelled", "the schedule export was cancelled"))}
         cx.consume_fuel(1);
         Ok(match job.advance(input.snapshot)? {
             Advance::Progress(stage) => {
@@ -192,7 +197,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for ScheduleCsvWork {
 pub fn handle(payload: &ExportScheduleCsv, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let id = resolve(&payload.id, &ctx.schedule.schedule, doc.snapshot)?;
     let schedule = &doc.snapshot.schedules[&id];
-    let instance = doc.operation_optional().map(|operation| operation.app_instance_id);
+    let instance = ctx.gestures.as_ref();
     let records = inference::with_inference(instance, doc.snapshot, |found| schedule_records(schedule, found.schedules.get(&id).unwrap_or(&Default::default())));
     Ok(download(doc.snapshot, &id, codec::document_text(records.into_iter().map(codec::record).collect())))
 }

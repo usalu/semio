@@ -8,7 +8,8 @@ use super::super::super::curtain_layout::CurtainLayout;
 use super::super::super::opening_frames::OpeningCut;
 use super::super::fillers::{door_parts, window_parts};
 use super::super::plan_kit::seg;
-use super::super::{dep_object, dep_types, dep_value, parts, profile_extents, profile_polygon, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+use super::super::{dep_object, dep_types, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
 use crate::{CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
 use semio_framework_geometry::bulge::BulgeSeg;
@@ -87,7 +88,7 @@ fn cell_frame(axis: &BulgeSeg, length: f64, rect: Cell, base_z: f64) -> Affine3 
     Affine3::from_frame([point.x, point.y, base_z + rect[2]], [tangent.x, tangent.y, 0.0], [normal.x, normal.y, 0.0], [0.0, 0.0, 1.0])
 }
 
-fn add_panel(builder: &mut SolidBuilder, snapshot: &ModelSnapshot, kind: &CurtainWallType, panel: &CurtainPanel, axis: &BulgeSeg, length: f64, rect: Cell, cuts: &[OpeningCut], depth: f64, base_z: f64) {
+fn add_panel(builder: &mut SolidBuilder, snapshot: &ModelSnapshot, kind: &CurtainWallType, panel: &CurtainPanel, axis: &BulgeSeg, length: f64, rect: Cell, cuts: &[OpeningCut], depth: f64, base_z: f64, layer: u32) {
     match panel {
         CurtainPanel::Empty => {}
         CurtainPanel::Glass => {
@@ -104,7 +105,7 @@ fn add_panel(builder: &mut SolidBuilder, snapshot: &ModelSnapshot, kind: &Curtai
             if let (false, Some(window)) = (touched(rect, cuts), snapshot.window_types.get(window_type)) {
                 let place = cell_frame(axis, length, rect, base_z);
                 for (part, glazing, mesh) in window_parts(window, rect[1] - rect[0], rect[3] - rect[2], 0.0) {
-                    builder.add(part, if glazing { &kind.panel_material } else { &window.material }, 0, &mesh.transformed(&place));
+                    builder.add(part, if glazing { &kind.panel_material } else { &window.material }, layer, &mesh.transformed(&place));
                 }
             }
         }
@@ -112,11 +113,22 @@ fn add_panel(builder: &mut SolidBuilder, snapshot: &ModelSnapshot, kind: &Curtai
             if let (false, Some(door)) = (touched(rect, cuts), snapshot.door_types.get(door_type)) {
                 let place = cell_frame(axis, length, rect, base_z);
                 for (part, mesh) in door_parts(door, rect[1] - rect[0], rect[3] - rect[2], 0.0) {
-                    builder.add(part, &door.material, 0, &mesh.transformed(&place));
+                    builder.add(part, &door.material, layer, &mesh.transformed(&place));
                 }
             }
         }
     }
+}
+
+/// 🔖️ The layer of the parts of the door or window that fills the cell `(u, v)`: one more than the row-major index of the cell, so every filler of a wall is one group family of its own (all other parts are layer `0`).
+pub fn filler_layer(layout: &CurtainLayout, u: u32, v: u32) -> u32 {
+    1 + v * layout.u_panels + u
+}
+
+/// 🔖️ The cell `(u, v)` a filler layer names, none for layer `0`.
+pub fn filler_cell(layout: &CurtainLayout, layer: u32) -> Option<(u32, u32)> {
+    let index = layer.checked_sub(1)?;
+    (layout.u_panels > 0).then(|| (index % layout.u_panels, index / layout.u_panels))
 }
 
 /// 🧱️ The mullion members of a curtain wall: the clear interval `(start, end)` of the member on every grid edge along the wall (`verticals`) and up it (`horizontals`), the polygons and sizes of the
@@ -148,7 +160,7 @@ impl Members {
 }
 
 /// 🧱️ The members of a curtain wall from its type and layout; none when the wall has no extent or a section has no size.
-pub fn members_of(kind: &CurtainWallType, layout: &CurtainLayout) -> Option<Members> {
+pub fn members_of(kind: &CurtainWallType, layout: &CurtainLayout, profiles: &FamilyProfiles<'_>) -> Option<Members> {
     let (border, interior) = (profile_polygon(&profiles.resolve(&kind.border_mullion)), profile_polygon(&profiles.resolve(&kind.interior_mullion)));
     let (border_size, interior_size) = (profile_extents(&border), profile_extents(&interior));
     if layout.length <= EPS || layout.height <= EPS || [border_size, interior_size].iter().any(|(across, depth)| *across <= EPS || *depth <= EPS) {
@@ -171,7 +183,7 @@ pub fn curtain_solid_in(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout:
     let (base_z, height) = (layout.base_z, layout.height);
     let mut builder = SolidBuilder::new(SolidFamily::CurtainWall);
     let Some(kind) = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type) else { return builder.build() };
-    let Some(members) = members_of(kind, layout) else { return builder.build() };
+    let Some(members) = members_of(kind, layout, profiles) else { return builder.build() };
     let axis = seg(&curtain.axis);
     let length = layout.length;
     let (last_u, last_v) = (members.verticals.len() - 1, members.horizontals.len() - 1);
@@ -189,7 +201,7 @@ pub fn curtain_solid_in(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout:
     for v in 0..layout.v_panels as usize {
         for u in 0..layout.u_panels as usize {
             if let (Some(rect), Some(panel)) = (members.cell(u, v), layout.panel_of(u as u32, v as u32)) {
-                add_panel(&mut builder, snapshot, kind, panel, &axis, length, rect, cuts, depth, base_z);
+                add_panel(&mut builder, snapshot, kind, panel, &axis, length, rect, cuts, depth, base_z, filler_layer(layout, u as u32, v as u32));
             }
         }
     }
@@ -213,8 +225,8 @@ pub struct MullionTakeoff {
 }
 
 /// 🧮️ The panels by kind (the clear cell area left by the members and cut by the hosted openings; a door or window panel overlapped by an opening is not drawn and not counted) and the mullions by section.
-pub fn takeoff(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout: &CurtainLayout, cuts: &[OpeningCut]) -> (Vec<PanelTakeoff>, Vec<MullionTakeoff>) {
-    let Some(members) = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).and_then(|kind| members_of(kind, layout)) else { return (Vec::new(), Vec::new()) };
+pub fn takeoff(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout: &CurtainLayout, cuts: &[OpeningCut], profiles: &FamilyProfiles<'_>) -> (Vec<PanelTakeoff>, Vec<MullionTakeoff>) {
+    let Some(members) = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).and_then(|kind| members_of(kind, layout, profiles)) else { return (Vec::new(), Vec::new()) };
     let mut panels: Vec<PanelTakeoff> = ["glass", "solid", "door", "window", "empty"].into_iter().map(|kind| PanelTakeoff { kind, count: 0, area: 0.0 }).collect();
     for v in 0..layout.v_panels as usize {
         for u in 0..layout.u_panels as usize {

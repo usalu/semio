@@ -1,1 +1,42 @@
-{}
+{
+  "curtain_wall_types": {
+    "cwt-3": {
+      "border_mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.08
+        }
+      },
+      "entry": "Created",
+      "interior_mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.05
+        }
+      },
+      "mullion_material": "m-steel",
+      "name": "Lined",
+      "panel": {
+        "Solid": {
+          "material": "m-wood"
+        }
+      },
+      "panel_material": "m-glass",
+      "u_grid": {
+        "Lines": {
+          "positions": [
+            1.0,
+            2.5
+          ]
+        }
+      },
+      "v_grid": {
+        "Lines": {
+          "positions": [
+            1.0
+          ]
+        }
+      }
+    }
+  }
+}

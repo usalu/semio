@@ -111,7 +111,7 @@ pub mod apply_video;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned)]
 #[mutations(snapshot = SemioSnapshot, diff = SemioDiff, schema = "SemioMutation")]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 pub enum SemioMutation {

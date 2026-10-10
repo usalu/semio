@@ -2,17 +2,12 @@
 //! `DwgDrawing`/`DwgEntity`/`DwgGeometry`, and the 📐️cad plugin's domain artifact (master plan
 //! "Subset snapshot cores" table, `cad` row). `CadEntity` carries the full 9-variant vocabulary
 //! (Line/Arc/Circle/Ellipse/Polyline/Text/Insert/Solid/Dimension).
-
 use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-
-
 use framework_schema::ArtifactSchema;
-
 //#region 🔖️Ids
 pub const STDIO_SEMIOCAD_DOCUMENT_SCHEMA: &str = "stdio.semio.cad";
 //#endregion 🔖️Ids
-
 //#region 🔖️Entity
 /// 📐️ Owned by the `cad` subset — a WEAK value struct (see `🔺️diff`'s module doc comment): whole-
 /// value replaced in diffs, never sub-diffed, same treatment as `BcfCamera`/`XlsxCellValue`.
@@ -23,7 +18,7 @@ pub const STDIO_SEMIOCAD_DOCUMENT_SCHEMA: &str = "stdio.semio.cad";
 /// `FromValue`, see `🌱️value/✨️derive`'s module docs) plus this file's own `added: Vec<T>` field
 /// needing `T: Default` wherever the missing-key fallback runs — bcf's local `NamedTripleDiff`
 /// copy carries the identical requirement (see that file's own doc comment).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CadEntity {
     Line { a: SemioPoint2, b: SemioPoint2 },
@@ -36,7 +31,6 @@ pub enum CadEntity {
     Solid { p1: SemioPoint2, p2: SemioPoint2, p3: SemioPoint2, p4: SemioPoint2 },
     Dimension { def_point: SemioPoint2, text_position: SemioPoint2, measurement: f64, text: String },
 }
-
 /// 🧭️ Manual impl (not `#[derive(Default)]`) -- `Default` on an enum requires a UNIT default
 /// variant, but every `CadEntity` variant carries fields, so the derive attribute is structurally
 /// rejected here; hand-written zero-length `Line` matches what a derive-with-unit-variant would
@@ -48,7 +42,6 @@ impl Default for CadEntity {
     }
 }
 //#endregion 🔖️Entity
-
 //#region 🔖️Layer
 /// 🗂️ Name-keyed (dxf `TABLES/LAYER`-style) — strong entity, own per-field diff. `Default` is the
 /// same spurious-bound workaround `CadEntity` documents above.
@@ -61,7 +54,6 @@ pub struct CadLayer {
     pub visible: bool,
 }
 //#endregion 🔖️Layer
-
 //#region 🔖️EntityRecord
 /// 🏷️ One placed entity — `handle` is the id key (dxf group code 5); `layer` names the owning
 /// `CadLayer` by reference. Referential invariants (dangling `layer`/`Insert.block_name`) are
@@ -74,7 +66,6 @@ pub struct CadEntityRecord {
     pub entity: CadEntity,
 }
 //#endregion 🔖️EntityRecord
-
 //#region 🔖️Block
 /// 📦️ Name-keyed (dxf `BLOCKS` section) — strong entity; `entities` is its own nested id-keyed
 /// collection (same shape as the top-level `entities`).
@@ -87,7 +78,6 @@ pub struct CadBlock {
     pub entities: Vec<CadEntityRecord>,
 }
 //#endregion 🔖️Block
-
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -105,93 +95,20 @@ pub struct SemioCadSnapshot {
     #[value(default)]
     pub entities: Vec<CadEntityRecord>,
 }
-
 impl Default for SemioCadSnapshot {
     fn default() -> Self {
         Self { schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(), layers: Vec::new(), blocks: Vec::new(), entities: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot
-
 //#region 🔖️TextPrimitives
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️TextPrimitives
-
 //#region 🔖️BinaryPrimitives
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️BinaryPrimitives
-
 //#region 🔖️HandcraftedArtifactCodecs
-
-
-
 //#endregion 🔖️HandcraftedArtifactCodecs
-
 //#region 🌉️ExternalCodecBridge
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🌉️ExternalCodecBridge
-
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.cad` document — a small floor-plan-shaped drawing exercising every
 /// collection AND every `CadEntity` variant at least once (a `door` block with a nested `Line`,
@@ -222,16 +139,9 @@ pub(crate) fn demo_cad_snapshot() -> SemioCadSnapshot {
     }
 }
 //#endregion 🔖️Demo
-
 //#region 🔖️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-
-
-
-
-
-
-
+                                                                

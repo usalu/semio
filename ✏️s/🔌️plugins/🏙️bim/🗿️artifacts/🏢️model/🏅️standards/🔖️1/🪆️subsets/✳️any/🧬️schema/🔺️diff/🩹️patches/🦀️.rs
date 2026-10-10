@@ -3,7 +3,7 @@
 use super::*;
 
 /// 🩹 Sparse patch of [`PropertyTemplate`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct PropertyTemplatePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -48,7 +48,7 @@ impl Patch<PropertyTemplate> for PropertyTemplatePatch {
 }
 
 /// 🩹 Sparse patch of [`ClassificationSystem`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct ClassificationSystemPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -98,8 +98,83 @@ impl Patch<ClassificationSystem> for ClassificationSystemPatch {
     }
 }
 
+/// 🩹 Sparse patch of [`SpaceConditions`]: an absent field is untouched.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct SpaceConditionsPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub occupancy: Option<Assigned<Option<String>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub occupancy_density: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub heating_setpoint: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub cooling_setpoint: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub ventilation_rate: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub lighting_power_density: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub equipment_power_density: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub schedule: Option<Assigned<Option<String>>>,
+}
+
+impl Patch<SpaceConditions> for SpaceConditionsPatch {
+    fn write(&self, base: &SpaceConditions) -> SpaceConditions {
+        SpaceConditions { occupancy: take_assigned(&self.occupancy, &base.occupancy), occupancy_density: take_assigned(&self.occupancy_density, &base.occupancy_density), heating_setpoint: take_assigned(&self.heating_setpoint, &base.heating_setpoint), cooling_setpoint: take_assigned(&self.cooling_setpoint, &base.cooling_setpoint), ventilation_rate: take_assigned(&self.ventilation_rate, &base.ventilation_rate), lighting_power_density: take_assigned(&self.lighting_power_density, &base.lighting_power_density), equipment_power_density: take_assigned(&self.equipment_power_density, &base.equipment_power_density), schedule: take_assigned(&self.schedule, &base.schedule) }
+    }
+    fn restoring(&self, base: &SpaceConditions) -> Self {
+        Self { occupancy: restore_assigned(&self.occupancy, &base.occupancy), occupancy_density: restore_assigned(&self.occupancy_density, &base.occupancy_density), heating_setpoint: restore_assigned(&self.heating_setpoint, &base.heating_setpoint), cooling_setpoint: restore_assigned(&self.cooling_setpoint, &base.cooling_setpoint), ventilation_rate: restore_assigned(&self.ventilation_rate, &base.ventilation_rate), lighting_power_density: restore_assigned(&self.lighting_power_density, &base.lighting_power_density), equipment_power_density: restore_assigned(&self.equipment_power_density, &base.equipment_power_density), schedule: restore_assigned(&self.schedule, &base.schedule) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.occupancy, later.occupancy);
+        merge_slot!(&mut self.occupancy_density, later.occupancy_density);
+        merge_slot!(&mut self.heating_setpoint, later.heating_setpoint);
+        merge_slot!(&mut self.cooling_setpoint, later.cooling_setpoint);
+        merge_slot!(&mut self.ventilation_rate, later.ventilation_rate);
+        merge_slot!(&mut self.lighting_power_density, later.lighting_power_density);
+        merge_slot!(&mut self.equipment_power_density, later.equipment_power_density);
+        merge_slot!(&mut self.schedule, later.schedule);
+    }
+    fn minimal(&self, base: &SpaceConditions) -> Self {
+        Self { occupancy: changed_assigned(&self.occupancy, &base.occupancy), occupancy_density: changed_assigned(&self.occupancy_density, &base.occupancy_density), heating_setpoint: changed_assigned(&self.heating_setpoint, &base.heating_setpoint), cooling_setpoint: changed_assigned(&self.cooling_setpoint, &base.cooling_setpoint), ventilation_rate: changed_assigned(&self.ventilation_rate, &base.ventilation_rate), lighting_power_density: changed_assigned(&self.lighting_power_density, &base.lighting_power_density), equipment_power_density: changed_assigned(&self.equipment_power_density, &base.equipment_power_density), schedule: changed_assigned(&self.schedule, &base.schedule) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.occupancy.is_some() {
+            out.push("occupancy".to_string());
+        }
+        if self.occupancy_density.is_some() {
+            out.push("occupancy_density".to_string());
+        }
+        if self.heating_setpoint.is_some() {
+            out.push("heating_setpoint".to_string());
+        }
+        if self.cooling_setpoint.is_some() {
+            out.push("cooling_setpoint".to_string());
+        }
+        if self.ventilation_rate.is_some() {
+            out.push("ventilation_rate".to_string());
+        }
+        if self.lighting_power_density.is_some() {
+            out.push("lighting_power_density".to_string());
+        }
+        if self.equipment_power_density.is_some() {
+            out.push("equipment_power_density".to_string());
+        }
+        if self.schedule.is_some() {
+            out.push("schedule".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
 /// 🩹 Sparse patch of [`Dimension`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct DimensionPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -168,7 +243,7 @@ impl Patch<Dimension> for DimensionPatch {
 }
 
 /// 🩹 Sparse patch of [`Tag`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct TagPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -225,7 +300,7 @@ impl Patch<Tag> for TagPatch {
 }
 
 /// 🩹 Sparse patch of [`TextNote`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct TextNotePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -282,7 +357,7 @@ impl Patch<TextNote> for TextNotePatch {
 }
 
 /// 🩹 Sparse patch of [`Leader`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct LeaderPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -339,7 +414,7 @@ impl Patch<Leader> for LeaderPatch {
 }
 
 /// 🩹 Sparse patch of [`AnnotationStyle`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct AnnotationStylePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -414,7 +489,7 @@ impl Patch<AnnotationStyle> for AnnotationStylePatch {
 }
 
 /// 🩹 Sparse patch of [`Family`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct FamilyPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -453,7 +528,7 @@ impl Patch<Family> for FamilyPatch {
 }
 
 /// 🩹 Sparse patch of [`FamilyParameter`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct FamilyParameterPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -504,7 +579,7 @@ impl Patch<FamilyParameter> for FamilyParameterPatch {
 }
 
 /// 🩹 Sparse patch of [`FamilySolid`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct FamilySolidPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -566,8 +641,449 @@ impl Patch<FamilySolid> for FamilySolidPatch {
     }
 }
 
+/// 🩹 Sparse patch of [`Component`]: an absent field is untouched.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct ComponentPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub family: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub position: Option<Point2>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub elevation: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub mirrored: Option<bool>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub host: Option<Assigned<Option<String>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub system: Option<Assigned<Option<MepSystem>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+impl Patch<Component> for ComponentPatch {
+    fn write(&self, base: &Component) -> Component {
+        Component { storey: take(&self.storey, &base.storey), family: take(&self.family, &base.family), position: take(&self.position, &base.position), elevation: take(&self.elevation, &base.elevation), rotation: take(&self.rotation, &base.rotation), mirrored: take(&self.mirrored, &base.mirrored), host: take_assigned(&self.host, &base.host), system: take_assigned(&self.system, &base.system), name: take(&self.name, &base.name) }
+    }
+    fn restoring(&self, base: &Component) -> Self {
+        Self { storey: restore(&self.storey, &base.storey), family: restore(&self.family, &base.family), position: restore(&self.position, &base.position), elevation: restore(&self.elevation, &base.elevation), rotation: restore(&self.rotation, &base.rotation), mirrored: restore(&self.mirrored, &base.mirrored), host: restore_assigned(&self.host, &base.host), system: restore_assigned(&self.system, &base.system), name: restore(&self.name, &base.name) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.family, later.family);
+        merge_slot!(&mut self.position, later.position);
+        merge_slot!(&mut self.elevation, later.elevation);
+        merge_slot!(&mut self.rotation, later.rotation);
+        merge_slot!(&mut self.mirrored, later.mirrored);
+        merge_slot!(&mut self.host, later.host);
+        merge_slot!(&mut self.system, later.system);
+        merge_slot!(&mut self.name, later.name);
+    }
+    fn minimal(&self, base: &Component) -> Self {
+        Self { storey: changed(&self.storey, &base.storey), family: changed(&self.family, &base.family), position: changed(&self.position, &base.position), elevation: changed(&self.elevation, &base.elevation), rotation: changed(&self.rotation, &base.rotation), mirrored: changed(&self.mirrored, &base.mirrored), host: changed_assigned(&self.host, &base.host), system: changed_assigned(&self.system, &base.system), name: changed(&self.name, &base.name) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.family.is_some() {
+            out.push("family".to_string());
+        }
+        if self.position.is_some() {
+            out.push("position".to_string());
+        }
+        if self.elevation.is_some() {
+            out.push("elevation".to_string());
+        }
+        if self.rotation.is_some() {
+            out.push("rotation".to_string());
+        }
+        if self.mirrored.is_some() {
+            out.push("mirrored".to_string());
+        }
+        if self.host.is_some() {
+            out.push("host".to_string());
+        }
+        if self.system.is_some() {
+            out.push("system".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`ComponentOverride`]: an absent field is untouched.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct ComponentOverridePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub component: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
+}
+
+impl Patch<ComponentOverride> for ComponentOverridePatch {
+    fn write(&self, base: &ComponentOverride) -> ComponentOverride {
+        ComponentOverride { component: take(&self.component, &base.component), name: take(&self.name, &base.name), value: take(&self.value, &base.value) }
+    }
+    fn restoring(&self, base: &ComponentOverride) -> Self {
+        Self { component: restore(&self.component, &base.component), name: restore(&self.name, &base.name), value: restore(&self.value, &base.value) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.component, later.component);
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.value, later.value);
+    }
+    fn minimal(&self, base: &ComponentOverride) -> Self {
+        Self { component: changed(&self.component, &base.component), name: changed(&self.name, &base.name), value: changed(&self.value, &base.value) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.component.is_some() {
+            out.push("component".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.value.is_some() {
+            out.push("value".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`MepElement`]: an absent field is untouched.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct MepElementPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub storey: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub system: Option<MepSystem>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub shape: Option<MepShape>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub path: Option<Vec<Point3>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+impl Patch<MepElement> for MepElementPatch {
+    fn write(&self, base: &MepElement) -> MepElement {
+        MepElement { storey: take(&self.storey, &base.storey), system: take(&self.system, &base.system), shape: take(&self.shape, &base.shape), path: take(&self.path, &base.path), name: take(&self.name, &base.name) }
+    }
+    fn restoring(&self, base: &MepElement) -> Self {
+        Self { storey: restore(&self.storey, &base.storey), system: restore(&self.system, &base.system), shape: restore(&self.shape, &base.shape), path: restore(&self.path, &base.path), name: restore(&self.name, &base.name) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.storey, later.storey);
+        merge_slot!(&mut self.system, later.system);
+        merge_slot!(&mut self.shape, later.shape);
+        merge_slot!(&mut self.path, later.path);
+        merge_slot!(&mut self.name, later.name);
+    }
+    fn minimal(&self, base: &MepElement) -> Self {
+        Self { storey: changed(&self.storey, &base.storey), system: changed(&self.system, &base.system), shape: changed(&self.shape, &base.shape), path: changed(&self.path, &base.path), name: changed(&self.name, &base.name) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.storey.is_some() {
+            out.push("storey".to_string());
+        }
+        if self.system.is_some() {
+            out.push("system".to_string());
+        }
+        if self.shape.is_some() {
+            out.push("shape".to_string());
+        }
+        if self.path.is_some() {
+            out.push("path".to_string());
+        }
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`ClashSet`]: an absent field is untouched.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct ClashSetPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub a: Option<ElementSelector>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub b: Option<ElementSelector>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub tolerance: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub clearance: Option<f64>,
+}
+
+impl Patch<ClashSet> for ClashSetPatch {
+    fn write(&self, base: &ClashSet) -> ClashSet {
+        ClashSet { name: take(&self.name, &base.name), a: take(&self.a, &base.a), b: take(&self.b, &base.b), tolerance: take(&self.tolerance, &base.tolerance), clearance: take(&self.clearance, &base.clearance) }
+    }
+    fn restoring(&self, base: &ClashSet) -> Self {
+        Self { name: restore(&self.name, &base.name), a: restore(&self.a, &base.a), b: restore(&self.b, &base.b), tolerance: restore(&self.tolerance, &base.tolerance), clearance: restore(&self.clearance, &base.clearance) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.a, later.a);
+        merge_slot!(&mut self.b, later.b);
+        merge_slot!(&mut self.tolerance, later.tolerance);
+        merge_slot!(&mut self.clearance, later.clearance);
+    }
+    fn minimal(&self, base: &ClashSet) -> Self {
+        Self { name: changed(&self.name, &base.name), a: changed(&self.a, &base.a), b: changed(&self.b, &base.b), tolerance: changed(&self.tolerance, &base.tolerance), clearance: changed(&self.clearance, &base.clearance) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.a.is_some() {
+            out.push("a".to_string());
+        }
+        if self.b.is_some() {
+            out.push("b".to_string());
+        }
+        if self.tolerance.is_some() {
+            out.push("tolerance".to_string());
+        }
+        if self.clearance.is_some() {
+            out.push("clearance".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Rule`]: an absent field is untouched.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct RulePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<RuleKind>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub severity: Option<RuleSeverity>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub scope: Option<RuleScope>,
+}
+
+impl Patch<Rule> for RulePatch {
+    fn write(&self, base: &Rule) -> Rule {
+        Rule { name: take(&self.name, &base.name), kind: take(&self.kind, &base.kind), limit: take(&self.limit, &base.limit), severity: take(&self.severity, &base.severity), scope: take(&self.scope, &base.scope) }
+    }
+    fn restoring(&self, base: &Rule) -> Self {
+        Self { name: restore(&self.name, &base.name), kind: restore(&self.kind, &base.kind), limit: restore(&self.limit, &base.limit), severity: restore(&self.severity, &base.severity), scope: restore(&self.scope, &base.scope) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.name, later.name);
+        merge_slot!(&mut self.kind, later.kind);
+        merge_slot!(&mut self.limit, later.limit);
+        merge_slot!(&mut self.severity, later.severity);
+        merge_slot!(&mut self.scope, later.scope);
+    }
+    fn minimal(&self, base: &Rule) -> Self {
+        Self { name: changed(&self.name, &base.name), kind: changed(&self.kind, &base.kind), limit: changed(&self.limit, &base.limit), severity: changed(&self.severity, &base.severity), scope: changed(&self.scope, &base.scope) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.name.is_some() {
+            out.push("name".to_string());
+        }
+        if self.kind.is_some() {
+            out.push("kind".to_string());
+        }
+        if self.limit.is_some() {
+            out.push("limit".to_string());
+        }
+        if self.severity.is_some() {
+            out.push("severity".to_string());
+        }
+        if self.scope.is_some() {
+            out.push("scope".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`Issue`]: an absent field is untouched.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct IssuePatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub status: Option<IssueStatus>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub priority: Option<IssuePriority>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub assignee: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub labels: Option<Vec<String>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub elements: Option<Vec<String>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub clash: Option<Assigned<Option<ClashRef>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub viewpoint: Option<Assigned<Option<IssueViewpoint>>>,
+}
+
+impl Patch<Issue> for IssuePatch {
+    fn write(&self, base: &Issue) -> Issue {
+        Issue { title: take(&self.title, &base.title), description: take(&self.description, &base.description), status: take(&self.status, &base.status), priority: take(&self.priority, &base.priority), assignee: take(&self.assignee, &base.assignee), author: take(&self.author, &base.author), created: take(&self.created, &base.created), labels: take(&self.labels, &base.labels), elements: take(&self.elements, &base.elements), clash: take_assigned(&self.clash, &base.clash), viewpoint: take_assigned(&self.viewpoint, &base.viewpoint) }
+    }
+    fn restoring(&self, base: &Issue) -> Self {
+        Self { title: restore(&self.title, &base.title), description: restore(&self.description, &base.description), status: restore(&self.status, &base.status), priority: restore(&self.priority, &base.priority), assignee: restore(&self.assignee, &base.assignee), author: restore(&self.author, &base.author), created: restore(&self.created, &base.created), labels: restore(&self.labels, &base.labels), elements: restore(&self.elements, &base.elements), clash: restore_assigned(&self.clash, &base.clash), viewpoint: restore_assigned(&self.viewpoint, &base.viewpoint) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.title, later.title);
+        merge_slot!(&mut self.description, later.description);
+        merge_slot!(&mut self.status, later.status);
+        merge_slot!(&mut self.priority, later.priority);
+        merge_slot!(&mut self.assignee, later.assignee);
+        merge_slot!(&mut self.author, later.author);
+        merge_slot!(&mut self.created, later.created);
+        merge_slot!(&mut self.labels, later.labels);
+        merge_slot!(&mut self.elements, later.elements);
+        merge_slot!(&mut self.clash, later.clash);
+        merge_slot!(&mut self.viewpoint, later.viewpoint);
+    }
+    fn minimal(&self, base: &Issue) -> Self {
+        Self { title: changed(&self.title, &base.title), description: changed(&self.description, &base.description), status: changed(&self.status, &base.status), priority: changed(&self.priority, &base.priority), assignee: changed(&self.assignee, &base.assignee), author: changed(&self.author, &base.author), created: changed(&self.created, &base.created), labels: changed(&self.labels, &base.labels), elements: changed(&self.elements, &base.elements), clash: changed_assigned(&self.clash, &base.clash), viewpoint: changed_assigned(&self.viewpoint, &base.viewpoint) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.title.is_some() {
+            out.push("title".to_string());
+        }
+        if self.description.is_some() {
+            out.push("description".to_string());
+        }
+        if self.status.is_some() {
+            out.push("status".to_string());
+        }
+        if self.priority.is_some() {
+            out.push("priority".to_string());
+        }
+        if self.assignee.is_some() {
+            out.push("assignee".to_string());
+        }
+        if self.author.is_some() {
+            out.push("author".to_string());
+        }
+        if self.created.is_some() {
+            out.push("created".to_string());
+        }
+        if self.labels.is_some() {
+            out.push("labels".to_string());
+        }
+        if self.elements.is_some() {
+            out.push("elements".to_string());
+        }
+        if self.clash.is_some() {
+            out.push("clash".to_string());
+        }
+        if self.viewpoint.is_some() {
+            out.push("viewpoint".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+/// 🩹 Sparse patch of [`IssueComment`]: an absent field is untouched.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct IssueCommentPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub issue: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub date: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+}
+
+impl Patch<IssueComment> for IssueCommentPatch {
+    fn write(&self, base: &IssueComment) -> IssueComment {
+        IssueComment { issue: take(&self.issue, &base.issue), author: take(&self.author, &base.author), date: take(&self.date, &base.date), text: take(&self.text, &base.text) }
+    }
+    fn restoring(&self, base: &IssueComment) -> Self {
+        Self { issue: restore(&self.issue, &base.issue), author: restore(&self.author, &base.author), date: restore(&self.date, &base.date), text: restore(&self.text, &base.text) }
+    }
+    fn merge(&mut self, later: Self) {
+        merge_slot!(&mut self.issue, later.issue);
+        merge_slot!(&mut self.author, later.author);
+        merge_slot!(&mut self.date, later.date);
+        merge_slot!(&mut self.text, later.text);
+    }
+    fn minimal(&self, base: &IssueComment) -> Self {
+        Self { issue: changed(&self.issue, &base.issue), author: changed(&self.author, &base.author), date: changed(&self.date, &base.date), text: changed(&self.text, &base.text) }
+    }
+    fn touched(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        if self.issue.is_some() {
+            out.push("issue".to_string());
+        }
+        if self.author.is_some() {
+            out.push("author".to_string());
+        }
+        if self.date.is_some() {
+            out.push("date".to_string());
+        }
+        if self.text.is_some() {
+            out.push("text".to_string());
+        }
+        out
+    }
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
 /// 🩹 Sparse patch of [`Sheet`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct SheetPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -654,7 +1170,7 @@ impl Patch<Sheet> for SheetPatch {
 }
 
 /// 🩹 Sparse patch of [`Viewport`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct ViewportPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -717,7 +1233,7 @@ impl Patch<Viewport> for ViewportPatch {
 }
 
 /// 🩹 Sparse patch of [`SheetRevision`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct SheetRevisionPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -774,7 +1290,7 @@ impl Patch<SheetRevision> for SheetRevisionPatch {
 }
 
 /// 🩹 Sparse patch of [`WallSweep`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct WallSweepPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -843,7 +1359,7 @@ impl Patch<WallSweep> for WallSweepPatch {
 }
 
 /// 🩹 Sparse patch of [`Project`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct ProjectPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -900,7 +1416,7 @@ impl Patch<Project> for ProjectPatch {
 }
 
 /// 🩹 Sparse patch of [`Material`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct MaterialPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -963,7 +1479,7 @@ impl Patch<Material> for MaterialPatch {
 }
 
 /// 🩹 Sparse patch of [`WallType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct WallTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1002,7 +1518,7 @@ impl Patch<WallType> for WallTypePatch {
 }
 
 /// 🩹 Sparse patch of [`SlabType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct SlabTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1041,7 +1557,7 @@ impl Patch<SlabType> for SlabTypePatch {
 }
 
 /// 🩹 Sparse patch of [`CeilingType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct CeilingTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1080,7 +1596,7 @@ impl Patch<CeilingType> for CeilingTypePatch {
 }
 
 /// 🩹 Sparse patch of [`RoofType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct RoofTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1119,7 +1635,7 @@ impl Patch<RoofType> for RoofTypePatch {
 }
 
 /// 🩹 Sparse patch of [`ColumnType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct ColumnTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1164,7 +1680,7 @@ impl Patch<ColumnType> for ColumnTypePatch {
 }
 
 /// 🩹 Sparse patch of [`BeamType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct BeamTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1209,7 +1725,7 @@ impl Patch<BeamType> for BeamTypePatch {
 }
 
 /// 🩹 Sparse patch of [`WindowType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct WindowTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1228,14 +1744,20 @@ pub struct WindowTypePatch {
     pub panes: Option<u32>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub material: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub u_value: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub g_value: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub frame_fraction: Option<Assigned<Option<f64>>>,
 }
 
 impl Patch<WindowType> for WindowTypePatch {
     fn write(&self, base: &WindowType) -> WindowType {
-        WindowType { name: take(&self.name, &base.name), width: take(&self.width, &base.width), height: take(&self.height, &base.height), sill: take(&self.sill, &base.sill), frame_width: take(&self.frame_width, &base.frame_width), frame_depth: take(&self.frame_depth, &base.frame_depth), panes: take(&self.panes, &base.panes), material: take(&self.material, &base.material) }
+        WindowType { name: take(&self.name, &base.name), width: take(&self.width, &base.width), height: take(&self.height, &base.height), sill: take(&self.sill, &base.sill), frame_width: take(&self.frame_width, &base.frame_width), frame_depth: take(&self.frame_depth, &base.frame_depth), panes: take(&self.panes, &base.panes), material: take(&self.material, &base.material), u_value: take_assigned(&self.u_value, &base.u_value), g_value: take_assigned(&self.g_value, &base.g_value), frame_fraction: take_assigned(&self.frame_fraction, &base.frame_fraction) }
     }
     fn restoring(&self, base: &WindowType) -> Self {
-        Self { name: restore(&self.name, &base.name), width: restore(&self.width, &base.width), height: restore(&self.height, &base.height), sill: restore(&self.sill, &base.sill), frame_width: restore(&self.frame_width, &base.frame_width), frame_depth: restore(&self.frame_depth, &base.frame_depth), panes: restore(&self.panes, &base.panes), material: restore(&self.material, &base.material) }
+        Self { name: restore(&self.name, &base.name), width: restore(&self.width, &base.width), height: restore(&self.height, &base.height), sill: restore(&self.sill, &base.sill), frame_width: restore(&self.frame_width, &base.frame_width), frame_depth: restore(&self.frame_depth, &base.frame_depth), panes: restore(&self.panes, &base.panes), material: restore(&self.material, &base.material), u_value: restore_assigned(&self.u_value, &base.u_value), g_value: restore_assigned(&self.g_value, &base.g_value), frame_fraction: restore_assigned(&self.frame_fraction, &base.frame_fraction) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.name, later.name);
@@ -1246,9 +1768,12 @@ impl Patch<WindowType> for WindowTypePatch {
         merge_slot!(&mut self.frame_depth, later.frame_depth);
         merge_slot!(&mut self.panes, later.panes);
         merge_slot!(&mut self.material, later.material);
+        merge_slot!(&mut self.u_value, later.u_value);
+        merge_slot!(&mut self.g_value, later.g_value);
+        merge_slot!(&mut self.frame_fraction, later.frame_fraction);
     }
     fn minimal(&self, base: &WindowType) -> Self {
-        Self { name: changed(&self.name, &base.name), width: changed(&self.width, &base.width), height: changed(&self.height, &base.height), sill: changed(&self.sill, &base.sill), frame_width: changed(&self.frame_width, &base.frame_width), frame_depth: changed(&self.frame_depth, &base.frame_depth), panes: changed(&self.panes, &base.panes), material: changed(&self.material, &base.material) }
+        Self { name: changed(&self.name, &base.name), width: changed(&self.width, &base.width), height: changed(&self.height, &base.height), sill: changed(&self.sill, &base.sill), frame_width: changed(&self.frame_width, &base.frame_width), frame_depth: changed(&self.frame_depth, &base.frame_depth), panes: changed(&self.panes, &base.panes), material: changed(&self.material, &base.material), u_value: changed_assigned(&self.u_value, &base.u_value), g_value: changed_assigned(&self.g_value, &base.g_value), frame_fraction: changed_assigned(&self.frame_fraction, &base.frame_fraction) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1276,6 +1801,15 @@ impl Patch<WindowType> for WindowTypePatch {
         if self.material.is_some() {
             out.push("material".to_string());
         }
+        if self.u_value.is_some() {
+            out.push("u_value".to_string());
+        }
+        if self.g_value.is_some() {
+            out.push("g_value".to_string());
+        }
+        if self.frame_fraction.is_some() {
+            out.push("frame_fraction".to_string());
+        }
         out
     }
     fn is_empty(&self) -> bool {
@@ -1284,7 +1818,7 @@ impl Patch<WindowType> for WindowTypePatch {
 }
 
 /// 🩹 Sparse patch of [`DoorType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct DoorTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1303,14 +1837,16 @@ pub struct DoorTypePatch {
     pub swing: Option<Swing>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub material: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub u_value: Option<Assigned<Option<f64>>>,
 }
 
 impl Patch<DoorType> for DoorTypePatch {
     fn write(&self, base: &DoorType) -> DoorType {
-        DoorType { name: take(&self.name, &base.name), width: take(&self.width, &base.width), height: take(&self.height, &base.height), frame_width: take(&self.frame_width, &base.frame_width), frame_depth: take(&self.frame_depth, &base.frame_depth), leaves: take(&self.leaves, &base.leaves), swing: take(&self.swing, &base.swing), material: take(&self.material, &base.material) }
+        DoorType { name: take(&self.name, &base.name), width: take(&self.width, &base.width), height: take(&self.height, &base.height), frame_width: take(&self.frame_width, &base.frame_width), frame_depth: take(&self.frame_depth, &base.frame_depth), leaves: take(&self.leaves, &base.leaves), swing: take(&self.swing, &base.swing), material: take(&self.material, &base.material), u_value: take_assigned(&self.u_value, &base.u_value) }
     }
     fn restoring(&self, base: &DoorType) -> Self {
-        Self { name: restore(&self.name, &base.name), width: restore(&self.width, &base.width), height: restore(&self.height, &base.height), frame_width: restore(&self.frame_width, &base.frame_width), frame_depth: restore(&self.frame_depth, &base.frame_depth), leaves: restore(&self.leaves, &base.leaves), swing: restore(&self.swing, &base.swing), material: restore(&self.material, &base.material) }
+        Self { name: restore(&self.name, &base.name), width: restore(&self.width, &base.width), height: restore(&self.height, &base.height), frame_width: restore(&self.frame_width, &base.frame_width), frame_depth: restore(&self.frame_depth, &base.frame_depth), leaves: restore(&self.leaves, &base.leaves), swing: restore(&self.swing, &base.swing), material: restore(&self.material, &base.material), u_value: restore_assigned(&self.u_value, &base.u_value) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.name, later.name);
@@ -1321,9 +1857,10 @@ impl Patch<DoorType> for DoorTypePatch {
         merge_slot!(&mut self.leaves, later.leaves);
         merge_slot!(&mut self.swing, later.swing);
         merge_slot!(&mut self.material, later.material);
+        merge_slot!(&mut self.u_value, later.u_value);
     }
     fn minimal(&self, base: &DoorType) -> Self {
-        Self { name: changed(&self.name, &base.name), width: changed(&self.width, &base.width), height: changed(&self.height, &base.height), frame_width: changed(&self.frame_width, &base.frame_width), frame_depth: changed(&self.frame_depth, &base.frame_depth), leaves: changed(&self.leaves, &base.leaves), swing: changed(&self.swing, &base.swing), material: changed(&self.material, &base.material) }
+        Self { name: changed(&self.name, &base.name), width: changed(&self.width, &base.width), height: changed(&self.height, &base.height), frame_width: changed(&self.frame_width, &base.frame_width), frame_depth: changed(&self.frame_depth, &base.frame_depth), leaves: changed(&self.leaves, &base.leaves), swing: changed(&self.swing, &base.swing), material: changed(&self.material, &base.material), u_value: changed_assigned(&self.u_value, &base.u_value) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1351,6 +1888,9 @@ impl Patch<DoorType> for DoorTypePatch {
         if self.material.is_some() {
             out.push("material".to_string());
         }
+        if self.u_value.is_some() {
+            out.push("u_value".to_string());
+        }
         out
     }
     fn is_empty(&self) -> bool {
@@ -1359,7 +1899,7 @@ impl Patch<DoorType> for DoorTypePatch {
 }
 
 /// 🩹 Sparse patch of [`Site`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct SitePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1422,7 +1962,7 @@ impl Patch<Site> for SitePatch {
 }
 
 /// 🩹 Sparse patch of [`Building`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct BuildingPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1479,7 +2019,7 @@ impl Patch<Building> for BuildingPatch {
 }
 
 /// 🩹 Sparse patch of [`Storey`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct StoreyPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1536,7 +2076,7 @@ impl Patch<Storey> for StoreyPatch {
 }
 
 /// 🩹 Sparse patch of [`GridLine`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct GridLinePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1587,7 +2127,7 @@ impl Patch<GridLine> for GridLinePatch {
 }
 
 /// 🩹 Sparse patch of [`Wall`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct WallPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1680,7 +2220,7 @@ impl Patch<Wall> for WallPatch {
 }
 
 /// 🩹 Sparse patch of [`CurtainWallType`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct CurtainWallTypePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1699,14 +2239,20 @@ pub struct CurtainWallTypePatch {
     pub panel_material: Option<String>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub mullion_material: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub u_value: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub g_value: Option<Assigned<Option<f64>>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub frame_fraction: Option<Assigned<Option<f64>>>,
 }
 
 impl Patch<CurtainWallType> for CurtainWallTypePatch {
     fn write(&self, base: &CurtainWallType) -> CurtainWallType {
-        CurtainWallType { name: take(&self.name, &base.name), u_grid: take(&self.u_grid, &base.u_grid), v_grid: take(&self.v_grid, &base.v_grid), interior_mullion: take(&self.interior_mullion, &base.interior_mullion), border_mullion: take(&self.border_mullion, &base.border_mullion), panel: take(&self.panel, &base.panel), panel_material: take(&self.panel_material, &base.panel_material), mullion_material: take(&self.mullion_material, &base.mullion_material) }
+        CurtainWallType { name: take(&self.name, &base.name), u_grid: take(&self.u_grid, &base.u_grid), v_grid: take(&self.v_grid, &base.v_grid), interior_mullion: take(&self.interior_mullion, &base.interior_mullion), border_mullion: take(&self.border_mullion, &base.border_mullion), panel: take(&self.panel, &base.panel), panel_material: take(&self.panel_material, &base.panel_material), mullion_material: take(&self.mullion_material, &base.mullion_material), u_value: take_assigned(&self.u_value, &base.u_value), g_value: take_assigned(&self.g_value, &base.g_value), frame_fraction: take_assigned(&self.frame_fraction, &base.frame_fraction) }
     }
     fn restoring(&self, base: &CurtainWallType) -> Self {
-        Self { name: restore(&self.name, &base.name), u_grid: restore(&self.u_grid, &base.u_grid), v_grid: restore(&self.v_grid, &base.v_grid), interior_mullion: restore(&self.interior_mullion, &base.interior_mullion), border_mullion: restore(&self.border_mullion, &base.border_mullion), panel: restore(&self.panel, &base.panel), panel_material: restore(&self.panel_material, &base.panel_material), mullion_material: restore(&self.mullion_material, &base.mullion_material) }
+        Self { name: restore(&self.name, &base.name), u_grid: restore(&self.u_grid, &base.u_grid), v_grid: restore(&self.v_grid, &base.v_grid), interior_mullion: restore(&self.interior_mullion, &base.interior_mullion), border_mullion: restore(&self.border_mullion, &base.border_mullion), panel: restore(&self.panel, &base.panel), panel_material: restore(&self.panel_material, &base.panel_material), mullion_material: restore(&self.mullion_material, &base.mullion_material), u_value: restore_assigned(&self.u_value, &base.u_value), g_value: restore_assigned(&self.g_value, &base.g_value), frame_fraction: restore_assigned(&self.frame_fraction, &base.frame_fraction) }
     }
     fn merge(&mut self, later: Self) {
         merge_slot!(&mut self.name, later.name);
@@ -1717,9 +2263,12 @@ impl Patch<CurtainWallType> for CurtainWallTypePatch {
         merge_slot!(&mut self.panel, later.panel);
         merge_slot!(&mut self.panel_material, later.panel_material);
         merge_slot!(&mut self.mullion_material, later.mullion_material);
+        merge_slot!(&mut self.u_value, later.u_value);
+        merge_slot!(&mut self.g_value, later.g_value);
+        merge_slot!(&mut self.frame_fraction, later.frame_fraction);
     }
     fn minimal(&self, base: &CurtainWallType) -> Self {
-        Self { name: changed(&self.name, &base.name), u_grid: changed(&self.u_grid, &base.u_grid), v_grid: changed(&self.v_grid, &base.v_grid), interior_mullion: changed(&self.interior_mullion, &base.interior_mullion), border_mullion: changed(&self.border_mullion, &base.border_mullion), panel: changed(&self.panel, &base.panel), panel_material: changed(&self.panel_material, &base.panel_material), mullion_material: changed(&self.mullion_material, &base.mullion_material) }
+        Self { name: changed(&self.name, &base.name), u_grid: changed(&self.u_grid, &base.u_grid), v_grid: changed(&self.v_grid, &base.v_grid), interior_mullion: changed(&self.interior_mullion, &base.interior_mullion), border_mullion: changed(&self.border_mullion, &base.border_mullion), panel: changed(&self.panel, &base.panel), panel_material: changed(&self.panel_material, &base.panel_material), mullion_material: changed(&self.mullion_material, &base.mullion_material), u_value: changed_assigned(&self.u_value, &base.u_value), g_value: changed_assigned(&self.g_value, &base.g_value), frame_fraction: changed_assigned(&self.frame_fraction, &base.frame_fraction) }
     }
     fn touched(&self) -> Vec<String> {
         let mut out = Vec::new();
@@ -1747,6 +2296,15 @@ impl Patch<CurtainWallType> for CurtainWallTypePatch {
         if self.mullion_material.is_some() {
             out.push("mullion_material".to_string());
         }
+        if self.u_value.is_some() {
+            out.push("u_value".to_string());
+        }
+        if self.g_value.is_some() {
+            out.push("g_value".to_string());
+        }
+        if self.frame_fraction.is_some() {
+            out.push("frame_fraction".to_string());
+        }
         out
     }
     fn is_empty(&self) -> bool {
@@ -1755,7 +2313,7 @@ impl Patch<CurtainWallType> for CurtainWallTypePatch {
 }
 
 /// 🩹 Sparse patch of [`CurtainPanelOverride`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct CurtainPanelOverridePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1806,7 +2364,7 @@ impl Patch<CurtainPanelOverride> for CurtainPanelOverridePatch {
 }
 
 /// 🩹 Sparse patch of [`CurtainWall`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct CurtainWallPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1887,7 +2445,7 @@ impl Patch<CurtainWall> for CurtainWallPatch {
 }
 
 /// 🩹 Sparse patch of [`Column`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct ColumnPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -1968,7 +2526,7 @@ impl Patch<Column> for ColumnPatch {
 }
 
 /// 🩹 Sparse patch of [`Beam`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct BeamPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2037,7 +2595,7 @@ impl Patch<Beam> for BeamPatch {
 }
 
 /// 🩹 Sparse patch of [`Slab`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct SlabPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2112,7 +2670,7 @@ impl Patch<Slab> for SlabPatch {
 }
 
 /// 🩹 Sparse patch of [`Ceiling`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct CeilingPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2181,7 +2739,7 @@ impl Patch<Ceiling> for CeilingPatch {
 }
 
 /// 🩹 Sparse patch of [`Roof`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct RoofPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2256,7 +2814,7 @@ impl Patch<Roof> for RoofPatch {
 }
 
 /// 🩹 Sparse patch of [`Opening`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct OpeningPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2349,7 +2907,7 @@ impl Patch<Opening> for OpeningPatch {
 }
 
 /// 🩹 Sparse patch of [`Stair`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct StairPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2466,7 +3024,7 @@ impl Patch<Stair> for StairPatch {
 }
 
 /// 🩹 Sparse patch of [`Railing`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct RailingPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2571,7 +3129,7 @@ impl Patch<Railing> for RailingPatch {
 }
 
 /// 🩹 Sparse patch of [`Ramp`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct RampPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2682,7 +3240,7 @@ impl Patch<Ramp> for RampPatch {
 }
 
 /// 🩹 Sparse patch of [`Space`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct SpacePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2769,7 +3327,7 @@ impl Patch<Space> for SpacePatch {
 }
 
 /// 🩹 Sparse patch of [`Zone`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct ZonePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2814,7 +3372,7 @@ impl Patch<Zone> for ZonePatch {
 }
 
 /// 🩹 Sparse patch of [`AreaScheme`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct AreaSchemePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2865,7 +3423,7 @@ impl Patch<AreaScheme> for AreaSchemePatch {
 }
 
 /// 🩹 Sparse patch of [`View`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct ViewPatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -2970,7 +3528,7 @@ impl Patch<View> for ViewPatch {
 }
 
 /// 🩹 Sparse patch of [`Schedule`]: an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(default)]
 pub struct SchedulePatch {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -3050,3 +3608,144 @@ impl Patch<Schedule> for SchedulePatch {
     }
 }
 
+
+/// 🩹️ Sparse authored OptionGroup fields.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct OptionGroupPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+impl Patch<OptionGroup> for OptionGroupPatch {
+    fn write(&self, base: &OptionGroup) -> OptionGroup { OptionGroup { name: take(&self.name, &base.name) } }
+    fn restoring(&self, base: &OptionGroup) -> Self { Self { name: restore(&self.name, &base.name) } }
+    fn minimal(&self, base: &OptionGroup) -> Self { Self { name: changed(&self.name, &base.name) } }
+    fn merge(&mut self, later: Self) { merge_slot!(&mut self.name, later.name); }
+    fn touched(&self) -> Vec<String> { let mut fields = Vec::new(); if self.name.is_some() { fields.push("name".into()); } fields }
+    fn is_empty(&self) -> bool { self == &Self::default() }
+}
+
+/// 🩹️ Sparse authored DesignOption fields.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct DesignOptionPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub primary: Option<bool>,
+}
+impl Patch<DesignOption> for DesignOptionPatch {
+    fn write(&self, base: &DesignOption) -> DesignOption { DesignOption { group: take(&self.group, &base.group), name: take(&self.name, &base.name), primary: take(&self.primary, &base.primary) } }
+    fn restoring(&self, base: &DesignOption) -> Self { Self { group: restore(&self.group, &base.group), name: restore(&self.name, &base.name), primary: restore(&self.primary, &base.primary) } }
+    fn minimal(&self, base: &DesignOption) -> Self { Self { group: changed(&self.group, &base.group), name: changed(&self.name, &base.name), primary: changed(&self.primary, &base.primary) } }
+    fn merge(&mut self, later: Self) { merge_slot!(&mut self.group, later.group); merge_slot!(&mut self.name, later.name); merge_slot!(&mut self.primary, later.primary); }
+    fn touched(&self) -> Vec<String> { let mut fields = Vec::new(); if self.group.is_some() { fields.push("group".into()); } if self.name.is_some() { fields.push("name".into()); } if self.primary.is_some() { fields.push("primary".into()); } fields }
+    fn is_empty(&self) -> bool { self == &Self::default() }
+}
+
+/// 🩹️ Sparse authored Workset fields.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct WorksetPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub default_visible: Option<bool>,
+}
+impl Patch<Workset> for WorksetPatch {
+    fn write(&self, base: &Workset) -> Workset { Workset { name: take(&self.name, &base.name), default_visible: take(&self.default_visible, &base.default_visible) } }
+    fn restoring(&self, base: &Workset) -> Self { Self { name: restore(&self.name, &base.name), default_visible: restore(&self.default_visible, &base.default_visible) } }
+    fn minimal(&self, base: &Workset) -> Self { Self { name: changed(&self.name, &base.name), default_visible: changed(&self.default_visible, &base.default_visible) } }
+    fn merge(&mut self, later: Self) { merge_slot!(&mut self.name, later.name); merge_slot!(&mut self.default_visible, later.default_visible); }
+    fn touched(&self) -> Vec<String> { let mut fields = Vec::new(); if self.name.is_some() { fields.push("name".into()); } if self.default_visible.is_some() { fields.push("default_visible".into()); } fields }
+    fn is_empty(&self) -> bool { self == &Self::default() }
+}
+
+/// 🩹️ Sparse authored ElementMembership fields.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct ElementMembershipPatch {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub target: Option<String>,
+}
+impl Patch<ElementMembership> for ElementMembershipPatch {
+    fn write(&self, base: &ElementMembership) -> ElementMembership { ElementMembership { target: take(&self.target, &base.target) } }
+    fn restoring(&self, base: &ElementMembership) -> Self { Self { target: restore(&self.target, &base.target) } }
+    fn minimal(&self, base: &ElementMembership) -> Self { Self { target: changed(&self.target, &base.target) } }
+    fn merge(&mut self, later: Self) { merge_slot!(&mut self.target, later.target); }
+    fn touched(&self) -> Vec<String> { let mut fields = Vec::new(); if self.target.is_some() { fields.push("target".into()); } fields }
+    fn is_empty(&self) -> bool { self == &Self::default() }
+}
+
+
+/// 🩹️ Sparse authored patch of StructuralSupport.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct StructuralSupportPatch {
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub name: Option<String>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub member: Option<String>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub location: Option<StructuralLocation>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub offset: Option<Point3>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub restraints: Option<Restraints>,
+}
+impl Patch<StructuralSupport> for StructuralSupportPatch {
+ fn write(&self, base: &StructuralSupport) -> StructuralSupport { StructuralSupport { name: take(&self.name, &base.name), member: take(&self.member, &base.member), location: take(&self.location, &base.location), offset: take(&self.offset, &base.offset), restraints: take(&self.restraints, &base.restraints) } }
+ fn restoring(&self, base: &StructuralSupport) -> Self { Self { name: restore(&self.name, &base.name), member: restore(&self.member, &base.member), location: restore(&self.location, &base.location), offset: restore(&self.offset, &base.offset), restraints: restore(&self.restraints, &base.restraints) } }
+ fn merge(&mut self, later: Self) { merge_slot!(&mut self.name, later.name); merge_slot!(&mut self.member, later.member); merge_slot!(&mut self.location, later.location); merge_slot!(&mut self.offset, later.offset); merge_slot!(&mut self.restraints, later.restraints); }
+ fn minimal(&self, base: &StructuralSupport) -> Self { Self { name: changed(&self.name, &base.name), member: changed(&self.member, &base.member), location: changed(&self.location, &base.location), offset: changed(&self.offset, &base.offset), restraints: changed(&self.restraints, &base.restraints) } }
+ fn touched(&self) -> Vec<String> { let mut out = Vec::new(); if self.name.is_some() { out.push("name".into()); } if self.member.is_some() { out.push("member".into()); } if self.location.is_some() { out.push("location".into()); } if self.offset.is_some() { out.push("offset".into()); } if self.restraints.is_some() { out.push("restraints".into()); } out }
+ fn is_empty(&self) -> bool { self == &Self::default() }
+}
+
+/// 🩹️ Sparse authored patch of LoadCase.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct LoadCasePatch {
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub name: Option<String>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub category: Option<String>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub factor: Option<f64>,
+}
+impl Patch<LoadCase> for LoadCasePatch {
+ fn write(&self, base: &LoadCase) -> LoadCase { LoadCase { name: take(&self.name, &base.name), category: take(&self.category, &base.category), factor: take(&self.factor, &base.factor) } }
+ fn restoring(&self, base: &LoadCase) -> Self { Self { name: restore(&self.name, &base.name), category: restore(&self.category, &base.category), factor: restore(&self.factor, &base.factor) } }
+ fn merge(&mut self, later: Self) { merge_slot!(&mut self.name, later.name); merge_slot!(&mut self.category, later.category); merge_slot!(&mut self.factor, later.factor); }
+ fn minimal(&self, base: &LoadCase) -> Self { Self { name: changed(&self.name, &base.name), category: changed(&self.category, &base.category), factor: changed(&self.factor, &base.factor) } }
+ fn touched(&self) -> Vec<String> { let mut out = Vec::new(); if self.name.is_some() { out.push("name".into()); } if self.category.is_some() { out.push("category".into()); } if self.factor.is_some() { out.push("factor".into()); } out }
+ fn is_empty(&self) -> bool { self == &Self::default() }
+}
+
+/// 🩹️ Sparse authored patch of StructuralLoad.
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(default)]
+pub struct StructuralLoadPatch {
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub name: Option<String>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub load_case: Option<String>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub member: Option<String>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub location: Option<StructuralLocation>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub force: Option<Point3>,
+ #[value(skip_serializing_if = "Option::is_none")]
+ pub moment: Option<Point3>,
+}
+impl Patch<StructuralLoad> for StructuralLoadPatch {
+ fn write(&self, base: &StructuralLoad) -> StructuralLoad { StructuralLoad { name: take(&self.name, &base.name), load_case: take(&self.load_case, &base.load_case), member: take(&self.member, &base.member), location: take(&self.location, &base.location), force: take(&self.force, &base.force), moment: take(&self.moment, &base.moment) } }
+ fn restoring(&self, base: &StructuralLoad) -> Self { Self { name: restore(&self.name, &base.name), load_case: restore(&self.load_case, &base.load_case), member: restore(&self.member, &base.member), location: restore(&self.location, &base.location), force: restore(&self.force, &base.force), moment: restore(&self.moment, &base.moment) } }
+ fn merge(&mut self, later: Self) { merge_slot!(&mut self.name, later.name); merge_slot!(&mut self.load_case, later.load_case); merge_slot!(&mut self.member, later.member); merge_slot!(&mut self.location, later.location); merge_slot!(&mut self.force, later.force); merge_slot!(&mut self.moment, later.moment); }
+ fn minimal(&self, base: &StructuralLoad) -> Self { Self { name: changed(&self.name, &base.name), load_case: changed(&self.load_case, &base.load_case), member: changed(&self.member, &base.member), location: changed(&self.location, &base.location), force: changed(&self.force, &base.force), moment: changed(&self.moment, &base.moment) } }
+ fn touched(&self) -> Vec<String> { let mut out = Vec::new(); if self.name.is_some() { out.push("name".into()); } if self.load_case.is_some() { out.push("load_case".into()); } if self.member.is_some() { out.push("member".into()); } if self.location.is_some() { out.push("location".into()); } if self.force.is_some() { out.push("force".into()); } if self.moment.is_some() { out.push("moment".into()); } out }
+ fn is_empty(&self) -> bool { self == &Self::default() }
+}

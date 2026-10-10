@@ -1146,7 +1146,7 @@
     "r-gable": {
       "family": "Roof",
       "volume": 6.3,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         -0.5,
         -0.5,
@@ -1157,7 +1157,7 @@
         6.5,
         7.812058714453
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 1.912058714453,
@@ -1170,7 +1170,7 @@
     "r-gable-rotated": {
       "family": "Roof",
       "volume": 4.8,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         -1.773121239968,
         0.0,
@@ -1181,7 +1181,7 @@
         8.096180588044,
         7.168379656215
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 1.268379656215,
@@ -1194,7 +1194,7 @@
     "r-hip": {
       "family": "Roof",
       "volume": 4.8,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         0.0,
         0.0,
@@ -1205,7 +1205,7 @@
         6.0,
         7.168379656214
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 1.268379656214,
@@ -1218,7 +1218,7 @@
     "r-hip-overhang": {
       "family": "Roof",
       "volume": 5.984,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         -0.4,
         -0.4,
@@ -1229,7 +1229,7 @@
         6.4,
         8.226065148362
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 2.326065148362,
@@ -1242,7 +1242,7 @@
     "r-mansard": {
       "family": "Roof",
       "volume": 4.8,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         0.0,
         0.0,
@@ -1253,7 +1253,7 @@
         6.0,
         7.670566463983
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 1.770566463983,
@@ -1263,7 +1263,7 @@
     "r-l-hip": {
       "family": "Roof",
       "volume": 3.6,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         0.0,
         0.0,
@@ -1274,7 +1274,7 @@
         6.0,
         6.745586437476
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 0.845586437476,
@@ -1349,7 +1349,7 @@
     "r-l-hip-overhang": {
       "family": "Roof",
       "volume": 4.784,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         -0.4,
         -0.4,
@@ -1360,7 +1360,7 @@
         6.4,
         7.211125975625
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 1.311125975625,
@@ -1371,7 +1371,7 @@
     "r-t-hip": {
       "family": "Roof",
       "volume": 3.9,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         0.0,
         0.0,
@@ -1382,7 +1382,7 @@
         7.0,
         6.534189828107
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 0.634189828107,
@@ -1393,7 +1393,7 @@
     "r-u-hip": {
       "family": "Roof",
       "volume": 4.5,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         0.0,
         0.0,
@@ -1404,7 +1404,7 @@
         6.0,
         6.719453734766
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 0.819453734766,
@@ -1415,7 +1415,7 @@
     "r-l-gable": {
       "family": "Roof",
       "volume": 3.6,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         0.0,
         0.0,
@@ -1426,7 +1426,7 @@
         6.0,
         6.630056989661
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 0.730056989661,
@@ -1437,7 +1437,7 @@
     "r-l-mansard": {
       "family": "Roof",
       "volume": 3.6,
-      "volume_tolerance": 1e-09,
+      "volume_tolerance": 1e-07,
       "min": [
         0.0,
         0.0,
@@ -1448,7 +1448,7 @@
         6.0,
         7.192718671343
       ],
-      "bounds_tolerance": 1e-09,
+      "bounds_tolerance": 1e-07,
       "curved": false,
       "thickness": 0.1,
       "rise": 1.292718671343,

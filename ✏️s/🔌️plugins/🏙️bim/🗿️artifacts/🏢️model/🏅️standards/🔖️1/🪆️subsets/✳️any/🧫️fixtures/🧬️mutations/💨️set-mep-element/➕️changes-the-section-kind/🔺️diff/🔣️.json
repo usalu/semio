@@ -1,0 +1,12 @@
+{
+  "mep_elements": {
+    "mep-duct": {
+      "entry": "Patched",
+      "shape": {
+        "Pipe": {
+          "diameter": 0.2
+        }
+      }
+    }
+  }
+}

@@ -43,6 +43,12 @@
       "implementation": "python",
       "package": "jsonschema",
       "version": "4.26.0"
+    },
+    {
+      "implementation": "python",
+      "package": "pypdf",
+      "version": "6.14.2",
+      "module": "pypdf"
     }
   ]
 }

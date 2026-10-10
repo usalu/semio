@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "r-1": {
+      "entry": "Patched",
+      "limit": 0.18
+    }
+  }
+}

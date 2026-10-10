@@ -1,1 +1,30 @@
-{}
+{
+  "views": {
+    "v-detail": {
+      "building": "bldg-1",
+      "crop": {
+        "max": {
+          "x": 6.0,
+          "y": 4.0
+        },
+        "min": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      "cut_height": 0.9,
+      "depth": 3.0,
+      "detail": "Fine",
+      "entry": "Created",
+      "hidden": [
+        "Beams",
+        "Grids"
+      ],
+      "kind": "Plan",
+      "name": "Detail plan",
+      "phase": "New",
+      "scale": 50,
+      "storey": "st-first"
+    }
+  }
+}

@@ -1,19 +1,19 @@
 {
   "beams": {
     "b-b": {
-      "beam_type": "bt-40x60",
       "axis": {
         "Line": {
-          "start": {
-            "x": 0,
-            "y": 3
-          },
           "end": {
-            "x": 4,
-            "y": 3
+            "x": 4.0,
+            "y": 3.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 3.0
           }
         }
       },
+      "beam_type": "bt-40x60",
       "entry": "Created",
       "name": "Beam B",
       "phase": "New",

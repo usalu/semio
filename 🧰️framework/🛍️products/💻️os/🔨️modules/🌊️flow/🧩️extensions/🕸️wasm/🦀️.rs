@@ -385,6 +385,7 @@ pub struct EvaluationInputPreparation {
     active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
+
 impl EvaluationInputPreparation {
     /// 🌱️ Takes one initial request's source allocation without scanning or copying its payload.
     pub fn new(input:String,dependency:String,operator:String,version:String)->Self {
@@ -585,6 +586,8 @@ struct EvaluationOutput {
     pending_source:Option<neural_engine::PendingExtensionEval>,text:Option<String>,wire:Option<String>,stage:u8,units:usize,faulted:bool,complete:bool,external_pending:bool,closing_fields:u8,normal_progress:RetainedCloneProgress,
     active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
+
+
 impl EvaluationOutput {
     fn new(output:Dictionary)->Self {let faulted=output.get("error").is_some();Self {writer:Some(semio_framework_pack_json::JsonWriteCursor::new(output)),envelope:None,encoding:None,retirement:Default::default(),pending_source:None,text:None,wire:None,stage:0,units:0,faulted,complete:true,external_pending:false,closing_fields:0,normal_progress:Default::default(),active:std::mem::ManuallyDrop::new(None)}}
     fn envelope(source:EvaluationEnvelopeSource,faulted:bool)->Self{let complete=source.done;let external_pending=source.pending.is_some();Self{writer:None,envelope:Some(semio_framework_pack_json::JsonWriteCursor::new(source)),encoding:None,retirement:Default::default(),pending_source:None,text:None,wire:None,stage:2,units:0,faulted,complete,external_pending,closing_fields:0,normal_progress:Default::default(),active:std::mem::ManuallyDrop::new(None)}}
@@ -678,6 +681,8 @@ struct RetainedEvaluation {
     active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     response:Option<EvaluationOutput>,response_failed:bool,continuation_identity:Option<EvaluationContinuationIdentity>,compact_request:Option<EvaluateRequest>,compact_cleanup:bool,compact_active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,completed_reply:Option<EvaluationReply>,pending_input:Option<Dictionary>,discarded_candidate:Option<(Dictionary,String)>,discarded_preparation:Option<EvaluationInputPreparation>,discarded_version:Option<String>,discarded_cancellation:Option<String>,
 }
+
+
 impl RetainedEvaluation {
     fn new(registry:neural_engine::SharedRegistry,request:EvaluateRequest)->Self {
         Self {finish:neural_engine::OperatorFinishCursor::new(),plan:neural_engine::OperatorPlanCursor::new(),planning:false,owner_identity:registry.owner_identity(),registry:Some(registry),lease:None,active:std::mem::ManuallyDrop::new(None),response:None,response_failed:false,continuation_identity:None,compact_request:None,compact_cleanup:false,compact_active:std::mem::ManuallyDrop::new(None),completed_reply:None,pending_input:None,discarded_candidate:None,discarded_preparation:None,discarded_version:None,discarded_cancellation:None,request_admission:Some(EvaluationRequestAdmission::new(request)),discarded_request:None,request_initial:true,discarded_operator:None,neuron_id:String::new(),pending_wave:None,pending_wave_closing:false,external_pending:None,external_completion:None,discarded_neuron:None,job:None,admission:None,replacement:None,candidate:None,dependency_identity:String::new(),version:String::new(),cancellation_id:String::new(),next_version:None,next_cancellation:None,retirement:Default::default(),finished:None,output:None,fault:None,units:0,identity_position:None,cancelled:false,restarting:false,normal_progress:Default::default()}

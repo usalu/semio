@@ -168,7 +168,7 @@ async fn fresh_program(actor: &str) -> ToyApp {
 
 /// ✏️ One document edit authored through the program's store, as a committed gesture leaves it.
 async fn author_edit(app: &mut ToyApp, op: &Value) {
-    app.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }).await.expect("the edit applies");
+    crate::with_authoring_identity!(|identity| app.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }, &mut identity).await).expect("the edit applies");
     app.refresh_cache().await.expect("the history backfills the edit");
 }
 
@@ -528,7 +528,8 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
     findings.holds(target.document_loading_refusal("undo").is_none(), || "a verb still waits for the cancelled load".to_string());
     let mut turns = 0usize;
     while target.document_archive_loads.get(62).is_some_and(|load| !load.terminal()) && turns < 100_000 {
-        PluginApp::maintenance_step(&mut target, 1, store::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("a maintenance turn");
+        let demand = PluginApp::maintenance_retirement_demands(&target, store::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("a quoted maintenance demand");
+        PluginApp::maintenance_step(&mut target, plugin_demand_grant(demand)).expect("a maintenance turn");
         turns += 1;
     }
     findings.holds(target.document_archive_loads.get(62).is_some_and(|load| load.terminal()), || format!("the cancelled load did not retire in {turns} maintenance turns without a host poll"));

@@ -11,7 +11,7 @@ pub use super::set_member::{SetMemberMutation, SetMemberPayload};
 pub use super::set_scalar::{SetScalarMutation, SetScalarPayload};
 pub use crate::schema::mutation_support::{JsonPath, JsonPathSegment};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = JsonSnapshot, diff = JsonDiff, schema = "s.stdio.json")]
 pub enum JsonMutation {

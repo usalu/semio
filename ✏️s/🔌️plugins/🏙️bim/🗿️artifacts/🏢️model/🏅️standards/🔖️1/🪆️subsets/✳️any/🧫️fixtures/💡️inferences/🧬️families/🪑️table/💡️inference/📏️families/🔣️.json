@@ -1,0 +1,602 @@
+{
+  "fam-broken": {
+    "category": "Generic",
+    "parameters": {
+      "after_loop": {
+        "kind": "Length",
+        "formula": "loop_a * 2"
+      },
+      "after_syntax": {
+        "kind": "Length",
+        "formula": "syntax + 1 m"
+      },
+      "base": {
+        "kind": "Length",
+        "formula": "1 m",
+        "value": {
+          "Length": {
+            "value": 1.0
+          }
+        }
+      },
+      "fraction": {
+        "kind": "Integer",
+        "formula": "2.5",
+        "value": {
+          "Number": {
+            "value": 2.5
+          }
+        }
+      },
+      "loop_a": {
+        "kind": "Length",
+        "formula": "loop_b + 1 m"
+      },
+      "loop_b": {
+        "kind": "Length",
+        "formula": "loop_a + 1 m"
+      },
+      "mixed": {
+        "kind": "Length",
+        "formula": "1 m + 30 deg"
+      },
+      "negative": {
+        "kind": "Length",
+        "formula": "-1 m",
+        "value": {
+          "Length": {
+            "value": -1.0
+          }
+        }
+      },
+      "no_material": {
+        "kind": "Material",
+        "formula": "\"m-ghost\"",
+        "value": {
+          "Text": {
+            "value": "m-ghost"
+          }
+        }
+      },
+      "number_for_length": {
+        "kind": "Length",
+        "formula": "2"
+      },
+      "syntax": {
+        "kind": "Length",
+        "formula": "2 *"
+      },
+      "unknown": {
+        "kind": "Length",
+        "formula": "ghost + 1 m"
+      },
+      "zero": {
+        "kind": "Real",
+        "formula": "1 / 0"
+      }
+    },
+    "issues": [
+      "cycle|parameter|loop_a|value",
+      "cycle|parameter|loop_b|value",
+      "dependency|parameter|after_loop|value",
+      "dependency|parameter|after_syntax|value",
+      "dependency|solid|s-bad-loop|width",
+      "division-by-zero|parameter|zero|value",
+      "kind|parameter|fraction|value",
+      "kind|parameter|mixed|value",
+      "kind|parameter|number_for_length|value",
+      "negative|solid|s-bad-height|height",
+      "syntax|parameter|syntax|value",
+      "unknown|parameter|no_material|value",
+      "unknown|parameter|unknown|value",
+      "unknown|solid|s-bad-material|material",
+      "unknown|solid|s-bad-name|width"
+    ],
+    "solids": {
+      "s-bad-height": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.0,
+        "area": 0.0,
+        "triangles": 0,
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "s-bad-loop": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.0,
+        "area": 0.0,
+        "triangles": 0,
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "s-bad-material": {
+        "visible": true,
+        "material": "m-ghost",
+        "volume": 1.0,
+        "area": 6.0,
+        "triangles": 12,
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "s-bad-name": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.0,
+        "area": 0.0,
+        "triangles": 0,
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "outline_area": 0.0,
+    "outline_vertices": 0
+  },
+  "fam-hea": {
+    "category": "Profile",
+    "parameters": {
+      "b": {
+        "kind": "Length",
+        "formula": "200 mm",
+        "value": {
+          "Length": {
+            "value": 0.2
+          }
+        }
+      },
+      "h": {
+        "kind": "Length",
+        "formula": "190 mm",
+        "value": {
+          "Length": {
+            "value": 0.19
+          }
+        }
+      },
+      "tf": {
+        "kind": "Length",
+        "formula": "10 mm",
+        "value": {
+          "Length": {
+            "value": 0.01
+          }
+        }
+      },
+      "tw": {
+        "kind": "Length",
+        "formula": "6.5 mm",
+        "value": {
+          "Length": {
+            "value": 0.0065
+          }
+        }
+      }
+    },
+    "issues": [],
+    "solids": {
+      "s-hea": {
+        "visible": true,
+        "material": "m-steel",
+        "volume": 0.005105000000000002,
+        "area": 1.17721,
+        "triangles": 44,
+        "min": [
+          -0.1,
+          -0.095,
+          0.0
+        ],
+        "max": [
+          0.1,
+          0.095,
+          1.0
+        ]
+      }
+    },
+    "outline_area": 0.005105000000000002,
+    "outline_vertices": 12
+  },
+  "fam-rhs": {
+    "category": "Profile",
+    "parameters": {
+      "depth": {
+        "kind": "Length",
+        "formula": "60 mm",
+        "value": {
+          "Length": {
+            "value": 0.06
+          }
+        }
+      },
+      "width": {
+        "kind": "Length",
+        "formula": "100 mm",
+        "value": {
+          "Length": {
+            "value": 0.1
+          }
+        }
+      }
+    },
+    "issues": [],
+    "solids": {
+      "s-rhs": {
+        "visible": true,
+        "material": "m-steel",
+        "volume": 0.006,
+        "area": 0.332,
+        "triangles": 12,
+        "min": [
+          -0.05,
+          -0.03,
+          0.0
+        ],
+        "max": [
+          0.05,
+          0.03,
+          1.0
+        ]
+      }
+    },
+    "outline_area": 0.006,
+    "outline_vertices": 4
+  },
+  "fam-round": {
+    "category": "Profile",
+    "parameters": {
+      "diameter": {
+        "kind": "Length",
+        "formula": "114 mm",
+        "value": {
+          "Length": {
+            "value": 0.114
+          }
+        }
+      }
+    },
+    "issues": [],
+    "solids": {
+      "s-round": {
+        "visible": true,
+        "material": "m-steel",
+        "volume": 0.010184018705807572,
+        "area": 0.37830760418450426,
+        "triangles": 212,
+        "min": [
+          -0.057,
+          -0.056903565021462287,
+          0.0
+        ],
+        "max": [
+          0.057,
+          0.056903565021462287,
+          1.0
+        ]
+      }
+    },
+    "outline_area": 0.010207034531513238,
+    "outline_vertices": 2
+  },
+  "fam-table": {
+    "category": "Furniture",
+    "parameters": {
+      "area": {
+        "kind": "Real",
+        "formula": "round(width * depth / 1 m2 * 100) / 100",
+        "value": {
+          "Number": {
+            "value": 1.28
+          }
+        }
+      },
+      "depth": {
+        "kind": "Length",
+        "formula": "0.8 m",
+        "value": {
+          "Length": {
+            "value": 0.8
+          }
+        }
+      },
+      "finish": {
+        "kind": "Material",
+        "formula": "\"m-oak\"",
+        "value": {
+          "Text": {
+            "value": "m-oak"
+          }
+        }
+      },
+      "height": {
+        "kind": "Length",
+        "formula": "0.74 m",
+        "value": {
+          "Length": {
+            "value": 0.74
+          }
+        }
+      },
+      "label": {
+        "kind": "Text",
+        "formula": "\"Dining table\"",
+        "value": {
+          "Text": {
+            "value": "Dining table"
+          }
+        }
+      },
+      "leg_height": {
+        "kind": "Length",
+        "formula": "height - top_thickness",
+        "value": {
+          "Length": {
+            "value": 0.71
+          }
+        }
+      },
+      "leg_inset": {
+        "kind": "Length",
+        "formula": "50 mm",
+        "value": {
+          "Length": {
+            "value": 0.05
+          }
+        }
+      },
+      "leg_section": {
+        "kind": "Length",
+        "formula": "60 mm",
+        "value": {
+          "Length": {
+            "value": 0.06
+          }
+        }
+      },
+      "leg_x": {
+        "kind": "Length",
+        "formula": "width - leg_inset - leg_section",
+        "value": {
+          "Length": {
+            "value": 1.49
+          }
+        }
+      },
+      "leg_y": {
+        "kind": "Length",
+        "formula": "depth - leg_inset - leg_section",
+        "value": {
+          "Length": {
+            "value": 0.69
+          }
+        }
+      },
+      "legs": {
+        "kind": "Integer",
+        "formula": "4",
+        "value": {
+          "Number": {
+            "value": 4.0
+          }
+        }
+      },
+      "ratio": {
+        "kind": "Real",
+        "formula": "width / depth",
+        "value": {
+          "Number": {
+            "value": 2.0
+          }
+        }
+      },
+      "tilt": {
+        "kind": "Angle",
+        "formula": "if wide then 15 deg else 0 deg",
+        "value": {
+          "Angle": {
+            "value": 0.2617993877991494
+          }
+        }
+      },
+      "top_thickness": {
+        "kind": "Length",
+        "formula": "30 mm",
+        "value": {
+          "Length": {
+            "value": 0.03
+          }
+        }
+      },
+      "wide": {
+        "kind": "Boolean",
+        "formula": "width > 1.4 m",
+        "value": {
+          "Boolean": {
+            "value": true
+          }
+        }
+      },
+      "width": {
+        "kind": "Length",
+        "formula": "1.6 m",
+        "value": {
+          "Length": {
+            "value": 1.6
+          }
+        }
+      }
+    },
+    "issues": [],
+    "solids": {
+      "s-foot": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 3.558122723526193e-05,
+        "area": 0.007498404916900458,
+        "triangles": 156,
+        "min": [
+          0.0500972807559737,
+          0.05002433005485292,
+          0.0
+        ],
+        "max": [
+          0.11,
+          0.10997566994514708,
+          0.015
+        ]
+      },
+      "s-leg-1": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.0025559999999999997,
+        "area": 0.1776,
+        "triangles": 12,
+        "min": [
+          0.05,
+          0.05,
+          0.0
+        ],
+        "max": [
+          0.11,
+          0.11,
+          0.71
+        ]
+      },
+      "s-leg-2": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.002556000000000002,
+        "area": 0.17760000000000006,
+        "triangles": 12,
+        "min": [
+          1.49,
+          0.05,
+          0.0
+        ],
+        "max": [
+          1.55,
+          0.11,
+          0.71
+        ]
+      },
+      "s-leg-3": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.0025560000000000044,
+        "area": 0.17760000000000015,
+        "triangles": 12,
+        "min": [
+          1.49,
+          0.69,
+          0.0
+        ],
+        "max": [
+          1.55,
+          0.75,
+          0.71
+        ]
+      },
+      "s-leg-4": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.002556000000000002,
+        "area": 0.17760000000000006,
+        "triangles": 12,
+        "min": [
+          0.05,
+          0.69,
+          0.0
+        ],
+        "max": [
+          0.11,
+          0.75,
+          0.71
+        ]
+      },
+      "s-rail": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.0009600000000000002,
+        "area": 0.19280000000000003,
+        "triangles": 20,
+        "min": [
+          0.0,
+          -0.01,
+          0.6699999999999999
+        ],
+        "max": [
+          1.61,
+          0.8,
+          0.69
+        ]
+      },
+      "s-shelf": {
+        "visible": false,
+        "material": "m-oak",
+        "volume": 0.021,
+        "area": 2.188,
+        "triangles": 12,
+        "min": [
+          0.050000000000000044,
+          0.04999999999999999,
+          0.15
+        ],
+        "max": [
+          1.55,
+          0.75,
+          0.16999999999999998
+        ]
+      },
+      "s-top": {
+        "visible": true,
+        "material": "m-oak",
+        "volume": 0.038400000000000004,
+        "area": 2.7040000000000006,
+        "triangles": 12,
+        "min": [
+          0.0,
+          0.0,
+          0.71
+        ],
+        "max": [
+          1.6,
+          0.8,
+          0.74
+        ]
+      }
+    },
+    "outline_area": 0.0,
+    "outline_vertices": 0
+  }
+}

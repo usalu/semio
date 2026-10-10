@@ -65,14 +65,14 @@ fn apply_tri<T: Clone>(slot: &mut Option<T>, diff: &Option<PdfSet<T>>) {
 //#region 🔖️IndexedTriple
 /// 📦️ An index-keyed triple of whole values (positional collections: content operators,
 /// annotations, outlines, named destinations, page labels, output intents).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfIndexedItem<T> {
     pub index: usize,
     pub value: T,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PdfIndexedDiff<T> {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -1397,7 +1397,7 @@ fn inverse_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> Pd
 /// `Stream` can only ever be an indirect object's OWN top-level value (never nested inside an
 /// Array/Dict as a value -- that requires an indirect `Ref`), so only `path == []` can possibly
 /// address a `Stream`'s dict; every deeper step is guaranteed `Array`/`Dict`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum PdfPathSegment {
     ArrayIndex { index: usize },
@@ -2252,7 +2252,7 @@ pub fn sequence(first: PdfDiff, second: PdfDiff) -> PdfDiff {
 }
 
 /// 📐 Which optional page box a mutation addresses.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PdfPageBox {
     Crop,

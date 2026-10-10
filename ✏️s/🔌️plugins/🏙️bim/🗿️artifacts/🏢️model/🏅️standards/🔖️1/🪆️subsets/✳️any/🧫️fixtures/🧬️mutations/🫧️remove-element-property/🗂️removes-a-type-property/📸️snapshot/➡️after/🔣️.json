@@ -1,142 +1,142 @@
 {
-  "schema": "s.bim.model@1",
+  "beam_types": {},
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "classifications": {},
+  "column_types": {},
+  "columns": {},
+  "curtain_walls": {},
+  "door_types": {},
+  "grids": {},
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
   "project": {
-    "name": "Model",
-    "description": "",
     "author": "",
+    "description": "",
+    "name": "Model",
     "organization": "",
     "phase_names": []
   },
-  "materials": {
-    "m-brick": {
-      "name": "Brick",
-      "category": "Masonry",
-      "color": {
-        "r": 0.7,
-        "g": 0.35,
-        "b": 0.25
-      },
-      "density": 1800,
-      "conductivity": 0.8,
-      "specific_heat": 900
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {},
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
     }
   },
   "wall_types": {
     "wt-300": {
-      "name": "Brick 300",
       "layers": [
         {
+          "function": "Structure",
           "material": "m-brick",
-          "thickness": 0.3,
-          "function": "Structure"
+          "thickness": 0.3
         }
-      ]
+      ],
+      "name": "Brick 300"
     }
   },
-  "slab_types": {},
-  "roof_types": {},
-  "column_types": {},
-  "beam_types": {},
-  "window_types": {},
-  "door_types": {},
-  "sites": {
-    "site-1": {
-      "name": "Plot",
-      "latitude": 47,
-      "longitude": 8,
-      "elevation": 100,
-      "true_north": 0,
-      "boundary": []
-    }
-  },
-  "buildings": {
-    "bldg-1": {
-      "site": "site-1",
-      "name": "House",
-      "origin": {
-        "x": 0,
-        "y": 0
-      },
-      "rotation": 0,
-      "elevation": 0
-    }
-  },
-  "storeys": {
-    "st-ground": {
-      "building": "bldg-1",
-      "name": "Ground",
-      "level": 0,
-      "height": 3
-    },
-    "st-first": {
-      "building": "bldg-1",
-      "name": "First",
-      "level": 1,
-      "height": 2.8
-    }
-  },
-  "grids": {},
   "walls": {
-    "w-south": {
-      "storey": "st-ground",
-      "wall_type": "wt-300",
-      "axis": {
-        "Line": {
-          "start": {
-            "x": 0,
-            "y": 0
-          },
-          "end": {
-            "x": 8,
-            "y": 0
-          }
-        }
-      },
-      "location": "Center",
-      "base_offset": 0,
-      "top": {
-        "StoreyTop": {
-          "offset": 0
-        }
-      },
-      "phase": "New",
-      "name": "South"
-    },
     "w-east": {
-      "storey": "st-ground",
-      "wall_type": "wt-300",
       "axis": {
         "Line": {
-          "start": {
-            "x": 8,
-            "y": 0
-          },
           "end": {
-            "x": 8,
-            "y": 6
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 8.0,
+            "y": 0.0
           }
         }
       },
+      "base_offset": 0.0,
       "location": "Center",
-      "base_offset": 0,
+      "name": "East",
+      "phase": "New",
+      "storey": "st-ground",
       "top": {
         "Unconnected": {
           "height": 2.4
         }
       },
+      "wall_type": "wt-300"
+    },
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "location": "Center",
+      "name": "South",
       "phase": "New",
-      "name": "East"
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
     }
   },
-  "curtain_walls": {},
-  "columns": {},
-  "beams": {},
-  "slabs": {},
-  "roofs": {},
-  "openings": {},
-  "stairs": {},
-  "railings": {},
-  "spaces": {},
-  "properties": {},
-  "classifications": {}
+  "window_types": {}
 }

@@ -1,0 +1,38 @@
+{
+  "mutation": "createIssue",
+  "id": "i-1",
+  "issue": {
+    "title": "Beam hits the south wall",
+    "description": "The beam runs through the wall.",
+    "status": "Open",
+    "priority": "Normal",
+    "assignee": "",
+    "author": "UG",
+    "created": "2026-10-09T08:30:00Z",
+    "labels": [
+      "Clash"
+    ],
+    "elements": [
+      "w-south",
+      "w-east"
+    ],
+    "viewpoint": {
+      "camera": {
+        "target": {
+          "x": 4,
+          "y": 3
+        },
+        "target_height": 1.5,
+        "azimuth": 0.8,
+        "pitch": 0.5,
+        "distance": 25
+      },
+      "isolate": []
+    },
+    "clash": {
+      "set": "cs-1",
+      "first": "w-south",
+      "second": "w-south"
+    }
+  }
+}

@@ -459,6 +459,10 @@ impl ArtifactApp for ToyRunApp {
         Some(bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("tool-run-doc", 4_096))
     }
 
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("tool-run-cfg", 131_072))
+    }
+
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
@@ -2093,3 +2097,4 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
 
 #[path = "../🧪️tool-run-member/🦀️.rs"]
 mod member;
+                                                                                                                                                          

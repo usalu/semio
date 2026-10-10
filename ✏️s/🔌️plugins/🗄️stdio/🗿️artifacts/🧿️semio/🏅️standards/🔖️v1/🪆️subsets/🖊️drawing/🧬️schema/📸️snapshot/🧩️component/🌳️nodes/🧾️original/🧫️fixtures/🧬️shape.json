@@ -1,0 +1,1 @@
+{"malformed":[{"kind":"constructor"},{"kind":"path","segments":[{"kind":"__proto__"}]},{"kind":"image","at":{"x":0,"y":0},"width":1,"height":1,"mime":"image/png"},{"kind":"path","segments":[{"kind":"lineTo"}]},{"kind":"text","value":"original","at":{"x":0,"y":0},"width":1},{"kind":"path","segments":[{"kind":"close","to":{"x":1,"y":2}}]}]}

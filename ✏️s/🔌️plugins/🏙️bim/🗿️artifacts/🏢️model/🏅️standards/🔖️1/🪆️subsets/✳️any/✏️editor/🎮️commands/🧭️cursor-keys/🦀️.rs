@@ -20,7 +20,7 @@ pub trait Cursor {
 macro_rules! cursor {
     ($($payload:ident => $keyword:literal, $delta:expr;)+) => {
         $(
-            #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+            #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
             #[dsl(keyword = $keyword)]
             pub struct $payload {}
 

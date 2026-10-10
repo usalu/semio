@@ -1,0 +1,147 @@
+{
+  "stages": [
+    "document",
+    "config",
+    "draft",
+    "presence",
+    "transient",
+    "interaction",
+    "windowConfig",
+    "windowTransient"
+  ],
+  "cases": [
+    {
+      "name": "deny-items",
+      "grant": {
+        "items": 0,
+        "copy": 16,
+        "capacity": 64,
+        "release": 128,
+        "depth": 1
+      },
+      "advanced": false
+    },
+    {
+      "name": "deny-copy",
+      "grant": {
+        "items": 1,
+        "copy": 15,
+        "capacity": 64,
+        "release": 128,
+        "depth": 1
+      },
+      "advanced": false
+    },
+    {
+      "name": "deny-capacity",
+      "grant": {
+        "items": 1,
+        "copy": 16,
+        "capacity": 63,
+        "release": 128,
+        "depth": 1
+      },
+      "advanced": false
+    },
+    {
+      "name": "deny-release",
+      "grant": {
+        "items": 1,
+        "copy": 16,
+        "capacity": 64,
+        "release": 127,
+        "depth": 1
+      },
+      "advanced": false
+    },
+    {
+      "name": "deny-depth",
+      "grant": {
+        "items": 1,
+        "copy": 16,
+        "capacity": 64,
+        "release": 128,
+        "depth": 0
+      },
+      "advanced": false
+    },
+    {
+      "name": "exact",
+      "grant": {
+        "items": 1,
+        "copy": 16,
+        "capacity": 64,
+        "release": 128,
+        "depth": 1
+      },
+      "advanced": true
+    }
+  ],
+  "demand": {
+    "copy": 16,
+    "capacity": 64,
+    "release": 128,
+    "depth": 1
+  },
+  "events": [
+    "body",
+    "frame",
+    "advance"
+  ],
+  "detach": {
+    "live": {
+      "root": "original-root",
+      "reads": "original-registry",
+      "factory": "original-factory"
+    },
+    "detached": {
+      "root": null,
+      "reads": null,
+      "factory": null
+    },
+    "retained": {
+      "root": "original-root",
+      "reads": "original-registry",
+      "factory": "original-factory"
+    },
+    "allocated": 0,
+    "released": 0
+  },
+  "readReturn": {
+    "refusals": [
+      "busy",
+      "stale",
+      "already-returned",
+      "changed-owner"
+    ],
+    "original": {
+      "owner": "original-read",
+      "lease": "original-generation",
+      "registry": "original-registry"
+    },
+    "success": {
+      "owner": null,
+      "lease": null,
+      "witness": "original-registry"
+    },
+    "allocated": 0,
+    "released": 0,
+    "exportConsumer": {
+      "phases": [
+        "producer",
+        "pending-read",
+        "active-read",
+        "terminal"
+      ],
+      "denied": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "identity": "original-read",
+      "preserved": true
+    }
+  }
+}

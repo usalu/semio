@@ -1,0 +1,6 @@
+{
+  "mutation": "setIssueComment",
+  "id": "c-1",
+  "author": "AB",
+  "text": "Edited."
+}

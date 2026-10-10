@@ -73,3 +73,44 @@ async fn nothing_selected_summarises_the_model_per_kind() {
         assert!(rendered.contains(expected), "the summary shows '{expected}': {rendered}");
     }
 }
+
+fn with_roof() -> ModelSnapshot {
+    let (mut snapshot, _) = demo();
+    for (kind, id, parent) in [("roof-type", "rf-1", ""), ("roof", "roof-1", "st-ground")] {
+        let create = crate::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
+        let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
+        snapshot = crate::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
+    }
+    snapshot
+}
+
+fn inferred(snapshot: &ModelSnapshot) -> ModelInference {
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, snapshot, Clone::clone)
+}
+
+#[semio_framework_async_macros::async_test]
+async fn walls_selected_with_a_roof_offer_to_attach_and_an_attached_wall_offers_to_free_its_top() {
+    let snapshot = with_roof();
+    let inference = inferred(&snapshot);
+    let alone = text(&snapshot, &inference, &["w-south"], &[], Locale::En);
+    assert!(!alone.contains("bim-properties.action.attach") && !alone.contains("bim-properties.action.free-top"), "{alone}");
+    for (locale, attach, free) in [(Locale::En, "Attach to roof", "Free the top"), (Locale::De, "An Dach anbinden", "Oberkante lösen")] {
+        let with_roof = text(&snapshot, &inference, &["w-south", "roof-1"], &[], locale);
+        assert!(with_roof.contains("bim-properties.action.attach") && with_roof.contains(attach), "{with_roof}");
+        assert!(!with_roof.contains("bim-properties.action.free-top"), "a free top has nothing to free");
+        let attached = crate::mutations::apply_model_mutation(&snapshot, &crate::ModelMutation::SetWallTop(crate::mutations::set_wall_top::SetWallTop { id: "w-south".into(), top: crate::TopConstraint::Roof { roof: "roof-1".into(), offset: 0.0 } })).expect("attaches");
+        let rendered = text(&attached, &inferred(&attached), &["w-south"], &[], locale);
+        assert!(rendered.contains("bim-properties.action.free-top") && rendered.contains(free), "{rendered}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_wall_depth_rows_are_labelled_in_both_languages() {
+    let snapshot = with_roof();
+    let inference = inferred(&snapshot);
+    let wall = text(&snapshot, &inference, &["w-south"], &[], Locale::En);
+    assert!(wall.contains("bim-properties.top_attach.input") && wall.contains("Top attached to") && wall.contains("Base follows slab"), "{wall}");
+    assert!(wall.contains("Top elevation"), "the inferred top shows: {wall}");
+    let german = text(&snapshot, &inference, &["w-south"], &[], Locale::De);
+    assert!(german.contains("Oberkante angebunden an") && german.contains("Fuß folgt Decke"), "{german}");
+}

@@ -1,0 +1,15 @@
+{
+  "mutation": "createIssue",
+  "id": "i-1",
+  "issue": {
+    "title": "Beam hits the south wall",
+    "description": "",
+    "status": "Open",
+    "priority": "Normal",
+    "assignee": "",
+    "author": "UG",
+    "created": "2026-10-09",
+    "labels": [],
+    "elements": []
+  }
+}

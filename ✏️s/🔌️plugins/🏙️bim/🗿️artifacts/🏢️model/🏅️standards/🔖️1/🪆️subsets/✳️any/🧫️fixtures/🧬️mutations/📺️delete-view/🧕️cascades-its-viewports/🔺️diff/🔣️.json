@@ -1,1 +1,15 @@
-{}
+{
+  "viewports": {
+    "vp-2": {
+      "entry": "Deleted"
+    },
+    "vp-3": {
+      "entry": "Deleted"
+    }
+  },
+  "views": {
+    "v-section": {
+      "entry": "Deleted"
+    }
+  }
+}

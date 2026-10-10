@@ -31,7 +31,7 @@ pub mod bounded_clone;
 
 #[path = "🛬️decode/🦀️.rs"]
 pub mod native_decoding;
-pub use native_decoding::NativeDecodeControl;
+pub use native_decoding::{NativeDecodeControl, NativeDecodeProgress, NativeDecodeRetirementRecipient};
 
 #[path = "🛫️encode/🦀️.rs"]
 pub mod native_encoding;

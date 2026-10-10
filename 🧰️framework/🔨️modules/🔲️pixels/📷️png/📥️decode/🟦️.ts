@@ -1,9 +1,10 @@
 /** 📥️ Budgeted PNG reconstruction with private RGBA publication. */
+import type {RetainedCloneGrant,RetainedCloneProgress} from "../../../🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
 import {validateExtent,type PixelImage} from "../../✍️editing/🟦️.ts";
 import {InflateCursor} from "../../../🗜️deflate/📥️decode/🟦️.ts";
 export type PngDecodeInput={data:Uint8Array;maxPixels:number;maxBytes:number;maxChunks:number};
-export type PngDecodeProgress={phase:"chunks"|"inflating"|"pixels"|"complete";bytes:number;totalBytes:number;pixels:number;totalPixels:number;work:number;done:boolean};
-export type PngDecodeOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:PngDecodeProgress)=>void};
+export type PngDecodeProgress={phase:"chunks"|"allocation"|"inflating"|"pixels"|"complete"|"transferred";bytes:number;totalBytes:number;pixels:number;totalPixels:number;work:number;done:boolean};
+export type PngDecodeOptions={workGrant:RetainedCloneGrant;signal?:AbortSignal;workBudget?:number;onProgress?:(progress:PngDecodeProgress)=>void};
 type Header={width:number;height:number;depth:number;color:number;interlace:number;channels:number};
 type Chunk={kind:string;start:number;length:number;at:number;end:number;crc:number};
 const signature=[137,80,78,71,13,10,26,10];
@@ -24,14 +25,14 @@ export class PngDecodeJob{
  private hadIdat=false;private closedIdat=false;private ranges:[number,number][]=[];private zLength=0;private range=0;private rangeAt=0;private zAt=0;private zHeader:number[]=[];private tail:number[]=[];
  private inflater:InflateCursor|undefined;private pending:number|undefined;private candidate:PixelImage|undefined;
  private pass=-1;private passWidth=0;private passHeight=0;private sx=0;private sy=0;private dx=1;private dy=1;private row=0;private column=0;private rowAt=-1;private rowBytes=0;private bpp=0;private filter=0;
- private current=new Uint8Array(0);private previous=new Uint8Array(0);private rawBytes=0;private expectedBytes=0;private adlerA=1;private adlerB=0;private streamDone=false;
+ private allocationAt=0;private stride=0;private rangeCapacity=0;private current=new Uint8Array(0);private previous=new Uint8Array(0);private rawBytes=0;private expectedBytes=0;private adlerA=1;private adlerB=0;private streamDone=false;
  private cancelled=false;private failed:unknown;private samples=new Uint32Array(4);
  constructor(input:PngDecodeInput){
   if(!(input.data instanceof Uint8Array)||!validInt(input.maxPixels,1,16777216)||!validInt(input.maxBytes,8,67108864)||!validInt(input.maxChunks,1,65536)||input.data.length<8||input.data.length>input.maxBytes||signature.some((v,i)=>input.data[i]!==v))fail("Invalid PNG input contract");
   this.data=input.data;this.totalBytes=input.data.length;this.limits={maxPixels:input.maxPixels,maxBytes:input.maxBytes,maxChunks:input.maxChunks};
  }
  private check():void{if(this.cancelled)abort();if(this.failed!==undefined)throw this.failed;}
- private release():void{this.data=new Uint8Array(0);this.ranges=[];this.current=new Uint8Array(0);this.previous=new Uint8Array(0);this.inflater=undefined;this.candidate=undefined;this.pending=undefined;}
+ 
  private parseChunk(c:Chunk):void{
   const h=this.header,data=this.data.subarray(c.start,c.end);
   if(!h&&c.kind!=="IHDR")fail("IHDR must be first");
@@ -58,26 +59,27 @@ export class PngDecodeJob{
     this.hadIdat=true;this.ranges.push([c.start,c.end]);this.zLength+=data.length;break;
    case "IEND":
     if(data.length||!this.hadIdat||this.at!==this.totalBytes||this.zLength<6)fail("Invalid PNG end");
-    this.phase="inflating";this.rangeAt=this.ranges[0]![0];
-    this.candidate={width:h!.width,height:h!.height,pixels:new Uint8Array(this.totalPixels*4)};
-    this.bpp=Math.max(1,Math.ceil(h!.channels*h!.depth/8));const stride=Math.ceil(h!.width*h!.channels*h!.depth/8);
-    this.current=new Uint8Array(stride);this.previous=new Uint8Array(stride);
+    this.phase="allocation";this.rangeAt=this.ranges[0]![0];
+    this.candidate={width:h!.width,height:h!.height,pixels:new Uint8Array(0)};
+    this.bpp=Math.max(1,Math.ceil(h!.channels*h!.depth/8));this.stride=Math.ceil(h!.width*h!.channels*h!.depth/8);
+    
     for(let p=0;p<(h!.interlace?7:1);p++){const spec=h!.interlace?passes[p]!:([0,0,1,1]as const),w=Math.max(0,Math.ceil((h!.width-spec[0])/spec[2])),height=Math.max(0,Math.ceil((h!.height-spec[1])/spec[3]));if(w&&height)this.expectedBytes+=(Math.ceil(w*h!.channels*h!.depth/8)+1)*height;}
     this.nextPass();break;
    default:if((c.kind.charCodeAt(0)&32)===0)fail("Unknown critical PNG chunk");
   }
  }
- private chunkStep():void{
+ private chunkStep():number{
   if(!this.chunk){
    if(this.at+12>this.totalBytes||++this.chunks>this.limits.maxChunks)fail("Truncated PNG or chunk limit exceeded");
    const length=be(this.data,this.at),end=this.at+8+length;if(length>2147483647||end+4>this.totalBytes)fail("Invalid chunk length");
    const type=this.data.subarray(this.at+4,this.at+8);if(type.some(v=>v<65||v>90&&v<97||v>122))fail("Invalid chunk type");
-   this.chunk={kind:String.fromCharCode(...type),start:this.at+8,length,at:this.at+4,end,crc:0xffffffff};this.bytes=this.at+4;return;
+   this.chunk={kind:String.fromCharCode(...type),start:this.at+8,length,at:this.at+4,end,crc:0xffffffff};this.bytes=this.at+4;return 0;
   }
   const c=this.chunk;
-  if(c.at<c.end){c.crc=crcByte(c.crc,this.data[c.at++]!);this.bytes=c.at;return;}
+  if(c.at<c.end){c.crc=crcByte(c.crc,this.data[c.at++]!);this.bytes=c.at;return 0;}
   if(((c.crc^0xffffffff)>>>0)!==be(this.data,c.end))fail("PNG CRC mismatch");
-  this.at=c.end+4;this.bytes=this.at;this.parseChunk(c);this.chunk=undefined;
+  if(c.kind==="IDAT"&&this.ranges.length===this.rangeCapacity){this.rangeCapacity++;return 16;}
+  this.at=c.end+4;this.bytes=this.at;const capacity=c.kind==="PLTE"||c.kind==="tRNS"?c.length:0;this.parseChunk(c);this.chunk=undefined;return capacity;
  }
  private nextPass():void{
   const h=this.header!;this.pass++;while(this.pass<(h.interlace?7:1)){
@@ -111,29 +113,41 @@ export class PngDecodeJob{
   if(++this.column===this.passWidth){const swap=this.previous;this.previous=this.current;this.current=swap;this.rowAt=-1;if(++this.row===this.passHeight)this.nextPass();this.phase="inflating";}
  }
  private scale(v:number):number{const depth=this.header!.depth;return depth===16?v>>>8:depth===8?v:Math.round(v*255/((1<<depth)-1));}
- private inflateStep():void{
-  if(this.zHeader.length<2){const b=this.zByte();if(b!==undefined)this.zHeader.push(b);if(this.zHeader.length===2){const [cmf,flg]=this.zHeader as [number,number];if((cmf&15)!==8||(cmf>>>4)>7||((cmf<<8)|flg)%31||(flg&32))fail("Invalid PNG zlib header");this.inflater=new InflateCursor(2**((cmf>>>4)+8));}return;}
+ private inflateStep():number{
+  if(this.zHeader.length<2){const b=this.zByte();if(b!==undefined)this.zHeader.push(b);if(this.zHeader.length===2){const [cmf,flg]=this.zHeader as [number,number];if((cmf&15)!==8||(cmf>>>4)>7||((cmf<<8)|flg)%31||(flg&32))fail("Invalid PNG zlib header");this.inflater=new InflateCursor(2**((cmf>>>4)+8));return 2**((cmf>>>4)+8);}return 0;}
   if(this.streamDone){
-   if(this.tail.length<4){const b=this.zByte();if(b!==undefined)this.tail.push(b);return;}
+   if(this.tail.length<4){const b=this.zByte();if(b!==undefined)this.tail.push(b);return 0;}
    if(this.zAt!==this.zLength||be(Uint8Array.from(this.tail),0)!==((this.adlerB*65536+this.adlerA)>>>0)||this.rawBytes!==this.expectedBytes||this.passWidth||this.pixels!==this.totalPixels)fail("PNG stream size or Adler mismatch");
-   this.phase="complete";this.data=new Uint8Array(0);this.ranges=[];this.current=new Uint8Array(0);this.previous=new Uint8Array(0);this.inflater=undefined;return;
+   this.phase="complete";return 0;
   }
-  if(this.pending===undefined&&this.zAt<this.zLength-4){const b=this.zByte();if(b===undefined)return;this.pending=b;}
+  if(this.pending===undefined&&this.zAt<this.zLength-4){const b=this.zByte();if(b===undefined)return 0;this.pending=b;}
   const result=this.inflater!.advance(this.pending,this.zAt===this.zLength-4);if(result.consumed)this.pending=undefined;
   if(result.value!==undefined)this.raw(result.value);
   if(result.done){if(this.pending!==undefined||this.zAt!==this.zLength-4||this.inflater!.unusedWholeBytes)fail("Trailing DEFLATE data");this.streamDone=true;}
+  return 0;
  }
- advance(budget:number):PngDecodeProgress{
-  if(!validInt(budget,1,Number.MAX_SAFE_INTEGER))fail("PNG work grant must be a positive integer");this.check();
-  try{for(let i=0;i<budget&&this.phase!=="complete";i++){if(this.phase==="chunks")this.chunkStep();else if(this.phase==="pixels")this.pixelStep();else this.inflateStep();this.work++;}}
-  catch(error){this.failed=error;this.release();throw error;}
-  return {phase:this.phase,bytes:this.bytes,totalBytes:this.totalBytes,pixels:this.pixels,totalPixels:this.totalPixels,work:this.work,done:this.phase==="complete"};
+ progress():PngDecodeProgress{return {phase:this.phase,bytes:this.bytes,totalBytes:this.totalBytes,pixels:this.pixels,totalPixels:this.totalPixels,work:this.work,done:this.phase==="complete"};}
+ nextCopyByteDemand():number{if(this.phase==="complete"||this.phase==="transferred")return 0;return 32+(this.phase==="chunks"&&this.chunk?.at===this.chunk?.end&&(this.chunk?.kind==="PLTE"||this.chunk?.kind==="tRNS")?Math.min(this.chunk.length,768):0);}
+ nextCapacityByteDemand():number{
+  if(this.phase==="allocation")return this.allocationAt===0?this.totalPixels*4:this.allocationAt<3?this.stride:0;
+  if(this.phase==="chunks"&&this.chunk?.at===this.chunk?.end){const c=this.chunk;if(c?.kind==="IDAT"&&this.ranges.length===this.rangeCapacity)return 16;if(c?.kind==="PLTE"||c?.kind==="tRNS")return Math.min(c.length,768);}
+  if(this.phase==="inflating"&&this.zHeader.length===1&&(this.zHeader[0]!&15)===8&&(this.zHeader[0]!>>>4)<=7)return 2**((this.zHeader[0]!>>>4)+8);
+  return 0;
  }
- cancel():void{this.cancelled=true;this.release();}
+ private allocationStep():number{const capacity=this.nextCapacityByteDemand();if(this.allocationAt===0)this.candidate!.pixels=new Uint8Array(capacity);else if(this.allocationAt===1)this.current=new Uint8Array(capacity);else if(this.allocationAt===2)this.previous=new Uint8Array(capacity);else this.phase="inflating";this.allocationAt++;return capacity;}
+ advance(grant:RetainedCloneGrant):{progress:PngDecodeProgress;receipt:RetainedCloneProgress}{
+  for(const field of ["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"]as const)if(!validInt(grant[field],0,Number.MAX_SAFE_INTEGER))fail("Invalid PNG funding");this.check();
+  const receipt:RetainedCloneProgress={copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0};
+  try{for(let i=0;i<grant.maximumItems&&this.phase!=="complete";i++){const copy=this.nextCopyByteDemand(),capacity=this.nextCapacityByteDemand();if(!grant.maximumDepth||copy>grant.maximumCopyBytes-receipt.copiedBytes||capacity>grant.maximumCapacityBytes-receipt.retainedCapacityBytes)break;let allocated=0;if(this.phase==="chunks")allocated=this.chunkStep();else if(this.phase==="allocation")allocated=this.allocationStep();else if(this.phase==="pixels")this.pixelStep();else allocated=this.inflateStep();this.work++;receipt.copiedItems++;receipt.copiedBytes+=copy;receipt.retainedCapacityBytes+=allocated;}}
+  catch(error){this.failed=error;throw error;}
+  return {progress:this.progress(),receipt};
+ }
+ takeResult(grant:RetainedCloneGrant):{value:PixelImage;receipt:RetainedCloneProgress}|undefined{for(const field of ["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"]as const)if(!validInt(grant[field],0,Number.MAX_SAFE_INTEGER))fail("Invalid PNG funding");const value=this.result();if(!grant.maximumItems||grant.maximumCopyBytes<32||!grant.maximumDepth)return;this.candidate=undefined;this.phase="transferred";return {value,receipt:{copiedItems:1,copiedBytes:32,retainedCapacityBytes:0,releasedBytes:0}};}
+ cancel():void{this.cancelled=true;}
  result():PixelImage{this.check();if(this.phase!=="complete"||!this.candidate)fail("PNG decode is incomplete");return this.candidate!;}
 }
-export async function decodePngImage(input:PngDecodeInput,options:PngDecodeOptions={}):Promise<PixelImage>{
+export async function decodePngImage(input:PngDecodeInput,options:PngDecodeOptions):Promise<PixelImage>{
  if(options.signal?.aborted)abort();const job=new PngDecodeJob(input);
- try{for(;;){if(options.signal?.aborted)abort();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);if(options.signal?.aborted)abort();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}
+ try{for(;;){if(options.signal?.aborted)abort();const step=job.advance({...options.workGrant,maximumItems:Math.min(options.workGrant.maximumItems,options.workBudget??4096)}),progress=step.progress;if(!progress.done&&!step.receipt.copiedItems)fail("PNG funding does not admit the next transition");options.onProgress?.(progress);if(options.signal?.aborted)abort();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}
  catch(error){job.cancel();throw error;}
 }
